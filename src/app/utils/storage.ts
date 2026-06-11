@@ -129,15 +129,122 @@ export function loadAllFeedback(): Record<string, DailyFeedback> {
   }
 }
 
+export interface HomeCalibrationData {
+  northOffset: number;
+  calibratedAt: string;
+  source: 'sun' | 'manual';
+  warning?: string;
+}
+
+export interface HomeRoomRect {
+  id: string;
+  name: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  baguaZone: string;
+  vastuZone: string;
+}
+
+export interface HomeFloorPlanData {
+  imageDataUrl: string;
+  rooms: HomeRoomRect[];
+  northOffset: number;
+}
+
+export interface HomeProgressItem {
+  id: string;
+  label: string;
+  done: boolean;
+}
+
+const HOME_CALIBRATION_KEY = 'astroday_home_calibration';
+const HOME_FLOORPLAN_KEY = 'astroday_home_floorplan';
+const HOME_PROGRESS_KEY = 'astroday_home_progress';
+
+export function saveHomeCalibration(data: HomeCalibrationData): void {
+  try {
+    const json = JSON.stringify(data);
+    localStorage.setItem(HOME_CALIBRATION_KEY, simpleEncrypt(json, ENCRYPTION_KEY));
+  } catch (error) {
+    console.error('Error saving home calibration:', error);
+  }
+}
+
+export function loadHomeCalibration(): HomeCalibrationData | null {
+  try {
+    const encrypted = localStorage.getItem(HOME_CALIBRATION_KEY);
+    if (!encrypted) return null;
+    const decrypted = simpleDecrypt(encrypted, ENCRYPTION_KEY);
+    return JSON.parse(decrypted) as HomeCalibrationData;
+  } catch (error) {
+    console.error('Error loading home calibration:', error);
+    return null;
+  }
+}
+
+export function saveHomeFloorPlan(data: HomeFloorPlanData): void {
+  try {
+    const json = JSON.stringify(data);
+    localStorage.setItem(HOME_FLOORPLAN_KEY, simpleEncrypt(json, ENCRYPTION_KEY));
+  } catch (error) {
+    console.error('Error saving home floor plan:', error);
+  }
+}
+
+export function loadHomeFloorPlan(): HomeFloorPlanData | null {
+  try {
+    const encrypted = localStorage.getItem(HOME_FLOORPLAN_KEY);
+    if (!encrypted) return null;
+    const decrypted = simpleDecrypt(encrypted, ENCRYPTION_KEY);
+    return JSON.parse(decrypted) as HomeFloorPlanData;
+  } catch (error) {
+    console.error('Error loading home floor plan:', error);
+    return null;
+  }
+}
+
+export function saveHomeProgress(items: HomeProgressItem[]): void {
+  try {
+    const json = JSON.stringify(items);
+    localStorage.setItem(HOME_PROGRESS_KEY, simpleEncrypt(json, ENCRYPTION_KEY));
+  } catch (error) {
+    console.error('Error saving home progress:', error);
+  }
+}
+
+export function loadHomeProgress(): HomeProgressItem[] {
+  try {
+    const encrypted = localStorage.getItem(HOME_PROGRESS_KEY);
+    if (!encrypted) return [];
+    const decrypted = simpleDecrypt(encrypted, ENCRYPTION_KEY);
+    return JSON.parse(decrypted) as HomeProgressItem[];
+  } catch (error) {
+    console.error('Error loading home progress:', error);
+    return [];
+  }
+}
+
+export function deleteHomeData(): void {
+  localStorage.removeItem(HOME_CALIBRATION_KEY);
+  localStorage.removeItem(HOME_FLOORPLAN_KEY);
+  localStorage.removeItem(HOME_PROGRESS_KEY);
+}
+
 export function deleteAllData(): void {
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(FEEDBACK_KEY);
+  deleteHomeData();
 }
 
 export function exportData(): string {
   const profile = loadUserProfile();
   const feedback = loadAllFeedback();
-  return JSON.stringify({ profile, feedback }, null, 2);
+  const homeCalibration = loadHomeCalibration();
+  const homeFloorPlan = loadHomeFloorPlan();
+  const homeProgress = loadHomeProgress();
+  return JSON.stringify({ profile, feedback, homeCalibration, homeFloorPlan, homeProgress }, null, 2);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

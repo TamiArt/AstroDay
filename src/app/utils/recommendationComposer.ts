@@ -135,13 +135,35 @@ function buildReasoning(input: RecommendationTextInput): string[] {
 }
 
 function buildBestAreas(input: RecommendationTextInput): string[] {
-  return Array.from(new Set([
-    ...input.dashaAreas,
-    ...input.hourAreas,
-    input.dashaHouseText ? 'Личные темы карты' : '',
-    input.vargaHints.some(hint => hint.includes('D24') || hint.includes('практик')) ? 'Практики и обучение' : '',
-    input.energyLevel >= 70 ? 'Активные действия' : 'Восстановление',
-  ].filter(Boolean))).slice(0, 4);
+  const areas: string[] = [];
+  
+  // Приоритет 1: Даша (долгосрочная тенденция, более важна для дневного прогноза)
+  areas.push(...input.dashaAreas);
+  
+  // Приоритет 2: Лунный транзит или пальцы карты
+  if (input.dashaHouseText) {
+    areas.push('Личные темы карты');
+  }
+  
+  // Приоритет 3: Специфика дня (энергия, практики)
+  if (input.energyLevel >= 75) {
+    areas.push('Активные действия');
+  } else if (input.energyLevel <= 40) {
+    areas.push('Восстановление');
+  }
+  
+  // Приоритет 4: Практики если они рекомендованы
+  if (input.vargaHints.some(hint => hint.includes('D24') || hint.includes('практик') || hint.includes('обучен'))) {
+    areas.push('Практики и обучение');
+  }
+  
+  // Приоритет 5: Час только если остальное не заполнило достаточно информации
+  if (areas.length < 2) {
+    areas.push(...input.hourAreas.filter(a => !areas.includes(a)));
+  }
+  
+  // Удаляем дубликаты и берем максимум 3 области для календаря
+  return Array.from(new Set(areas.filter(Boolean))).slice(0, 3);
 }
 
 export function composePersonalRecommendationText(input: RecommendationTextInput): RecommendationTextBundle {

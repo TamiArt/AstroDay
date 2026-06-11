@@ -12,6 +12,73 @@ import { createDateInTimezone } from './timezones';
 
 export const FORECAST_CALC_VERSION = 'personalized-v4';
 
+/**
+ * Выбрать наиболее релевантную область для отображения в календаре
+ */
+function selectBestAreaForCalendar(
+  bestAreas: string[],
+  energyLevel: number,
+  tithi: string
+): string {
+  if (!bestAreas || bestAreas.length === 0) {
+    return 'Наблюдение';
+  }
+
+  // Приоритеты для разных типов дней
+  if (energyLevel >= 75) {
+    // Для высокоэнергичных дней показываем действие/активность
+    if (bestAreas.includes('Активные действия')) return 'Активные действия';
+    if (bestAreas.includes('Карьера')) return 'Карьера';
+    if (bestAreas.includes('Рост')) return 'Рост';
+  }
+
+  if (energyLevel <= 40) {
+    // Для низкоэнергичных дней показываем восстановление
+    if (bestAreas.includes('Восстановление')) return 'Восстановление';
+    if (bestAreas.includes('Дом')) return 'Дом';
+    if (bestAreas.includes('Духовность')) return 'Духовность';
+  }
+
+  // Для Полнолуния - завершение
+  if (tithi.includes('Полнолуние') || tithi.includes('14')) {
+    if (bestAreas.includes('Завершение')) return 'Завершение';
+    if (bestAreas.includes('Личные темы карты')) return 'Личные темы карты';
+  }
+
+  // Для Новолуния - новые начинания
+  if (tithi.includes('Новолуние') || tithi.includes('29')) {
+    if (bestAreas.includes('Рост')) return 'Рост';
+    if (bestAreas.includes('Новые возможности')) return 'Новые возможности';
+  }
+
+  // Приоритеты по умолчанию (предпочитаем более специфичные области)
+  const priorityOrder = [
+    'Личные темы карты',
+    'Карьера',
+    'Отношения',
+    'Творчество',
+    'Практики и обучение',
+    'Дисциплина',
+    'Финансы',
+    'Рост',
+    'Дом',
+    'Семья',
+    'Активные действия',
+    'Восстановление',
+    'Общение',
+    'Обучение'
+  ];
+
+  for (const priority of priorityOrder) {
+    if (bestAreas.includes(priority)) {
+      return priority;
+    }
+  }
+
+  // Если ничего не подходит, берем первую доступную
+  return bestAreas[0] || 'Наблюдение';
+}
+
 function stableHash(value: string): string {
   let hash = 0;
   for (let i = 0; i < value.length; i++) {

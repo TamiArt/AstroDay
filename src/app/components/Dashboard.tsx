@@ -22,6 +22,7 @@ const LocationSettings = lazy(() => import('./LocationSettings').then(module => 
 const NatalChartDetailed = lazy(() => import('./NatalChartDetailed').then(module => ({ default: module.NatalChartDetailed })));
 const PanchangWidget = lazy(() => import('./PanchangWidget').then(module => ({ default: module.PanchangWidget })));
 const RemediesLibrary = lazy(() => import('./RemediesLibrary').then(module => ({ default: module.RemediesLibrary })));
+const HomeAssistant = lazy(() => import('./HomeAssistant').then(module => ({ default: module.HomeAssistant })));
 
 interface DashboardProps {
   profile: UserProfile;
@@ -29,11 +30,12 @@ interface DashboardProps {
   onProfileUpdate?: (profile: UserProfile) => void;
 }
 
-type DashboardView = 'dayoverview' | 'overview' | 'panchang' | 'natalchart' | 'remedies' | 'calendar' | 'now' | 'settings';
+type DashboardView = 'dayoverview' | 'overview' | 'home' | 'panchang' | 'natalchart' | 'remedies' | 'calendar' | 'now' | 'settings';
 
 const NAV_ITEMS: Array<{ id: DashboardView; label: string }> = [
   { id: 'dayoverview', label: 'Обзор дня' },
   { id: 'overview', label: 'Сегодня' },
+  { id: 'home', label: 'Дом' },
   { id: 'panchang', label: 'Панчанг' },
   { id: 'natalchart', label: 'Натальная карта' },
   { id: 'remedies', label: 'Упайи' },
@@ -275,6 +277,18 @@ export function Dashboard({ profile, onReset, onProfileUpdate }: DashboardProps)
         {selectedView === 'natalchart' && (
           <Suspense fallback={<ViewFallback />}>
             <NatalChartDetailed natalChart={natalChart} />
+          </Suspense>
+        )}
+
+        {selectedView === 'home' && (
+          <Suspense fallback={<ViewFallback />}>
+            <HomeAssistant
+              profile={profile}
+              natalChart={natalChart}
+              currentChart={currentChart}
+              panchang={panchang}
+              planetaryHour={planetaryHour}
+            />
           </Suspense>
         )}
 

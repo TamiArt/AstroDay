@@ -16,6 +16,7 @@ export interface DayForecast {
   avoidRecommendation?: string;
   reasoning?: string[];
   bestAreas?: string[];
+  calendarArea?: string; // Наиболее релевантная область для отображения в календаре
   microUpaya?: string;
   precisionNotes?: string[];
   warning?: string;
