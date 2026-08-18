@@ -3,19 +3,18 @@
  * All data is stored locally in browser, never sent to server
  */
 
+import { clearForecastCache } from './indexedDB';
+
 // Simple XOR encryption for sensitive data (UTF-8 compatible)
 function simpleEncrypt(text: string, key: string): string {
-  // First encode UTF-8 to bytes
   const utf8Bytes = new TextEncoder().encode(text);
   const keyBytes = new TextEncoder().encode(key);
 
-  // XOR encryption
   const encrypted = new Uint8Array(utf8Bytes.length);
   for (let i = 0; i < utf8Bytes.length; i++) {
     encrypted[i] = utf8Bytes[i] ^ keyBytes[i % keyBytes.length];
   }
 
-  // Convert to base64
   let binary = '';
   for (let i = 0; i < encrypted.length; i++) {
     binary += String.fromCharCode(encrypted[i]);
@@ -24,21 +23,18 @@ function simpleEncrypt(text: string, key: string): string {
 }
 
 function simpleDecrypt(encrypted: string, key: string): string {
-  // Decode from base64
   const binary = atob(encrypted);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
     bytes[i] = binary.charCodeAt(i);
   }
 
-  // XOR decryption
   const keyBytes = new TextEncoder().encode(key);
   const decrypted = new Uint8Array(bytes.length);
   for (let i = 0; i < bytes.length; i++) {
     decrypted[i] = bytes[i] ^ keyBytes[i % keyBytes.length];
   }
 
-  // Decode UTF-8
   return new TextDecoder().decode(decrypted);
 }
 
@@ -78,7 +74,7 @@ export interface Relative {
 
 export interface DailyFeedback {
   date: string;
-  mood: number; // 1-5
+  mood: number;
   notes?: string;
 }
 
@@ -232,10 +228,16 @@ export function deleteHomeData(): void {
   localStorage.removeItem(HOME_PROGRESS_KEY);
 }
 
-export function deleteAllData(): void {
+export async function deleteAllData(): Promise<void> {
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(FEEDBACK_KEY);
   deleteHomeData();
+
+  try {
+    await clearForecastCache();
+  } catch (error) {
+    console.error('Error clearing forecast cache:', error);
+  }
 }
 
 export function exportData(): string {
