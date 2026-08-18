@@ -1,40 +1,53 @@
 // [ХУК] Переиспользуемая логика геокодирования
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { geocodePlace, getHistoricalTimezone, type GeocodingResult } from '../utils/geocoding';
 
 export function useGeocoding(birthDate?: Date) {
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<GeocodingResult[]>([]);
   const [error, setError] = useState<string>('');
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const requestIdRef = useRef(0);
+
+  useEffect(() => () => abortControllerRef.current?.abort(), []);
 
   const search = async (query: string): Promise<void> => {
-    if (!query.trim()) {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) {
       setError('Введите название места');
       return;
     }
+
+    abortControllerRef.current?.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    const requestId = ++requestIdRef.current;
 
     setIsSearching(true);
     setError('');
     setSearchResults([]);
 
     try {
-      const results = await geocodePlace(query);
-      setSearchResults(results);
+      const results = await geocodePlace(trimmedQuery, controller.signal);
+      if (requestId !== requestIdRef.current) return;
 
-      // Если передана дата рождения и есть результаты - определяем исторический часовой пояс
-      if (birthDate && results.length > 0) {
-        results.forEach((result) => {
-          result.timezone = getHistoricalTimezone(
-            result.latitude,
-            result.longitude,
-            birthDate
-          );
-        });
-      }
+      const normalizedResults = birthDate
+        ? results.map((result) => ({
+            ...result,
+            timezone: getHistoricalTimezone(result.latitude, result.longitude, birthDate)
+          }))
+        : results;
+
+      setSearchResults(normalizedResults);
     } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
+      if (requestId !== requestIdRef.current) return;
       setError(err instanceof Error ? err.message : 'Не удалось найти место');
     } finally {
-      setIsSearching(false);
+      if (requestId === requestIdRef.current) {
+        setIsSearching(false);
+        abortControllerRef.current = null;
+      }
     }
   };
 
@@ -44,6 +57,9 @@ export function useGeocoding(birthDate?: Date) {
   };
 
   const reset = (): void => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    requestIdRef.current += 1;
     setSearchResults([]);
     setError('');
     setIsSearching(false);
