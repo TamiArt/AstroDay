@@ -1,7 +1,7 @@
-import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { GlassCard } from './common/GlassCard';
 import { loadHomeCalibration, loadHomeFloorPlan, saveHomeFloorPlan, HomeFloorPlanData, HomeRoomRect } from '../utils/storage';
-import { generateBaguaGrid, assignBaguaZone, getVastuZone, getZoneElement } from '../utils/homeZoneCalculations';
+import { generateBaguaGrid, assignBaguaZone, getVastuZone } from '../utils/homeZoneCalculations';
 
 interface FloorPlanEditorProps {
   onRoomSelect: (room: HomeRoomRect | null) => void;
@@ -9,20 +9,14 @@ interface FloorPlanEditorProps {
 
 export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const imageRef = useRef<HTMLImageElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [planData, setPlanData] = useState<HomeFloorPlanData | null>(loadHomeFloorPlan());
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [drawing, setDrawing] = useState(false);
   const [draft, setDraft] = useState<{ x:number; y:number; width:number; height:number } | null>(null);
   const [startPoint, setStartPoint] = useState<{ x:number; y:number } | null>(null);
-  const [northOffset, setNorthOffset] = useState<number>(loadHomeCalibration()?.northOffset ?? 0);
+  const [northOffset] = useState<number>(loadHomeCalibration()?.northOffset ?? 0);
   const [showGrid, setShowGrid] = useState(true);
-
-  const selectedRoom = useMemo(
-    () => planData?.rooms.find((room) => room.id === selectedRoomId) ?? null,
-    [planData?.rooms, selectedRoomId]
-  );
 
   useEffect(() => {
     if (!planData) return;
@@ -30,7 +24,7 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
       drawPlan();
     }, 50);
     return () => window.clearTimeout(timeout);
-  }, [planData, draft, northOffset]);
+  }, [planData, draft, northOffset, showGrid, selectedRoomId]);
 
   const savePlan = (next: HomeFloorPlanData) => {
     saveHomeFloorPlan(next);
@@ -52,27 +46,26 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
       image.onload = () => {
         ctx.drawImage(image, 0, 0, width, height);
         if (showGrid) drawBaguaGrid(ctx, width, height);
-        drawRooms(ctx, width, height);
+        drawRooms(ctx);
       };
       image.src = planData.imageDataUrl;
     } else {
       ctx.fillStyle = 'rgba(255,255,255,0.95)';
       ctx.fillRect(0, 0, width, height);
       if (showGrid) drawBaguaGrid(ctx, width, height);
-      drawRooms(ctx, width, height);
+      drawRooms(ctx);
     }
   };
 
   const drawBaguaGrid = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
     const grid = generateBaguaGrid(width, height, northOffset);
-    
+
     ctx.save();
     ctx.globalAlpha = 0.15;
 
     const cellWidth = width / 3;
     const cellHeight = height / 3;
 
-    // Рисуем линии сетки
     ctx.strokeStyle = 'rgba(59, 130, 246, 0.6)';
     ctx.lineWidth = 2;
 
@@ -88,7 +81,6 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
       ctx.stroke();
     }
 
-    // Рисуем названия зон
     ctx.globalAlpha = 0.4;
     ctx.fillStyle = 'rgba(59, 130, 246, 1)';
     ctx.font = 'bold 12px sans-serif';
@@ -104,14 +96,14 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
     ctx.restore();
   };
 
-  const drawRooms = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+  const drawRooms = (ctx: CanvasRenderingContext2D) => {
     ctx.lineWidth = 2;
     ctx.strokeStyle = 'rgba(59,130,246,0.85)';
     ctx.fillStyle = 'rgba(59,130,246,0.12)';
 
     planData?.rooms.forEach((room) => {
       const isSelected = selectedRoomId === room.id;
-      
+
       if (isSelected) {
         ctx.strokeStyle = 'rgba(6,182,212,0.95)';
         ctx.fillStyle = 'rgba(6,182,212,0.2)';
@@ -119,11 +111,11 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
 
       ctx.fillRect(room.x, room.y, room.width, room.height);
       ctx.strokeRect(room.x, room.y, room.width, room.height);
-      
+
       ctx.fillStyle = 'rgba(255,255,255,0.9)';
       ctx.font = 'bold 12px sans-serif';
       ctx.fillText(room.name, room.x + 8, room.y + 16);
-      
+
       ctx.fillStyle = 'rgba(100,200,255,0.7)';
       ctx.font = '10px sans-serif';
       ctx.fillText(`${room.baguaZone} · ${room.vastuZone}`, room.x + 8, room.y + 28);
@@ -142,9 +134,8 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
 
   const updateCanvasSize = () => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
     const container = containerRef.current;
-    if (!container) return;
+    if (!canvas || !container) return;
 
     canvas.width = container.clientWidth * 2;
     canvas.height = container.clientHeight * 2;
@@ -157,9 +148,9 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
     updateCanvasSize();
     window.addEventListener('resize', updateCanvasSize);
     return () => window.removeEventListener('resize', updateCanvasSize);
-  });
+  }, []);
 
-  const handleFile = async (event: ChangeEvent<HTMLInputElement>) => {
+  const handleFile = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -214,7 +205,6 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
       return;
     }
 
-    // Вычисляем зоны автоматически
     const tempRoom: HomeRoomRect = {
       id: `temp-${Date.now()}`,
       name,
@@ -272,7 +262,7 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
             <input type="file" accept="image/*" onChange={handleFile} className="w-full" />
             <p className="text-xs opacity-60">Файл хранится локально в браузере.</p>
             <button
-              onClick={() => setShowGrid(!showGrid)}
+              onClick={() => setShowGrid((visible) => !visible)}
               className={`rounded-2xl px-3 py-2 text-sm transition-colors ${showGrid ? 'bg-primary/20 text-primary' : 'bg-secondary text-white'}`}
             >
               {showGrid ? '✓ Сетка видна' : 'Показать сетку'}
