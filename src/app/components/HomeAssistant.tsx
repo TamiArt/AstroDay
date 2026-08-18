@@ -10,7 +10,6 @@ import { HomeProgressTracker } from './HomeProgressTracker';
 import { HomeARView } from './HomeARView';
 import { getHomePersonalizedRecommendations, HOME_LEARNING_CARDS } from '../utils/homeRecommendations';
 import { getDataPrecision } from '../utils/personalRecommendations';
-import { loadHomeCalibration } from '../utils/storage';
 
 interface HomeAssistantProps {
   profile: UserProfile;
@@ -20,7 +19,7 @@ interface HomeAssistantProps {
   planetaryHour: string;
 }
 
-export function HomeAssistant({ profile, natalChart, currentChart, panchang, planetaryHour }: HomeAssistantProps) {
+export function HomeAssistant({ profile, natalChart, currentChart: _currentChart, panchang, planetaryHour }: HomeAssistantProps) {
   const [selectedRoom, setSelectedRoom] = useState<HomeRoomRect | null>(null);
 
   const recommendations = useMemo(
