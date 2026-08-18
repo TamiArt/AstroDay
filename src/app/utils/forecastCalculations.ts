@@ -159,9 +159,9 @@ export async function precalculateForecasts(
     date.setDate(date.getDate() + i);
 
     const dateStr = formatDateKey(date);
-    const cached = await getForecast(dateStr);
+    const cached = await getForecast(dateStr, profileKey, FORECAST_CALC_VERSION);
 
-    if (!cached || cached.profileKey !== profileKey || cached.calcVersion !== FORECAST_CALC_VERSION) {
+    if (!cached) {
       try {
         const forecast = await calculateDayForecast(date, profile, context);
         await saveForecast(forecast);
@@ -182,10 +182,10 @@ export async function getOrCalculateForecast(
   profile: UserProfile
 ): Promise<DayForecast> {
   const dateStr = formatDateKey(date);
-  const cached = await getForecast(dateStr);
   const profileKey = getForecastProfileKey(profile);
+  const cached = await getForecast(dateStr, profileKey, FORECAST_CALC_VERSION);
 
-  if (cached && cached.profileKey === profileKey && cached.calcVersion === FORECAST_CALC_VERSION) {
+  if (cached) {
     return cached;
   }
 
