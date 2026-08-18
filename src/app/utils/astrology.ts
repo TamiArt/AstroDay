@@ -5,18 +5,15 @@
 
 import * as Astronomy from 'astronomy-engine';
 import { calculateAdditionalVargas, type AdditionalVargas } from './divisionalCharts';
+import { getLahiriAyanamsha } from './ayanamsha';
 
-// Ayanamsha Lahiri constant for sidereal zodiac (2000.0 epoch)
-const AYANAMSHA_LAHIRI_2000 = 23.85;
-const AYANAMSHA_RATE = 0.0135; // degrees per year
 const DEG_TO_RAD = Math.PI / 180;
 const FULL_CIRCLE = 360;
 
-// Calculate current ayanamsha
+// Keep the public API stable while delegating the calculation to the dedicated,
+// regression-tested Lahiri module.
 export function getAyanamsha(date: Date): number {
-  const year = date.getFullYear() + (date.getMonth() / 12);
-  const yearsSince2000 = year - 2000;
-  return AYANAMSHA_LAHIRI_2000 + (AYANAMSHA_RATE * yearsSince2000);
+  return getLahiriAyanamsha(date);
 }
 
 // Convert tropical longitude to sidereal
@@ -207,26 +204,22 @@ export function calculatePlanetPosition(
   bodyName: string,
   date: Date
 ): PlanetPosition {
-  // [ИСПРАВЛЕНО] Добавлена специальная обработка для Солнца и других тел
   try {
-    // Валидация даты
     if (!(date instanceof Date) || isNaN(date.getTime())) {
       throw new Error(`Некорректная дата: ${date}`);
     }
 
     let tropicalLon: number;
 
-    // Солнце требует специального метода (геоцентрическая позиция)
     if (bodyName === 'Sun') {
       try {
         const sunPos = Astronomy.SunPosition(date);
-        tropicalLon = sunPos.elon; // ecliptic longitude
+        tropicalLon = sunPos.elon;
       } catch (err) {
         console.error('SunPosition error:', err);
         throw new Error(`API astronomy-engine вернул ошибку для Солнца: ${err instanceof Error ? err.message : String(err)}`);
       }
     } else {
-      // Для других планет используем стандартный метод
       const body = bodyName as Astronomy.Body;
       try {
         tropicalLon = Astronomy.EclipticLongitude(body, date);
@@ -241,7 +234,6 @@ export function calculatePlanetPosition(
     }
 
     const siderealLon = tropicalToSidereal(tropicalLon, date);
-
     const sign = getSign(siderealLon);
     const degree = siderealLon % 30;
     const nakshatra = getNakshatra(siderealLon);
@@ -271,9 +263,7 @@ export function calculateAscendant(
   latitude: number,
   longitude: number
 ): PlanetPosition {
-  // [ИСПРАВЛЕНО] Добавлена обработка ошибок
   try {
-    // Валидация входных данных
     if (!(date instanceof Date) || isNaN(date.getTime())) {
       throw new Error(`Некорректная дата: ${date}`);
     }
@@ -331,101 +321,69 @@ function createCalculatedPoint(name: string, tropicalLon: number, siderealLon: n
   };
 }
 
-// House cusp interface
 export interface HouseCusp {
-  house: number; // 1-12
-  cusp: number; // Degrees (0-360)
-  sign: number; // Zodiac sign (0-11)
-  signName: string; // Name of sign
-  lord: string; // Ruling planet of the sign
+  house: number;
+  cusp: number;
+  sign: number;
+  signName: string;
+  lord: string;
 }
 
-/**
- * Get the ruling planet (lord) of a zodiac sign
- */
 function getSignLord(signIndex: number): string {
   const lords = [
-    'Mars',     // 0 - Aries
-    'Venus',    // 1 - Taurus
-    'Mercury',  // 2 - Gemini
-    'Moon',     // 3 - Cancer
-    'Sun',      // 4 - Leo
-    'Mercury',  // 5 - Virgo
-    'Venus',    // 6 - Libra
-    'Mars',     // 7 - Scorpio
-    'Jupiter',  // 8 - Sagittarius
-    'Saturn',   // 9 - Capricorn
-    'Saturn',   // 10 - Aquarius
-    'Jupiter'   // 11 - Pisces
+    'Mars', 'Venus', 'Mercury', 'Moon', 'Sun', 'Mercury',
+    'Venus', 'Mars', 'Jupiter', 'Saturn', 'Saturn', 'Jupiter'
   ];
   return lords[signIndex % 12];
 }
 
-/**
- * Calculate 12 house cusps using Whole Sign house system
- * In Vedic astrology, the entire sign of the ascendant is the 1st house
- */
 function calculateHouses(ascendantSign: number): HouseCusp[] {
   const houses: HouseCusp[] = [];
 
   for (let i = 0; i < 12; i++) {
     const signIndex = (ascendantSign + i) % 12;
-    const signName = SIGNS[signIndex];
-    const lord = getSignLord(signIndex);
-
     houses.push({
       house: i + 1,
-      cusp: signIndex * 30, // Each sign is 30 degrees
+      cusp: signIndex * 30,
       sign: signIndex,
-      signName,
-      lord
+      signName: SIGNS[signIndex],
+      lord: getSignLord(signIndex)
     });
   }
 
   return houses;
 }
 
-/**
- * Determine which house a planet is in based on natal chart houses
- */
 export function getPlanetHouse(planetSign: number, houses: HouseCusp[]): number {
-  // Find which house contains this sign
   const house = houses.find(h => h.sign === planetSign);
   return house ? house.house : 1;
 }
 
-/**
- * Get the life area associated with house numbers
- */
 export function getLifeAreaHouses(): Record<string, number[]> {
   return {
-    career: [6, 10, 11],        // Upachaya houses, career, profession
-    relationships: [5, 7, 12],   // Romance, partnership, bed pleasures
-    health: [1, 6, 8],           // Body, disease, longevity
-    finances: [2, 6, 10, 11],    // Wealth, income, gains
-    learning: [4, 5, 9],         // Education, intelligence, higher learning
-    creativity: [3, 5, 9],       // Communication, creativity, fortune
-    spirituality: [8, 9, 12],    // Transformation, dharma, moksha
-    family: [2, 4, 7]            // Family, home, spouse
+    career: [6, 10, 11],
+    relationships: [5, 7, 12],
+    health: [1, 6, 8],
+    finances: [2, 6, 10, 11],
+    learning: [4, 5, 9],
+    creativity: [3, 5, 9],
+    spirituality: [8, 9, 12],
+    family: [2, 4, 7]
   };
 }
 
-/**
- * Vimshottari Dasha periods (in years)
- */
 const DASHA_PERIODS: Record<string, number> = {
-  'Ketu': 7,
-  'Venus': 20,
-  'Sun': 6,
-  'Moon': 10,
-  'Mars': 7,
-  'Rahu': 18,
-  'Jupiter': 16,
-  'Saturn': 19,
-  'Mercury': 17
+  Ketu: 7,
+  Venus: 20,
+  Sun: 6,
+  Moon: 10,
+  Mars: 7,
+  Rahu: 18,
+  Jupiter: 16,
+  Saturn: 19,
+  Mercury: 17
 };
 
-// Dasha sequence order
 const DASHA_ORDER = ['Ketu', 'Venus', 'Sun', 'Moon', 'Mars', 'Rahu', 'Jupiter', 'Saturn', 'Mercury'];
 const DAYS_IN_TROPICAL_YEAR = 365.2425;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -445,16 +403,12 @@ export interface DashaPeriod {
   antardasha?: AntardashaPeriod[];
 }
 
-/**
- * Calculate Vimshottari Dasha periods based on Moon nakshatra at birth
- */
 export function calculateDasha(
   birthDate: Date,
   moonNakshatra: number,
   currentDate: Date = new Date(),
   moonSiderealLon?: number
 ): DashaPeriod {
-  // Determine starting Dasha lord based on Moon nakshatra
   const dashaLordIndex = moonNakshatra % 9;
   const startingLord = DASHA_ORDER[dashaLordIndex];
   const startingBalanceRatio = getDashaBalanceRatio(moonSiderealLon);
@@ -463,23 +417,20 @@ export function calculateDasha(
   let dashaStartDate = new Date(birthDate);
   let isStartingDasha = true;
 
-  // Iterate through Dashas to find the current one
   while (dashaStartDate <= currentDate) {
     const planet = DASHA_ORDER[currentPlanetIndex];
     const periodYears = DASHA_PERIODS[planet] * (isStartingDasha ? startingBalanceRatio : 1);
     const dashaEndDate = addFractionalYears(dashaStartDate, periodYears);
 
     if (currentDate >= dashaStartDate && currentDate < dashaEndDate) {
-      // Found the current Mahadasha
-      // Calculate Antardasha (sub-periods)
       const antardashas: DashaPeriod['antardasha'] = [];
       let antardashaStart = new Date(dashaStartDate);
-      const totalDashaDays = (dashaEndDate.getTime() - dashaStartDate.getTime()) / (1000 * 60 * 60 * 24);
+      const totalDashaDays = (dashaEndDate.getTime() - dashaStartDate.getTime()) / DAY_MS;
 
       for (let i = 0; i < 9; i++) {
         const antarPlanetIndex = (currentPlanetIndex + i) % 9;
         const antarPlanet = DASHA_ORDER[antarPlanetIndex];
-        const antarPeriodRatio = DASHA_PERIODS[antarPlanet] / 120; // Total Dasha cycle is 120 years
+        const antarPeriodRatio = DASHA_PERIODS[antarPlanet] / 120;
         const antarDays = totalDashaDays * antarPeriodRatio;
         const antarEnd = addFractionalDays(antardashaStart, antarDays);
 
@@ -501,13 +452,11 @@ export function calculateDasha(
       };
     }
 
-    // Move to next Dasha
     dashaStartDate = new Date(dashaEndDate);
     currentPlanetIndex = (currentPlanetIndex + 1) % 9;
     isStartingDasha = false;
   }
 
-  // Fallback (should not reach here if logic is correct)
   return {
     planet: startingLord,
     startDate: birthDate,
@@ -534,9 +483,6 @@ function addFractionalDays(date: Date, days: number): Date {
   return new Date(date.getTime() + days * DAY_MS);
 }
 
-/**
- * Get current active Antardasha from a Dasha period
- */
 export function getCurrentAntardasha(dasha: DashaPeriod, currentDate: Date = new Date()): AntardashaPeriod | null {
   if (!dasha.antardasha) return null;
 
@@ -549,13 +495,12 @@ export function getCurrentAntardasha(dasha: DashaPeriod, currentDate: Date = new
   return null;
 }
 
-// Calculate natal chart
 export interface NatalChart {
   date: Date;
   latitude: number;
   longitude: number;
   ascendant: PlanetPosition;
-  houses?: HouseCusp[]; // 12 houses (only if birth time available)
+  houses?: HouseCusp[];
   planets: {
     Sun: PlanetPosition;
     Moon: PlanetPosition;
@@ -564,8 +509,8 @@ export interface NatalChart {
     Jupiter: PlanetPosition;
     Venus: PlanetPosition;
     Saturn: PlanetPosition;
-    Rahu: PlanetPosition; // North Node (Mean)
-    Ketu: PlanetPosition; // South Node (always 180° from Rahu)
+    Rahu: PlanetPosition;
+    Ketu: PlanetPosition;
   };
 }
 
@@ -574,9 +519,7 @@ export function calculateNatalChart(
   latitude: number,
   longitude: number
 ): NatalChart {
-  // [ИСПРАВЛЕНО] Добавлена обработка ошибок и детальная диагностика
   try {
-    // Валидация входных данных
     if (!(birthDate instanceof Date) || isNaN(birthDate.getTime())) {
       throw new Error('Некорректная дата рождения');
     }
@@ -589,7 +532,6 @@ export function calculateNatalChart(
       throw new Error('Некорректная долгота');
     }
 
-    // Расчёт асцендента
     let ascendant;
     try {
       ascendant = calculateAscendant(birthDate, latitude, longitude);
@@ -597,7 +539,6 @@ export function calculateNatalChart(
       throw new Error(`Не удалось рассчитать асцендент: ${error instanceof Error ? error.message : 'неизвестная ошибка'}`);
     }
 
-    // Расчёт позиций планет
     const planets: Partial<NatalChart['planets']> = {};
     const planetNames: Array<Exclude<PlanetName, 'Rahu' | 'Ketu'>> = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
 
@@ -609,29 +550,19 @@ export function calculateNatalChart(
       }
     }
 
-    // Расчёт Раху и Кету (лунные узлы)
     try {
-      // Вычисляем Mean Longitude of Ascending Node (Ω) вручную
-      // Формула: Ω = 125.0445479 - 1934.1362891 * T + 0.0020754 * T^2 + T^3 / 467441 - T^4 / 60616000
-      // где T - время в юлианских столетиях от J2000.0
-
       const astroTime = Astronomy.MakeTime(birthDate);
-      const jd = astroTime.ut; // Julian Day
-      const T = (jd - 2451545.0) / 36525.0; // Julian centuries from J2000.0
-
-      // Mean Longitude of Ascending Node в градусах (тропическая)
+      const jd = astroTime.ut;
+      const T = (jd - 2451545.0) / 36525.0;
       let meanNodeLon = 125.0445479 - 1934.1362891 * T + 0.0020754 * T * T + (T * T * T) / 467441.0 - (T * T * T * T) / 60616000.0;
 
-      // Нормализуем к диапазону 0-360
       meanNodeLon = meanNodeLon % 360;
       if (meanNodeLon < 0) meanNodeLon += 360;
 
-      // Раху (North Node) - используем Mean Node
       const rahuTropicalLon = meanNodeLon;
       const rahuSiderealLon = tropicalToSidereal(rahuTropicalLon, birthDate);
       planets.Rahu = createCalculatedPoint('Rahu', rahuTropicalLon, rahuSiderealLon);
 
-      // Кету (South Node) - всегда в оппозиции к Раху (180°)
       const ketuTropicalLon = (rahuTropicalLon + 180) % 360;
       const ketuSiderealLon = (rahuSiderealLon + 180) % 360;
       planets.Ketu = createCalculatedPoint('Ketu', ketuTropicalLon, ketuSiderealLon);
@@ -639,7 +570,6 @@ export function calculateNatalChart(
       throw new Error(`Не удалось рассчитать Раху/Кету: ${error instanceof Error ? error.message : 'неизвестная ошибка'}`);
     }
 
-    // Расчёт домов (если есть асцендент)
     const houses = calculateHouses(ascendant.sign);
 
     return {
@@ -661,13 +591,11 @@ export function calculateNatalChart(
       }
     };
   } catch (error) {
-    // Добавляем контекст к ошибке
     const message = error instanceof Error ? error.message : 'неизвестная ошибка';
     throw new Error(`Ошибка расчёта натальной карты: ${message}`);
   }
 }
 
-// Calculate aspects (Drishti)
 export interface Aspect {
   planet1: string;
   planet2: string;

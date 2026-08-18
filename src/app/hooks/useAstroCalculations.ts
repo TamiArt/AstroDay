@@ -1,5 +1,5 @@
 // [ХУК] Централизованные астрологические расчёты с обработкой ошибок
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   calculateNatalChart,
   NatalChart,
@@ -24,6 +24,21 @@ interface UseAstroCalculationsResult {
   retry: () => void;
 }
 
+interface NatalCache {
+  key: string;
+  chart: NatalChart;
+}
+
+function getNatalCacheKey(profile: UserProfile): string {
+  return [
+    profile.birthDate,
+    profile.birthTime,
+    profile.latitude,
+    profile.longitude,
+    profile.timezone,
+  ].join('|');
+}
+
 export function useAstroCalculations(profile: UserProfile): UseAstroCalculationsResult {
   const [natalChart, setNatalChart] = useState<NatalChart | null>(null);
   const [currentChart, setCurrentChart] = useState<NatalChart | null>(null);
@@ -34,6 +49,7 @@ export function useAstroCalculations(profile: UserProfile): UseAstroCalculations
   const [favorableWindows, setFavorableWindows] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const natalCacheRef = useRef<NatalCache | null>(null);
 
   const calculate = (showLoading = false) => {
     if (showLoading) {
@@ -42,7 +58,6 @@ export function useAstroCalculations(profile: UserProfile): UseAstroCalculations
     setError(null);
 
     try {
-      // Валидация профиля
       if (!profile.birthDate || !profile.birthTime) {
         throw new Error('Не указаны дата или время рождения');
       }
@@ -54,12 +69,10 @@ export function useAstroCalculations(profile: UserProfile): UseAstroCalculations
       const currentDate = new Date();
       const birthDate = createDateInTimezone(profile.birthDate, profile.birthTime, profile.timezone);
 
-      // Проверка валидности даты
       if (isNaN(birthDate.getTime())) {
         throw new Error('Неверный формат даты или времени рождения');
       }
 
-      // Проверка валидности координат
       if (
         profile.latitude < -90 ||
         profile.latitude > 90 ||
@@ -69,13 +82,10 @@ export function useAstroCalculations(profile: UserProfile): UseAstroCalculations
         throw new Error('Неверные координаты (широта: -90..90, долгота: -180..180)');
       }
 
-      // [ВАЖНО] Используем текущее местоположение для дневных расчётов
-      // Если не установлено - фолбэк на место рождения
       const currentLat = profile.currentLocation?.latitude ?? profile.latitude;
       const currentLon = profile.currentLocation?.longitude ?? profile.longitude;
       const currentTimezone = profile.currentLocation?.timezone ?? profile.timezone;
 
-      // Проверка валидности координат текущего местоположения
       if (
         currentLat < -90 ||
         currentLat > 90 ||
@@ -85,15 +95,21 @@ export function useAstroCalculations(profile: UserProfile): UseAstroCalculations
         throw new Error('Неверные координаты текущего местоположения');
       }
 
-      // [ВАЖНО] Натальная карта ВСЕГДА рассчитывается по месту рождения (не меняется при смене города)
+      // Натальная карта неизменна, пока не меняются данные рождения.
+      // Не пересчитываем её при минутном обновлении транзитов и при смене текущего города.
+      const natalCacheKey = getNatalCacheKey(profile);
       let natal: NatalChart;
-      try {
-        natal = calculateNatalChart(birthDate, profile.latitude, profile.longitude);
-      } catch (err) {
-        throw new Error(`Ошибка расчёта натальной карты: ${err instanceof Error ? err.message : 'неизвестная ошибка'}`);
+      if (natalCacheRef.current?.key === natalCacheKey) {
+        natal = natalCacheRef.current.chart;
+      } else {
+        try {
+          natal = calculateNatalChart(birthDate, profile.latitude, profile.longitude);
+          natalCacheRef.current = { key: natalCacheKey, chart: natal };
+        } catch (err) {
+          throw new Error(`Ошибка расчёта натальной карты: ${err instanceof Error ? err.message : 'неизвестная ошибка'}`);
+        }
       }
 
-      // [ВАЖНО] Транзиты рассчитываются для ТЕКУЩЕГО местоположения (меняются при смене города)
       let current: NatalChart;
       try {
         current = calculateNatalChart(currentDate, currentLat, currentLon);
@@ -106,7 +122,7 @@ export function useAstroCalculations(profile: UserProfile): UseAstroCalculations
         asp = calculateTransitAspects(natal, current);
       } catch (err) {
         console.warn('Ошибка расчёта аспектов:', err);
-        asp = []; // Аспекты опциональны, продолжаем без них
+        asp = [];
       }
 
       let panch: PanchangData;
@@ -123,7 +139,7 @@ export function useAstroCalculations(profile: UserProfile): UseAstroCalculations
         hour = hourInfo.planet;
       } catch (err) {
         console.warn('Ошибка определения планетарного часа:', err);
-        hour = 'Sun'; // Дефолтное значение
+        hour = 'Sun';
       }
 
       let windows: string[] = [];

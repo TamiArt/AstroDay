@@ -16,7 +16,6 @@ export default function App() {
       setProfile(saved);
     } catch (error) {
       console.error('Ошибка загрузки профиля:', error);
-      // В случае ошибки просто начнём с онбординга
       setProfile(null);
     } finally {
       setLoading(false);
@@ -41,8 +40,8 @@ export default function App() {
     setProfile(newProfile);
   };
 
-  const handleReset = () => {
-    deleteAllData();
+  const handleReset = async () => {
+    await deleteAllData();
     setProfile(null);
   };
 

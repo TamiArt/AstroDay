@@ -7,8 +7,8 @@
     "build": "vite build",
     "dev": "vite",
     "typecheck": "tsc --noEmit",
-    "test:unit": "npx tsx src/app/utils/homeUtils.test.ts",
-    "verify": "vite build && tsc --noEmit"
+    "test:unit": "tsx src/app/utils/ayanamsha.test.ts && tsx src/app/utils/timezones.test.ts",
+    "verify": "npm run test:unit && vite build && tsc --noEmit"
   },
   "dependencies": {
     "astronomy-engine": "^2.1.19",
