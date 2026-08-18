@@ -22,11 +22,11 @@ interface NominatimSearchItem {
 }
 
 /**
- * Search for a place and get its coordinates
- * Uses Nominatim API (free, no API key required)
- * Returns coordinates in WGS84 datum (standard GPS)
+ * Search for a place and get its coordinates.
+ * Uses Nominatim API (free, no API key required).
+ * AbortSignal lets the UI cancel stale requests when the query changes.
  */
-export async function geocodePlace(query: string): Promise<GeocodingResult[]> {
+export async function geocodePlace(query: string, signal?: AbortSignal): Promise<GeocodingResult[]> {
   if (!query.trim()) {
     throw new Error('Введите название места');
   }
@@ -39,8 +39,9 @@ export async function geocodePlace(query: string): Promise<GeocodingResult[]> {
       `&limit=5` +
       `&addressdetails=1`,
       {
+        signal,
         headers: {
-          'User-Agent': 'VedicAstrologyApp/1.0'
+          'Accept-Language': 'ru,en;q=0.8'
         }
       }
     );
@@ -59,6 +60,10 @@ export async function geocodePlace(query: string): Promise<GeocodingResult[]> {
       const latitude = parseFloat(item.lat);
       const longitude = parseFloat(item.lon);
 
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        throw new Error('Сервис геокодирования вернул некорректные координаты');
+      }
+
       const timezoneInfo = findTimezoneInfoByCoordinates(latitude, longitude);
 
       return {
@@ -70,6 +75,9 @@ export async function geocodePlace(query: string): Promise<GeocodingResult[]> {
       };
     });
   } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw error;
+    }
     console.error('Geocoding error:', error);
     throw error;
   }
@@ -119,7 +127,7 @@ export async function reverseGeocode(latitude: number, longitude: number): Promi
       `&format=json`,
       {
         headers: {
-          'User-Agent': 'VedicAstrologyApp/1.0'
+          'Accept-Language': 'ru,en;q=0.8'
         }
       }
     );
