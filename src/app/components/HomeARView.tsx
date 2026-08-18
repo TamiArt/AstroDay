@@ -11,13 +11,20 @@ interface HomeARViewProps {
 export function HomeARView({ northOffset, canvasWidth = 800, canvasHeight = 600 }: HomeARViewProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
   const animationRef = useRef<number | null>(null);
 
   const [cameraActive, setCameraActive] = useState(false);
   const [permissionError, setPermissionError] = useState<string | null>(null);
   const [showGrid, setShowGrid] = useState(true);
   const [opacity, setOpacity] = useState(0.3);
+
+  const stopCameraStream = () => {
+    if (videoRef.current?.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach((track) => track.stop());
+      videoRef.current.srcObject = null;
+    }
+  };
 
   const startCamera = async () => {
     try {
@@ -30,12 +37,16 @@ export function HomeARView({ northOffset, canvasWidth = 800, canvasHeight = 600 
         },
       });
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setCameraActive(true);
-        startARRender();
+      if (!videoRef.current) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
       }
+
+      videoRef.current.srcObject = stream;
+      await videoRef.current.play();
+      setCameraActive(true);
     } catch (error) {
+      stopCameraStream();
       if (error instanceof DOMException) {
         setPermissionError(`Ошибка доступа к камере: ${error.message}`);
       } else {
@@ -46,39 +57,13 @@ export function HomeARView({ northOffset, canvasWidth = 800, canvasHeight = 600 
   };
 
   const stopCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach((track) => track.stop());
-      setCameraActive(false);
-    }
+    setCameraActive(false);
+    stopCameraStream();
 
-    if (animationRef.current) {
+    if (animationRef.current !== null) {
       cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
     }
-  };
-
-  const startARRender = () => {
-    const render = () => {
-      const canvas = canvasRef.current;
-      const video = videoRef.current;
-
-      if (!canvas || !video || !cameraActive) return;
-
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      // Рисуем видео
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      // Рисуем сетку Багуа поверх видео
-      if (showGrid) {
-        drawBaguaOverlay(ctx, canvas.width, canvas.height);
-      }
-
-      animationRef.current = requestAnimationFrame(render);
-    };
-
-    animationRef.current = requestAnimationFrame(render);
   };
 
   const drawBaguaOverlay = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
@@ -90,7 +75,6 @@ export function HomeARView({ northOffset, canvasWidth = 800, canvasHeight = 600 
     const cellWidth = width / 3;
     const cellHeight = height / 3;
 
-    // Рисуем линии сетки
     ctx.strokeStyle = 'rgba(100, 200, 255, 0.8)';
     ctx.lineWidth = 3;
 
@@ -106,26 +90,21 @@ export function HomeARView({ northOffset, canvasWidth = 800, canvasHeight = 600 
       ctx.stroke();
     }
 
-    // Рисуем названия зон с фоном
     ctx.font = 'bold 16px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
 
     grid.forEach((cell) => {
       const x = cell.x + cell.width / 2;
       const y = cell.y + cell.height / 2;
-
-      // Рисуем полубрачный фон для текста
       const textWidth = ctx.measureText(cell.label).width;
-      ctx.fillRect(x - textWidth / 2 - 8, y - 12, textWidth + 16, 24);
 
-      // Рисуем текст
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      ctx.fillRect(x - textWidth / 2 - 8, y - 12, textWidth + 16, 24);
       ctx.fillStyle = 'rgba(100, 200, 255, 1)';
       ctx.fillText(cell.label, x, y);
     });
 
-    // Рисуем указатель севера (стрелка в центре сверху)
     const centerX = width / 2;
     const topY = 40;
 
@@ -133,7 +112,6 @@ export function HomeARView({ northOffset, canvasWidth = 800, canvasHeight = 600 
     ctx.lineWidth = 4;
     ctx.fillStyle = 'rgba(255, 100, 100, 0.7)';
 
-    // Стрелка
     ctx.beginPath();
     ctx.moveTo(centerX, topY - 30);
     ctx.lineTo(centerX - 10, topY);
@@ -143,7 +121,6 @@ export function HomeARView({ northOffset, canvasWidth = 800, canvasHeight = 600 
     ctx.fill();
     ctx.stroke();
 
-    // Текст "Север"
     ctx.font = 'bold 14px sans-serif';
     ctx.fillStyle = 'rgba(255, 100, 100, 1)';
     ctx.fillText('Север', centerX, topY + 25);
@@ -152,8 +129,40 @@ export function HomeARView({ northOffset, canvasWidth = 800, canvasHeight = 600 
   };
 
   useEffect(() => {
+    if (!cameraActive) return;
+
+    const render = () => {
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      if (!canvas || !video) return;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      if (showGrid) {
+        drawBaguaOverlay(ctx, canvas.width, canvas.height);
+      }
+
+      animationRef.current = requestAnimationFrame(render);
+    };
+
+    animationRef.current = requestAnimationFrame(render);
+
     return () => {
-      stopCamera();
+      if (animationRef.current !== null) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
+    };
+  }, [cameraActive, northOffset, opacity, showGrid]);
+
+  useEffect(() => {
+    return () => {
+      stopCameraStream();
+      if (animationRef.current !== null) {
+        cancelAnimationFrame(animationRef.current);
+      }
     };
   }, []);
 
@@ -188,12 +197,13 @@ export function HomeARView({ northOffset, canvasWidth = 800, canvasHeight = 600 
             </button>
 
             <div className="rounded-2xl overflow-hidden border border-border bg-background">
-              <div ref={containerRef} className="relative w-full aspect-video bg-black">
+              <div className="relative w-full aspect-video bg-black">
                 <video
                   ref={videoRef}
                   autoPlay
                   playsInline
-                  className="absolute inset-0 w-full h-full object-cover hidden"
+                  muted
+                  className="absolute inset-0 w-full h-full object-cover opacity-0 pointer-events-none"
                 />
                 <canvas
                   ref={canvasRef}
@@ -214,13 +224,13 @@ export function HomeARView({ northOffset, canvasWidth = 800, canvasHeight = 600 
                 max="1"
                 step="0.1"
                 value={opacity}
-                onChange={(e) => setOpacity(parseFloat(e.target.value))}
+                onChange={(event) => setOpacity(parseFloat(event.target.value))}
                 className="w-full"
               />
             </div>
 
             <button
-              onClick={() => setShowGrid(!showGrid)}
+              onClick={() => setShowGrid((visible) => !visible)}
               className={`w-full rounded-2xl px-4 py-3 transition-colors ${
                 showGrid ? 'bg-primary/20 text-primary' : 'bg-secondary text-white'
               }`}
