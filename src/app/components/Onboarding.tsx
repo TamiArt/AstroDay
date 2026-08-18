@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { Sparkles, MapPin, Calendar, Clock, Info, Search, Loader2 } from 'lucide-react';
 import { getHistoricalTimezone, getTimezoneInfo } from '../utils/geocoding';
 import { useGeocoding } from '../hooks/useGeocoding';
@@ -23,18 +23,18 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   const [birthDate, setBirthDate] = useState('');
   const [birthTime, setBirthTime] = useState('');
   const [birthPlace, setBirthPlace] = useState('');
-  const [latitude, setLatitude] = useState(55.7558); // Moscow default
+  const [latitude, setLatitude] = useState(55.7558);
   const [longitude, setLongitude] = useState(37.6173);
-  const [timezone, setTimezone] = useState('Europe/Moscow'); // Default
+  const [timezone, setTimezone] = useState('Europe/Moscow');
   const [timezoneAccuracy, setTimezoneAccuracy] = useState<'matched-region' | 'estimated-longitude' | 'manual'>('manual');
   const [timeUncertainty, setTimeUncertainty] = useState(0);
   const [locationConfirmed, setLocationConfirmed] = useState(false);
 
-  // [РЕФАКТОРИНГ] Используем хук useGeocoding вместо дублирования логики
   const birthDateTime = useMemo(
-    () => (birthDate ? new Date(birthDate) : undefined),
+    () => (birthDate ? new Date(`${birthDate}T12:00:00`) : undefined),
     [birthDate]
   );
+
   const {
     search,
     selectResult,
@@ -44,18 +44,14 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     setError: setSearchError
   } = useGeocoding(birthDateTime);
 
-  // Auto-select first result when search completes
-  useEffect(() => {
-    if (searchResults.length > 0) {
-      const result = searchResults[0];
-      setLatitude(result.latitude);
-      setLongitude(result.longitude);
-      setBirthPlace(result.displayName);
-      setTimezone(result.timezone);
-      setTimezoneAccuracy(result.timezoneAccuracy);
-      setLocationConfirmed(true);
+  const isValidTimezone = (value: string) => {
+    try {
+      new Intl.DateTimeFormat('en-US', { timeZone: value }).format(new Date());
+      return true;
+    } catch {
+      return false;
     }
-  }, [searchResults]);
+  };
 
   const handleSearch = async () => {
     if (!birthPlace.trim()) {
@@ -68,6 +64,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       return;
     }
 
+    setLocationConfirmed(false);
     await search(birthPlace);
   };
 
@@ -88,8 +85,11 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   };
 
   const handleSubmit = () => {
-    // Ensure we have timezone determined
-    const finalTimezone = timezone || getHistoricalTimezone(latitude, longitude, new Date(birthDate));
+    const finalTimezone = timezone.trim() || getHistoricalTimezone(latitude, longitude, new Date(birthDate));
+    if (!isValidTimezone(finalTimezone)) {
+      setSearchError('Укажите корректный IANA timezone, например Europe/Moscow или Asia/Kolkata');
+      return;
+    }
 
     onComplete({
       name,
@@ -117,7 +117,6 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           boxShadow: '0 8px 32px rgba(107, 76, 230, 0.15)'
         }}
       >
-        {/* Progress */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-2">
             <span className="opacity-70">Шаг {step} из {totalSteps}</span>
@@ -134,7 +133,6 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           </div>
         </div>
 
-        {/* Step 1: Welcome */}
         {step === 1 && (
           <div className="space-y-6 animate-in fade-in duration-500">
             <div>
@@ -149,12 +147,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               <div className="flex gap-3">
                 <Info className="w-5 h-5 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="mb-2">
-                    Все ваши данные хранятся только в этом браузере и никогда не отправляются на сервер.
-                  </p>
-                  <p className="opacity-70">
-                    Для точных расчётов понадобятся дата, время и место рождения.
-                  </p>
+                  <p className="mb-2">Все ваши данные хранятся только в этом браузере и никогда не отправляются на сервер.</p>
+                  <p className="opacity-70">Для точных расчётов понадобятся дата, время и место рождения.</p>
                 </div>
               </div>
             </div>
@@ -181,14 +175,11 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           </div>
         )}
 
-        {/* Step 2: Birth Date */}
         {step === 2 && (
           <div className="space-y-6 animate-in fade-in duration-500">
             <div>
               <h2 className="mb-3">Дата рождения</h2>
-              <p className="opacity-80">
-                Она определяет положение планет в момент вашего рождения.
-              </p>
+              <p className="opacity-80">Она определяет положение планет в момент вашего рождения.</p>
             </div>
 
             <div>
@@ -205,10 +196,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             </div>
 
             <div className="flex gap-3">
-              <button
-                onClick={() => setStep(1)}
-                className="px-6 py-4 rounded-xl border border-border hover:bg-secondary transition-colors"
-              >
+              <button onClick={() => setStep(1)} className="px-6 py-4 rounded-xl border border-border hover:bg-secondary transition-colors">
                 Назад
               </button>
               <button
@@ -223,14 +211,11 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           </div>
         )}
 
-        {/* Step 3: Birth Time */}
         {step === 3 && (
           <div className="space-y-6 animate-in fade-in duration-500">
             <div>
               <h2 className="mb-3">Время рождения</h2>
-              <p className="opacity-80 mb-4">
-                Точное время важно для расчёта асцендента (восходящего знака).
-              </p>
+              <p className="opacity-80 mb-4">Точное время важно для расчёта асцендента (восходящего знака).</p>
             </div>
 
             <div>
@@ -247,9 +232,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             </div>
 
             <div>
-              <label className="block mb-2">
-                Погрешность времени: ±{timeUncertainty} мин
-              </label>
+              <label className="block mb-2">Погрешность времени: ±{timeUncertainty} мин</label>
               <input
                 type="range"
                 min="0"
@@ -258,16 +241,11 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 onChange={(e) => setTimeUncertainty(Number(e.target.value))}
                 className="w-full"
               />
-              <p className="mt-2 opacity-60">
-                Если точное время неизвестно, укажите примерную погрешность
-              </p>
+              <p className="mt-2 opacity-60">Если точное время неизвестно, укажите примерную погрешность</p>
             </div>
 
             <div className="flex gap-3">
-              <button
-                onClick={() => setStep(2)}
-                className="px-6 py-4 rounded-xl border border-border hover:bg-secondary transition-colors"
-              >
+              <button onClick={() => setStep(2)} className="px-6 py-4 rounded-xl border border-border hover:bg-secondary transition-colors">
                 Назад
               </button>
               <button
@@ -282,14 +260,11 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           </div>
         )}
 
-        {/* Step 4: Birth Place */}
         {step === 4 && (
           <div className="space-y-6 animate-in fade-in duration-500">
             <div>
               <h2 className="mb-3">Место рождения</h2>
-              <p className="opacity-80">
-                Введите город или место рождения. Координаты определятся автоматически.
-              </p>
+              <p className="opacity-80">Найдите место и явно выберите правильный результат. После выбора проверьте часовой пояс.</p>
             </div>
 
             <div>
@@ -306,25 +281,22 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     setLocationConfirmed(false);
                     setSearchError('');
                   }}
-                  onKeyPress={(e) => {
+                  onKeyDown={(e) => {
                     if (e.key === 'Enter') {
-                      handleSearch();
+                      e.preventDefault();
+                      void handleSearch();
                     }
                   }}
                   placeholder="Москва, Россия"
                   className="flex-1 px-4 py-3 rounded-xl bg-input-background border border-input focus:outline-none focus:ring-2 focus:ring-primary"
                 />
                 <button
-                  onClick={handleSearch}
+                  onClick={() => void handleSearch()}
                   disabled={isSearching || !birthPlace.trim()}
                   className="px-6 py-3 rounded-xl bg-primary text-primary-foreground disabled:opacity-50 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2"
                   style={{ boxShadow: '0 4px 16px rgba(107, 76, 230, 0.3)' }}
                 >
-                  {isSearching ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Search className="w-5 h-5" />
-                  )}
+                  {isSearching ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
                 </button>
               </div>
             </div>
@@ -335,56 +307,73 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               </div>
             )}
 
-            {searchResults.length > 1 && (
+            {searchResults.length > 0 && (
               <div className="space-y-2">
-                <p className="opacity-70">Найдено несколько мест. Выберите нужное:</p>
+                <p className="opacity-70">Выберите точное место рождения:</p>
                 {searchResults.map((result, index) => (
                   <button
-                    key={index}
+                    key={`${result.displayName}-${index}`}
                     onClick={() => handleSelectResult(result)}
                     className="w-full p-4 rounded-xl border border-border hover:border-primary hover:bg-secondary transition-all text-left"
                   >
                     <p className="mb-1">{result.displayName}</p>
-                    <p className="opacity-60">
-                      {result.latitude.toFixed(4)}, {result.longitude.toFixed(4)}
-                    </p>
+                    <p className="opacity-60">{result.latitude.toFixed(4)}, {result.longitude.toFixed(4)}</p>
                   </button>
                 ))}
               </div>
             )}
 
             {locationConfirmed && (
-              <div className="p-4 rounded-xl bg-accent/10 border border-accent/30">
+              <div className="p-4 rounded-xl bg-accent/10 border border-accent/30 space-y-4">
                 <div className="flex items-start gap-3">
                   <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="mb-2">✅ Координаты и часовой пояс определены:</p>
-                    <p className="opacity-70 mb-1">
-                      📍 Координаты (WGS84): {latitude.toFixed(4)}, {longitude.toFixed(4)}
-                    </p>
+                  <div className="flex-1">
+                    <p className="mb-2">✅ Место рождения выбрано:</p>
+                    <p className="opacity-70 mb-1">📍 {latitude.toFixed(4)}, {longitude.toFixed(4)}</p>
                     <p className="opacity-70">
-                      🕐 Часовой пояс: {timezone ? getTimezoneInfo(timezone, new Date(birthDate)) : 'определяется...'}
-                    </p>
-                    <p className="opacity-60 mt-2">
-                      {timezoneAccuracy === 'estimated-longitude'
-                        ? 'Часовой пояс определён приблизительно по долготе. Проверьте его, если город находится рядом с границей зоны.'
-                        : 'Часовой пояс учитывает исторические изменения для даты вашего рождения'}
+                      🕐 {timezone ? getTimezoneInfo(timezone, new Date(`${birthDate}T12:00:00`)) : 'часовой пояс не указан'}
                     </p>
                   </div>
+                </div>
+
+                <div>
+                  <label className="block mb-2">Timezone (IANA)</label>
+                  <input
+                    type="text"
+                    value={timezone}
+                    onChange={(e) => {
+                      setTimezone(e.target.value);
+                      setTimezoneAccuracy('manual');
+                      setSearchError('');
+                    }}
+                    placeholder="Europe/Moscow"
+                    className="w-full px-4 py-3 rounded-xl bg-input-background border border-input focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <p className="opacity-60 mt-2 text-sm">
+                    {timezoneAccuracy === 'estimated-longitude'
+                      ? 'Автоопределение приблизительное. Особенно важно проверить timezone для места у границы часовых зон.'
+                      : timezoneAccuracy === 'manual'
+                        ? 'Часовой пояс подтверждается вручную.'
+                        : 'Часовой пояс предложен по региону. Проверьте его перед созданием карты.'}
+                  </p>
                 </div>
               </div>
             )}
 
             <div className="flex gap-3">
-              <button
-                onClick={() => setStep(3)}
-                className="px-6 py-4 rounded-xl border border-border hover:bg-secondary transition-colors"
-              >
+              <button onClick={() => setStep(3)} className="px-6 py-4 rounded-xl border border-border hover:bg-secondary transition-colors">
                 Назад
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={!birthPlace.trim() || !locationConfirmed || !Number.isFinite(latitude) || !Number.isFinite(longitude)}
+                disabled={
+                  !birthPlace.trim() ||
+                  !locationConfirmed ||
+                  !Number.isFinite(latitude) ||
+                  !Number.isFinite(longitude) ||
+                  !timezone.trim() ||
+                  !isValidTimezone(timezone.trim())
+                }
                 className="flex-1 py-4 rounded-xl bg-primary text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.02] active:scale-[0.98]"
                 style={{ boxShadow: '0 4px 16px rgba(107, 76, 230, 0.3)' }}
               >
