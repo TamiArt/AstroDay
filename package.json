@@ -7,7 +7,7 @@
     "build": "vite build",
     "dev": "vite",
     "typecheck": "tsc --noEmit",
-    "test:unit": "tsx src/app/utils/ayanamsha.test.ts && tsx src/app/utils/timezones.test.ts && tsx src/app/utils/locationValidation.test.ts && tsx src/app/utils/astrology.test.ts && tsx src/app/utils/panchang.test.ts && tsx src/app/utils/planetaryHours.test.ts && tsx src/app/utils/astroInfluenceEngine.test.ts && tsx src/app/utils/personalRecommendations.test.ts && tsx src/app/utils/personalRecommendations.integration.test.ts && tsx src/app/utils/dailyAreaScoring.test.ts && tsx src/app/utils/dailyAreasAnalysis.test.ts",
+    "test:unit": "tsx src/app/utils/ayanamsha.test.ts && tsx src/app/utils/timezones.test.ts && tsx src/app/utils/locationValidation.test.ts && tsx src/app/utils/astrology.test.ts && tsx src/app/utils/panchang.test.ts && tsx src/app/utils/planetaryHours.test.ts && tsx src/app/utils/astroInfluenceEngine.test.ts && tsx src/app/utils/personalRecommendations.test.ts && tsx src/app/utils/personalRecommendations.integration.test.ts && tsx src/app/utils/dailyAreaScoring.test.ts && tsx src/app/utils/dailyAreasAnalysis.test.ts && tsx src/app/utils/storage.test.ts",
     "verify": "npm run test:unit && tsc --noEmit --noUnusedLocals --noUnusedParameters && vite build"
   },
   "dependencies": {

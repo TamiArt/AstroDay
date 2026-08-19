@@ -1,38 +1,29 @@
-/**
- * Local Storage Management with Encryption
- * All data is stored locally in browser, never sent to server
- */
-
 import { clearForecastCache } from './indexedDB';
+import { isValidCoordinates, isValidIanaTimezone } from './locationValidation';
+import { unwrapProfilePayload, wrapProfilePayload } from './profileMigrations';
 
-// Simple XOR encryption for sensitive data (UTF-8 compatible)
-function simpleEncrypt(text: string, key: string): string {
+function legacyObfuscate(text: string, key: string): string {
   const utf8Bytes = new TextEncoder().encode(text);
   const keyBytes = new TextEncoder().encode(key);
-
   const encrypted = new Uint8Array(utf8Bytes.length);
-  for (let i = 0; i < utf8Bytes.length; i++) {
-    encrypted[i] = utf8Bytes[i] ^ keyBytes[i % keyBytes.length];
+
+  for (let index = 0; index < utf8Bytes.length; index++) {
+    encrypted[index] = utf8Bytes[index] ^ keyBytes[index % keyBytes.length];
   }
 
   let binary = '';
-  for (let i = 0; i < encrypted.length; i++) {
-    binary += String.fromCharCode(encrypted[i]);
-  }
+  for (const byte of encrypted) binary += String.fromCharCode(byte);
   return btoa(binary);
 }
 
-function simpleDecrypt(encrypted: string, key: string): string {
-  const binary = atob(encrypted);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-
+function legacyDeobfuscate(value: string, key: string): string {
+  const binary = atob(value);
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
   const keyBytes = new TextEncoder().encode(key);
   const decrypted = new Uint8Array(bytes.length);
-  for (let i = 0; i < bytes.length; i++) {
-    decrypted[i] = bytes[i] ^ keyBytes[i % keyBytes.length];
+
+  for (let index = 0; index < bytes.length; index++) {
+    decrypted[index] = bytes[index] ^ keyBytes[index % keyBytes.length];
   }
 
   return new TextDecoder().decode(decrypted);
@@ -78,53 +69,6 @@ export interface DailyFeedback {
   notes?: string;
 }
 
-const STORAGE_KEY = 'vedic_astro_profile';
-const FEEDBACK_KEY = 'vedic_astro_feedback';
-const ENCRYPTION_KEY = 'jyotish-2026';
-
-export function saveUserProfile(profile: UserProfile): void {
-  try {
-    const json = JSON.stringify(profile);
-    const encrypted = simpleEncrypt(json, ENCRYPTION_KEY);
-    localStorage.setItem(STORAGE_KEY, encrypted);
-  } catch (error) {
-    console.error('Error saving profile:', error);
-  }
-}
-
-export function loadUserProfile(): UserProfile | null {
-  try {
-    const encrypted = localStorage.getItem(STORAGE_KEY);
-    if (!encrypted) return null;
-
-    const decrypted = simpleDecrypt(encrypted, ENCRYPTION_KEY);
-    return JSON.parse(decrypted);
-  } catch (error) {
-    console.error('Error loading profile:', error);
-    return null;
-  }
-}
-
-export function saveDailyFeedback(feedback: DailyFeedback): void {
-  try {
-    const existing = loadAllFeedback();
-    existing[feedback.date] = feedback;
-    localStorage.setItem(FEEDBACK_KEY, JSON.stringify(existing));
-  } catch (error) {
-    console.error('Error saving feedback:', error);
-  }
-}
-
-export function loadAllFeedback(): Record<string, DailyFeedback> {
-  try {
-    const data = localStorage.getItem(FEEDBACK_KEY);
-    return data ? JSON.parse(data) : {};
-  } catch (error) {
-    console.error('Error loading feedback:', error);
-    return {};
-  }
-}
-
 export interface HomeCalibrationData {
   northOffset: number;
   calibratedAt: string;
@@ -155,70 +99,95 @@ export interface HomeProgressItem {
   done: boolean;
 }
 
+const STORAGE_KEY = 'vedic_astro_profile';
+const FEEDBACK_KEY = 'vedic_astro_feedback';
+const LEGACY_OBFUSCATION_KEY = 'jyotish-2026';
 const HOME_CALIBRATION_KEY = 'astroday_home_calibration';
 const HOME_FLOORPLAN_KEY = 'astroday_home_floorplan';
 const HOME_PROGRESS_KEY = 'astroday_home_progress';
 
-export function saveHomeCalibration(data: HomeCalibrationData): void {
+export function saveUserProfile(profile: UserProfile): void {
   try {
-    const json = JSON.stringify(data);
-    localStorage.setItem(HOME_CALIBRATION_KEY, simpleEncrypt(json, ENCRYPTION_KEY));
+    const payload = wrapProfilePayload(profile);
+    localStorage.setItem(STORAGE_KEY, legacyObfuscate(JSON.stringify(payload), LEGACY_OBFUSCATION_KEY));
   } catch (error) {
-    console.error('Error saving home calibration:', error);
+    console.error('Error saving profile:', error);
   }
+}
+
+export function loadUserProfile(): UserProfile | null {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return null;
+
+    const parsed: unknown = JSON.parse(legacyDeobfuscate(stored, LEGACY_OBFUSCATION_KEY));
+    return validateUserProfile(unwrapProfilePayload(parsed));
+  } catch (error) {
+    console.error('Error loading profile:', error);
+    return null;
+  }
+}
+
+export function saveDailyFeedback(feedback: DailyFeedback): void {
+  try {
+    const existing = loadAllFeedback();
+    existing[feedback.date] = feedback;
+    localStorage.setItem(FEEDBACK_KEY, JSON.stringify(existing));
+  } catch (error) {
+    console.error('Error saving feedback:', error);
+  }
+}
+
+export function loadAllFeedback(): Record<string, DailyFeedback> {
+  try {
+    const data = localStorage.getItem(FEEDBACK_KEY);
+    return data ? JSON.parse(data) : {};
+  } catch (error) {
+    console.error('Error loading feedback:', error);
+    return {};
+  }
+}
+
+export function saveHomeCalibration(data: HomeCalibrationData): void {
+  saveLegacyHomeValue(HOME_CALIBRATION_KEY, data);
 }
 
 export function loadHomeCalibration(): HomeCalibrationData | null {
-  try {
-    const encrypted = localStorage.getItem(HOME_CALIBRATION_KEY);
-    if (!encrypted) return null;
-    const decrypted = simpleDecrypt(encrypted, ENCRYPTION_KEY);
-    return JSON.parse(decrypted) as HomeCalibrationData;
-  } catch (error) {
-    console.error('Error loading home calibration:', error);
-    return null;
-  }
+  return loadLegacyHomeValue<HomeCalibrationData>(HOME_CALIBRATION_KEY, null);
 }
 
 export function saveHomeFloorPlan(data: HomeFloorPlanData): void {
-  try {
-    const json = JSON.stringify(data);
-    localStorage.setItem(HOME_FLOORPLAN_KEY, simpleEncrypt(json, ENCRYPTION_KEY));
-  } catch (error) {
-    console.error('Error saving home floor plan:', error);
-  }
+  saveLegacyHomeValue(HOME_FLOORPLAN_KEY, data);
 }
 
 export function loadHomeFloorPlan(): HomeFloorPlanData | null {
-  try {
-    const encrypted = localStorage.getItem(HOME_FLOORPLAN_KEY);
-    if (!encrypted) return null;
-    const decrypted = simpleDecrypt(encrypted, ENCRYPTION_KEY);
-    return JSON.parse(decrypted) as HomeFloorPlanData;
-  } catch (error) {
-    console.error('Error loading home floor plan:', error);
-    return null;
-  }
+  return loadLegacyHomeValue<HomeFloorPlanData>(HOME_FLOORPLAN_KEY, null);
 }
 
 export function saveHomeProgress(items: HomeProgressItem[]): void {
-  try {
-    const json = JSON.stringify(items);
-    localStorage.setItem(HOME_PROGRESS_KEY, simpleEncrypt(json, ENCRYPTION_KEY));
-  } catch (error) {
-    console.error('Error saving home progress:', error);
-  }
+  saveLegacyHomeValue(HOME_PROGRESS_KEY, items);
 }
 
 export function loadHomeProgress(): HomeProgressItem[] {
+  return loadLegacyHomeValue<HomeProgressItem[]>(HOME_PROGRESS_KEY, []);
+}
+
+function saveLegacyHomeValue(key: string, value: unknown): void {
   try {
-    const encrypted = localStorage.getItem(HOME_PROGRESS_KEY);
-    if (!encrypted) return [];
-    const decrypted = simpleDecrypt(encrypted, ENCRYPTION_KEY);
-    return JSON.parse(decrypted) as HomeProgressItem[];
+    localStorage.setItem(key, legacyObfuscate(JSON.stringify(value), LEGACY_OBFUSCATION_KEY));
   } catch (error) {
-    console.error('Error loading home progress:', error);
-    return [];
+    console.error(`Error saving ${key}:`, error);
+  }
+}
+
+function loadLegacyHomeValue<T>(key: string, fallback: T): T {
+  try {
+    const stored = localStorage.getItem(key);
+    if (!stored) return fallback;
+    return JSON.parse(legacyDeobfuscate(stored, LEGACY_OBFUSCATION_KEY)) as T;
+  } catch (error) {
+    console.error(`Error loading ${key}:`, error);
+    return fallback;
   }
 }
 
@@ -241,25 +210,17 @@ export async function deleteAllData(): Promise<void> {
 }
 
 export function exportData(): string {
-  const profile = loadUserProfile();
-  const feedback = loadAllFeedback();
-  const homeCalibration = loadHomeCalibration();
-  const homeFloorPlan = loadHomeFloorPlan();
-  const homeProgress = loadHomeProgress();
-  return JSON.stringify({ profile, feedback, homeCalibration, homeFloorPlan, homeProgress }, null, 2);
+  return JSON.stringify({
+    profile: loadUserProfile(),
+    feedback: loadAllFeedback(),
+    homeCalibration: loadHomeCalibration(),
+    homeFloorPlan: loadHomeFloorPlan(),
+    homeProgress: loadHomeProgress(),
+  }, null, 2);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
-}
-
-function isValidCoordinate(latitude: number, longitude: number): boolean {
-  return Number.isFinite(latitude)
-    && Number.isFinite(longitude)
-    && latitude >= -90
-    && latitude <= 90
-    && longitude >= -180
-    && longitude <= 180;
 }
 
 function isTimezoneAccuracy(value: unknown): value is NonNullable<UserProfile['timezoneAccuracy']> {
@@ -284,9 +245,8 @@ function normalizeCurrentLocation(value: unknown): UserProfile['currentLocation'
   const longitude = readNumber(value, 'longitude');
   const timezone = readString(value, 'timezone');
 
-  if (!place || latitude === null || longitude === null || !timezone || !isValidCoordinate(latitude, longitude)) {
-    return undefined;
-  }
+  if (!place || latitude === null || longitude === null || !timezone) return undefined;
+  if (!isValidCoordinates(latitude, longitude) || !isValidIanaTimezone(timezone)) return undefined;
 
   return {
     place,
@@ -301,44 +261,41 @@ function normalizeCurrentLocation(value: unknown): UserProfile['currentLocation'
 function normalizeRelatives(value: unknown): Relative[] | undefined {
   if (!Array.isArray(value)) return undefined;
 
-  const relatives = value
-    .map((item, index): Relative | null => {
-      if (!isRecord(item)) return null;
+  const relatives = value.map((item, index): Relative | null => {
+    if (!isRecord(item)) return null;
 
-      const name = readString(item, 'name');
-      const relationship = readString(item, 'relationship');
-      const birthDate = readString(item, 'birthDate');
-      const birthTime = readString(item, 'birthTime');
-      const birthPlace = readString(item, 'birthPlace');
-      const latitude = readNumber(item, 'latitude');
-      const longitude = readNumber(item, 'longitude');
+    const name = readString(item, 'name');
+    const relationship = readString(item, 'relationship');
+    const birthDate = readString(item, 'birthDate');
+    const birthTime = readString(item, 'birthTime');
+    const birthPlace = readString(item, 'birthPlace');
+    const latitude = readNumber(item, 'latitude');
+    const longitude = readNumber(item, 'longitude');
 
-      if (!name || !relationship || !birthDate || !birthTime || !birthPlace || latitude === null || longitude === null) {
-        return null;
-      }
+    if (!name || !relationship || !birthDate || !birthTime || !birthPlace || latitude === null || longitude === null) {
+      return null;
+    }
+    if (!isValidCoordinates(latitude, longitude)) return null;
 
-      if (!isValidCoordinate(latitude, longitude)) return null;
-
-      return {
-        id: readString(item, 'id') || `relative-${index + 1}`,
-        name,
-        relationship,
-        birthDate,
-        birthTime,
-        birthPlace,
-        latitude,
-        longitude,
-        livesNearby: typeof item.livesNearby === 'boolean' ? item.livesNearby : false,
-        includeInPredictions: typeof item.includeInPredictions === 'boolean' ? item.includeInPredictions : false,
-      };
-    })
-    .filter((item): item is Relative => item !== null);
+    return {
+      id: readString(item, 'id') || `relative-${index + 1}`,
+      name,
+      relationship,
+      birthDate,
+      birthTime,
+      birthPlace,
+      latitude,
+      longitude,
+      livesNearby: typeof item.livesNearby === 'boolean' ? item.livesNearby : false,
+      includeInPredictions: typeof item.includeInPredictions === 'boolean' ? item.includeInPredictions : false,
+    };
+  }).filter((item): item is Relative => item !== null);
 
   return relatives.length > 0 ? relatives : undefined;
 }
 
 export function validateUserProfile(value: unknown): UserProfile | null {
-  const source = isRecord(value) && isRecord(value.profile) ? value.profile : value;
+  const source = unwrapProfilePayload(value);
   if (!isRecord(source)) return null;
 
   const name = readString(source, 'name');
@@ -352,8 +309,7 @@ export function validateUserProfile(value: unknown): UserProfile | null {
   if (!name || !birthDate || !birthTime || !birthPlace || latitude === null || longitude === null || !timezone) {
     return null;
   }
-
-  if (!isValidCoordinate(latitude, longitude)) return null;
+  if (!isValidCoordinates(latitude, longitude) || !isValidIanaTimezone(timezone)) return null;
 
   const profile: UserProfile = {
     name,
@@ -367,9 +323,7 @@ export function validateUserProfile(value: unknown): UserProfile | null {
   };
 
   const timeUncertainty = readNumber(source, 'timeUncertainty');
-  if (timeUncertainty !== null && timeUncertainty >= 0) {
-    profile.timeUncertainty = timeUncertainty;
-  }
+  if (timeUncertainty !== null && timeUncertainty >= 0) profile.timeUncertainty = timeUncertainty;
 
   const currentLocation = normalizeCurrentLocation(source.currentLocation);
   if (currentLocation) profile.currentLocation = currentLocation;
@@ -381,11 +335,11 @@ export function validateUserProfile(value: unknown): UserProfile | null {
 }
 
 export function importUserProfile(json: string): UserProfile {
-  const parsed = JSON.parse(json);
+  const parsed: unknown = JSON.parse(json);
   const profile = validateUserProfile(parsed);
 
   if (!profile) {
-    throw new Error('Файл не похож на профиль AstroDay или содержит некорректные координаты.');
+    throw new Error('Файл не похож на профиль AstroDay или содержит некорректные координаты/timezone.');
   }
 
   return profile;
