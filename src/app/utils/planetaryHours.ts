@@ -1,5 +1,6 @@
 import * as Astronomy from 'astronomy-engine';
 import { formatDateKey, formatTime, getWeekdayIndex } from './dateUtils';
+import { isValidCoordinates, isValidIanaTimezone } from './locationValidation';
 import { createDateInTimezone } from './timezones';
 
 const CHALDEAN_ORDER = ['Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon'] as const;
@@ -24,6 +25,15 @@ export interface FavorableTimeWindow {
   description: string;
   start: Date;
   end: Date;
+}
+
+function validatePlanetaryHourInput(latitude: number, longitude: number, timezone: string): void {
+  if (!isValidCoordinates(latitude, longitude)) {
+    throw new Error('Для расчёта планетарного часа нужны корректные координаты');
+  }
+  if (!isValidIanaTimezone(timezone)) {
+    throw new Error('Для расчёта планетарного часа нужна корректная IANA timezone');
+  }
 }
 
 function searchSunEvent(
@@ -80,9 +90,7 @@ export function calculatePlanetaryHour(
   longitude: number,
   timezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone
 ): PlanetaryHourInfo {
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-    throw new Error('Для расчёта планетарного часа нужны корректные координаты');
-  }
+  validatePlanetaryHourInput(latitude, longitude, timezone);
 
   const { sunrise, sunset, nextSunrise, previousSunrise, previousSunset, isFallback } = getLocalDayBounds(
     date,
@@ -153,6 +161,8 @@ export function calculatePlanetaryHoursForDay(
   longitude: number,
   timezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone
 ): PlanetaryHourInfo[] {
+  validatePlanetaryHourInput(latitude, longitude, timezone);
+
   const { sunrise, sunset, nextSunrise, isFallback } = getLocalDayBounds(date, latitude, longitude, timezone);
   const dayRuler = DAY_RULERS[getWeekdayIndex(sunrise, timezone)];
   const rulerIndex = CHALDEAN_ORDER.indexOf(dayRuler as typeof CHALDEAN_ORDER[number]);
@@ -214,19 +224,4 @@ export function calculateFavorableTimeWindows(
         end: hour.end
       };
     });
-}
-
-export function getPlanetaryHour(
-  date: Date,
-  latitude?: number,
-  longitude?: number,
-  timezone?: string
-): string {
-  if (latitude !== undefined && longitude !== undefined) {
-    return calculatePlanetaryHour(date, latitude, longitude, timezone).planet;
-  }
-
-  const planets = ['Sun', 'Venus', 'Mercury', 'Moon', 'Saturn', 'Jupiter', 'Mars'];
-  const index = (date.getDay() * 24 + date.getHours()) % 7;
-  return planets[index];
 }

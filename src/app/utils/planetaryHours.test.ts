@@ -36,4 +36,15 @@ for (const window of windows) {
   assert.ok(['Jupiter', 'Venus', 'Mercury', 'Moon'].includes(window.planet));
 }
 
+assert.throws(
+  () => calculatePlanetaryHour(date, 91, longitude, timezone),
+  /координаты/,
+  'Out-of-range coordinates must be rejected before astronomy calculations',
+);
+assert.throws(
+  () => calculatePlanetaryHoursForDay(date, latitude, longitude, 'Invalid/Timezone'),
+  /IANA timezone/,
+  'Invalid IANA timezone must be rejected explicitly',
+);
+
 console.log('planetaryHours tests passed');
