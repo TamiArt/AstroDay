@@ -1,11 +1,12 @@
-import { Aspect, calculateDasha, getCurrentAntardasha, getPlanetHouse, NatalChart } from './astrology';
+import { type Aspect, calculateDasha, getCurrentAntardasha, getPlanetHouse, type NatalChart } from './astrology';
+import { buildAstroInfluenceFacts, type PanchangSignal } from './astroInfluenceEngine';
 import { calculatePersonalEnergyLevel } from './energyUtils';
-import { PanchangData } from './panchang';
-import { PlanetaryHourInfo } from './planetaryHours';
+import type { PanchangData } from './panchang';
+import type { PlanetaryHourInfo } from './planetaryHours';
 import { getPlanetName } from './planetUtils';
 import { composePersonalRecommendationText } from './recommendationComposer';
-import { getUpayaForDay, Upaya } from './remedies';
-import { UserProfile } from './storage';
+import { getUpayaForDay, type Upaya } from './remedies';
+import type { UserProfile } from './storage';
 
 export interface DataPrecisionInfo {
   level: 'high' | 'medium' | 'low';
@@ -81,9 +82,6 @@ const PLANET_AREAS: Record<string, { action: string; avoid: string; areas: strin
     areas: ['Духовность', 'Очищение', 'Завершение'],
   },
 };
-
-const DIFFICULT_YOGAS = ['Атиганда', 'Шула', 'Ганда', 'Вьягхата', 'Вьятипата', 'Вайдхрити'];
-const SUPPORTIVE_YOGAS = ['Прити', 'Саубхагья', 'Шобхана', 'Сиддхи', 'Сиддха', 'Шубха'];
 
 const HOUSE_THEMES: Record<number, string> = {
   1: 'тело, самочувствие и личная инициатива',
@@ -168,16 +166,9 @@ function getPlanetHouseText(planet: string, chart: NatalChart): string | null {
   return `${getPlanetName(planet)} в вашей карте связан с ${house}-м домом: ${HOUSE_THEMES[house]}`;
 }
 
-function getTransitHouseText(planet: string, natalChart: NatalChart, currentChart: NatalChart): string | null {
-  const transitPosition = currentChart.planets[planet as keyof typeof currentChart.planets];
-  if (!transitPosition || !natalChart.houses) return null;
-
-  const house = getPlanetHouse(transitPosition.sign, natalChart.houses);
-  return `транзитный ${getPlanetName(planet)} сейчас активирует ваш ${house}-й дом: ${HOUSE_THEMES[house]}`;
-}
-
-function getStrongestAspect(aspects: Aspect[]): Aspect | null {
-  return aspects.length > 0 ? aspects[0] : null;
+function getMoonTransitText(currentMoonHouse: number | null): string | null {
+  if (currentMoonHouse === null) return null;
+  return `транзитный ${getPlanetName('Moon')} сейчас активирует ваш ${currentMoonHouse}-й дом: ${HOUSE_THEMES[currentMoonHouse]}`;
 }
 
 function getAspectTypeText(aspect: Aspect): string {
@@ -224,12 +215,12 @@ function getVargaHints(planet: string, chart: NatalChart): string[] {
   return hints;
 }
 
-function getPanchangFocus(panchang: PanchangData): string {
-  if (panchang.tithi.index === 14) return 'полнолуние поддерживает завершение и ясное подведение итогов';
-  if (panchang.tithi.index === 29) return 'новолуние лучше использовать для очищения и намерения';
-  if (panchang.tithi.index === 10 || panchang.tithi.index === 25) return 'Экадаши усиливает практики дисциплины и внутренней чистоты';
-  if (SUPPORTIVE_YOGAS.includes(panchang.yoga.name)) return `${panchang.yoga.name} поддерживает созидательные шаги`;
-  if (DIFFICULT_YOGAS.includes(panchang.yoga.name)) return `${panchang.yoga.name} требует аккуратности и меньшего давления`;
+function getPanchangFocus(panchang: PanchangData, signal: PanchangSignal): string {
+  if (signal === 'purnima') return 'полнолуние поддерживает завершение и ясное подведение итогов';
+  if (signal === 'amavasya') return 'новолуние лучше использовать для очищения и намерения';
+  if (signal === 'ekadashi') return 'Экадаши усиливает практики дисциплины и внутренней чистоты';
+  if (signal === 'supportive-yoga') return `${panchang.yoga.name} поддерживает созидательные шаги`;
+  if (signal === 'difficult-yoga') return `${panchang.yoga.name} требует аккуратности и меньшего давления`;
   return `${panchang.tithi.name}: ${panchang.tithi.meaning.toLowerCase()}`;
 }
 
@@ -238,17 +229,23 @@ export function generatePersonalRecommendations(
 ): PersonalRecommendationResult {
   const { profile, date, natalChart, currentChart, aspects, panchang, planetaryHour } = context;
   const precision = getDataPrecision(profile);
-  const { dasha, antardasha } = getCurrentDashaForChart(natalChart, date);
-  const hourPlanet = planetaryHour.planet;
+  const facts = buildAstroInfluenceFacts({ date, natalChart, currentChart, aspects, panchang, planetaryHour });
+  const {
+    dasha,
+    antardasha,
+    strongestAspect,
+    currentMoonSign,
+    currentMoonHouse,
+    planetaryHourPlanet: hourPlanet,
+    panchangSignal,
+  } = facts;
   const hourContext = PLANET_AREAS[hourPlanet] || PLANET_AREAS.Sun;
   const dashaContext = PLANET_AREAS[dasha.planet] || PLANET_AREAS.Sun;
-  const strongestAspect = getStrongestAspect(aspects);
   const dashaHouseText = getPlanetHouseText(dasha.planet, natalChart);
   const hourHouseText = getPlanetHouseText(hourPlanet, natalChart);
-  const currentMoonSign = currentChart.planets.Moon.signName;
-  const moonTransitText = getTransitHouseText('Moon', natalChart, currentChart);
+  const moonTransitText = getMoonTransitText(currentMoonHouse);
   const aspectAdvice = getAspectAdvice(strongestAspect);
-  const panchangFocus = getPanchangFocus(panchang);
+  const panchangFocus = getPanchangFocus(panchang, panchangSignal);
   const vargaHints = Array.from(new Set([
     ...getVargaHints(dasha.planet, natalChart),
     ...getVargaHints(hourPlanet, natalChart),
@@ -287,7 +284,7 @@ export function generatePersonalRecommendations(
     vargaHints,
     energyLevel,
     currentMoonSign,
-    difficultYogaName: DIFFICULT_YOGAS.includes(panchang.yoga.name) ? panchang.yoga.name : null,
+    difficultYogaName: facts.isDifficultYoga ? panchang.yoga.name : null,
     tenseAspectText: strongestAspect && (strongestAspect.type === 'square' || strongestAspect.type === 'opposition')
       ? `напряжение ${getPlanetName(strongestAspect.planet1)} и ${getPlanetName(strongestAspect.planet2)} лучше не переводить в спор`
       : null,
