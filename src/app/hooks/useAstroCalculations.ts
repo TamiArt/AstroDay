@@ -10,6 +10,7 @@ import { calculateFavorableTimeWindows, calculatePlanetaryHour, PlanetaryHourInf
 import { calculatePanchang, PanchangData } from '../utils/panchang';
 import { UserProfile } from '../utils/storage';
 import { createDateInTimezone } from '../utils/timezones';
+import { isValidCoordinates, isValidIanaTimezone } from '../utils/locationValidation';
 
 interface UseAstroCalculationsResult {
   natalChart: NatalChart | null;
@@ -62,8 +63,12 @@ export function useAstroCalculations(profile: UserProfile): UseAstroCalculations
         throw new Error('Не указаны дата или время рождения');
       }
 
-      if (!Number.isFinite(profile.latitude) || !Number.isFinite(profile.longitude)) {
-        throw new Error('Не указаны координаты места рождения');
+      if (!isValidCoordinates(profile.latitude, profile.longitude)) {
+        throw new Error('Неверные координаты (широта: -90..90, долгота: -180..180)');
+      }
+
+      if (!isValidIanaTimezone(profile.timezone)) {
+        throw new Error('Неверный часовой пояс места рождения');
       }
 
       const currentDate = new Date();
@@ -73,26 +78,16 @@ export function useAstroCalculations(profile: UserProfile): UseAstroCalculations
         throw new Error('Неверный формат даты или времени рождения');
       }
 
-      if (
-        profile.latitude < -90 ||
-        profile.latitude > 90 ||
-        profile.longitude < -180 ||
-        profile.longitude > 180
-      ) {
-        throw new Error('Неверные координаты (широта: -90..90, долгота: -180..180)');
-      }
-
       const currentLat = profile.currentLocation?.latitude ?? profile.latitude;
       const currentLon = profile.currentLocation?.longitude ?? profile.longitude;
       const currentTimezone = profile.currentLocation?.timezone ?? profile.timezone;
 
-      if (
-        currentLat < -90 ||
-        currentLat > 90 ||
-        currentLon < -180 ||
-        currentLon > 180
-      ) {
+      if (!isValidCoordinates(currentLat, currentLon)) {
         throw new Error('Неверные координаты текущего местоположения');
+      }
+
+      if (!isValidIanaTimezone(currentTimezone)) {
+        throw new Error('Неверный часовой пояс текущего местоположения');
       }
 
       // Натальная карта неизменна, пока не меняются данные рождения.
