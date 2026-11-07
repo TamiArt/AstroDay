@@ -5,6 +5,7 @@ import { analyzeLifeAreas, getSynastryAspects } from '../../utils/lifePathAnalys
 import { isValidCoordinates, isValidIanaTimezone } from '../../utils/locationValidation';
 import { loadPartnerProfile, savePartnerProfile, type PartnerBirthProfile } from '../../utils/storage';
 import type { NatalChart } from '../../utils/astrology';
+import { geocodePlace, type GeocodingResult } from '../../utils/geocoding';
 import { GlassCard } from '../common/GlassCard';
 
 interface LifePathAnalysisTabProps {
@@ -26,6 +27,8 @@ export function LifePathAnalysisTab({ natalChart }: LifePathAnalysisTabProps) {
   const [partnerChart, setPartnerChart] = useState<NatalChart | null>(null);
   const [partnerError, setPartnerError] = useState('');
   const [partnerNotice, setPartnerNotice] = useState('');
+  const [placeResults, setPlaceResults] = useState<GeocodingResult[]>([]);
+  const [isSearchingPlace, setIsSearchingPlace] = useState(false);
   const areas = useMemo(() => analyzeLifeAreas(natalChart), [natalChart]);
   const synastry = useMemo(
     () => partnerChart ? getSynastryAspects(natalChart, partnerChart) : [],
@@ -41,6 +44,30 @@ export function LifePathAnalysisTab({ natalChart }: LifePathAnalysisTabProps) {
     setPartnerNotice('');
   };
 
+  const searchPartnerPlace = async () => {
+    if (!partner.birthPlace.trim()) {
+      setPartnerError('Сначала введите город рождения партнёра.');
+      return;
+    }
+    setIsSearchingPlace(true);
+    setPartnerError('');
+    try {
+      const results = await geocodePlace(partner.birthPlace);
+      setPlaceResults(results);
+    } catch (error) {
+      setPartnerError(error instanceof Error ? error.message : 'Не удалось найти место рождения.');
+    } finally {
+      setIsSearchingPlace(false);
+    }
+  };
+
+  const selectPartnerPlace = (place: GeocodingResult) => {
+    setPartner((current) => ({ ...current, birthPlace: place.displayName, latitude: place.latitude, longitude: place.longitude, timezone: place.timezone }));
+    setPlaceResults([]);
+    setPartnerChart(null);
+    setPartnerNotice('Координаты и часовой пояс места рождения подставлены.');
+  };
+
   const analyzePartner = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setPartnerError('');
@@ -49,7 +76,7 @@ export function LifePathAnalysisTab({ natalChart }: LifePathAnalysisTabProps) {
       setPartnerError('Заполните имя, дату, время и место рождения партнёра.');
       return;
     }
-    if (!isValidCoordinates(partner.latitude, partner.longitude)) {
+    if (!isValidCoordinates(partner.latitude, partner.longitude) || (partner.latitude === 0 && partner.longitude === 0)) {
       setPartnerError('Проверьте координаты места рождения: широта от −90 до 90, долгота от −180 до 180.');
       return;
     }
@@ -129,7 +156,8 @@ export function LifePathAnalysisTab({ natalChart }: LifePathAnalysisTabProps) {
             </label>
             <label className="text-sm space-y-1">
               <span>Место рождения</span>
-              <input className="w-full rounded-xl border border-border bg-background p-3" value={partner.birthPlace} onChange={(event) => updatePartner('birthPlace', event.target.value)} placeholder="Город, страна" />
+              <input className="w-full rounded-xl border border-border bg-background p-3" value={partner.birthPlace} onChange={(event) => { updatePartner('birthPlace', event.target.value); setPlaceResults([]); }} placeholder="Город, страна" />
+              <button type="button" onClick={searchPartnerPlace} disabled={isSearchingPlace} className="mt-2 rounded-lg border border-border px-3 py-2 text-xs disabled:opacity-50">{isSearchingPlace ? 'Ищем место…' : 'Найти координаты и часовой пояс'}</button>
             </label>
             <label className="text-sm space-y-1">
               <span>Дата рождения</span>
@@ -151,6 +179,14 @@ export function LifePathAnalysisTab({ natalChart }: LifePathAnalysisTabProps) {
               <span>Часовой пояс места рождения (IANA)</span>
               <input className="w-full rounded-xl border border-border bg-background p-3" value={partner.timezone} onChange={(event) => updatePartner('timezone', event.target.value)} placeholder="Europe/Moscow" />
             </label>
+            {placeResults.length > 0 && (
+              <div className="md:col-span-2 rounded-xl border border-border p-3 space-y-2">
+                <p className="text-sm font-semibold">Выберите правильное место рождения:</p>
+                {placeResults.map((place) => (
+                  <button key={`${place.latitude}-${place.longitude}-${place.displayName}`} type="button" onClick={() => selectPartnerPlace(place)} className="block w-full rounded-lg bg-secondary p-2 text-left text-xs hover:bg-primary/10">{place.displayName}</button>
+                ))}
+              </div>
+            )}
             <div className="md:col-span-2 flex flex-wrap items-center gap-3">
               <button type="submit" className="rounded-xl bg-primary px-5 py-3 font-semibold text-primary-foreground">Рассчитать карту партнёра</button>
               {partnerNotice && <span className="text-sm text-green-700">{partnerNotice}</span>}
