@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { PROFILE_SCHEMA_VERSION, unwrapProfilePayload, wrapProfilePayload } from './profileMigrations';
 import {
   deleteHomeData,
+  deletePartnerProfile,
   importUserProfile,
   loadVastuChecklist,
   loadPartnerProfile,
@@ -64,6 +65,8 @@ savePartnerProfile(partner);
 assert.deepEqual(loadPartnerProfile(), partner, 'Partner profile must persist locally');
 deleteHomeData();
 assert.deepEqual(loadVastuChecklist(), [], 'Deleting home data must also delete the Vastu checklist');
-assert.equal(loadPartnerProfile(), null, 'Deleting home data must also delete the partner profile');
+assert.deepEqual(loadPartnerProfile(), partner, 'Deleting home data must preserve the separate partner chart');
+deletePartnerProfile();
+assert.equal(loadPartnerProfile(), null, 'Partner profile can be deleted separately');
 
 console.log('storage migration tests passed');
