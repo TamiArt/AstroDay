@@ -267,7 +267,7 @@ export function getHomePersonalizedRecommendations(
   }
 
   // Анализируем натальную карту для персонализации
-  const { weakPlanets, strongPlanets } = analyzeNatalChartForHome(natalChart);
+  const { weakPlanets } = analyzeNatalChartForHome(natalChart);
 
   const panchangNote = panchang.tithi.index === 14
     ? 'Полнолуние усиливает работу с завершением и благодарностью, особенно в центральных и южных зонах.'
