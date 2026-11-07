@@ -99,6 +99,16 @@ export interface HomeProgressItem {
   done: boolean;
 }
 
+export interface PartnerBirthProfile {
+  name: string;
+  birthDate: string;
+  birthTime: string;
+  birthPlace: string;
+  latitude: number;
+  longitude: number;
+  timezone: string;
+}
+
 export interface VastuChecklistItem {
   id: string;
   goal: 'abundance' | 'relationships' | 'wellbeing';
@@ -113,6 +123,7 @@ const HOME_CALIBRATION_KEY = 'astroday_home_calibration';
 const HOME_FLOORPLAN_KEY = 'astroday_home_floorplan';
 const HOME_PROGRESS_KEY = 'astroday_home_progress';
 const HOME_VASTU_CHECKLIST_KEY = 'astroday_vastu_checklist';
+const PARTNER_PROFILE_KEY = 'astroday_partner_profile';
 
 export function saveUserProfile(profile: UserProfile): void {
   try {
@@ -217,11 +228,31 @@ function loadLegacyHomeValue<T>(key: string, fallback: T): T {
   }
 }
 
+export function savePartnerProfile(profile: PartnerBirthProfile): void {
+  saveLegacyHomeValue(PARTNER_PROFILE_KEY, profile);
+}
+
+export function loadPartnerProfile(): PartnerBirthProfile | null {
+  const stored = loadLegacyHomeValue<unknown>(PARTNER_PROFILE_KEY, null);
+  if (!isRecord(stored)) return null;
+  const name = readString(stored, 'name');
+  const birthDate = readString(stored, 'birthDate');
+  const birthTime = readString(stored, 'birthTime');
+  const birthPlace = readString(stored, 'birthPlace');
+  const latitude = readNumber(stored, 'latitude');
+  const longitude = readNumber(stored, 'longitude');
+  const timezone = readString(stored, 'timezone');
+  if (!name || !birthDate || !birthTime || !birthPlace || latitude === null || longitude === null || !timezone) return null;
+  if (!isValidCoordinates(latitude, longitude) || !isValidIanaTimezone(timezone)) return null;
+  return { name, birthDate, birthTime, birthPlace, latitude, longitude, timezone };
+}
+
 export function deleteHomeData(): void {
   localStorage.removeItem(HOME_CALIBRATION_KEY);
   localStorage.removeItem(HOME_FLOORPLAN_KEY);
   localStorage.removeItem(HOME_PROGRESS_KEY);
   localStorage.removeItem(HOME_VASTU_CHECKLIST_KEY);
+  localStorage.removeItem(PARTNER_PROFILE_KEY);
 }
 
 export async function deleteAllData(): Promise<void> {
@@ -244,6 +275,7 @@ export function exportData(): string {
     homeFloorPlan: loadHomeFloorPlan(),
     homeProgress: loadHomeProgress(),
     vastuChecklist: loadVastuChecklist(),
+    partnerProfile: loadPartnerProfile(),
   }, null, 2);
 }
 
