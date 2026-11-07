@@ -574,8 +574,7 @@ export function calculateNatalChart(
     }
 
     try {
-      const astroTime = Astronomy.MakeTime(birthDate);
-      const jd = astroTime.ut;
+      const jd = getJulianDay(birthDate) - JULIAN_DAY_J2000;
       const T = (jd - 2451545.0) / 36525.0;
       let meanNodeLon = 125.0445479 - 1934.1362891 * T + 0.0020754 * T * T + (T * T * T) / 467441.0 - (T * T * T * T) / 60616000.0;
 
