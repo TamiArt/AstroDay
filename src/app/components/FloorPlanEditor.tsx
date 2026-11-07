@@ -2,6 +2,7 @@ import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { GlassCard } from './common/GlassCard';
 import { loadHomeCalibration, loadHomeFloorPlan, saveHomeFloorPlan, HomeFloorPlanData, HomeRoomRect, VastuMarkerType } from '../utils/storage';
 import { generateBaguaGrid, assignBaguaZone, getVastuZoneAtPoint } from '../utils/homeZoneCalculations';
+import { VASTU_DIRECTIONS } from '../utils/vastuGuide';
 
 const MARKERS: Array<{ type: VastuMarkerType; label: string; code: string; group: string }> = [{type:'entrance',label:'Вход',code:'ВХ',group:'inflow'},{type:'window',label:'Окно / балкон',code:'ОК',group:'inflow'},{type:'water',label:'Вода / протечка',code:'В',group:'outflow'},{type:'bathroom',label:'Санузел',code:'СУ',group:'outflow'},{type:'obstruction',label:'Тяжёлое препятствие',code:'ПР',group:'blockage'},{type:'clutter',label:'Захламление',code:'ХЛ',group:'blockage'},{type:'kitchen',label:'Кухня / плита',code:'К',group:'function'},{type:'workspace',label:'Рабочее место',code:'Р',group:'function'}];
 const SECTORS: Record<string,string> = {northwest:'Северо-запад',north:'Север',northeast:'Северо-восток',west:'Запад',center:'Центр',east:'Восток',southwest:'Юго-запад',south:'Юг',southeast:'Юго-восток'};
@@ -235,6 +236,7 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
   };
   const markerAnalysis = markers.map((marker) => { const canvas = canvasRef.current; const zone = canvas ? getVastuZoneAtPoint(marker.x * canvas.width, marker.y * canvas.height, canvas.width, canvas.height, bearing) : 'center'; return { ...marker, zone, option: MARKERS.find((item) => item.type === marker.type) }; });
   const grouped = (group: string) => markerAnalysis.filter((item) => item.option?.group === group);
+  const moneySectors = ['north', 'northeast', 'center', 'southeast', 'northwest'];
 
   const handleRoomClick = (room: HomeRoomRect) => {
     setSelectedRoomId(room.id);
@@ -278,6 +280,24 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">{MARKERS.map((item) => <button key={item.type} type="button" aria-pressed={markerMode===item.type} onClick={()=>setMarkerMode(markerMode===item.type?null:item.type)} className={'rounded-xl border p-2 text-xs text-left '+(markerMode===item.type?'border-primary bg-primary/10':'border-border bg-secondary')}>{item.label}</button>)}</div>
           {markerMode && <p className="text-sm text-primary font-semibold">Нажмите на план, чтобы поставить метку «{MARKERS.find((item)=>item.type===markerMode)?.label}».</p>}{notice && <p role="status" className="text-xs opacity-70">{notice}</p>}
           {markerAnalysis.map((item)=><div key={item.id} className="flex justify-between gap-2 text-sm bg-secondary rounded-lg p-2"><span>{item.option?.label}: <strong>{SECTORS[item.zone]}</strong></span><button type="button" className="underline text-xs" onClick={()=>savePlan({...planData,markers:markers.filter((marker)=>marker.id!==item.id)})}>Удалить</button></div>)}
+        </div>
+        <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 space-y-3">
+          <h3 className="text-lg font-semibold">Денежная карта дома по Васту</h3>
+          <p className="text-xs opacity-70">Сопоставление реальных помещений и отмеченных объектов с традиционными секторами. Это карта для осмотра и планирования, а не измерение потока денег.</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {moneySectors.map((sector) => {
+              const zone = VASTU_DIRECTIONS.find((item) => item.id === sector);
+              const rooms = planData.rooms.filter((room) => room.vastuZone === sector);
+              const points = markerAnalysis.filter((marker) => marker.zone === sector);
+              return <div key={sector} className="rounded-xl bg-background/80 p-3">
+                <p className="font-semibold">{SECTORS[sector]}</p>
+                <p className="text-xs opacity-70 mt-1">{zone?.focus}</p>
+                <p className="text-sm mt-2">Комнаты: {rooms.length ? rooms.map((room) => room.name).join(', ') : 'не размечены'}</p>
+                <p className="text-sm">Метки: {points.length ? points.map((item) => item.option?.label).join(', ') : 'нет'}</p>
+                <p className="text-xs mt-2"><strong>Практический шаг:</strong> {zone?.firstStep}</p>
+              </div>;
+            })}
+          </div>
         </div>
         <div className="grid gap-3 md:grid-cols-2">{[{title:'Точки притока',items:grouped('inflow'),note:'Входы и окна — доступ, движение и дневной свет в традиционной трактовке.'},{title:'Точки возможного оттока',items:grouped('outflow'),note:'Проверьте санузлы, сливы и отсутствие протечек.'},{title:'Что может перекрывать пространство',items:grouped('blockage'),note:'Захламление и препятствия — бытовые помехи, а не доказанные блоки энергии.'},{title:'Функциональные зоны',items:grouped('function'),note:'Сопоставьте расположение кухни и рабочего места с сектором.'}].map((group)=><div key={group.title} className="rounded-2xl border border-border p-4"><h3 className="font-semibold">{group.title}</h3><p className="text-xs opacity-65 mt-1">{group.note}</p>{group.items.length?group.items.map((item)=><p key={item.id} className="text-sm mt-2">{item.option?.label}: {SECTORS[item.zone]}</p>):<p className="text-sm opacity-55 mt-2">Пока не отмечены.</p>}</div>)}</div>
         {planData.rooms.length ? (
