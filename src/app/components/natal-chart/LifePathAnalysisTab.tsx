@@ -34,6 +34,7 @@ export function LifePathAnalysisTab({ natalChart }: LifePathAnalysisTabProps) {
     () => partnerChart ? getSynastryAspects(natalChart, partnerChart) : [],
     [natalChart, partnerChart],
   );
+  const partnerAreas = useMemo(() => partnerChart ? analyzeLifeAreas(partnerChart) : [], [partnerChart]);
 
   const updatePartner = (field: keyof PartnerBirthProfile, value: string) => {
     setPartner((current) => ({
@@ -199,6 +200,7 @@ export function LifePathAnalysisTab({ natalChart }: LifePathAnalysisTabProps) {
           {partnerChart && (
             <div className="space-y-3 border-t border-border pt-4">
               <h3 className="font-semibold">Сопоставление карт: {partner.name}</h3>
+              <p className="text-sm opacity-75">Индивидуальный контекст партнёра: Лагна в {partnerChart.ascendant.signName}; Солнце в {partnerChart.planets.Sun.signName}; Луна в {partnerChart.planets.Moon.signName}.</p>
               <p className="text-sm opacity-75">
                 Ниже показаны найденные угловые связи между планетами двух карт. Это не рейтинг совместимости
                 и не вывод о том, должны ли люди быть вместе.
@@ -213,7 +215,18 @@ export function LifePathAnalysisTab({ natalChart }: LifePathAnalysisTabProps) {
                   ))}
                 </div>
               ) : <p className="text-sm opacity-70">В выбранном наборе планет точных основных аспектов в заданных орбисах не найдено.</p>}
-              <p className="text-xs opacity-60">Карта партнёра сохранена локально. Данные можно удалить через очистку данных дома.</p>
+              <div className="space-y-3 pt-3 border-t border-border">
+                <h4 className="font-semibold">Сферы жизни партнёра</h4>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {partnerAreas.map((area) => (
+                    <div key={area.id} className="rounded-xl bg-secondary p-3">
+                      <h5 className="text-sm font-semibold">{area.title}</h5>
+                      <p className="text-xs opacity-75 mt-2">{area.houseNotes.join(' ')}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <p className="text-xs opacity-60">Карта партнёра сохранена локально и включается в экспорт данных. Удалить её можно отдельной кнопкой выше.</p>
             </div>
           )}
         </div>
