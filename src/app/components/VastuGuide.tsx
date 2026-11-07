@@ -40,11 +40,9 @@ export function VastuGuide() {
   const completedActions = activeActions.filter((action) => action.done).length;
 
   const toggleAction = (id: string) => {
-    setChecklist((current) => {
-      const next = current.map((item) => item.id === id ? { ...item, done: !item.done } : item);
-      saveVastuChecklist(next);
-      return next;
-    });
+    const next = checklist.map((item) => item.id === id ? { ...item, done: !item.done } : item);
+    setChecklist(next);
+    saveVastuChecklist(next);
   };
   const selectedZone = VASTU_DIRECTIONS.find((zone) => zone.id === selectedZoneId) ?? VASTU_DIRECTIONS[0];
 
@@ -93,7 +91,8 @@ export function VastuGuide() {
             <p className="text-sm opacity-70 mt-3">
               Используйте рекомендации как культурную и интерьерную практику, а не как доказанный способ
               привлечь деньги, вылечить заболевание или исправить отношения. Начинайте с безопасных,
-              недорогих изменений, которые действительно делают дом удобнее.
+              недорогих изменений, которые действительно делают дом удобнее. Не нужно покупать специальные
+              предметы, ставить фонтаны или менять планировку ради «активации» сектора.
             </p>
             <p className="text-sm rounded-xl border border-border bg-secondary p-3 mt-3">
               Важно: чтобы точно сопоставить направления с комнатами, на плане должен быть отмечен реальный
