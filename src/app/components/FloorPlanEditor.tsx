@@ -237,7 +237,7 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
   };
   const markerAnalysis = markers.map((marker) => { const canvas = canvasRef.current; const zone = canvas ? getVastuZoneAtPoint(marker.x * canvas.width, marker.y * canvas.height, canvas.width, canvas.height, bearing) : 'center'; return { ...marker, zone, option: MARKERS.find((item) => item.type === marker.type) }; });
   const grouped = (group: string) => markerAnalysis.filter((item) => item.option?.group === group);
-  const moneySectors = ['north', 'northeast', 'center', 'southeast', 'northwest'];
+  const moneySectors = ['northwest', 'north', 'northeast', 'west', 'center', 'east', 'southwest', 'south', 'southeast'];
 
   const handleRoomClick = (room: HomeRoomRect) => {
     setSelectedRoomId(room.id);
