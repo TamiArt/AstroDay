@@ -9,6 +9,14 @@ import { getLahiriAyanamsha } from './ayanamsha';
 
 const DEG_TO_RAD = Math.PI / 180;
 const FULL_CIRCLE = 360;
+const JULIAN_DAY_UNIX_EPOCH = 2440587.5;
+const JULIAN_DAY_J2000 = 2451545.0;
+const MILLISECONDS_PER_DAY = 86_400_000;
+
+function getJulianDay(date: Date): number {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) throw new Error('Некорректная дата для астрономического расчёта');
+  return date.getTime() / MILLISECONDS_PER_DAY + JULIAN_DAY_UNIX_EPOCH;
+}
 
 // Keep the public API stable while delegating the calculation to the dedicated,
 // regression-tested Lahiri module.
@@ -28,26 +36,22 @@ function normalizeDegrees(value: number): number {
 
 /**
  * Greenwich apparent sidereal time in hours.
- * Uses the standard J2000 GMST polynomial plus the equation-of-equinoxes
- * correction from astronomy-engine's Earth-tilt model. This avoids relying on
- * the SiderealTime namespace export, which is absent in the Node ESM runtime.
+ * Uses the standard J2000 GMST polynomial directly from UTC Julian Day,
+ * avoiding astronomy-engine namespace exports missing in the Node ESM runtime.
+ * The omitted equation-of-equinoxes correction is below a few arcseconds.
  */
 function getGreenwichSiderealTimeHours(date: Date): number {
-  const astroTime = Astronomy.MakeTime(date);
-  const daysSinceJ2000 = astroTime.ut;
+  const daysSinceJ2000 = getJulianDay(date) - JULIAN_DAY_J2000;
   const centuries = daysSinceJ2000 / 36525;
   const meanSiderealDegrees = 280.46061837
     + 360.98564736629 * daysSinceJ2000
     + 0.000387933 * centuries * centuries
     - (centuries * centuries * centuries) / 38710000;
-  const equationOfEquinoxesSeconds = Astronomy.e_tilt(astroTime).ee;
-  const meanHours = normalizeDegrees(meanSiderealDegrees) / 15;
-  return (meanHours + equationOfEquinoxesSeconds / 3600 + 24) % 24;
+  return normalizeDegrees(meanSiderealDegrees) / 15;
 }
 
 function getMeanObliquity(date: Date): number {
-  const astroTime = Astronomy.MakeTime(date);
-  const t = (astroTime.ut - 2451545.0) / 36525.0;
+  const t = (getJulianDay(date) - JULIAN_DAY_J2000) / 36525.0;
   const seconds = 21.448 - t * (46.8150 + t * (0.00059 - t * 0.001813));
   return 23 + (26 / 60) + (seconds / 3600);
 }
