@@ -3,7 +3,7 @@
  * Free and open-source implementation using astronomy-engine
  */
 
-import * as Astronomy from 'astronomy-engine';
+import { EclipticLongitude, SunPosition, type Body } from 'astronomy-engine';
 import { calculateAdditionalVargas, type AdditionalVargas } from './divisionalCharts';
 import { getLahiriAyanamsha } from './ayanamsha';
 
@@ -236,16 +236,16 @@ export function calculatePlanetPosition(
 
     if (bodyName === 'Sun') {
       try {
-        const sunPos = Astronomy.SunPosition(date);
+        const sunPos = SunPosition(date);
         tropicalLon = sunPos.elon;
       } catch (err) {
         console.error('SunPosition error:', err);
         throw new Error(`API astronomy-engine вернул ошибку для Солнца: ${err instanceof Error ? err.message : String(err)}`);
       }
     } else {
-      const body = bodyName as Astronomy.Body;
+      const body = bodyName as Body;
       try {
-        tropicalLon = Astronomy.EclipticLongitude(body, date);
+        tropicalLon = EclipticLongitude(body, date);
       } catch (err) {
         console.error(`EclipticLongitude error for ${bodyName}:`, err);
         throw new Error(`API astronomy-engine вернул ошибку для ${bodyName}: ${err instanceof Error ? err.message : String(err)}`);
