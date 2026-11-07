@@ -99,7 +99,7 @@ export function getVastuZoneAtPoint(
   const dx = x - canvasWidth / 2;
   const dy = y - canvasHeight / 2;
   const east = dx * Math.cos(angle) + dy * Math.sin(angle);
-  const north = -dx * Math.sin(angle) + dy * Math.cos(angle);
+  const north = dx * Math.sin(angle) - dy * Math.cos(angle);
   const col = east < -canvasWidth / 6 ? 'west' : east > canvasWidth / 6 ? 'east' : 'center';
   const row = north > canvasHeight / 6 ? 'north' : north < -canvasHeight / 6 ? 'south' : 'center';
   const sectorMap: Record<string, string> = {
