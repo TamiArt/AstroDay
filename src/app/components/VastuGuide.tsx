@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { GlassCard } from './common/GlassCard';
-import { VASTU_ACTION_PLANS, VASTU_DIRECTIONS, VASTU_GOALS, VASTU_GRID_ORDER, type VastuGoal } from '../utils/vastuGuide';
+import { getVastuMoneyFocus, VASTU_ACTION_PLANS, VASTU_DIRECTIONS, VASTU_GOALS, VASTU_GRID_ORDER, VASTU_MONEY_FOCUS, VASTU_REMEDIES, type VastuGoal, type VastuRemedyType } from '../utils/vastuGuide';
 import { loadVastuChecklist, saveVastuChecklist, type VastuChecklistItem } from '../utils/storage';
 
 const VASTU_GRID_DIRECTIONS = VASTU_GRID_ORDER.map((id) => VASTU_DIRECTIONS.find((zone) => zone.id === id))
@@ -27,6 +27,8 @@ const PRACTICAL_FRICTIONS = [
 export function VastuGuide() {
   const [activeGoal, setActiveGoal] = useState<VastuGoal>('abundance');
   const [selectedZoneId, setSelectedZoneId] = useState('north');
+  const [moneyGoal, setMoneyGoal] = useState<typeof VASTU_MONEY_FOCUS[number]['id']>('stable-income');
+  const [remedyType, setRemedyType] = useState<VastuRemedyType>('spatial');
   const [checklist, setChecklist] = useState<VastuChecklistItem[]>(() => {
     const saved = loadVastuChecklist();
     return VASTU_ACTION_PLANS.map((action) => ({
@@ -215,6 +217,99 @@ export function VastuGuide() {
                 <p className="text-sm opacity-80 mt-2">{selectedZone.avoid}</p>
               </div>
             </div>
+          </div>
+
+          <div className="rounded-3xl border border-primary/30 bg-primary/5 p-5 space-y-4">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-primary font-semibold">Денежная карта дома</p>
+              <h3 className="text-xl font-semibold mt-1">Как выбрать направление-фокус</h3>
+              <p className="text-sm opacity-75 mt-2">
+                В разных школах Васту трактовки могут различаться. Здесь направление выбирается не как
+                магически «самое сильное», а как символический фокус под вашу текущую финансовую задачу.
+                Для точного сопоставления с квартирой сначала подтвердите север на плане.
+              </p>
+            </div>
+            <div className="grid gap-2 md:grid-cols-3">
+              {VASTU_MONEY_FOCUS.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => { setMoneyGoal(item.id); setSelectedZoneId(item.direction); }}
+                  aria-pressed={moneyGoal === item.id}
+                  className={`rounded-2xl border p-3 text-left transition-colors ${moneyGoal === item.id ? 'border-primary bg-background' : 'border-border bg-secondary'}`}
+                >
+                  <span className="block font-semibold text-sm">{item.label}</span>
+                  <span className="block text-xs opacity-70 mt-1">{item.directionLabel}</span>
+                </button>
+              ))}
+            </div>
+            {(() => {
+              const focus = getVastuMoneyFocus(moneyGoal);
+              return (
+                <div className="rounded-2xl bg-background/80 p-4 space-y-2">
+                  <p className="font-semibold">{focus.directionLabel} — выбранное направление-фокус</p>
+                  <p className="text-sm opacity-75">{focus.reason}</p>
+                  <p className="text-sm"><span className="font-semibold">Что проверить:</span> {focus.action}</p>
+                </div>
+              );
+            })()}
+            <div className="grid grid-cols-3 gap-2" aria-label="Денежная карта девяти секторов, север сверху">
+              {VASTU_GRID_DIRECTIONS.map((zone) => (
+                <div key={zone.id} className={`rounded-xl border p-3 min-h-16 ${zone.id === getVastuMoneyFocus(moneyGoal).direction ? 'border-primary bg-primary/10' : 'border-border bg-secondary/70'}`}>
+                  <p className="text-xs font-semibold">{zone.direction}</p>
+                  <p className="text-[11px] opacity-65 mt-1">{zone.id === 'north' ? 'Ресурсы' : zone.id === 'northeast' ? 'Ясность' : zone.id === 'northwest' ? 'Связи' : zone.id === 'center' ? 'Свободный поток' : zone.focus.split('.')[0]}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-border p-5 space-y-4">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-primary font-semibold">Четыре типа remedies</p>
+              <h3 className="text-xl font-semibold mt-1">Какой способ коррекции выбрать</h3>
+              <p className="text-sm opacity-75 mt-2">Начинайте с простого и безопасного. Символические практики необязательны и не заменяют реальные финансовые действия.</p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              {VASTU_REMEDIES.map((remedy) => (
+                <button
+                  key={remedy.id}
+                  type="button"
+                  onClick={() => setRemedyType(remedy.id)}
+                  aria-pressed={remedyType === remedy.id}
+                  className={`rounded-xl border p-3 text-left text-sm font-semibold ${remedyType === remedy.id ? 'border-primary bg-primary/10' : 'border-border bg-secondary'}`}
+                >
+                  {remedy.title}
+                </button>
+              ))}
+            </div>
+            {(() => {
+              const remedy = VASTU_REMEDIES.find((item) => item.id === remedyType) ?? VASTU_REMEDIES[0];
+              return (
+                <div className="rounded-2xl bg-secondary p-4">
+                  <h4 className="font-semibold">{remedy.title}</h4>
+                  <p className="text-sm opacity-75 mt-1">{remedy.description}</p>
+                  <ul className="list-disc pl-5 mt-3 space-y-1">
+                    {remedy.examples.map((example) => <li key={example} className="text-sm">{example}</li>)}
+                  </ul>
+                </div>
+              );
+            })()}
+          </div>
+
+          <div className="rounded-3xl border border-border p-5 space-y-3">
+            <p className="text-xs uppercase tracking-wider text-primary font-semibold">Васту и недвижимость</p>
+            <h3 className="text-xl font-semibold">Используйте принципы пространства и в работе с объектами</h3>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="rounded-2xl bg-secondary p-4">
+                <h4 className="font-semibold">Аренда и продажа</h4>
+                <p className="text-sm opacity-75 mt-2">Подготовка объекта к показу: свободный вход, свет, чистота, устранение запахов и мелких неисправностей, понятные сценарии использования комнат.</p>
+              </div>
+              <div className="rounded-2xl bg-secondary p-4">
+                <h4 className="font-semibold">Работа с недвижимостью как доходом</h4>
+                <p className="text-sm opacity-75 mt-2">Планируйте загрузку, расходы, ремонт, юридическую проверку и доходность объекта. Васту может быть дополнительным языком описания пространства, но не заменяет оценку рынка и финансовый расчёт.</p>
+              </div>
+            </div>
+            <p className="text-xs opacity-60">Ни одно направление или remedy не гарантирует арендаторов, рост цены или прибыль от недвижимости.</p>
           </div>
         </div>
       </GlassCard>
