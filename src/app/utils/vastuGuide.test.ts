@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { VASTU_ACTION_PLANS, VASTU_DIRECTIONS, VASTU_GOALS, VASTU_GRID_ORDER } from './vastuGuide';
+import { getVastuMoneyFocus, VASTU_ACTION_PLANS, VASTU_DIRECTIONS, VASTU_GOALS, VASTU_GRID_ORDER, VASTU_MONEY_FOCUS, VASTU_REMEDIES } from './vastuGuide';
 
 assert.equal(VASTU_DIRECTIONS.length, 9, 'Vastu guide must describe all nine sectors');
 assert.equal(new Set(VASTU_DIRECTIONS.map((zone) => zone.id)).size, 9, 'Vastu sector IDs must be unique');
@@ -44,6 +44,14 @@ for (const goal of VASTU_GOALS) {
   for (const action of actions) {
     assert.ok(action.label.trim(), `Action label is required for ${action.id}`);
   }
+}
+
+assert.equal(VASTU_REMEDIES.length, 4, 'Exactly four remedy categories must be available');
+assert.equal(new Set(VASTU_REMEDIES.map((item) => item.id)).size, 4, 'Remedy categories must be unique');
+assert.equal(VASTU_MONEY_FOCUS.length, 3, 'Money focus must offer stable income, skills and networking directions');
+for (const focus of VASTU_MONEY_FOCUS) {
+  assert.ok(VASTU_DIRECTIONS.some((zone) => zone.id === focus.direction), `Unknown money direction: ${focus.direction}`);
+  assert.equal(getVastuMoneyFocus(focus.id).id, focus.id);
 }
 
 console.log('Vastu guide content tests passed');
