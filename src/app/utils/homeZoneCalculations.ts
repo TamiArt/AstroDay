@@ -80,16 +80,18 @@ export function getVastuZone(room: HomeRoomRect, canvasWidth: number, canvasHeig
   const colIndex = Math.floor(roomCenterX / cellWidth);
   const rowIndex = Math.floor(roomCenterY / cellHeight);
 
+  // Canvas coordinates grow from left to right and top to bottom.
+  // This mapping assumes the floor plan is oriented with geographic north at the top.
   const vastuPositions: Record<string, string> = {
-    '0_0': 'northeast',
+    '0_0': 'northwest',
     '1_0': 'north',
-    '2_0': 'northwest',
-    '0_1': 'east',
+    '2_0': 'northeast',
+    '0_1': 'west',
     '1_1': 'center',
-    '2_1': 'west',
-    '0_2': 'southeast',
+    '2_1': 'east',
+    '0_2': 'southwest',
     '1_2': 'south',
-    '2_2': 'southwest',
+    '2_2': 'southeast',
   };
 
   return vastuPositions[`${colIndex}_${rowIndex}`] || 'center';
