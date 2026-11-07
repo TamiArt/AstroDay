@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import { PROFILE_SCHEMA_VERSION, unwrapProfilePayload, wrapProfilePayload } from './profileMigrations';
-import { importUserProfile, validateUserProfile } from './storage';
+import {
+  deleteHomeData,
+  importUserProfile,
+  loadVastuChecklist,
+  saveVastuChecklist,
+  validateUserProfile,
+  type VastuChecklistItem,
+} from './storage';
 
 const legacyProfile = {
   name: 'Test',
@@ -25,5 +32,24 @@ assert.throws(
   () => unwrapProfilePayload({ schemaVersion: PROFILE_SCHEMA_VERSION + 1, profile: legacyProfile }),
   /более новой версией/,
 );
+
+const storageValues = new Map<string, string>();
+Object.defineProperty(globalThis, 'localStorage', {
+  configurable: true,
+  value: {
+    getItem: (key: string) => storageValues.get(key) ?? null,
+    setItem: (key: string, value: string) => storageValues.set(key, value),
+    removeItem: (key: string) => storageValues.delete(key),
+  },
+});
+
+const checklist: VastuChecklistItem[] = [
+  { id: 'abundance-north', goal: 'abundance', label: 'Освободить север', done: true },
+  { id: 'relationships-southwest', goal: 'relationships', label: 'Организовать спальню', done: false },
+];
+saveVastuChecklist(checklist);
+assert.deepEqual(loadVastuChecklist(), checklist, 'Vastu checklist must persist locally');
+deleteHomeData();
+assert.deepEqual(loadVastuChecklist(), [], 'Deleting home data must also delete the Vastu checklist');
 
 console.log('storage migration tests passed');
