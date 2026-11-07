@@ -203,7 +203,7 @@ export function LifePathAnalysisTab({ natalChart }: LifePathAnalysisTabProps) {
               <p className="text-sm opacity-75">Индивидуальный контекст партнёра: Лагна в {partnerChart.ascendant.signName}; Солнце в {partnerChart.planets.Sun.signName}; Луна в {partnerChart.planets.Moon.signName}, накшатра {partnerChart.planets.Moon.nakshatraName}, пада {partnerChart.planets.Moon.pada}.</p>
               <p className="text-sm opacity-75">
                 Ниже показаны найденные связи между сидерическими долготами планет двух карт в традиционной логике Джйотиш. Это не рейтинг совместимости
-                и не вывод о том, должны ли люди быть вместе.
+                и не вывод о том, должны ли люди быть вместе. Полный расчёт Ашта-Кута / Гуна-милан пока не реализован.
               </p>
               {synastry.length ? (
                 <div className="grid gap-2 sm:grid-cols-2">
