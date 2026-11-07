@@ -26,6 +26,25 @@ function normalizeDegrees(value: number): number {
   return ((value % FULL_CIRCLE) + FULL_CIRCLE) % FULL_CIRCLE;
 }
 
+/**
+ * Greenwich apparent sidereal time in hours.
+ * Uses the standard J2000 GMST polynomial plus the equation-of-equinoxes
+ * correction from astronomy-engine's Earth-tilt model. This avoids relying on
+ * the SiderealTime namespace export, which is absent in the Node ESM runtime.
+ */
+function getGreenwichSiderealTimeHours(date: Date): number {
+  const astroTime = Astronomy.MakeTime(date);
+  const daysSinceJ2000 = astroTime.ut;
+  const centuries = daysSinceJ2000 / 36525;
+  const meanSiderealDegrees = 280.46061837
+    + 360.98564736629 * daysSinceJ2000
+    + 0.000387933 * centuries * centuries
+    - (centuries * centuries * centuries) / 38710000;
+  const equationOfEquinoxesSeconds = Astronomy.e_tilt(astroTime).ee;
+  const meanHours = normalizeDegrees(meanSiderealDegrees) / 15;
+  return (meanHours + equationOfEquinoxesSeconds / 3600 + 24) % 24;
+}
+
 function getMeanObliquity(date: Date): number {
   const astroTime = Astronomy.MakeTime(date);
   const t = (astroTime.ut - 2451545.0) / 36525.0;
@@ -88,7 +107,7 @@ function refineHorizonRoot(
 }
 
 function calculateTropicalAscendant(date: Date, latitude: number, longitude: number): number {
-  const siderealTimeHours = Astronomy.SiderealTime(date);
+  const siderealTimeHours = getGreenwichSiderealTimeHours(date);
   const localSiderealDegrees = normalizeDegrees((siderealTimeHours * 15) + longitude);
   const obliquity = getMeanObliquity(date);
   const roots: number[] = [];
