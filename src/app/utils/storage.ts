@@ -99,12 +99,20 @@ export interface HomeProgressItem {
   done: boolean;
 }
 
+export interface VastuChecklistItem {
+  id: string;
+  goal: 'abundance' | 'relationships' | 'wellbeing';
+  label: string;
+  done: boolean;
+}
+
 const STORAGE_KEY = 'vedic_astro_profile';
 const FEEDBACK_KEY = 'vedic_astro_feedback';
 const LEGACY_OBFUSCATION_KEY = 'jyotish-2026';
 const HOME_CALIBRATION_KEY = 'astroday_home_calibration';
 const HOME_FLOORPLAN_KEY = 'astroday_home_floorplan';
 const HOME_PROGRESS_KEY = 'astroday_home_progress';
+const HOME_VASTU_CHECKLIST_KEY = 'astroday_vastu_checklist';
 
 export function saveUserProfile(profile: UserProfile): void {
   try {
@@ -172,6 +180,24 @@ export function loadHomeProgress(): HomeProgressItem[] {
   return loadLegacyHomeValue<HomeProgressItem[]>(HOME_PROGRESS_KEY, []);
 }
 
+export function saveVastuChecklist(items: VastuChecklistItem[]): void {
+  saveLegacyHomeValue(HOME_VASTU_CHECKLIST_KEY, items);
+}
+
+export function loadVastuChecklist(): VastuChecklistItem[] {
+  const stored = loadLegacyHomeValue<unknown>(HOME_VASTU_CHECKLIST_KEY, []);
+  if (!Array.isArray(stored)) return [];
+
+  return stored.filter((item): item is VastuChecklistItem => {
+    if (typeof item !== 'object' || item === null) return false;
+    const value = item as Record<string, unknown>;
+    return typeof value.id === 'string'
+      && typeof value.label === 'string'
+      && typeof value.done === 'boolean'
+      && (value.goal === 'abundance' || value.goal === 'relationships' || value.goal === 'wellbeing');
+  });
+}
+
 function saveLegacyHomeValue(key: string, value: unknown): void {
   try {
     localStorage.setItem(key, legacyObfuscate(JSON.stringify(value), LEGACY_OBFUSCATION_KEY));
@@ -195,6 +221,7 @@ export function deleteHomeData(): void {
   localStorage.removeItem(HOME_CALIBRATION_KEY);
   localStorage.removeItem(HOME_FLOORPLAN_KEY);
   localStorage.removeItem(HOME_PROGRESS_KEY);
+  localStorage.removeItem(HOME_VASTU_CHECKLIST_KEY);
 }
 
 export async function deleteAllData(): Promise<void> {
@@ -216,6 +243,7 @@ export function exportData(): string {
     homeCalibration: loadHomeCalibration(),
     homeFloorPlan: loadHomeFloorPlan(),
     homeProgress: loadHomeProgress(),
+    vastuChecklist: loadVastuChecklist(),
   }, null, 2);
 }
 
