@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { GlassCard } from './common/GlassCard';
-import { VASTU_ACTION_PLANS, VASTU_DIRECTIONS, VASTU_GOALS, type VastuGoal } from '../utils/vastuGuide';
+import { VASTU_ACTION_PLANS, VASTU_DIRECTIONS, VASTU_GOALS, VASTU_GRID_ORDER, type VastuGoal } from '../utils/vastuGuide';
 import { loadVastuChecklist, saveVastuChecklist, type VastuChecklistItem } from '../utils/storage';
+
+const VASTU_GRID_DIRECTIONS = VASTU_GRID_ORDER.map((id) => VASTU_DIRECTIONS.find((zone) => zone.id === id))
+  .filter((zone) => zone !== undefined);
 
 const PRACTICAL_FRICTIONS = [
   {
@@ -163,8 +166,8 @@ export function VastuGuide() {
               <h3 className="font-semibold">Девять направлений дома</h3>
               <p className="text-xs opacity-60">Выберите сектор для практических рекомендаций</p>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {VASTU_DIRECTIONS.map((zone) => {
+            <div className="grid grid-cols-3 gap-2" aria-label="Карта направлений Васту, север сверху">
+              {VASTU_GRID_DIRECTIONS.map((zone) => {
                 const isSelected = selectedZoneId === zone.id;
                 const isRelevant = zone.goals.includes(activeGoal);
                 return (
