@@ -87,10 +87,23 @@ export interface HomeRoomRect {
   vastuZone: string;
 }
 
+export type VastuMarkerType = 'entrance' | 'window' | 'obstruction' | 'water' | 'clutter' | 'kitchen' | 'bathroom' | 'workspace';
+
+export interface VastuPlanMarker {
+  id: string;
+  type: VastuMarkerType;
+  x: number;
+  y: number;
+  label: string;
+}
+
 export interface HomeFloorPlanData {
   imageDataUrl: string;
   rooms: HomeRoomRect[];
   northOffset: number;
+  /** Clockwise bearing of geographic north from the image's top edge. */
+  northBearingDegrees?: number;
+  markers?: VastuPlanMarker[];
 }
 
 export interface HomeProgressItem {
