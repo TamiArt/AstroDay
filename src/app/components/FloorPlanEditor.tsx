@@ -136,6 +136,8 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
   const handleFile = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    if (!file.type.startsWith('image/')) { setNotice('Выберите изображение плана квартиры.'); return; }
+    if (file.size > 2 * 1024 * 1024) { setNotice('Файл больше 2 МБ. Уменьшите изображение перед загрузкой, чтобы не переполнить локальное хранилище.'); return; }
 
     const reader = new FileReader();
     reader.onload = () => {
@@ -143,7 +145,6 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
       const next: HomeFloorPlanData = { ...planData, imageDataUrl };
       savePlan(next);
     };
-    if (file.size > 5 * 1024 * 1024) { setNotice('Файл больше 5 МБ. Уменьшите изображение перед загрузкой.'); return; }
     reader.readAsDataURL(file);
   };
 
@@ -271,6 +272,7 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
             />
           </div>
         </div>
