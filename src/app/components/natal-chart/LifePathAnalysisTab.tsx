@@ -158,7 +158,7 @@ export function LifePathAnalysisTab({ natalChart }: LifePathAnalysisTabProps) {
               <span>Место рождения</span>
               <input className="w-full rounded-xl border border-border bg-background p-3" value={partner.birthPlace} onChange={(event) => { updatePartner('birthPlace', event.target.value); setPlaceResults([]); }} placeholder="Город, страна" />
               <button type="button" onClick={searchPartnerPlace} disabled={isSearchingPlace} className="mt-2 rounded-lg border border-border px-3 py-2 text-xs disabled:opacity-50">{isSearchingPlace ? 'Ищем место…' : 'Найти координаты и часовой пояс'}</button>
-            </label>
+            </div>
             <label className="text-sm space-y-1">
               <span>Дата рождения</span>
               <input type="date" className="w-full rounded-xl border border-border bg-background p-3" value={partner.birthDate} onChange={(event) => updatePartner('birthDate', event.target.value)} />
@@ -166,6 +166,7 @@ export function LifePathAnalysisTab({ natalChart }: LifePathAnalysisTabProps) {
             <label className="text-sm space-y-1">
               <span>Время рождения</span>
               <input type="time" className="w-full rounded-xl border border-border bg-background p-3" value={partner.birthTime} onChange={(event) => updatePartner('birthTime', event.target.value)} />
+              <span className="block text-xs opacity-60">Если точное время неизвестно, 12:00 даст только приблизительную карту: Лагна и дома могут быть неверны.</span>
             </label>
             <label className="text-sm space-y-1">
               <span>Широта</span>
