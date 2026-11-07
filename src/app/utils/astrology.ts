@@ -3,21 +3,12 @@
  * Free and open-source implementation using astronomy-engine
  */
 
-import { EclipticLongitude, SunPosition, type Body } from 'astronomy-engine';
+import * as Astronomy from 'astronomy-engine';
 import { calculateAdditionalVargas, type AdditionalVargas } from './divisionalCharts';
 import { getLahiriAyanamsha } from './ayanamsha';
 
 const DEG_TO_RAD = Math.PI / 180;
 const FULL_CIRCLE = 360;
-const JULIAN_DAY_UNIX_EPOCH = 2440587.5;
-const JULIAN_DAY_J2000 = 2451545.0;
-const MILLISECONDS_PER_DAY = 86_400_000;
-
-function getJulianDay(date: Date): number {
-  if (!(date instanceof Date) || Number.isNaN(date.getTime())) throw new Error('Некорректная дата для астрономического расчёта');
-  return date.getTime() / MILLISECONDS_PER_DAY + JULIAN_DAY_UNIX_EPOCH;
-}
-
 // Keep the public API stable while delegating the calculation to the dedicated,
 // regression-tested Lahiri module.
 export function getAyanamsha(date: Date): number {
@@ -34,24 +25,10 @@ function normalizeDegrees(value: number): number {
   return ((value % FULL_CIRCLE) + FULL_CIRCLE) % FULL_CIRCLE;
 }
 
-/**
- * Greenwich mean sidereal time in hours.
- * Uses the standard J2000 GMST polynomial directly from UTC Julian Day,
- * avoiding astronomy-engine namespace exports missing in the Node ESM runtime.
- * The omitted equation-of-equinoxes correction is below a few arcseconds.
- */
-function getGreenwichSiderealTimeHours(date: Date): number {
-  const daysSinceJ2000 = getJulianDay(date) - JULIAN_DAY_J2000;
-  const centuries = daysSinceJ2000 / 36525;
-  const meanSiderealDegrees = 280.46061837
-    + 360.98564736629 * daysSinceJ2000
-    + 0.000387933 * centuries * centuries
-    - (centuries * centuries * centuries) / 38710000;
-  return normalizeDegrees(meanSiderealDegrees) / 15;
-}
 
 function getMeanObliquity(date: Date): number {
-  const t = (getJulianDay(date) - JULIAN_DAY_J2000) / 36525.0;
+  const astroTime = Astronomy.MakeTime(date);
+  const t = (astroTime.ut - 2451545.0) / 36525.0;
   const seconds = 21.448 - t * (46.8150 + t * (0.00059 - t * 0.001813));
   return 23 + (26 / 60) + (seconds / 3600);
 }
@@ -111,7 +88,7 @@ function refineHorizonRoot(
 }
 
 function calculateTropicalAscendant(date: Date, latitude: number, longitude: number): number {
-  const siderealTimeHours = getGreenwichSiderealTimeHours(date);
+  const siderealTimeHours = Astronomy.SiderealTime(date);
   const localSiderealDegrees = normalizeDegrees((siderealTimeHours * 15) + longitude);
   const obliquity = getMeanObliquity(date);
   const roots: number[] = [];
@@ -236,16 +213,16 @@ export function calculatePlanetPosition(
 
     if (bodyName === 'Sun') {
       try {
-        const sunPos = SunPosition(date);
+        const sunPos = Astronomy.SunPosition(date);
         tropicalLon = sunPos.elon;
       } catch (err) {
         console.error('SunPosition error:', err);
         throw new Error(`API astronomy-engine вернул ошибку для Солнца: ${err instanceof Error ? err.message : String(err)}`);
       }
     } else {
-      const body = bodyName as Body;
+      const body = bodyName as Astronomy.Body;
       try {
-        tropicalLon = EclipticLongitude(body, date);
+        tropicalLon = Astronomy.EclipticLongitude(body, date);
       } catch (err) {
         console.error(`EclipticLongitude error for ${bodyName}:`, err);
         throw new Error(`API astronomy-engine вернул ошибку для ${bodyName}: ${err instanceof Error ? err.message : String(err)}`);
@@ -574,7 +551,8 @@ export function calculateNatalChart(
     }
 
     try {
-      const jd = getJulianDay(birthDate) - JULIAN_DAY_J2000;
+      const astroTime = Astronomy.MakeTime(birthDate);
+      const jd = astroTime.ut;
       const T = (jd - 2451545.0) / 36525.0;
       let meanNodeLon = 125.0445479 - 1934.1362891 * T + 0.0020754 * T * T + (T * T * T) / 467441.0 - (T * T * T * T) / 60616000.0;
 
