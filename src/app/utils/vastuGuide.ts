@@ -141,3 +141,26 @@ export const VASTU_GOALS: Array<{ id: VastuGoal; label: string; description: str
     description: 'Проверьте свет на востоке, порядок в центре, спокойствие спальни и безопасность кухни.',
   },
 ];
+
+
+export interface VastuAction {
+  id: string;
+  goal: VastuGoal;
+  label: string;
+}
+
+// Небольшие практические действия без обязательных покупок и перестройки жилья.
+export const VASTU_ACTION_PLANS: VastuAction[] = [
+  { id: 'abundance-north', goal: 'abundance', label: 'Освободить северный сектор и организовать удобное место для рабочих задач.' },
+  { id: 'abundance-northeast', goal: 'abundance', label: 'Убрать лишнее с северо-востока и обеспечить доступ дневного света.' },
+  { id: 'abundance-center', goal: 'abundance', label: 'Освободить центральные проходы и убрать препятствия для движения.' },
+  { id: 'abundance-finances', goal: 'abundance', label: 'Разобрать счета и документы, записать один конкретный следующий финансовый шаг.' },
+  { id: 'relationships-southwest', goal: 'relationships', label: 'Сделать спальню спокойной: убрать рабочие вещи и обеспечить приватность.' },
+  { id: 'relationships-northwest', goal: 'relationships', label: 'Освободить пространство для общения и договориться о личных границах.' },
+  { id: 'relationships-center', goal: 'relationships', label: 'Освободить общие проходы и убрать вещи, которые создают бытовые помехи.' },
+  { id: 'relationships-ritual', goal: 'relationships', label: 'Организовать уютное место для совместного отдыха или разговора.' },
+  { id: 'wellbeing-east', goal: 'wellbeing', label: 'Проверить дневной свет, проветривание и состояние растений на востоке.' },
+  { id: 'wellbeing-southeast', goal: 'wellbeing', label: 'Проверить безопасность кухни, вытяжку, электрику и рабочие поверхности.' },
+  { id: 'wellbeing-southwest', goal: 'wellbeing', label: 'Улучшить условия сна: свет, шум, температуру и порядок в спальне.' },
+  { id: 'wellbeing-center', goal: 'wellbeing', label: 'Освободить центральные проходы и обеспечить удобное перемещение по дому.' },
+];
