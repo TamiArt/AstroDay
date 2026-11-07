@@ -1,6 +1,5 @@
 import { HomeRoomRect } from './storage';
 import { NatalChart } from './astrology';
-import { getPlanetName } from './planetUtils';
 
 export interface BaguaGridCell {
   id: string;
