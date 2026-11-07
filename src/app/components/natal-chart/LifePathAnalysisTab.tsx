@@ -200,7 +200,7 @@ export function LifePathAnalysisTab({ natalChart }: LifePathAnalysisTabProps) {
           {partnerChart && (
             <div className="space-y-3 border-t border-border pt-4">
               <h3 className="font-semibold">Сопоставление карт: {partner.name}</h3>
-              <p className="text-sm opacity-75">Индивидуальный контекст партнёра: Лагна в {partnerChart.ascendant.signName}; Солнце в {partnerChart.planets.Sun.signName}; Луна в {partnerChart.planets.Moon.signName}.</p>
+              <p className="text-sm opacity-75">Индивидуальный контекст партнёра: Лагна в {partnerChart.ascendant.signName}; Солнце в {partnerChart.planets.Sun.signName}; Луна в {partnerChart.planets.Moon.signName}, накшатра {partnerChart.planets.Moon.nakshatraName}, пада {partnerChart.planets.Moon.pada}.</p>
               <p className="text-sm opacity-75">
                 Ниже показаны найденные связи между сидерическими долготами планет двух карт в традиционной логике Джйотиш. Это не рейтинг совместимости
                 и не вывод о том, должны ли люди быть вместе.
@@ -217,6 +217,7 @@ export function LifePathAnalysisTab({ natalChart }: LifePathAnalysisTabProps) {
               ) : <p className="text-sm opacity-70">В выбранном наборе планет точных основных аспектов в заданных орбисах не найдено.</p>}
               <div className="space-y-3 pt-3 border-t border-border">
                 <h4 className="font-semibold">Сферы жизни партнёра</h4>
+                <p className="text-sm opacity-75">Ваша Луна: {natalChart.planets.Moon.nakshatraName}, пада {natalChart.planets.Moon.pada}. Луна партнёра: {partnerChart.planets.Moon.nakshatraName}, пада {partnerChart.planets.Moon.pada}. Эти данные важны для дальнейшего традиционного анализа совместимости по Джйотиш.</p>
                 <div className="grid gap-3 md:grid-cols-2">
                   {partnerAreas.map((area) => (
                     <div key={area.id} className="rounded-xl bg-secondary p-3">
