@@ -23,10 +23,9 @@ assert.deepEqual(areas.map((area) => area.id), ['money', 'career', 'development'
 assert.ok(areas.every((area) => area.houseNotes.length === area.houses.length));
 assert.ok(areas.find((area) => area.id === 'money')?.planetNotes.length);
 
-const synastry = getSynastryAspects(chart, {
-  ...chart,
-  planets: { ...chart.planets, Sun: position(70) },
-});
+const firstSynastryChart = { ...chart, planets: { Moon: position(65) } } as unknown as NatalChart;
+const secondSynastryChart = { ...chart, planets: { Sun: position(65) } } as unknown as NatalChart;
+const synastry = getSynastryAspects(firstSynastryChart, secondSynastryChart);
 assert.ok(synastry.some((aspect) => aspect.firstPlanet === 'Moon' && aspect.secondPlanet === 'Sun'));
 assert.ok(synastry.every((aspect) => aspect.orb >= 0));
 console.log('life path analysis tests passed');
