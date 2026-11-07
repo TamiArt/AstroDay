@@ -4,7 +4,9 @@ import {
   deleteHomeData,
   importUserProfile,
   loadVastuChecklist,
+  loadPartnerProfile,
   saveVastuChecklist,
+  savePartnerProfile,
   validateUserProfile,
   type VastuChecklistItem,
 } from './storage';
@@ -49,7 +51,19 @@ const checklist: VastuChecklistItem[] = [
 ];
 saveVastuChecklist(checklist);
 assert.deepEqual(loadVastuChecklist(), checklist, 'Vastu checklist must persist locally');
+const partner = {
+  name: 'Partner',
+  birthDate: '1988-05-12',
+  birthTime: '08:30',
+  birthPlace: 'London',
+  latitude: 51.5074,
+  longitude: -0.1278,
+  timezone: 'Europe/London',
+};
+savePartnerProfile(partner);
+assert.deepEqual(loadPartnerProfile(), partner, 'Partner profile must persist locally');
 deleteHomeData();
 assert.deepEqual(loadVastuChecklist(), [], 'Deleting home data must also delete the Vastu checklist');
+assert.equal(loadPartnerProfile(), null, 'Deleting home data must also delete the partner profile');
 
 console.log('storage migration tests passed');
