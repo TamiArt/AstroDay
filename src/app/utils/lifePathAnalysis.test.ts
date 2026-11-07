@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { angularDistance, analyzeLifeAreas, getSynastryAspects } from './lifePathAnalysis';
-import type { NatalChart } from './astrology';
+import type { NatalChart, PlanetPosition } from './astrology';
 
-const position = (siderealLon: number) => ({ siderealLon, signName: 'Овен' });
+const position = (siderealLon: number) => ({ siderealLon, signName: 'Овен', name: 'Test', tropicalLon: siderealLon, sign: 1, degree: siderealLon, nakshatra: 1, nakshatraName: 'Ашвини', pada: 1, vargas: {} } as unknown as PlanetPosition);
 const chart = {
   date: new Date('1990-01-01T12:00:00Z'),
   latitude: 55,
