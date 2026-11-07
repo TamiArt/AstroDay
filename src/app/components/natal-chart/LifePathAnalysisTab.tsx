@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { calculateNatalChart } from '../../utils/astrology';
 import { createDateInTimezone } from '../../utils/timezones';
 import { analyzeLifeAreas, getSynastryAspects } from '../../utils/lifePathAnalysis';
@@ -41,7 +41,7 @@ export function LifePathAnalysisTab({ natalChart }: LifePathAnalysisTabProps) {
     setPartnerNotice('');
   };
 
-  const analyzePartner = (event: React.FormEvent<HTMLFormElement>) => {
+  const analyzePartner = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setPartnerError('');
     setPartnerNotice('');
