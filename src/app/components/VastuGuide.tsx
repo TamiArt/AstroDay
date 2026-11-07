@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { GlassCard } from './common/GlassCard';
-import { VASTU_DIRECTIONS, VASTU_GOALS, type VastuGoal } from '../utils/vastuGuide';
+import { VASTU_ACTION_PLANS, VASTU_DIRECTIONS, VASTU_GOALS, type VastuGoal } from '../utils/vastuGuide';
+import { loadVastuChecklist, saveVastuChecklist, type VastuChecklistItem } from '../utils/storage';
 
 const PRACTICAL_FRICTIONS = [
   {
@@ -23,8 +24,25 @@ const PRACTICAL_FRICTIONS = [
 export function VastuGuide() {
   const [activeGoal, setActiveGoal] = useState<VastuGoal>('abundance');
   const [selectedZoneId, setSelectedZoneId] = useState('north');
+  const [checklist, setChecklist] = useState<VastuChecklistItem[]>(() => {
+    const saved = loadVastuChecklist();
+    return VASTU_ACTION_PLANS.map((action) => ({
+      ...action,
+      done: saved.find((item) => item.id === action.id)?.done ?? false,
+    }));
+  });
 
   const activeGoalInfo = VASTU_GOALS.find((goal) => goal.id === activeGoal);
+  const activeActions = checklist.filter((action) => action.goal === activeGoal);
+  const completedActions = activeActions.filter((action) => action.done).length;
+
+  const toggleAction = (id: string) => {
+    setChecklist((current) => {
+      const next = current.map((item) => item.id === id ? { ...item, done: !item.done } : item);
+      saveVastuChecklist(next);
+      return next;
+    });
+  };
   const selectedZone = VASTU_DIRECTIONS.find((zone) => zone.id === selectedZoneId) ?? VASTU_DIRECTIONS[0];
 
   const selectGoal = (goal: VastuGoal) => {
@@ -101,6 +119,43 @@ export function VastuGuide() {
             {activeGoalInfo && (
               <p className="text-sm opacity-75 mt-3">{activeGoalInfo.description}</p>
             )}
+          </div>
+
+          <div className="rounded-3xl border border-border bg-secondary/60 p-5 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 className="font-semibold">План действий</h3>
+                <p className="text-sm opacity-70 mt-1">Небольшие шаги для выбранной сферы — без дорогих ритуалов и обязательных покупок.</p>
+              </div>
+              <span className="text-sm font-semibold tabular-nums">{completedActions} из {activeActions.length}</span>
+            </div>
+            <div
+              className="h-2 rounded-full bg-background overflow-hidden"
+              role="progressbar"
+              aria-label="Прогресс плана Васту"
+              aria-valuemin={0}
+              aria-valuemax={activeActions.length}
+              aria-valuenow={completedActions}
+            >
+              <div
+                className="h-full rounded-full bg-primary transition-all"
+                style={{ width: `${activeActions.length ? completedActions / activeActions.length * 100 : 0}%` }}
+              />
+            </div>
+            <div className="space-y-2">
+              {activeActions.map((action) => (
+                <label key={action.id} className="flex items-start gap-3 rounded-xl border border-border bg-background/70 p-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={action.done}
+                    onChange={() => toggleAction(action.id)}
+                    className="mt-1 h-4 w-4 accent-primary"
+                  />
+                  <span className={action.done ? 'text-sm opacity-60 line-through' : 'text-sm'}>{action.label}</span>
+                </label>
+              ))}
+            </div>
+            <p className="text-xs opacity-60">Отметки сохраняются локально в этом браузере и не влияют на астрологические расчёты.</p>
           </div>
 
           <div>
