@@ -154,7 +154,7 @@ export function LifePathAnalysisTab({ natalChart }: LifePathAnalysisTabProps) {
               <span>Имя партнёра</span>
               <input className="w-full rounded-xl border border-border bg-background p-3" value={partner.name} onChange={(event) => updatePartner('name', event.target.value)} />
             </label>
-            <label className="text-sm space-y-1">
+            <div className="text-sm space-y-1">
               <span>Место рождения</span>
               <input className="w-full rounded-xl border border-border bg-background p-3" value={partner.birthPlace} onChange={(event) => { updatePartner('birthPlace', event.target.value); setPlaceResults([]); }} placeholder="Город, страна" />
               <button type="button" onClick={searchPartnerPlace} disabled={isSearchingPlace} className="mt-2 rounded-lg border border-border px-3 py-2 text-xs disabled:opacity-50">{isSearchingPlace ? 'Ищем место…' : 'Найти координаты и часовой пояс'}</button>
