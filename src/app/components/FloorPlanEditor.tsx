@@ -10,7 +10,11 @@ interface FloorPlanEditorProps {
 export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [planData, setPlanData] = useState<HomeFloorPlanData | null>(loadHomeFloorPlan());
+  const [planData, setPlanData] = useState<HomeFloorPlanData>(() => loadHomeFloorPlan() ?? {
+    imageDataUrl: '',
+    rooms: [],
+    northOffset: loadHomeCalibration()?.northOffset ?? 0,
+  });
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [drawing, setDrawing] = useState(false);
   const [draft, setDraft] = useState<{ x:number; y:number; width:number; height:number } | null>(null);
@@ -19,7 +23,6 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
   const [showGrid, setShowGrid] = useState(true);
 
   useEffect(() => {
-    if (!planData) return;
     const timeout = window.setTimeout(() => {
       drawPlan();
     }, 50);
@@ -41,7 +44,7 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
     const height = canvas.height;
     ctx.clearRect(0, 0, width, height);
 
-    if (planData?.imageDataUrl) {
+    if (planData.imageDataUrl) {
       const image = new Image();
       image.onload = () => {
         ctx.drawImage(image, 0, 0, width, height);
@@ -192,7 +195,7 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
   };
 
   const handlePointerUp = () => {
-    if (!drawing || !draft || !planData || !canvasRef.current) {
+    if (!drawing || !draft || !canvasRef.current) {
       setDrawing(false);
       setDraft(null);
       return;
@@ -279,7 +282,7 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
           </div>
         </div>
 
-        {planData?.rooms.length ? (
+        {planData.rooms.length ? (
           <div className="space-y-3">
             <h3 className="text-lg font-semibold">Комнаты на плане</h3>
             <div className="grid gap-2 sm:grid-cols-2">
