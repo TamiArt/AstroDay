@@ -69,31 +69,51 @@ export function assignBaguaZone(room: HomeRoomRect, grid: BaguaGridCell[]): stri
 }
 
 // Вычисляет позицию комнаты в 3x3 сетке (для Васту)
-export function getVastuZone(room: HomeRoomRect, canvasWidth: number, canvasHeight: number): string {
-  const roomCenterX = room.x + room.width / 2;
-  const roomCenterY = room.y + room.height / 2;
+export function getVastuZone(
+  room: HomeRoomRect,
+  canvasWidth: number,
+  canvasHeight: number,
+  northBearingDegrees = 0,
+): string {
+  return getVastuZoneAtPoint(
+    room.x + room.width / 2,
+    room.y + room.height / 2,
+    canvasWidth,
+    canvasHeight,
+    northBearingDegrees,
+  );
+}
 
-  const cellWidth = canvasWidth / 3;
-  const cellHeight = canvasHeight / 3;
-
-  const colIndex = Math.floor(roomCenterX / cellWidth);
-  const rowIndex = Math.floor(roomCenterY / cellHeight);
-
-  // Canvas coordinates grow from left to right and top to bottom.
-  // This mapping assumes the floor plan is oriented with geographic north at the top.
-  const vastuPositions: Record<string, string> = {
-    '0_0': 'northwest',
-    '1_0': 'north',
-    '2_0': 'northeast',
-    '0_1': 'west',
-    '1_1': 'center',
-    '2_1': 'east',
-    '0_2': 'southwest',
-    '1_2': 'south',
-    '2_2': 'southeast',
+/**
+ * Maps a point on the floor-plan image to a compass-aligned Vastu sector.
+ * northBearingDegrees is clockwise from the image's top edge (0 = north is up).
+ */
+export function getVastuZoneAtPoint(
+  x: number,
+  y: number,
+  canvasWidth: number,
+  canvasHeight: number,
+  northBearingDegrees = 0,
+): string {
+  const angle = northBearingDegrees * Math.PI / 180;
+  const dx = x - canvasWidth / 2;
+  const dy = y - canvasHeight / 2;
+  const east = dx * Math.cos(angle) + dy * Math.sin(angle);
+  const north = -dx * Math.sin(angle) + dy * Math.cos(angle);
+  const col = east < -canvasWidth / 6 ? 'west' : east > canvasWidth / 6 ? 'east' : 'center';
+  const row = north > canvasHeight / 6 ? 'north' : north < -canvasHeight / 6 ? 'south' : 'center';
+  const sectorMap: Record<string, string> = {
+    'west_north': 'northwest',
+    'center_north': 'north',
+    'east_north': 'northeast',
+    'west_center': 'west',
+    'center_center': 'center',
+    'east_center': 'east',
+    'west_south': 'southwest',
+    'center_south': 'south',
+    'east_south': 'southeast',
   };
-
-  return vastuPositions[`${colIndex}_${rowIndex}`] || 'center';
+  return sectorMap[`${col}_${row}`] ?? 'center';
 }
 
 // Определяет элемент на основе зоны
