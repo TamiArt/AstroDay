@@ -108,7 +108,9 @@ https://nominatim.openstreetmap.org/search?q=...&format=json&limit=5&addressdeta
 
 ## Хранение И Приватность
 
-`storage.ts` хранит профиль локально. В профиле есть `timeUncertainty` и `timezoneAccuracy`. Текущее местоположение опционально и имеет собственную `timezoneAccuracy`.
+`storage.ts` хранит профиль локально. В профиле есть `timeUncertainty` и `timezoneAccuracy`. Текущее местоположение опционально и имеет собственную `timezoneAccuracy`. Данные профиля в localStorage подвергаются обратимой XOR-обфускации с ключом из клиентского кода; это не шифрование и не защита от доступа к хранилищу браузера.
+
+Для поиска места и reverse geocoding приложение отправляет поисковую строку либо координаты в OpenStreetMap Nominatim. Остальные данные профиля не передаются этому сервису.
 
 Пользователь может:
 
