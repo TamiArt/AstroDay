@@ -1,7 +1,10 @@
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { GlassCard } from './common/GlassCard';
-import { loadHomeCalibration, loadHomeFloorPlan, saveHomeFloorPlan, HomeFloorPlanData, HomeRoomRect } from '../utils/storage';
-import { generateBaguaGrid, assignBaguaZone, getVastuZone } from '../utils/homeZoneCalculations';
+import { loadHomeCalibration, loadHomeFloorPlan, saveHomeFloorPlan, HomeFloorPlanData, HomeRoomRect, VastuMarkerType } from '../utils/storage';
+import { generateBaguaGrid, assignBaguaZone, getVastuZoneAtPoint } from '../utils/homeZoneCalculations';
+
+const MARKERS: Array<{ type: VastuMarkerType; label: string; code: string; group: string }> = [{type:'entrance',label:'Вход',code:'ВХ',group:'inflow'},{type:'window',label:'Окно / балкон',code:'ОК',group:'inflow'},{type:'water',label:'Вода / протечка',code:'В',group:'outflow'},{type:'bathroom',label:'Санузел',code:'СУ',group:'outflow'},{type:'obstruction',label:'Тяжёлое препятствие',code:'ПР',group:'blockage'},{type:'clutter',label:'Захламление',code:'ХЛ',group:'blockage'},{type:'kitchen',label:'Кухня / плита',code:'К',group:'function'},{type:'workspace',label:'Рабочее место',code:'Р',group:'function'}];
+const SECTORS: Record<string,string> = {northwest:'Северо-запад',north:'Север',northeast:'Северо-восток',west:'Запад',center:'Центр',east:'Восток',southwest:'Юго-запад',south:'Юг',southeast:'Юго-восток'};
 
 interface FloorPlanEditorProps {
   onRoomSelect: (room: HomeRoomRect | null) => void;
@@ -21,6 +24,10 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
   const [startPoint, setStartPoint] = useState<{ x:number; y:number } | null>(null);
   const [northOffset] = useState<number>(loadHomeCalibration()?.northOffset ?? 0);
   const [showGrid, setShowGrid] = useState(true);
+  const [markerMode, setMarkerMode] = useState<VastuMarkerType | null>(null);
+  const [notice, setNotice] = useState('');
+  const bearing = planData.northBearingDegrees ?? 0;
+  const markers = planData.markers ?? [];
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -48,56 +55,28 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
       const image = new Image();
       image.onload = () => {
         ctx.drawImage(image, 0, 0, width, height);
-        if (showGrid) drawBaguaGrid(ctx, width, height);
+        if (showGrid) drawVastuGrid(ctx, width, height);
         drawRooms(ctx);
+        drawMarkers(ctx, width, height);
       };
       image.src = planData.imageDataUrl;
     } else {
       ctx.fillStyle = 'rgba(255,255,255,0.95)';
       ctx.fillRect(0, 0, width, height);
-      if (showGrid) drawBaguaGrid(ctx, width, height);
+      if (showGrid) drawVastuGrid(ctx, width, height);
       drawRooms(ctx);
+      drawMarkers(ctx, width, height);
     }
   };
 
-  const drawBaguaGrid = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
-    const grid = generateBaguaGrid(width, height, northOffset);
-
-    ctx.save();
-    ctx.globalAlpha = 0.15;
-
-    const cellWidth = width / 3;
-    const cellHeight = height / 3;
-
-    ctx.strokeStyle = 'rgba(59, 130, 246, 0.6)';
-    ctx.lineWidth = 2;
-
-    for (let i = 1; i < 3; i++) {
-      ctx.beginPath();
-      ctx.moveTo(i * cellWidth, 0);
-      ctx.lineTo(i * cellWidth, height);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(0, i * cellHeight);
-      ctx.lineTo(width, i * cellHeight);
-      ctx.stroke();
-    }
-
-    ctx.globalAlpha = 0.4;
-    ctx.fillStyle = 'rgba(59, 130, 246, 1)';
-    ctx.font = 'bold 12px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    grid.forEach((cell) => {
-      const x = cell.x + cell.width / 2;
-      const y = cell.y + cell.height / 2;
-      ctx.fillText(cell.label, x, y);
-    });
-
-    ctx.restore();
+  const drawVastuGrid = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+    ctx.save(); ctx.translate(width / 2, height / 2); ctx.rotate(bearing * Math.PI / 180);
+    ctx.strokeStyle = 'rgba(14,116,144,0.8)'; ctx.lineWidth = 3; ctx.setLineDash([12,8]);
+    for (let i=-1;i<=1;i+=2) { ctx.beginPath(); ctx.moveTo(i*width/6,-height); ctx.lineTo(i*width/6,height); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-width,i*height/6); ctx.lineTo(width,i*height/6); ctx.stroke(); }
+    ctx.setLineDash([]); const labels=[['СЗ','СЕВЕР','СВ'],['ЗАПАД','ЦЕНТР','ВОСТОК'],['ЮЗ','ЮГ','ЮВ']]; ctx.fillStyle='rgba(8,47,73,0.92)'; ctx.font='bold 24px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    labels.forEach((row,r)=>row.forEach((label,col)=>ctx.fillText(label,(col-1)*width/3,(r-1)*height/3))); ctx.restore();
   };
+  const drawMarkers = (ctx: CanvasRenderingContext2D, width: number, height: number) => { markers.forEach((marker)=>{ const option=MARKERS.find((item)=>item.type===marker.type); const x=marker.x*width; const y=marker.y*height; ctx.beginPath(); ctx.fillStyle=option?.group==='inflow'?'#15803d':option?.group==='outflow'?'#1d4ed8':option?.group==='blockage'?'#b91c1c':'#7e22ce'; ctx.arc(x,y,20,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.stroke(); ctx.fillStyle='#fff'; ctx.font='bold 15px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(option?.code??'?',x,y); }); };
 
   const drawRooms = (ctx: CanvasRenderingContext2D) => {
     ctx.lineWidth = 2;
