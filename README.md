@@ -29,7 +29,7 @@ npm run verify
 npm run dev        # локальный dev-сервер
 npm run build      # production build в dist/
 npm run typecheck  # TypeScript без emit
-npm run verify     # build + typecheck
+npm run verify     # unit tests + typecheck + production build
 ```
 
 ## Что Делает Приложение
