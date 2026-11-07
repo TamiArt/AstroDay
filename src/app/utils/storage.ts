@@ -161,7 +161,7 @@ export function saveHomeCalibration(data: HomeCalibrationData): void {
 }
 
 export function loadHomeCalibration(): HomeCalibrationData | null {
-  return loadLegacyHomeValue<HomeCalibrationData>(HOME_CALIBRATION_KEY, null);
+  return loadLegacyHomeValue<HomeCalibrationData | null>(HOME_CALIBRATION_KEY, null);
 }
 
 export function saveHomeFloorPlan(data: HomeFloorPlanData): void {
@@ -169,7 +169,7 @@ export function saveHomeFloorPlan(data: HomeFloorPlanData): void {
 }
 
 export function loadHomeFloorPlan(): HomeFloorPlanData | null {
-  return loadLegacyHomeValue<HomeFloorPlanData>(HOME_FLOORPLAN_KEY, null);
+  return loadLegacyHomeValue<HomeFloorPlanData | null>(HOME_FLOORPLAN_KEY, null);
 }
 
 export function saveHomeProgress(items: HomeProgressItem[]): void {
