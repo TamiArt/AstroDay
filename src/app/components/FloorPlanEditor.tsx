@@ -139,13 +139,10 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
     const reader = new FileReader();
     reader.onload = () => {
       const imageDataUrl = reader.result as string;
-      const next: HomeFloorPlanData = {
-        imageDataUrl,
-        rooms: planData?.rooms ?? [],
-        northOffset,
-      };
+      const next: HomeFloorPlanData = { ...planData, imageDataUrl };
       savePlan(next);
     };
+    if (file.size > 5 * 1024 * 1024) { setNotice('Файл больше 5 МБ. Уменьшите изображение перед загрузкой.'); return; }
     reader.readAsDataURL(file);
   };
 
@@ -155,6 +152,11 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
     const rect = canvas.getBoundingClientRect();
     const x = ((event.clientX - rect.left) / rect.width) * canvas.width;
     const y = ((event.clientY - rect.top) / rect.height) * canvas.height;
+    if (markerMode) {
+      const option = MARKERS.find((item) => item.type === markerMode);
+      const marker = { id: 'marker-' + Date.now(), type: markerMode, x: x / canvas.width, y: y / canvas.height, label: option?.label ?? 'Метка' };
+      savePlan({ ...planData, markers: [...markers, marker] }); setMarkerMode(null); setNotice('Добавлена отметка: ' + marker.label); return;
+    }
     setStartPoint({ x, y });
     setDrawing(true);
   };
@@ -201,7 +203,7 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
     const canvas = canvasRef.current;
     const baguaGrid = generateBaguaGrid(canvas.width, canvas.height, northOffset);
     const baguaZone = assignBaguaZone(tempRoom, baguaGrid);
-    const vastuZone = getVastuZone(tempRoom, canvas.width, canvas.height);
+    const vastuZone = getVastuZoneAtPoint(draft.x + draft.width / 2, draft.y + draft.height / 2, canvas.width, canvas.height, bearing);
 
     const newRoom: HomeRoomRect = {
       id: `${Date.now()}-${name.replace(/\s+/g, '-')}`,
@@ -225,6 +227,15 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
     setDraft(null);
   };
 
+  const updateBearing = (value: number) => {
+    const nextBearing = ((value % 360) + 360) % 360;
+    const canvas = canvasRef.current;
+    const rooms = canvas ? planData.rooms.map((room) => ({ ...room, vastuZone: getVastuZoneAtPoint(room.x + room.width / 2, room.y + room.height / 2, canvas.width, canvas.height, nextBearing) })) : planData.rooms;
+    savePlan({ ...planData, northBearingDegrees: nextBearing, rooms });
+  };
+  const markerAnalysis = markers.map((marker) => { const canvas = canvasRef.current; const zone = canvas ? getVastuZoneAtPoint(marker.x * canvas.width, marker.y * canvas.height, canvas.width, canvas.height, bearing) : 'center'; return { ...marker, zone, option: MARKERS.find((item) => item.type === marker.type) }; });
+  const grouped = (group: string) => markerAnalysis.filter((item) => item.option?.group === group);
+
   const handleRoomClick = (room: HomeRoomRect) => {
     setSelectedRoomId(room.id);
     onRoomSelect(room);
@@ -235,19 +246,20 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
       <div className="space-y-4">
         <div>
           <h2 className="text-xl font-semibold">План квартиры</h2>
-          <p className="opacity-70">Загрузите план, ориентированный севером вверх, и обведите комнаты. Сектора рассчитываются по этой ориентации; автоматического поворота изображения пока нет.</p>
+          <p className="opacity-70">Наложите компасную сетку Васту, настройте север и отметьте входы, окна, воду, санузлы и препятствия. Сетка поворачивается относительно плана.</p>
         </div>
 
         <div className="rounded-3xl overflow-hidden border border-border bg-background">
           <div className="p-4 flex flex-col gap-3">
             <label className="block text-sm font-medium">Загрузить чертеж</label>
             <input type="file" accept="image/*" onChange={handleFile} className="w-full" />
+            <label className="block text-sm">Север относительно верхнего края: <strong>{bearing.toFixed(0)}°</strong><input type="range" min="0" max="359" value={bearing} onChange={(event) => updateBearing(Number(event.target.value))} className="w-full mt-2" /><span className="text-xs opacity-60">0° — сверху; 90° — справа; 180° — снизу; 270° — слева.</span></label>
             <p className="text-xs opacity-60">Файл хранится локально в браузере.</p>
             <button
               onClick={() => setShowGrid((visible) => !visible)}
               className={`rounded-2xl px-3 py-2 text-sm transition-colors ${showGrid ? 'bg-primary/20 text-primary' : 'bg-secondary text-white'}`}
             >
-              {showGrid ? '✓ Сетка видна' : 'Показать сетку'}
+              {showGrid ? '✓ Сетка Васту видна' : 'Показать сетку Васту'}
             </button>
           </div>
           <div ref={containerRef} className="relative h-[360px] bg-[#0f172a]/10">
@@ -261,6 +273,13 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
           </div>
         </div>
 
+        <div className="rounded-2xl border border-border p-4 space-y-3">
+          <h3 className="font-semibold">Точки притока, оттока и препятствия</h3><p className="text-xs opacity-70">Выберите тип отметки, затем нажмите место на плане. Зелёный — входы/окна, синий — вода/санузлы, красный — препятствия, фиолетовый — кухня/рабочее место.</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">{MARKERS.map((item) => <button key={item.type} type="button" aria-pressed={markerMode===item.type} onClick={()=>setMarkerMode(markerMode===item.type?null:item.type)} className={'rounded-xl border p-2 text-xs text-left '+(markerMode===item.type?'border-primary bg-primary/10':'border-border bg-secondary')}>{item.label}</button>)}</div>
+          {markerMode && <p className="text-sm text-primary font-semibold">Нажмите на план, чтобы поставить метку «{MARKERS.find((item)=>item.type===markerMode)?.label}».</p>}{notice && <p role="status" className="text-xs opacity-70">{notice}</p>}
+          {markerAnalysis.map((item)=><div key={item.id} className="flex justify-between gap-2 text-sm bg-secondary rounded-lg p-2"><span>{item.option?.label}: <strong>{SECTORS[item.zone]}</strong></span><button type="button" className="underline text-xs" onClick={()=>savePlan({...planData,markers:markers.filter((marker)=>marker.id!==item.id)})}>Удалить</button></div>)}
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">{[{title:'Точки притока',items:grouped('inflow'),note:'Входы и окна — доступ, движение и дневной свет в традиционной трактовке.'},{title:'Точки возможного оттока',items:grouped('outflow'),note:'Проверьте санузлы, сливы и отсутствие протечек.'},{title:'Что может перекрывать пространство',items:grouped('blockage'),note:'Захламление и препятствия — бытовые помехи, а не доказанные блоки энергии.'},{title:'Функциональные зоны',items:grouped('function'),note:'Сопоставьте расположение кухни и рабочего места с сектором.'}].map((group)=><div key={group.title} className="rounded-2xl border border-border p-4"><h3 className="font-semibold">{group.title}</h3><p className="text-xs opacity-65 mt-1">{group.note}</p>{group.items.length?group.items.map((item)=><p key={item.id} className="text-sm mt-2">{item.option?.label}: {SECTORS[item.zone]}</p>):<p className="text-sm opacity-55 mt-2">Пока не отмечены.</p>}</div>)}</div>
         {planData.rooms.length ? (
           <div className="space-y-3">
             <h3 className="text-lg font-semibold">Комнаты на плане</h3>
