@@ -5,6 +5,8 @@ import {
   deletePartnerProfile,
   importUserProfile,
   loadVastuChecklist,
+  loadHomeFloorPlan,
+  saveHomeFloorPlan,
   loadPartnerProfile,
   saveVastuChecklist,
   savePartnerProfile,
@@ -52,6 +54,15 @@ const checklist: VastuChecklistItem[] = [
 ];
 saveVastuChecklist(checklist);
 assert.deepEqual(loadVastuChecklist(), checklist, 'Vastu checklist must persist locally');
+const floorPlan = {
+  imageDataUrl: '',
+  rooms: [],
+  northOffset: 0,
+  northBearingDegrees: 90,
+  markers: [{ id: 'entry-1', type: 'entrance' as const, x: 0.2, y: 0.4, label: 'Вход' }],
+};
+saveHomeFloorPlan(floorPlan);
+assert.deepEqual(loadHomeFloorPlan(), floorPlan, 'Vastu compass alignment and plan markers must persist locally');
 const partner = {
   name: 'Partner',
   birthDate: '1988-05-12',
