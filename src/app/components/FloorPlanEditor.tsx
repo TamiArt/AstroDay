@@ -253,7 +253,7 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
       <div className="space-y-4">
         <div>
           <h2 className="text-xl font-semibold">План квартиры</h2>
-          <p className="opacity-70">Загрузите план и обведите комнаты. Сетка Багуа/Васту повернется с учётом севера.</p>
+          <p className="opacity-70">Загрузите план, ориентированный севером вверх, и обведите комнаты. Сектора рассчитываются по этой ориентации; автоматического поворота изображения пока нет.</p>
         </div>
 
         <div className="rounded-3xl overflow-hidden border border-border bg-background">
