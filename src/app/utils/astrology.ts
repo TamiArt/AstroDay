@@ -35,7 +35,7 @@ function normalizeDegrees(value: number): number {
 }
 
 /**
- * Greenwich apparent sidereal time in hours.
+ * Greenwich mean sidereal time in hours.
  * Uses the standard J2000 GMST polynomial directly from UTC Julian Day,
  * avoiding astronomy-engine namespace exports missing in the Node ESM runtime.
  * The omitted equation-of-equinoxes correction is below a few arcseconds.
