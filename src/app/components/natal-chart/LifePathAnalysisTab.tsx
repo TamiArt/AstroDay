@@ -3,7 +3,7 @@ import { calculateNatalChart } from '../../utils/astrology';
 import { createDateInTimezone } from '../../utils/timezones';
 import { analyzeLifeAreas, getSynastryAspects } from '../../utils/lifePathAnalysis';
 import { isValidCoordinates, isValidIanaTimezone } from '../../utils/locationValidation';
-import { loadPartnerProfile, savePartnerProfile, type PartnerBirthProfile } from '../../utils/storage';
+import { deletePartnerProfile, loadPartnerProfile, savePartnerProfile, type PartnerBirthProfile } from '../../utils/storage';
 import type { NatalChart } from '../../utils/astrology';
 import { geocodePlace, type GeocodingResult } from '../../utils/geocoding';
 import { GlassCard } from '../common/GlassCard';
@@ -190,6 +190,7 @@ export function LifePathAnalysisTab({ natalChart }: LifePathAnalysisTabProps) {
             )}
             <div className="md:col-span-2 flex flex-wrap items-center gap-3">
               <button type="submit" className="rounded-xl bg-primary px-5 py-3 font-semibold text-primary-foreground">Рассчитать карту партнёра</button>
+              <button type="button" onClick={() => { deletePartnerProfile(); setPartner(EMPTY_PARTNER); setPartnerChart(null); setPlaceResults([]); setPartnerNotice('Сохранённая карта партнёра удалена.'); setPartnerError(''); }} className="rounded-xl border border-border px-4 py-3 text-sm">Удалить сохранённые данные партнёра</button>
               {partnerNotice && <span className="text-sm text-green-700">{partnerNotice}</span>}
               {partnerError && <span role="alert" className="text-sm text-red-600">{partnerError}</span>}
             </div>
