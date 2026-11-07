@@ -142,10 +142,10 @@ export function LifePathAnalysisTab({ natalChart }: LifePathAnalysisTabProps) {
       <GlassCard>
         <div className="space-y-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.18em] font-semibold text-primary">Совместный разбор</p>
-            <h2 className="text-2xl font-semibold mt-2">Карта партнёра — мужа или жены</h2>
+            <p className="text-xs uppercase tracking-[0.18em] font-semibold text-primary">Джйотиш · совместимость пары</p>
+            <h2 className="text-2xl font-semibold mt-2">Синастрия по Джйотиш: карта супруга или партнёра</h2>
             <p className="text-sm opacity-75 mt-2">
-              Добавьте данные рождения партнёра, чтобы построить вторую карту и посмотреть межкартные аспекты.
+              Добавьте данные рождения партнёра, чтобы построить вторую сидерическую натальную карту в системе Джйотиш и посмотреть межкартные аспекты, дома и индивидуальные жизненные сферы обоих партнёров.
               Для точного расчёта домов нужны точное время, координаты и часовой пояс места рождения.
             </p>
           </div>
@@ -202,7 +202,7 @@ export function LifePathAnalysisTab({ natalChart }: LifePathAnalysisTabProps) {
               <h3 className="font-semibold">Сопоставление карт: {partner.name}</h3>
               <p className="text-sm opacity-75">Индивидуальный контекст партнёра: Лагна в {partnerChart.ascendant.signName}; Солнце в {partnerChart.planets.Sun.signName}; Луна в {partnerChart.planets.Moon.signName}.</p>
               <p className="text-sm opacity-75">
-                Ниже показаны найденные угловые связи между планетами двух карт. Это не рейтинг совместимости
+                Ниже показаны найденные связи между сидерическими долготами планет двух карт в традиционной логике Джйотиш. Это не рейтинг совместимости
                 и не вывод о том, должны ли люди быть вместе.
               </p>
               {synastry.length ? (
