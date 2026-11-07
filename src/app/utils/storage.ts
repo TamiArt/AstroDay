@@ -247,18 +247,22 @@ export function loadPartnerProfile(): PartnerBirthProfile | null {
   return { name, birthDate, birthTime, birthPlace, latitude, longitude, timezone };
 }
 
+export function deletePartnerProfile(): void {
+  localStorage.removeItem(PARTNER_PROFILE_KEY);
+}
+
 export function deleteHomeData(): void {
   localStorage.removeItem(HOME_CALIBRATION_KEY);
   localStorage.removeItem(HOME_FLOORPLAN_KEY);
   localStorage.removeItem(HOME_PROGRESS_KEY);
   localStorage.removeItem(HOME_VASTU_CHECKLIST_KEY);
-  localStorage.removeItem(PARTNER_PROFILE_KEY);
 }
 
 export async function deleteAllData(): Promise<void> {
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(FEEDBACK_KEY);
   deleteHomeData();
+  deletePartnerProfile();
 
   try {
     await clearForecastCache();
