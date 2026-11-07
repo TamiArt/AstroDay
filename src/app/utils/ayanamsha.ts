@@ -1,6 +1,6 @@
-import * as Astronomy from 'astronomy-engine';
-
 const J2000_JULIAN_DAY = 2451545.0;
+const UNIX_EPOCH_JULIAN_DAY = 2440587.5;
+const MILLISECONDS_PER_DAY = 86_400_000;
 const JULIAN_CENTURY_DAYS = 36525;
 const ARCSECONDS_PER_DEGREE = 3600;
 
@@ -26,8 +26,10 @@ export function getLahiriAyanamsha(date: Date): number {
     throw new Error('Некорректная дата для расчёта Lahiri ayanamsha');
   }
 
-  const astroTime = Astronomy.MakeTime(date);
-  const t = (astroTime.ut - J2000_JULIAN_DAY) / JULIAN_CENTURY_DAYS;
+  // Astronomy Engine's UT day count is equivalent to Julian Day minus J2000.
+  // Convert directly from the UTC timestamp so this utility also works in Node ESM tests.
+  const julianDay = (date.getTime() / MILLISECONDS_PER_DAY) + UNIX_EPOCH_JULIAN_DAY;
+  const t = (julianDay - J2000_JULIAN_DAY) / JULIAN_CENTURY_DAYS;
   const precessionDegrees = getGeneralPrecessionArcseconds(t) / ARCSECONDS_PER_DEGREE;
 
   return LAHIRI_J2000_DEGREES + precessionDegrees;
