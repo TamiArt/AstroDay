@@ -1,8 +1,18 @@
 import assert from 'node:assert/strict';
-import { VASTU_ACTION_PLANS, VASTU_DIRECTIONS, VASTU_GOALS } from './vastuGuide';
+import { VASTU_ACTION_PLANS, VASTU_DIRECTIONS, VASTU_GOALS, VASTU_GRID_ORDER } from './vastuGuide';
 
 assert.equal(VASTU_DIRECTIONS.length, 9, 'Vastu guide must describe all nine sectors');
 assert.equal(new Set(VASTU_DIRECTIONS.map((zone) => zone.id)).size, 9, 'Vastu sector IDs must be unique');
+assert.deepEqual(
+  VASTU_GRID_ORDER,
+  ['northwest', 'north', 'northeast', 'west', 'center', 'east', 'southwest', 'south', 'southeast'],
+  'Compass grid must place north at the top and east on the right',
+);
+assert.deepEqual(
+  [...VASTU_GRID_ORDER].sort(),
+  VASTU_DIRECTIONS.map((zone) => zone.id).sort(),
+  'Compass grid must contain every Vastu sector exactly once',
+);
 
 for (const zone of VASTU_DIRECTIONS) {
   assert.ok(zone.direction.trim(), `Direction label is required for ${zone.id}`);
