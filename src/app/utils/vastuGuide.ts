@@ -13,6 +13,13 @@ export interface VastuDirection {
   goals: VastuGoal[];
 }
 
+// Порядок отображения соответствует компасной сетке: север сверху, восток справа.
+export const VASTU_GRID_ORDER = [
+  'northwest', 'north', 'northeast',
+  'west', 'center', 'east',
+  'southwest', 'south', 'southeast',
+] as const;
+
 export const VASTU_DIRECTIONS: VastuDirection[] = [
   {
     id: 'north',
