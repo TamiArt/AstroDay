@@ -53,6 +53,7 @@ assert.equal(evaluatePlanetCondition(chart, 'Rahu')?.dignity, 'not_applicable');
 assert.equal(evaluatePlanetCondition(chart, 'Ketu')?.score, null);
 assert.ok(describePeriodConnection(chart, 'Rahu', [4], []).includes('Диспозитор Луна'));
 assert.ok(describePeriodConnection(chart, 'Ketu', [10], []).includes('Диспозитор Сатурн'));
+assert.ok(describePeriodConnection(chart, 'Moon', [3], []).includes('получает аспект на своё положение от Юпитер'));
 assert.ok(describeHouseDrishti(chart, 5).some((item) => item.includes('Сатурн')));
 const drishti = getGrahaDrishti(chart);
 assert.deepEqual(drishti.filter((item) => item.source === 'Марс').map((item) => item.targetHouse), [4, 7, 8]);
