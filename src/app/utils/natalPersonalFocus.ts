@@ -175,7 +175,10 @@ function getPlanetaryLinkId(link: {
 }): string {
   // Keys are astronomical identifiers, not translated labels. Direction is
   // retained because a graha-drishti relationship is directional.
-  return [link.sourceKey, link.targetKey, link.kind, link.offset ?? 'same-sign'].join(':');
+  const [sourceKey, targetKey] = link.kind === 'conjunction'
+    ? [link.sourceKey, link.targetKey].sort()
+    : [link.sourceKey, link.targetKey];
+  return [sourceKey, targetKey, link.kind, link.offset ?? 'same-sign'].join(':');
 }
 
 function describePlanetaryLink(link: {
@@ -208,7 +211,7 @@ export function getCoreInteractionsByLifeArea(chart: NatalChart): CoreLifeAreaIn
     // select the representative deterministically rather than by input order.
     const uniquePairs = new Map<string, typeof directLinks[number]>();
     for (const link of [...directLinks].sort((a, b) =>
-      getPlanetaryLinkId(a).localeCompare(getPlanetaryLinkId(b)),
+      getPlanetaryLinkId(a) < getPlanetaryLinkId(b) ? -1 : getPlanetaryLinkId(a) > getPlanetaryLinkId(b) ? 1 : 0,
     )) {
       const pairKey = [link.sourceKey, link.targetKey].sort().join(':');
       if (!uniquePairs.has(pairKey)) uniquePairs.set(pairKey, link);
