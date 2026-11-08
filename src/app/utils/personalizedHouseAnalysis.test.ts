@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { analyzeLifeTopics, analyzePersonalizedHouses, getVargaEvidence } from './personalizedHouseAnalysis';
 import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition, getGrahaDrishti } from './natalStrengthAnalysis';
+import { getSunHouseFocus } from './natalAnalysisGuidance';
 import type { NatalChart, PlanetPosition } from './astrology';
 
 function position(name: string, longitude: number, signName: string, nakshatraName: string) {
@@ -34,6 +35,22 @@ const chart = {
     Ketu: position('Ketu', 275, 'Capricorn', 'Shravana'),
   },
 } as unknown as NatalChart;
+
+const leoTwelfthChart = {
+  ...chart,
+  houses: chart.houses?.map((house) => ({
+    ...house,
+    house: ((house.sign - 5 + 12) % 12) + 1,
+  })),
+} as NatalChart;
+const leoTwelfthFocus = getSunHouseFocus(leoTwelfthChart, 12);
+assert.ok(leoTwelfthFocus.includes('закулисная стратегия'));
+assert.ok(leoTwelfthFocus.includes('Лев добавляет лидерский и творческий способ проявления'));
+assert.ok(leoTwelfthFocus.includes('собственный знак'));
+const virgoAscendantFirstHouse = analyzePersonalizedHouses(leoTwelfthChart).find((item) => item.house === 1);
+assert.equal(virgoAscendantFirstHouse?.sign, 'Дева');
+assert.equal(virgoAscendantFirstHouse?.lord, 'Меркурий');
+assert.ok(virgoAscendantFirstHouse?.interpretation.includes('аналитика'));
 
 const houses = analyzePersonalizedHouses(chart);
 assert.equal(houses.length, 12);
