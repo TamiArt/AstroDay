@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { analyzeLifeTopics, analyzePersonalizedHouses, getVargaEvidence } from './personalizedHouseAnalysis';
 import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition, getGrahaDrishti } from './natalStrengthAnalysis';
 import { getSunHouseFocus } from './natalAnalysisGuidance';
-import { getAscendantLordFocus, getMoonHouseFocus } from './natalPersonalFocus';
+import { getAscendantLordFocus, getCoreChartSynthesis, getMoonHouseFocus } from './natalPersonalFocus';
 import type { NatalChart, PlanetPosition } from './astrology';
 
 function position(name: string, longitude: number, signName: string, nakshatraName: string) {
@@ -65,6 +65,18 @@ const moonFocus = getMoonHouseFocus(chart, 3);
 assert.ok(moonFocus.includes('3-м доме'));
 assert.ok(moonFocus.includes('Mrigashira'));
 assert.ok(moonFocus.includes('Аспекты'));
+const synthesis = getCoreChartSynthesis(chart);
+assert.ok(synthesis.includes('Базовый способ действовать'));
+assert.ok(synthesis.includes('Вектор воли и самореализации'));
+assert.ok(synthesis.includes('Эмоциональные потребности'));
+assert.ok(synthesis.includes('распределены по разным домам'));
+const alignedCoreChart = {
+  ...chart,
+  planets: { ...chart.planets, Moon: position('Moon', 130, 'Leo', 'Magha') },
+} as NatalChart;
+const alignedSynthesis = getCoreChartSynthesis(alignedCoreChart);
+assert.ok(alignedSynthesis.includes('Общая точка акцента'));
+assert.ok(alignedSynthesis.includes('Солнце и Луна связаны с 5-м домом'));
 
 const houses = analyzePersonalizedHouses(chart);
 assert.equal(houses.length, 12);
