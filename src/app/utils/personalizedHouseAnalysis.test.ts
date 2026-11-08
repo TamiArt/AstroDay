@@ -84,6 +84,9 @@ const marsAspectsSunChart = {
 } as NatalChart;
 const directLinks = getPlanetToPlanetAspects(marsAspectsSunChart, ['Mars', 'Sun', 'Moon']);
 assert.ok(directLinks.some((item) => item.source === 'Марс' && item.target === 'Солнце' && item.kind === 'graha-drishti' && item.offset === 7));
+assert.ok(directLinks.some((item) => item.sourceKey === 'Mars' && item.targetKey === 'Sun'));
+assert.ok(getCoreChartSynthesis(marsAspectsSunChart).includes('воля и самореализация'));
+assert.ok(getCoreChartSynthesis(marsAspectsSunChart).includes('направлять намерения в конкретные действия'));
 const directSynthesis = getCoreChartSynthesis(marsAspectsSunChart);
 assert.ok(directSynthesis.includes('Марс из 1-го дома аспектирует Солнце'));
 const sameSignCoreChart = {
@@ -97,6 +100,7 @@ const sameSignCoreChart = {
 const conjunctions = getPlanetToPlanetAspects(sameSignCoreChart, ['Sun', 'Moon']);
 assert.equal(conjunctions.filter((item) => item.kind === 'conjunction').length, 1);
 assert.ok(getCoreChartSynthesis(sameSignCoreChart).includes('Солнце и Луна находятся в одном знаке'));
+assert.ok(getCoreChartSynthesis(sameSignCoreChart).includes('темы «самостоятельность, авторство, воля и ответственность» и «эмоциональные потребности'));
 assert.ok(!getPlanetToPlanetAspects(chart, ['Rahu', 'Ketu']).length);
 
 const houses = analyzePersonalizedHouses(chart);
