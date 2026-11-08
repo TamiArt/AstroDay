@@ -3,7 +3,6 @@
  */
 
 import * as Astronomy from 'astronomy-engine';
-
 import { NAKSHATRAS, tropicalToSidereal } from './astrology';
 import { getWeekdayIndex } from './dateUtils';
 
