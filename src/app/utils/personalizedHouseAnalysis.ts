@@ -1,5 +1,6 @@
 import { calculateDasha, getCurrentAntardasha, getPlanetHouse as resolvePlanetHouse, type NatalChart } from './astrology';
 import { calculateDivisionalChart } from './divisionalCharts';
+import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition } from './natalStrengthAnalysis';
 
 export interface PlanetEvidence {
   name: string;
@@ -216,6 +217,9 @@ export function analyzePersonalizedHouses(chart: NatalChart): PersonalizedHouseI
       .filter((name) => getPlanetHouseForChart(chart, name) === house.house)
       .map((name) => toEvidence(name, chart));
     const lordEvidence = lord ? toEvidence(house.lord, chart) : null;
+    const lordCondition = evaluatePlanetCondition(chart, house.lord);
+    const houseAspects = describeHouseDrishti(chart, house.house);
+    const lordHouseAspects = lordHouse ? describeHouseDrishti(chart, lordHouse) : [];
     const sign = SIGN_RU[house.signName] ?? house.signName;
     const interpretation = lordHouse
       ? `В традиционной Джйотиш этот дом связан с темой: ${HOUSE_MEANING[house.house]}. В твоей карте он начинается в знаке ${sign}. Управитель — ${PLANET_RU[house.lord] ?? house.lord}; он расположен в ${lordHouse}-м доме (${getLordHouseMeaning(lordHouse)}). Поэтому темы этих двух домов стоит рассматривать вместе: решения и опыт в сфере «${getLordHouseMeaning(lordHouse)}» символически связываются с темой этого дома.`
@@ -224,6 +228,9 @@ export function analyzePersonalizedHouses(chart: NatalChart): PersonalizedHouseI
     const evidence = [
       `Знак дома: ${sign}`,
       `Управитель: ${PLANET_RU[house.lord] ?? house.lord}${lordEvidence ? ` — ${formatPlanetEvidence(lordEvidence)}` : ''}`,
+      lordCondition ? `Достоинство управителя: ${lordCondition.label}; качественная шкала ${lordCondition.score}/100. Это не Shadbala.` : 'Достоинство управителя: нет данных.',
+      ...houseAspects,
+      ...lordHouseAspects.map((item) => `Аспект на положение управителя: ${item}`),
       occupants.length ? `Планеты в доме: ${occupants.map((item) => formatPlanetEvidence(item)).join('; ')}` : 'В доме нет планет; интерпретация опирается прежде всего на знак и управителя.',
     ];
 
@@ -239,7 +246,7 @@ export function analyzePersonalizedHouses(chart: NatalChart): PersonalizedHouseI
       lordSign: lord ? SIGN_RU[lord.signName] ?? lord.signName : null,
       lordNakshatra: lord?.nakshatraName ?? null,
       occupants,
-      interpretation: `${interpretation} Символические качества управителя: ${planetThemes.join('; ')}.`,
+      interpretation: `${interpretation} Символические качества управителя: ${planetThemes.join('; ')}. Состояние управителя: ${lordCondition ? `${lordCondition.label} в знаке ${lordCondition.sign} (качественная оценка ${lordCondition.score}/100): ${lordCondition.explanation}` : 'не удалось определить'}. ${houseAspects.length ? `Влияние на сам дом: ${houseAspects.join(' ')}` : 'Прямых граха-дришти на этот дом по используемой схеме не найдено.'} ${lordHouseAspects.length ? `Дополнительные аспекты на дом, где расположен управитель: ${lordHouseAspects.join(' ')}` : ''}`,
       practicalActions: HOUSE_ACTIONS[house.house] ?? [],
       watchouts: house.house === 5
         ? ['Не воспринимайте символические показатели как прогноз фертильности или гарантированное число детей.']
@@ -277,16 +284,20 @@ export function analyzeLifeTopics(chart: NatalChart, currentDate: Date = new Dat
   const moonNakshatra = chart.planets.Moon.nakshatra;
   const dasha = calculateDasha(chart.date, moonNakshatra, currentDate, chart.planets.Moon.siderealLon);
   const antar = getCurrentAntardasha(dasha, currentDate);
-  const periodLabel = `Текущая Вимшоттари Даша по расчёту приложения: ${PLANET_RU[dasha.planet] ?? dasha.planet}${antar ? ` / Антардаша: ${PLANET_RU[antar.planet] ?? antar.planet}` : ''}.`;
+  const formatDate = (date: Date) => date.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
+  const periodLabel = `Махадаша ${PLANET_RU[dasha.planet] ?? dasha.planet} действует с ${formatDate(dasha.startDate)} по ${formatDate(dasha.endDate)}${antar ? `; Антардаша ${PLANET_RU[antar.planet] ?? antar.planet} — с ${formatDate(antar.startDate)} по ${formatDate(antar.endDate)}` : ''}.`;
 
   return TOPIC_CONFIG.map((topic) => {
     const planets = getTopicPlanetNames(chart, topic.houses);
     const directions = [...new Set(planets.map((name) => topic.directions[name]).filter((value): value is string => Boolean(value)))];
     const evidence = getTopicEvidence(chart, topic.houses);
     const focus = planets.map((name) => `${PLANET_RU[name] ?? name}: ${PLANET_THEMES[name]}`).join('; ');
+    const mahaConnection = describePeriodConnection(chart, dasha.planet, topic.houses, planets);
+    const antarConnection = antar ? describePeriodConnection(chart, antar.planet, topic.houses, planets) : 'Текущая Антардаша не определена в доступных данных.';
+    const periodMeaning = `Связь Махадаши с этой сферой: ${mahaConnection} Связь Антардаши: ${antarConnection}`;
     const timingNote = topic.id === 'children'
-      ? `${periodLabel} В традиционной астрологии период рассматривают как символический контекст, но он не позволяет установить дату зачатия, количество детей или медицинский прогноз. Для планирования беременности ориентируйтесь на медицинские рекомендации.`
-      : `${periodLabel} Это символический астрологический фон, а не гарантия события или лучший день для финансовой операции.`;
+      ? `${periodLabel} ${periodMeaning} Это символическая трактовка периода, а не прогноз фертильности, даты зачатия или количества детей. Медицинское планирование беременности следует обсуждать с врачом.`
+      : `${periodLabel} ${periodMeaning} Период показывает символический акцент, а не гарантирует событие и не определяет лучший день для финансовой операции.`;
 
     return {
       id: topic.id,
@@ -300,7 +311,6 @@ export function analyzeLifeTopics(chart: NatalChart, currentDate: Date = new Dat
     };
   });
 }
-
 export function getVargaEvidence(chart: NatalChart, division: 7 | 10): string[] {
   const varga = calculateDivisionalChart(
     Object.fromEntries(Object.entries(chart.planets).map(([name, position]) => [name, position.siderealLon])),
