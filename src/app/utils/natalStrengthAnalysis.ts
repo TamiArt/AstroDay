@@ -3,9 +3,9 @@ import type { NatalChart } from './astrology';
 export interface PlanetCondition {
   planet: string;
   sign: string;
-  dignity: 'exalted' | 'own' | 'debilitated' | 'other';
+  dignity: 'exalted' | 'own' | 'debilitated' | 'other' | 'not_applicable';
   label: string;
-  score: number;
+  score: number | null;
   explanation: string;
   house: number | null;
 }
@@ -33,6 +33,17 @@ export function evaluatePlanetCondition(chart: NatalChart, planetName: string): 
   const planet = chart.planets[planetName as keyof NatalChart['planets']];
   if (!planet) return null;
   const sign = planet.sign;
+  if (planetName === 'Rahu' || planetName === 'Ketu') {
+    return {
+      planet: PLANET_RU[planetName],
+      sign: SIGN_RU[sign] ?? planet.signName,
+      dignity: 'not_applicable',
+      label: 'отдельная оценка достоинства не применяется',
+      score: null,
+      explanation: 'Для лунных узлов экзальтация, падение и собственные знаки трактуются неодинаково в разных школах. Здесь их положение оценивается через дом, знак и диспозитора, без условного балла.',
+      house: getPlanetHouse(chart, planetName),
+    };
+  }
   const debilitationSign = EXALTATION[planetName] === undefined ? undefined : (EXALTATION[planetName] + 6) % 12;
   let dignity: PlanetCondition['dignity'] = 'other';
   let label = 'в другом знаке';
@@ -125,6 +136,25 @@ export function describePeriodConnection(
   if (occupiedHouse && relevantHouses.includes(occupiedHouse)) links.push(`расположена непосредственно в ${occupiedHouse}-м тематическом доме`);
   if (aspects.length) links.push(`аспектирует тематический дом ${aspects.map((item) => item.targetHouse).join(', ')}`);
   if (relevantPlanets.includes(planetName) && !links.length) links.push('связана с тематикой как одна из планет, расположенных в рассматриваемых домах');
+  let dispositorNote = '';
+  if (planetName === 'Rahu' || planetName === 'Ketu') {
+    const dispositor = chart.houses?.find((house) => house.sign === chart.planets[planetName].sign)?.lord;
+    if (dispositor) {
+      const dispositorCondition = evaluatePlanetCondition(chart, dispositor);
+      const dispositorHouse = getPlanetHouse(chart, dispositor);
+      const dispositorRules = chart.houses?.filter((house) => house.lord === dispositor).map((house) => house.house) ?? [];
+      const dispositorLinks = [
+        dispositorRules.some((house) => relevantHouses.includes(house))
+          ? `управляет тематическими домами ${dispositorRules.filter((house) => relevantHouses.includes(house)).join(', ')}`
+          : '',
+        dispositorHouse && relevantHouses.includes(dispositorHouse)
+          ? `находится в тематическом ${dispositorHouse}-м доме`
+          : '',
+      ].filter(Boolean);
+      dispositorNote = ` Диспозитор ${PLANET_RU[dispositor] ?? dispositor} (${dispositorCondition?.sign ?? 'знак неизвестен'}, ${dispositorHouse ? `${dispositorHouse}-й дом` : 'дом неизвестен'}, ${dispositorCondition?.label ?? 'достоинство не определено'})${dispositorLinks.length ? `: ${dispositorLinks.join('; ')}.` : ' не имеет прямой связи с указанными домами по управлению или положению.'}`;
+    }
+  }
   const connection = links.length ? links.join('; ') : 'прямой связи с выбранными домами по управлению, положению или аспекту не обнаружено';
-  return `${condition.planet} (${condition.sign}, ${condition.house ?? 'неизвестный'}-й дом; ${condition.label}) ${connection}. ${condition.explanation}`;
+  const houseLabel = condition.house ? `${condition.house}-м доме` : 'дом не определён';
+  return `${condition.planet} (${condition.sign}, ${houseLabel}; ${condition.label}) ${connection}. ${condition.explanation}${dispositorNote}`;
 }
