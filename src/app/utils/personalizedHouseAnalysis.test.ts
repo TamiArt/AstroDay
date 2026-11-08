@@ -156,6 +156,10 @@ const conjunctions = getPlanetToPlanetAspects(sameSignCoreChart, ['Sun', 'Moon']
 assert.equal(conjunctions.find((item) => item.kind === 'conjunction')?.sourceKey, 'Sun');
 assert.equal(conjunctions.find((item) => item.kind === 'conjunction')?.targetKey, 'Moon');
 assert.equal(conjunctions.filter((item) => item.kind === 'conjunction').length, 1);
+const conjunctionAreaLink = getCoreInteractionsByLifeArea(sameSignCoreChart)
+  .flatMap((area) => area.links)
+  .find((link) => link.kind === 'conjunction');
+assert.equal(conjunctionAreaLink?.id, 'Moon:Sun:conjunction:same-sign');
 assert.ok(getCoreChartSynthesis(sameSignCoreChart).includes('Солнце и Луна находятся в одном знаке'));
 assert.ok(getCoreChartSynthesis(sameSignCoreChart).includes('темы «самостоятельность, авторство, воля и ответственность» и «эмоциональные потребности'));
 assert.ok(!getPlanetToPlanetAspects(chart, ['Rahu', 'Ketu']).length);
