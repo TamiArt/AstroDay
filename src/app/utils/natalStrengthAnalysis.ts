@@ -144,7 +144,7 @@ export function describePeriodConnection(
   if (relevantPlanets.includes(planetName) && !links.length) links.push('связана с тематикой как одна из планет, расположенных в рассматриваемых домах');
   let dispositorNote = '';
   if (planetName === 'Rahu' || planetName === 'Ketu') {
-    const dispositor = chart.houses?.find((house) => house.sign === chart.planets[planetName].sign)?.lord;
+    const dispositor = chart.houses?.find((house) => house.sign === chart.planets[planetName as keyof NatalChart['planets']].sign)?.lord;
     if (dispositor) {
       const dispositorCondition = evaluatePlanetCondition(chart, dispositor);
       const dispositorHouse = getPlanetHouse(chart, dispositor);
