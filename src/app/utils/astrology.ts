@@ -7,10 +7,10 @@ import * as Astronomy from 'astronomy-engine';
 
 // Node's ESM interop can expose the CommonJS build under `default`, while Vite
 // exposes the ESM namespace directly. Normalize both shapes in one place.
-const AstronomyApi = (Astronomy as unknown as { default?: typeof Astronomy }).default ?? Astronomy;
 import { calculateAdditionalVargas, type AdditionalVargas } from './divisionalCharts';
 import { getLahiriAyanamsha } from './ayanamsha';
 
+const AstronomyApi = (Reflect.get(Astronomy, 'default') as typeof Astronomy | undefined) ?? Astronomy;
 const DEG_TO_RAD = Math.PI / 180;
 const FULL_CIRCLE = 360;
 // Keep the public API stable while delegating the calculation to the dedicated,
@@ -28,7 +28,6 @@ export function tropicalToSidereal(tropicalLon: number, date: Date): number {
 function normalizeDegrees(value: number): number {
   return ((value % FULL_CIRCLE) + FULL_CIRCLE) % FULL_CIRCLE;
 }
-
 
 function getMeanObliquity(date: Date): number {
   const astroTime = AstronomyApi.MakeTime(date);
