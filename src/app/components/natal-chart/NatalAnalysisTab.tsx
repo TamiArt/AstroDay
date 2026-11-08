@@ -15,7 +15,12 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { NatalChart as NatalChartType, PlanetPosition } from '../../utils/astrology';
+import { SIGNS_RU } from '../../utils/astrology';
+import type { NatalChart as NatalChartType } from '../../utils/astrology';
+import { analyzePersonalizedHouses } from '../../utils/personalizedHouseAnalysis';
+import { getPlanetHouse } from '../../utils/natalStrengthAnalysis';
+import { getSunHouseFocus } from '../../utils/natalAnalysisGuidance';
+import { getAscendantLordFocus, getCoreChartSynthesis, getMoonHouseFocus } from '../../utils/natalPersonalFocus';
 import { getAscendantDescription, getMoonDescription, getSunDescription } from '../../utils/natalChartDescriptions';
 import { GlassCard } from '../common/GlassCard';
 import { TermTooltip } from '../common/TermTooltip';
@@ -55,9 +60,6 @@ const LIFE_AREA_STYLES = {
   },
 } as const;
 
-function getHouseForPlanet(planet: PlanetPosition, ascendantLon: number): number {
-  return Math.floor(((planet.siderealLon - ascendantLon + 360) % 360) / 30) + 1;
-}
 
 function BulletList({ items, tone }: { items: string[]; tone: 'green' | 'orange' | 'blue' | 'yellow' }) {
   const toneClass = {
@@ -99,11 +101,18 @@ function InsightCard({ icon: Icon, title, subtitle, accent, children }: InsightC
 }
 
 export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
-  const sunHouse = getHouseForPlanet(natalChart.planets.Sun, natalChart.ascendant.siderealLon);
-  const moonHouse = getHouseForPlanet(natalChart.planets.Moon, natalChart.ascendant.siderealLon);
+  const sunHouse = (getPlanetHouse(natalChart, 'Sun') ?? 1);
+  const moonHouse = (getPlanetHouse(natalChart, 'Moon') ?? 1);
+  const personalizedHouses = analyzePersonalizedHouses(natalChart);
+  const sunFocus = getSunHouseFocus(natalChart, sunHouse);
+  const ascendantLordFocus = getAscendantLordFocus(natalChart);
+  const moonHouseFocus = getMoonHouseFocus(natalChart, moonHouse);
+  const coreChartSynthesis = getCoreChartSynthesis(natalChart);
   const ascDesc = getAscendantDescription(natalChart.ascendant.signName);
-  const sunDesc = getSunDescription(natalChart.planets.Sun.signName, sunHouse);
-  const moonDesc = getMoonDescription(natalChart.planets.Moon.signName, moonHouse);
+  const sunSignRu = SIGNS_RU[natalChart.planets.Sun.sign] ?? natalChart.planets.Sun.signName;
+  const moonSignRu = SIGNS_RU[natalChart.planets.Moon.sign] ?? natalChart.planets.Moon.signName;
+  const sunDesc = getSunDescription(sunSignRu, sunHouse);
+  const moonDesc = getMoonDescription(moonSignRu, moonHouse);
 
   return (
     <div className="space-y-6">
@@ -120,6 +129,11 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
           </h4>
           <p className="text-sm text-gray-800 leading-relaxed mb-3">{ascDesc.whatItIs}</p>
           <p className="text-sm text-gray-700 leading-relaxed">{ascDesc.meaning}</p>
+        </div>
+
+        <div className="p-4 bg-white rounded-lg border border-purple-200">
+          <h4 className="text-sm font-semibold text-purple-700 uppercase mb-2">Управитель Лагны — куда направлена энергия личности</h4>
+          <p className="text-sm text-gray-700 leading-relaxed">{ascendantLordFocus}</p>
         </div>
 
         <div className="p-4 bg-white rounded-lg border border-purple-200">
@@ -164,7 +178,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
       <InsightCard
         icon={Sun}
         title={sunDesc.title}
-        subtitle={`Солнце в ${natalChart.planets.Sun.signName}, ${sunHouse}-й дом`}
+        subtitle={`Солнце в ${sunSignRu}, ${sunHouse}-й дом`}
         accent="border-yellow-200"
       >
         <div className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border-l-4 border-yellow-600">
@@ -179,7 +193,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
           </div>
           <div className="p-4 bg-white rounded-lg border border-orange-200">
             <h4 className="text-sm font-semibold text-orange-700 uppercase mb-2">Где светить</h4>
-            <p className="text-sm text-gray-700 leading-relaxed">{sunDesc.inHouse}</p>
+            <p className="text-sm text-gray-700 leading-relaxed">{sunFocus}</p>
           </div>
         </div>
         <div className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border-l-4 border-yellow-600">
@@ -194,12 +208,16 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
       <InsightCard
         icon={Moon}
         title={moonDesc.title}
-        subtitle={`Луна в ${natalChart.planets.Moon.signName}, ${moonHouse}-й дом`}
+        subtitle={`Луна в ${moonSignRu}, ${moonHouse}-й дом`}
         accent="border-blue-200"
       >
         <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-600">
           <h4 className="font-semibold text-gray-900 mb-2">Эмоциональная природа</h4>
           <p className="text-sm text-gray-800 leading-relaxed">{moonDesc.essence}</p>
+        </div>
+        <div className="p-4 bg-white rounded-lg border border-blue-200">
+          <h4 className="text-sm font-semibold text-blue-700 uppercase mb-2">Конкретная жизненная сфера Луны</h4>
+          <p className="text-sm text-gray-700 leading-relaxed">{moonHouseFocus}</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-4 bg-white rounded-lg border border-blue-200">
@@ -219,6 +237,21 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
           <p className="text-sm text-gray-700 leading-relaxed">{moonDesc.comfort}</p>
         </div>
       </InsightCard>
+
+      <GlassCard>
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 pb-3 border-b border-gray-200">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Как три главных показателя складываются вместе</h3>
+              <p className="text-sm text-gray-600">Лагна, Солнце и Луна: общий акцент и разные функции</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{coreChartSynthesis}</p>
+        </div>
+      </GlassCard>
 
       <GlassCard>
         <div className="space-y-4">
@@ -241,6 +274,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
             ].map((area) => {
               const Icon = area.icon;
               const house = natalChart.houses?.find((item) => item.house === area.house);
+              const personal = personalizedHouses.find((item) => item.house === area.house);
               const styles = LIFE_AREA_STYLES[area.tone as keyof typeof LIFE_AREA_STYLES];
 
               return (
@@ -249,10 +283,18 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                     <Icon className={`w-5 h-5 ${styles.icon}`} />
                     <h4 className="font-semibold text-gray-900">{area.title} ({area.house}-й дом)</h4>
                   </div>
-                  <p className="text-sm text-gray-700 leading-relaxed mb-2">{area.text}</p>
-                  <p className={`text-xs ${styles.meta} font-medium`}>
-                    {house ? `${house.signName}, управитель ${house.lord}` : 'Данные дома недоступны'}
+                  <p className="text-sm text-gray-600 leading-relaxed mb-2">{area.text}</p>
+                  <p className={`text-xs ${styles.meta} font-medium mb-2`}>
+                    {personal ? `${personal.sign}, управитель ${personal.lord}` : house ? 'Знак и управитель дома определены, подробности недоступны' : 'Данные дома недоступны'}
                   </p>
+                  {personal ? (
+                    <div className="space-y-2 border-t border-white/70 pt-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-600">Что это означает именно в вашей карте</p>
+                      <p className="text-sm leading-relaxed text-gray-800">
+                        {personal.interpretation}
+                      </p>
+                    </div>
+                  ) : null}
                 </div>
               );
             })}
