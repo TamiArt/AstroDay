@@ -35,6 +35,10 @@ export function getSunHouseFocus(chart: NatalChart, house: number): string {
   const sun = chart.planets.Sun;
   const condition = evaluatePlanetCondition(chart, 'Sun');
   const aspects = describeHouseDrishti(chart, house);
+  const ruledHouses = chart.houses?.filter((item) => item.lord === 'Sun').map((item) => item.house) ?? [];
+  const lordship = ruledHouses.length
+    ? `В этой карте Солнце также управляет ${ruledHouses.map((item) => `${item}-м домом`).join(', ')}; темы этих домов связываются с его положением.`
+    : '';
   const signSpecific = SUN_SIGN_STYLE[sun.signName]
     ?? `Знак ${sun.signName} описывает стиль проявления Солнца; его качества нужно читать вместе с конкретной сферой ${house}-го дома.`;
   const dignity = condition
@@ -43,5 +47,5 @@ export function getSunHouseFocus(chart: NatalChart, house: number): string {
   const aspectNote = aspects.length
     ? `На эту сферу также влияют аспекты: ${aspects.join(' ')}`
     : 'По используемой схеме классической граха-дришти прямые аспекты на этот дом не обнаружены.';
-  return `Конкретные направления: ${SUN_HOUSE_FOCUS[house] ?? 'сфера определяется положением Солнца и связями управителей'}. ${signSpecific} ${dignity} ${aspectNote}`;
+  return `Конкретные направления: ${SUN_HOUSE_FOCUS[house] ?? 'сфера определяется положением Солнца и связями управителей'}. ${signSpecific} ${lordship} ${dignity} ${aspectNote}`;
 }
