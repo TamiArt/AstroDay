@@ -135,6 +135,12 @@ export function describePeriodConnection(
   }
   if (occupiedHouse && relevantHouses.includes(occupiedHouse)) links.push(`расположена непосредственно в ${occupiedHouse}-м тематическом доме`);
   if (aspects.length) links.push(`аспектирует тематический дом ${aspects.map((item) => item.targetHouse).join(', ')}`);
+  const influencesOnPeriodLord = occupiedHouse
+    ? getGrahaDrishti(chart).filter((item) => item.targetHouse === occupiedHouse && item.source !== condition.planet)
+    : [];
+  if (influencesOnPeriodLord.length) {
+    links.push(`получает аспект на своё положение от ${influencesOnPeriodLord.map((item) => item.source).join(', ')}`);
+  }
   if (relevantPlanets.includes(planetName) && !links.length) links.push('связана с тематикой как одна из планет, расположенных в рассматриваемых домах');
   let dispositorNote = '';
   if (planetName === 'Rahu' || planetName === 'Ketu') {
