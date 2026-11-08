@@ -20,7 +20,7 @@ import type { NatalChart as NatalChartType } from '../../utils/astrology';
 import { analyzePersonalizedHouses } from '../../utils/personalizedHouseAnalysis';
 import { getPlanetHouse } from '../../utils/natalStrengthAnalysis';
 import { getSunHouseFocus } from '../../utils/natalAnalysisGuidance';
-import { getAscendantLordFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getMoonHouseFocus } from '../../utils/natalPersonalFocus';
+import { getAscendantLordFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus } from '../../utils/natalPersonalFocus';
 import { getAscendantDescription, getMoonDescription, getSunDescription } from '../../utils/natalChartDescriptions';
 import { GlassCard } from '../common/GlassCard';
 import { TermTooltip } from '../common/TermTooltip';
@@ -109,6 +109,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
   const moonHouseFocus = getMoonHouseFocus(natalChart, moonHouse);
   const coreChartSynthesis = getCoreChartSynthesis(natalChart);
   const coreLifeAreaInteractions = getCoreInteractionsByLifeArea(natalChart);
+  const coreLifeAreaBridges = getCoreLifeAreaBridges(natalChart);
   const ascDesc = getAscendantDescription(natalChart.ascendant.signName);
   const sunSignRu = SIGNS_RU[natalChart.planets.Sun.sign] ?? natalChart.planets.Sun.signName;
   const moonSignRu = SIGNS_RU[natalChart.planets.Moon.sign] ?? natalChart.planets.Moon.signName;
@@ -263,6 +264,18 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                 </section>
               ))}
             </div>
+            {coreLifeAreaBridges.length > 0 ? (
+              <section className="rounded-lg border border-indigo-100 bg-indigo-50/60 p-4 space-y-3">
+                <h4 className="font-semibold text-gray-900">Как несколько жизненных сфер связаны между собой</h4>
+                {coreLifeAreaBridges.map((bridge) => (
+                  <div key={bridge.id} className="space-y-1">
+                    <p className="text-sm font-medium text-gray-800">{bridge.connection}</p>
+                    <p className="text-sm text-gray-700">Подтверждённые сферы: {bridge.areas.join(', ')}.</p>
+                    <p className="text-xs leading-relaxed text-gray-600">{bridge.explanation}</p>
+                  </div>
+                ))}
+              </section>
+            ) : null}
             <p className="text-xs leading-relaxed text-gray-500">Если связь планет не имеет опоры в домах конкретной сферы, она здесь не показывается. Это традиционная символическая интерпретация, а не прогноз событий.</p>
           </div>
         </GlassCard>
