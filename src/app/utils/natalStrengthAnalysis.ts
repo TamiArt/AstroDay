@@ -188,6 +188,7 @@ export function getPlanetToPlanetAspects(chart: NatalChart, planetNames: string[
 
     for (const target of uniqueNames) {
       if (source === target) continue;
+      if (target === 'Rahu' || target === 'Ketu') continue;
       const targetPosition = chart.planets[target as keyof NatalChart['planets']];
       const targetHouse = getPlanetHouse(chart, target);
       if (!targetHouse) continue;
@@ -199,7 +200,6 @@ export function getPlanetToPlanetAspects(chart: NatalChart, planetNames: string[
         continue;
       }
 
-      if (target === 'Rahu' || target === 'Ketu') continue;
       const offset = ((targetHouse - sourceHouse + 12) % 12) + 1;
       const allowedOffsets = SPECIAL_DRISHTI[source] ?? [7];
       if (allowedOffsets.includes(offset)) {
