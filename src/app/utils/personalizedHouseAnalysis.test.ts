@@ -101,12 +101,23 @@ assert.ok(getCoreChartSynthesis(marsAspectsSunChart).includes('направля�
 const directSynthesis = getCoreChartSynthesis(marsAspectsSunChart);
 assert.ok(directSynthesis.includes('Марс из 1-го дома аспектирует Солнце'));
 const areaInteractions = getCoreInteractionsByLifeArea(marsAspectsSunChart);
+const structuredCareerLink = areaInteractions.flatMap((area) => area.links).find((link) =>
+  link.sourceKey === 'Mars' && link.targetKey === 'Sun' && link.kind === 'graha-drishti' && link.offset === 7,
+);
+assert.ok(structuredCareerLink);
+assert.equal(structuredCareerLink?.id, 'Mars:Sun:graha-drishti:7');
+assert.ok(structuredCareerLink?.evidence.length);
+assert.equal(structuredCareerLink?.sourceHouse, 1);
+assert.equal(structuredCareerLink?.targetHouse, 7);
 assert.ok(areaInteractions.some((area) => area.id === 'relationships'));
 assert.ok(areaInteractions.find((area) => area.id === 'relationships')?.connections.some((line) => line.includes('Солнце расположен в 7-м доме')));
 assert.ok(!areaInteractions.some((area) => area.id === 'career'));
 assert.ok(areaInteractions.find((area) => area.id === 'money')?.connections.some((line) => line.includes('Марс управляет 8-м домом')));
 const lifeAreaBridges = getCoreLifeAreaBridges(marsAspectsSunChart);
 assert.equal(lifeAreaBridges.length, 1);
+assert.equal(lifeAreaBridges[0].id, 'Mars:Sun:graha-drishti:7');
+assert.deepEqual(lifeAreaBridges[0].evidenceByArea.map((item) => item.areaId), ['career', 'relationships', 'money']);
+assert.ok(lifeAreaBridges[0].evidenceByArea.every((item) => item.evidence.length > 0));
 assert.deepEqual(lifeAreaBridges[0].areas, ['Профессия и работа', 'Отношения и партнёрство', 'Деньги и ресурсы'].filter((title) =>
   areaInteractions.some((area) => area.title === title && area.connections.some((line) => line.startsWith(lifeAreaBridges[0].connection))),
 ));
