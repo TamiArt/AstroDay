@@ -3,6 +3,8 @@
  */
 
 import * as Astronomy from 'astronomy-engine';
+
+const AstronomyApi = (Astronomy as unknown as { default?: typeof Astronomy }).default ?? Astronomy;
 import { NAKSHATRAS, tropicalToSidereal } from './astrology';
 import { getWeekdayIndex } from './dateUtils';
 
@@ -103,11 +105,11 @@ export function calculatePanchang(date: Date, context: PanchangContext = {}): Pa
   // Солнце требует SunPosition(), Луна - EclipticGeoMoon()
   try {
     // Для Солнца используем SunPosition (геоцентрическая позиция)
-    const sunPos = Astronomy.SunPosition(date);
+    const sunPos = AstronomyApi.SunPosition(date);
     const sunLon = tropicalToSidereal(sunPos.elon, date);
 
     // Для Луны используем EclipticGeoMoon (геоцентрическая эклиптическая позиция)
-    const moonPos = Astronomy.EclipticGeoMoon(date);
+    const moonPos = AstronomyApi.EclipticGeoMoon(date);
     const moonLon = tropicalToSidereal(moonPos.lon, date);
 
     // Tithi calculation
