@@ -90,7 +90,8 @@ assert.ok(fifth?.practicalActions.some((item) => item.includes('творческ
 assert.ok(fifth?.interpretation.includes('собственный знак'));
 assert.ok(fifth?.evidence.some((item) => item.includes('Достоинство управителя')));
 assert.ok(fifth?.evidence.some((item) => item.includes('Сатурн') && item.includes('аспект')));
-assert.equal(evaluatePlanetCondition(chart, 'Mercury')?.dignity, 'own');
+assert.equal(evaluatePlanetCondition(chart, 'Mercury')?.dignity, 'exalted');
+assert.equal(evaluatePlanetCondition(chart, 'Saturn')?.dignity, 'own');
 assert.equal(evaluatePlanetCondition(chart, 'Jupiter')?.dignity, 'other');
 assert.equal(evaluatePlanetCondition(chart, 'Rahu')?.dignity, 'not_applicable');
 assert.equal(evaluatePlanetCondition(chart, 'Ketu')?.score, null);
