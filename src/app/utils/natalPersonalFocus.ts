@@ -46,6 +46,31 @@ export function getMoonHouseFocus(chart: NatalChart, house: number): string {
   return 'Луна в ' + sign + ', ' + house + '-м доме: эмоциональный комфорт и привычные способы восстановления особенно связаны с темами «' + houseMeaning + '». ' + PLANET_THEMES.Moon + '. ' + conditionText(chart, 'Moon') + nakshatra + ' ' + aspectText(chart, house);
 }
 
+function coreIndicatorRole(planet: string, ascendantLord: string): string {
+  const roles = [
+    ...(planet === ascendantLord ? ['управитель Лагны — базовый способ действовать'] : []),
+    ...(planet === 'Sun' ? ['Солнце — воля и самореализация'] : []),
+    ...(planet === 'Moon' ? ['Луна — эмоциональные потребности и адаптация'] : []),
+  ];
+  return roles.join(' и ') || (PLANET_RU[planet] ?? planet);
+}
+
+function describeCoreInteraction(
+  source: string,
+  target: string,
+  ascendantLord: string,
+  kind: 'conjunction' | 'graha-drishti',
+): string {
+  const sourceRole = coreIndicatorRole(source, ascendantLord);
+  const targetRole = coreIndicatorRole(target, ascendantLord);
+  const sourceTheme = PLANET_THEMES[source] ?? 'функции планеты';
+  const targetTheme = PLANET_THEMES[target] ?? 'функции планеты';
+  if (kind === 'conjunction') {
+    return sourceRole + ' и ' + targetRole + ' соединены по знаку: темы «' + sourceTheme + '» и «' + targetTheme + '» в традиционной трактовке действуют совместно. Практический вопрос для самоанализа: где эти две потребности поддерживают друг друга, а где требуют баланса?';
+  }
+  return sourceRole + ' аспектирует ' + targetRole + ': темы «' + sourceTheme + '» символически влияют на проявление «' + targetTheme + '». Для практического анализа стоит проверить, помогает ли этот канал направлять намерения в конкретные действия или создаёт внутреннее напряжение.';
+}
+
 /** Synthesizes the three Jyotish reference points without treating them as interchangeable. */
 export function getCoreChartSynthesis(chart: NatalChart): string {
   const firstHouse = chart.houses?.find((house) => house.house === 1);
@@ -74,9 +99,10 @@ export function getCoreChartSynthesis(chart: NatalChart): string {
   const directAspects = getPlanetToPlanetAspects(chart, keyPlanets);
   const relationshipText = directAspects.length
     ? 'Прямые связи между ключевыми показателями: ' + directAspects.map((aspect) =>
-      aspect.kind === 'conjunction'
-        ? aspect.source + ' и ' + aspect.target + ' находятся в одном знаке (' + aspect.sourceHouse + '-й дом). Это соединение по знаку; точная сила соединения по градусному орбису здесь не оценивается.'
-        : aspect.source + ' из ' + aspect.sourceHouse + '-го дома аспектирует ' + aspect.target + ' в ' + aspect.targetHouse + '-м доме (' + aspect.offset + '-й аспект).'
+      (aspect.kind === 'conjunction'
+        ? aspect.source + ' и ' + aspect.target + ' находятся в одном знаке (' + aspect.sourceHouse + '-й дом). Это соединение по знаку; точная сила соединения по градусному орбису здесь не оценивается. '
+        : aspect.source + ' из ' + aspect.sourceHouse + '-го дома аспектирует ' + aspect.target + ' в ' + aspect.targetHouse + '-м доме (' + aspect.offset + '-й аспект). ')
+      + describeCoreInteraction(aspect.sourceKey, aspect.targetKey, ascendantLord, aspect.kind)
     ).join(' ') + ' В этой схеме узлы не используют для прямых аспектов.'
     : 'Между управителем Лагны, Солнцем и Луной прямые соединения по знаку или классические взаимные аспекты по используемой схеме не обнаружены.';
   return lines.join('\n\n') + '\n\n' + synthesis + '\n\n' + relationshipText + '\n\nЭто обобщение традиционной астрологической символики, а не научная оценка личности или прогноз событий.';
