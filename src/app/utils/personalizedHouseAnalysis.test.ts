@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { analyzeLifeTopics, analyzePersonalizedHouses, getVargaEvidence } from './personalizedHouseAnalysis';
+import { describeHouseDrishti, evaluatePlanetCondition } from './natalStrengthAnalysis';
 import type { NatalChart, PlanetPosition } from './astrology';
 
 function position(name: string, longitude: number, signName: string, nakshatraName: string) {
@@ -43,12 +44,21 @@ assert.equal(fifth?.lord, 'Солнце');
 assert.equal(fifth?.lordHouse, 5);
 assert.ok(fifth?.evidence.some((item) => item.includes('накшатра')));
 assert.ok(fifth?.practicalActions.some((item) => item.includes('творческое')));
+assert.ok(fifth?.interpretation.includes('собственный знак'));
+assert.ok(fifth?.evidence.some((item) => item.includes('Достоинство управителя')));
+assert.ok(fifth?.evidence.some((item) => item.includes('Сатурн') && item.includes('аспект')));
+assert.equal(evaluatePlanetCondition(chart, 'Mercury')?.dignity, 'own');
+assert.equal(evaluatePlanetCondition(chart, 'Jupiter')?.dignity, 'other');
+assert.ok(describeHouseDrishti(chart, 5).some((item) => item.includes('Сатурн')));
 
 const topics = analyzeLifeTopics(chart, new Date('2026-11-08T12:00:00Z'));
 assert.deepEqual(topics.map((topic) => topic.id), ['talents', 'money', 'career', 'children', 'relationships']);
 assert.ok(topics.find((topic) => topic.id === 'money')?.evidence.length);
 assert.ok(topics.find((topic) => topic.id === 'children')?.timingNote.includes('дату зачатия'));
 assert.ok(topics.find((topic) => topic.id === 'talents')?.directions.length);
+assert.ok(topics.find((topic) => topic.id === 'money')?.timingNote.includes('Связь Махадаши с этой сферой'));
+assert.ok(topics.find((topic) => topic.id === 'career')?.timingNote.includes('Сатурн'));
+assert.ok(topics.find((topic) => topic.id === 'children')?.timingNote.includes('Связь Антардаши'));
 
 assert.ok(getVargaEvidence(chart, 7).some((item) => item.includes('D7')));
 assert.ok(getVargaEvidence(chart, 10).some((item) => item.includes('D10')));
