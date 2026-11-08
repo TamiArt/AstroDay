@@ -136,6 +136,15 @@ assert.ok(dispositorAreaInteractions.find((area) => area.id === 'career')?.conne
 assert.ok(dispositorAreaInteractions.find((area) => area.id === 'career')?.connections.some((line) =>
   line.includes('Сатурн — диспозитор Венера; расположен в 11-м доме этой сферы'),
 ));
+const structuredDispositorLinks = dispositorAreaInteractions.find((area) => area.id === 'career')?.links ?? [];
+assert.ok(structuredDispositorLinks.some((link) => link.evidence.some((item) =>
+  item.type === 'dispositor-placement' && item.planetKey === 'Venus' &&
+  item.dispositedPlanetKey === 'Sun' && item.house === 10 && item.chainDepth === 1,
+)));
+assert.ok(structuredDispositorLinks.some((link) => link.evidence.some((item) =>
+  item.type === 'dispositor-placement' && item.planetKey === 'Saturn' &&
+  item.dispositedPlanetKey === 'Venus' && item.house === 11 && item.chainDepth === 2,
+)));
 assert.equal(
   dispositorAreaInteractions.find((area) => area.id === 'career')?.connections
     .filter((line) => line.includes('Сатурн — диспозитор Венера')).length,
