@@ -164,3 +164,46 @@ export function describePeriodConnection(
   const houseLabel = condition.house ? `${condition.house}-м доме` : 'дом не определён';
   return `${condition.planet} (${condition.sign}, ${houseLabel}; ${condition.label}) ${connection}. ${condition.explanation}${dispositorNote}`;
 }
+
+export interface PlanetToPlanetAspect {
+  source: string;
+  target: string;
+  sourceHouse: number;
+  targetHouse: number;
+  kind: 'conjunction' | 'graha-drishti';
+  offset: number | null;
+}
+
+/** Direct relationships between planets using whole-sign houses and classical Parashari aspects. */
+export function getPlanetToPlanetAspects(chart: NatalChart, planetNames: string[]): PlanetToPlanetAspect[] {
+  const results: PlanetToPlanetAspect[] = [];
+  const uniqueNames = [...new Set(planetNames)].filter((name) =>
+    Boolean(chart.planets[name as keyof NatalChart['planets']]),
+  );
+
+  for (const source of uniqueNames) {
+    const sourcePosition = chart.planets[source as keyof NatalChart['planets']];
+    const sourceHouse = getPlanetHouse(chart, source);
+    if (!sourceHouse || source === 'Rahu' || source === 'Ketu') continue;
+
+    for (const target of uniqueNames) {
+      if (source === target) continue;
+      const targetPosition = chart.planets[target as keyof NatalChart['planets']];
+      const targetHouse = getPlanetHouse(chart, target);
+      if (!targetHouse) continue;
+
+      if (sourcePosition.sign === targetPosition.sign) {
+        results.push({ source: PLANET_RU[source] ?? source, target: PLANET_RU[target] ?? target, sourceHouse, targetHouse, kind: 'conjunction', offset: null });
+        continue;
+      }
+
+      if (target === 'Rahu' || target === 'Ketu') continue;
+      const offset = ((targetHouse - sourceHouse + 12) % 12) + 1;
+      const allowedOffsets = SPECIAL_DRISHTI[source] ?? [7];
+      if (allowedOffsets.includes(offset)) {
+        results.push({ source: PLANET_RU[source] ?? source, target: PLANET_RU[target] ?? target, sourceHouse, targetHouse, kind: 'graha-drishti', offset });
+      }
+    }
+  }
+  return results;
+}
