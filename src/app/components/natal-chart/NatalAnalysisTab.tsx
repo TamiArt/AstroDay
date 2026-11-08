@@ -20,6 +20,7 @@ import type { NatalChart as NatalChartType } from '../../utils/astrology';
 import { analyzePersonalizedHouses } from '../../utils/personalizedHouseAnalysis';
 import { getPlanetHouse } from '../../utils/natalStrengthAnalysis';
 import { getSunHouseFocus } from '../../utils/natalAnalysisGuidance';
+import { getAscendantLordFocus, getMoonHouseFocus } from '../../utils/natalPersonalFocus';
 import { getAscendantDescription, getMoonDescription, getSunDescription } from '../../utils/natalChartDescriptions';
 import { GlassCard } from '../common/GlassCard';
 import { TermTooltip } from '../common/TermTooltip';
@@ -104,6 +105,8 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
   const moonHouse = (getPlanetHouse(natalChart, 'Moon') ?? 1);
   const personalizedHouses = analyzePersonalizedHouses(natalChart);
   const sunFocus = getSunHouseFocus(natalChart, sunHouse);
+  const ascendantLordFocus = getAscendantLordFocus(natalChart);
+  const moonHouseFocus = getMoonHouseFocus(natalChart, moonHouse);
   const ascDesc = getAscendantDescription(natalChart.ascendant.signName);
   const sunSignRu = SIGNS_RU[natalChart.planets.Sun.sign] ?? natalChart.planets.Sun.signName;
   const moonSignRu = SIGNS_RU[natalChart.planets.Moon.sign] ?? natalChart.planets.Moon.signName;
@@ -125,6 +128,11 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
           </h4>
           <p className="text-sm text-gray-800 leading-relaxed mb-3">{ascDesc.whatItIs}</p>
           <p className="text-sm text-gray-700 leading-relaxed">{ascDesc.meaning}</p>
+        </div>
+
+        <div className="p-4 bg-white rounded-lg border border-purple-200">
+          <h4 className="text-sm font-semibold text-purple-700 uppercase mb-2">Управитель Лагны — куда направлена энергия личности</h4>
+          <p className="text-sm text-gray-700 leading-relaxed">{ascendantLordFocus}</p>
         </div>
 
         <div className="p-4 bg-white rounded-lg border border-purple-200">
