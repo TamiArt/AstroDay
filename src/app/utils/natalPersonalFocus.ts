@@ -14,6 +14,12 @@ function aspectText(chart: NatalChart, house: number): string {
   const aspects = describeHouseDrishti(chart, house);
   return aspects.length ? 'Аспекты на эту сферу: ' + aspects.join(' ') : 'По используемой схеме классической граха-дришти прямые аспекты на этот дом не найдены.';
 }
+function getSignDispositor(chart: NatalChart, name: string): string | null {
+  const planet = chart.planets[name as keyof NatalChart['planets']];
+  if (!planet) return null;
+  return chart.houses?.find((house) => house.sign === planet.sign)?.lord ?? null;
+}
+
 function dispositorText(chart: NatalChart, name: string): string {
   const planet = chart.planets[name as keyof NatalChart['planets']];
   if (!planet) return '';
@@ -171,7 +177,25 @@ export function getCoreInteractionsByLifeArea(chart: NatalChart): CoreLifeAreaIn
         ...(targetHouse && area.houses.includes(targetHouse) ? [`${link.target} расположен в ${targetHouse}-м доме этой сферы`] : []),
         ...(targetRules.filter((house) => area.houses.includes(house)).map((house) => `${link.target} управляет ${house}-м домом этой сферы`)),
       ];
-      const evidence = [...sourceEvidence, ...targetEvidence];
+      const getDispositorEvidence = (planetKey: string, planetLabel: string): string[] => {
+        const dispositor = getSignDispositor(chart, planetKey);
+        if (!dispositor || dispositor === planetKey || !chart.planets[dispositor as keyof NatalChart['planets']]) return [];
+        const dispositorHouse = getPlanetHouse(chart, dispositor);
+        const dispositorRules = chart.houses!.filter((house) => house.lord === dispositor).map((house) => house.house);
+        return [
+          ...(dispositorHouse && area.houses.includes(dispositorHouse)
+            ? [`${PLANET_RU[dispositor] ?? dispositor} — диспозитор ${planetLabel}; расположен в ${dispositorHouse}-м доме этой сферы`]
+            : []),
+          ...dispositorRules.filter((house) => area.houses.includes(house))
+            .map((house) => `${PLANET_RU[dispositor] ?? dispositor} — диспозитор ${planetLabel}; управляет ${house}-м домом этой сферы`),
+        ];
+      };
+      const evidence = [
+        ...sourceEvidence,
+        ...targetEvidence,
+        ...getDispositorEvidence(link.sourceKey, link.source),
+        ...getDispositorEvidence(link.targetKey, link.target),
+      ];
       if (!evidence.length) return [];
       const interaction = link.kind === 'conjunction'
         ? 'связаны соединением по знаку'
