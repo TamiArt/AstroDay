@@ -4,6 +4,7 @@
  */
 
 import * as Astronomy from 'astronomy-engine';
+import { SiderealTime } from 'astronomy-engine';
 import { calculateAdditionalVargas, type AdditionalVargas } from './divisionalCharts';
 import { getLahiriAyanamsha } from './ayanamsha';
 
@@ -88,7 +89,7 @@ function refineHorizonRoot(
 }
 
 function calculateTropicalAscendant(date: Date, latitude: number, longitude: number): number {
-  const siderealTimeHours = Astronomy.SiderealTime(date);
+  const siderealTimeHours = SiderealTime(date);
   const localSiderealDegrees = normalizeDegrees((siderealTimeHours * 15) + longitude);
   const obliquity = getMeanObliquity(date);
   const roots: number[] = [];
