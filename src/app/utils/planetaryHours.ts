@@ -1,10 +1,10 @@
 import * as Astronomy from 'astronomy-engine';
 
-const AstronomyApi = (Astronomy as unknown as { default?: typeof Astronomy }).default ?? Astronomy;
 import { formatDateKey, formatTime, getWeekdayIndex } from './dateUtils';
 import { isValidCoordinates, isValidIanaTimezone } from './locationValidation';
 import { createDateInTimezone } from './timezones';
 
+const AstronomyApi = (Reflect.get(Astronomy, 'default') as typeof Astronomy | undefined) ?? Astronomy;
 const CHALDEAN_ORDER = ['Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon'] as const;
 const DAY_RULERS = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'] as const;
 
