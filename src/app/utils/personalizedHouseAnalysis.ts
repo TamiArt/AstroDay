@@ -1,4 +1,4 @@
-import { calculateDasha, getCurrentAntardasha, getPlanetHouse, type NatalChart } from './astrology';
+import { calculateDasha, getCurrentAntardasha, getPlanetHouse as resolvePlanetHouse, type NatalChart } from './astrology';
 import { calculateDivisionalChart } from './divisionalCharts';
 
 export interface PlanetEvidence {
@@ -180,10 +180,10 @@ const TOPIC_CONFIG: Array<{
   },
 ];
 
-function getPlanetHouse(chart: NatalChart, planetName: string): number | null {
+function getPlanetHouseForChart(chart: NatalChart, planetName: string): number | null {
   const planet = chart.planets[planetName as keyof NatalChart['planets']];
   if (!planet || !chart.houses) return null;
-  return getPlanetHouse(planet.sign, chart.houses);
+  return resolvePlanetHouse(planet.sign, chart.houses);
 }
 
 function toEvidence(name: string, chart: NatalChart): PlanetEvidence {
@@ -191,7 +191,7 @@ function toEvidence(name: string, chart: NatalChart): PlanetEvidence {
   return {
     name: PLANET_RU[name] ?? name,
     sign: SIGN_RU[planet.signName] ?? planet.signName,
-    house: getPlanetHouse(chart, name) ?? 0,
+    house: getPlanetHouseForChart(chart, name) ?? 0,
     nakshatra: planet.nakshatraName,
     pada: planet.pada,
   };
@@ -210,9 +210,9 @@ export function analyzePersonalizedHouses(chart: NatalChart): PersonalizedHouseI
 
   return chart.houses.map((house) => {
     const lord = chart.planets[house.lord as keyof NatalChart['planets']];
-    const lordHouse = lord ? getPlanetHouse(chart, house.lord) : null;
+    const lordHouse = lord ? getPlanetHouseForChart(chart, house.lord) : null;
     const occupants = Object.keys(chart.planets)
-      .filter((name) => getPlanetHouse(chart, name) === house.house)
+      .filter((name) => getPlanetHouseForChart(chart, name) === house.house)
       .map((name) => toEvidence(name, chart));
     const lordEvidence = lord ? toEvidence(house.lord, chart) : null;
     const sign = SIGN_RU[house.signName] ?? house.signName;
@@ -256,7 +256,7 @@ function getTopicPlanetNames(chart: NatalChart, houses: number[]): string[] {
     const house = chart.houses?.find((item) => item.house === houseNumber);
     if (house) names.add(house.lord);
     for (const name of Object.keys(chart.planets)) {
-      if (getPlanetHouse(chart, name) === houseNumber) names.add(name);
+      if (getPlanetHouseForChart(chart, name) === houseNumber) names.add(name);
     }
   }
   return [...names];
@@ -309,7 +309,7 @@ export function getVargaEvidence(chart: NatalChart, division: 7 | 10): string[] 
     division === 7 ? 'Saptamsha' : 'Dashamsha',
     division === 7 ? 'Дети и творчество' : 'Профессия',
   );
-  const relevant = division === 7 ? ['Jupiter', 'Moon', 'Venus', '5th'] : ['Sun', 'Mercury', 'Saturn', 'Mars'];
+  const relevant = division === 7 ? ['Jupiter', 'Moon', 'Venus'] : ['Sun', 'Mercury', 'Saturn', 'Mars'];
   return relevant
     .filter((name) => Boolean(varga.planets[name]))
     .map((name) => {
