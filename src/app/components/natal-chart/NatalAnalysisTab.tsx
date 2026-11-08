@@ -20,7 +20,7 @@ import type { NatalChart as NatalChartType } from '../../utils/astrology';
 import { analyzePersonalizedHouses } from '../../utils/personalizedHouseAnalysis';
 import { getPlanetHouse } from '../../utils/natalStrengthAnalysis';
 import { getSunHouseFocus } from '../../utils/natalAnalysisGuidance';
-import { getAscendantLordFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus } from '../../utils/natalPersonalFocus';
+import { formatCoreLifeAreaEvidence, getAscendantLordFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus } from '../../utils/natalPersonalFocus';
 import { getAscendantDescription, getMoonDescription, getSunDescription } from '../../utils/natalChartDescriptions';
 import { GlassCard } from '../common/GlassCard';
 import { TermTooltip } from '../common/TermTooltip';
@@ -274,7 +274,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                     <ul className="space-y-2 pl-3 border-l border-indigo-200">
                       {bridge.evidenceByArea.map((item) => (
                         <li key={item.areaId} className="text-xs leading-relaxed text-gray-600">
-                          <span className="font-semibold">{item.areaTitle}:</span> {item.evidence.join('; ')}.
+                          <span className="font-semibold">{item.areaTitle}:</span> {item.evidence.map(formatCoreLifeAreaEvidence).join('; ')}.
                         </li>
                       ))}
                     </ul>
