@@ -13,6 +13,11 @@ const chart = calculateNatalChart(birthMoment, 51.5074, -0.1278);
 assert.equal(chart.houses?.length, 12, 'Whole Sign chart must contain 12 houses');
 assert.equal(new Set(chart.houses?.map((house) => house.house)).size, 12, 'House numbers must be unique');
 assert.ok(chart.ascendant.sign >= 0 && chart.ascendant.sign < 12, 'Ascendant sign must be valid');
+assert.ok(Number.isFinite(chart.ascendant.tropicalLon), 'Ascendant tropical longitude must be finite');
+assert.ok(
+  chart.ascendant.siderealLon >= 0 && chart.ascendant.siderealLon < 360,
+  'Ascendant sidereal longitude must be normalized'
+);
 
 const rahu = chart.planets.Rahu.siderealLon;
 const ketu = chart.planets.Ketu.siderealLon;
