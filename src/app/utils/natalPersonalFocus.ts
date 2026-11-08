@@ -1,5 +1,5 @@
 import type { NatalChart } from './astrology';
-import { describeHouseDrishti, evaluatePlanetCondition, getPlanetHouse } from './natalStrengthAnalysis';
+import { describeHouseDrishti, evaluatePlanetCondition, getPlanetHouse, getPlanetToPlanetAspects } from './natalStrengthAnalysis';
 
 const SIGN_NAMES = ['Овен', 'Телец', 'Близнецы', 'Рак', 'Лев', 'Дева', 'Весы', 'Скорпион', 'Стрелец', 'Козерог', 'Водолей', 'Рыбы'];
 const PLANET_THEMES: Record<string, string> = { Sun: 'самостоятельность, авторство, воля и ответственность', Moon: 'эмоциональные потребности, привычки, забота и безопасность', Mars: 'инициатива, действие, конкуренция и защита границ', Mercury: 'анализ, обучение, коммуникация, данные и систематизация', Jupiter: 'обучение, наставничество и расширение знаний', Venus: 'отношения, эстетика, творчество и согласование интересов', Saturn: 'структура, дисциплина, качество и долгосрочная работа', Rahu: 'эксперименты, технологии и нестандартные задачи', Ketu: 'специализация, исследование и углублённое изучение' };
@@ -70,5 +70,14 @@ export function getCoreChartSynthesis(chart: NatalChart): string {
   const synthesis = shared.length
     ? 'Общая точка акцента: ' + shared.map(([house, labels]) => labels.join(' и ') + ' связаны с ' + house + '-м домом (' + HOUSE_THEMES[house] + '). В традиционной символике эта сфера объединяет несколько ключевых показателей карты.').join(' ')
     : 'Ключевые показатели распределены по разным домам. Это не противоречие: управитель Лагны описывает базовый способ действовать, Солнце — волю и самореализацию, Луна — эмоциональные потребности. Их темы раскрываются в разных жизненных областях.';
-  return lines.join('\n\n') + '\n\n' + synthesis + '\n\nЭто обобщение традиционной астрологической символики, а не научная оценка личности или прогноз событий.';
+  const keyPlanets = [...new Set([ascendantLord, 'Sun', 'Moon'])];
+  const directAspects = getPlanetToPlanetAspects(chart, keyPlanets);
+  const relationshipText = directAspects.length
+    ? 'Прямые связи между ключевыми показателями: ' + directAspects.map((aspect) =>
+      aspect.kind === 'conjunction'
+        ? aspect.source + ' и ' + aspect.target + ' находятся в одном знаке (' + aspect.sourceHouse + '-й дом). Это соединение по знаку; точная сила соединения по градусному орбису здесь не оценивается.'
+        : aspect.source + ' из ' + aspect.sourceHouse + '-го дома аспектирует ' + aspect.target + ' в ' + aspect.targetHouse + '-м доме (' + aspect.offset + '-й аспект).'
+    ).join(' ') + ' В этой схеме узлы не используют для прямых аспектов.'
+    : 'Между управителем Лагны, Солнцем и Луной прямые соединения по знаку или классические взаимные аспекты по используемой схеме не обнаружены.';
+  return lines.join('\n\n') + '\n\n' + synthesis + '\n\n' + relationshipText + '\n\nЭто обобщение традиционной астрологической символики, а не научная оценка личности или прогноз событий.';
 }
