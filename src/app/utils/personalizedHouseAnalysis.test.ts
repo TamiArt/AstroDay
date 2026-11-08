@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { analyzeLifeTopics, analyzePersonalizedHouses, getVargaEvidence } from './personalizedHouseAnalysis';
 import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition, getGrahaDrishti } from './natalStrengthAnalysis';
 import { getSunHouseFocus } from './natalAnalysisGuidance';
+import { getAscendantLordFocus, getMoonHouseFocus } from './natalPersonalFocus';
 import type { NatalChart, PlanetPosition } from './astrology';
 
 function position(name: string, longitude: number, signName: string, nakshatraName: string) {
@@ -52,6 +53,18 @@ const virgoAscendantFirstHouse = analyzePersonalizedHouses(leoTwelfthChart).find
 assert.equal(virgoAscendantFirstHouse?.sign, 'Дева');
 assert.equal(virgoAscendantFirstHouse?.lord, 'Меркурий');
 assert.ok(virgoAscendantFirstHouse?.interpretation.includes('аналитика'));
+
+const lagnaFocus = getAscendantLordFocus(chart);
+assert.ok(lagnaFocus.includes('управитель — Марс'));
+assert.ok(lagnaFocus.includes('1-м доме'));
+assert.ok(lagnaFocus.includes('собственный знак'));
+const virgoLagnaFocus = getAscendantLordFocus(leoTwelfthChart);
+assert.ok(virgoLagnaFocus.includes('управитель — Меркурий'));
+assert.ok(virgoLagnaFocus.includes('анализа'));
+const moonFocus = getMoonHouseFocus(chart, 3);
+assert.ok(moonFocus.includes('3-м доме'));
+assert.ok(moonFocus.includes('Mrigashira'));
+assert.ok(moonFocus.includes('аспекты'));
 
 const houses = analyzePersonalizedHouses(chart);
 assert.equal(houses.length, 12);
