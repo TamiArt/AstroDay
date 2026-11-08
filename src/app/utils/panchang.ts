@@ -4,10 +4,10 @@
 
 import * as Astronomy from 'astronomy-engine';
 
-const AstronomyApi = (Astronomy as unknown as { default?: typeof Astronomy }).default ?? Astronomy;
 import { NAKSHATRAS, tropicalToSidereal } from './astrology';
 import { getWeekdayIndex } from './dateUtils';
 
+const AstronomyApi = (Reflect.get(Astronomy, 'default') as typeof Astronomy | undefined) ?? Astronomy;
 // Tithi (Lunar day) - 30 tithis in a lunar month
 export const TITHIS = [
   { name: 'Шукла Пратипада', meaning: 'Начало растущего лунного цикла, новые возможности' },
