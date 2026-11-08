@@ -107,3 +107,63 @@ export function getCoreChartSynthesis(chart: NatalChart): string {
     : 'Между управителем Лагны, Солнцем и Луной прямые соединения по знаку или классические взаимные аспекты по используемой схеме не обнаружены.';
   return lines.join('\n\n') + '\n\n' + synthesis + '\n\n' + relationshipText + '\n\nЭто обобщение традиционной астрологической символики, а не научная оценка личности или прогноз событий.';
 }
+
+export interface CoreLifeAreaInteraction {
+  id: 'career' | 'relationships' | 'money' | 'talents' | 'home';
+  title: string;
+  connections: string[];
+}
+
+const CORE_LIFE_AREAS: Array<{
+  id: CoreLifeAreaInteraction['id'];
+  title: string;
+  houses: number[];
+}> = [
+  { id: 'career', title: 'Профессия и работа', houses: [6, 10, 11] },
+  { id: 'relationships', title: 'Отношения и партнёрство', houses: [2, 7] },
+  { id: 'money', title: 'Деньги и ресурсы', houses: [2, 8, 11] },
+  { id: 'talents', title: 'Обучение и таланты', houses: [3, 5, 9] },
+  { id: 'home', title: 'Дом и эмоциональная опора', houses: [4, 12] },
+];
+
+/**
+ * Connects only calculated direct links between Lagna lord, Sun and Moon
+ * with life areas evidenced by the planets' placements or house lordships.
+ * This is a symbolic mapping, not a prediction.
+ */
+export function getCoreInteractionsByLifeArea(chart: NatalChart): CoreLifeAreaInteraction[] {
+  const firstHouse = chart.houses?.find((house) => house.house === 1);
+  if (!firstHouse || !chart.houses?.length) return [];
+
+  const ascendantLord = firstHouse.lord;
+  const keyPlanets = [...new Set([ascendantLord, 'Sun', 'Moon'])];
+  const directLinks = getPlanetToPlanetAspects(chart, keyPlanets);
+  if (!directLinks.length) return [];
+
+  const areaLinks = CORE_LIFE_AREAS.map((area) => {
+    const relevant = directLinks.flatMap((link) => {
+      const sourceHouse = getPlanetHouse(chart, link.sourceKey);
+      const targetHouse = getPlanetHouse(chart, link.targetKey);
+      const sourceRules = chart.houses!.filter((house) => house.lord === link.sourceKey).map((house) => house.house);
+      const targetRules = chart.houses!.filter((house) => house.lord === link.targetKey).map((house) => house.house);
+      const sourceEvidence = [
+        ...(sourceHouse && area.houses.includes(sourceHouse) ? [`${link.source} расположен в ${sourceHouse}-м доме этой сферы`] : []),
+        ...(sourceRules.filter((house) => area.houses.includes(house)).map((house) => `${link.source} управляет ${house}-м домом этой сферы`)),
+      ];
+      const targetEvidence = [
+        ...(targetHouse && area.houses.includes(targetHouse) ? [`${link.target} расположен в ${targetHouse}-м доме этой сферы`] : []),
+        ...(targetRules.filter((house) => area.houses.includes(house)).map((house) => `${link.target} управляет ${house}-м домом этой сферы`)),
+      ];
+      const evidence = [...sourceEvidence, ...targetEvidence];
+      if (!evidence.length) return [];
+      const interaction = link.kind === 'conjunction'
+        ? 'связаны соединением по знаку'
+        : `связаны аспектом ${link.offset}-го дома`;
+      return [`${link.source} и ${link.target} ${interaction}. Основание связи со сферой: ${evidence.join('; ')}. Это показывает символическую связь показателей с темой, но не гарантирует событие или результат.`];
+    });
+    return relevant.length ? { id: area.id, title: area.title, connections: relevant } : null;
+  });
+
+  return areaLinks.filter((item): item is CoreLifeAreaInteraction => item !== null);
+}
+
