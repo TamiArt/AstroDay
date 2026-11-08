@@ -346,7 +346,7 @@ export interface CoreLifeAreaBridge {
   id: string;
   connection: string;
   areas: string[];
-  evidenceByArea: Array<{ areaId: CoreLifeAreaInteraction['id']; areaTitle: string; evidence: string[] }>;
+  evidenceByArea: Array<{ areaId: CoreLifeAreaInteraction['id']; areaTitle: string; evidence: CoreLifeAreaEvidence[] }>;
   explanation: string;
 }
 
