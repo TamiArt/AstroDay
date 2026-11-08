@@ -4,7 +4,10 @@
  */
 
 import * as Astronomy from 'astronomy-engine';
-import { SiderealTime } from 'astronomy-engine';
+
+// Node's ESM interop can expose the CommonJS build under `default`, while Vite
+// exposes the ESM namespace directly. Normalize both shapes in one place.
+const AstronomyApi = (Astronomy as unknown as { default?: typeof Astronomy }).default ?? Astronomy;
 import { calculateAdditionalVargas, type AdditionalVargas } from './divisionalCharts';
 import { getLahiriAyanamsha } from './ayanamsha';
 
@@ -28,7 +31,7 @@ function normalizeDegrees(value: number): number {
 
 
 function getMeanObliquity(date: Date): number {
-  const astroTime = Astronomy.MakeTime(date);
+  const astroTime = AstronomyApi.MakeTime(date);
   const t = (astroTime.ut - 2451545.0) / 36525.0;
   const seconds = 21.448 - t * (46.8150 + t * (0.00059 - t * 0.001813));
   return 23 + (26 / 60) + (seconds / 3600);
@@ -89,7 +92,7 @@ function refineHorizonRoot(
 }
 
 function calculateTropicalAscendant(date: Date, latitude: number, longitude: number): number {
-  const siderealTimeHours = SiderealTime(date);
+  const siderealTimeHours = AstronomyApi.SiderealTime(date);
   const localSiderealDegrees = normalizeDegrees((siderealTimeHours * 15) + longitude);
   const obliquity = getMeanObliquity(date);
   const roots: number[] = [];
@@ -214,7 +217,7 @@ export function calculatePlanetPosition(
 
     if (bodyName === 'Sun') {
       try {
-        const sunPos = Astronomy.SunPosition(date);
+        const sunPos = AstronomyApi.SunPosition(date);
         tropicalLon = sunPos.elon;
       } catch (err) {
         console.error('SunPosition error:', err);
@@ -223,7 +226,7 @@ export function calculatePlanetPosition(
     } else {
       const body = bodyName as Astronomy.Body;
       try {
-        tropicalLon = Astronomy.EclipticLongitude(body, date);
+        tropicalLon = AstronomyApi.EclipticLongitude(body, date);
       } catch (err) {
         console.error(`EclipticLongitude error for ${bodyName}:`, err);
         throw new Error(`API astronomy-engine вернул ошибку для ${bodyName}: ${err instanceof Error ? err.message : String(err)}`);
@@ -552,7 +555,7 @@ export function calculateNatalChart(
     }
 
     try {
-      const astroTime = Astronomy.MakeTime(birthDate);
+      const astroTime = AstronomyApi.MakeTime(birthDate);
       const jd = astroTime.ut;
       const T = (jd - 2451545.0) / 36525.0;
       let meanNodeLon = 125.0445479 - 1934.1362891 * T + 0.0020754 * T * T + (T * T * T) / 467441.0 - (T * T * T * T) / 60616000.0;
