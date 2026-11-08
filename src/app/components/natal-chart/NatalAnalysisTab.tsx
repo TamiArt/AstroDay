@@ -214,6 +214,10 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
           <h4 className="font-semibold text-gray-900 mb-2">Эмоциональная природа</h4>
           <p className="text-sm text-gray-800 leading-relaxed">{moonDesc.essence}</p>
         </div>
+        <div className="p-4 bg-white rounded-lg border border-blue-200">
+          <h4 className="text-sm font-semibold text-blue-700 uppercase mb-2">Конкретная жизненная сфера Луны</h4>
+          <p className="text-sm text-gray-700 leading-relaxed">{moonHouseFocus}</p>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-4 bg-white rounded-lg border border-blue-200">
             <h4 className="text-sm font-semibold text-blue-700 uppercase mb-2">Эмоциональные потребности</h4>
