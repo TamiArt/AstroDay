@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { analyzeLifeTopics, analyzePersonalizedHouses, getVargaEvidence } from './personalizedHouseAnalysis';
-import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition } from './natalStrengthAnalysis';
+import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition, getGrahaDrishti } from './natalStrengthAnalysis';
 import type { NatalChart, PlanetPosition } from './astrology';
 
 function position(name: string, longitude: number, signName: string, nakshatraName: string) {
@@ -54,6 +54,11 @@ assert.equal(evaluatePlanetCondition(chart, 'Ketu')?.score, null);
 assert.ok(describePeriodConnection(chart, 'Rahu', [4], []).includes('Диспозитор Луна'));
 assert.ok(describePeriodConnection(chart, 'Ketu', [10], []).includes('Диспозитор Сатурн'));
 assert.ok(describeHouseDrishti(chart, 5).some((item) => item.includes('Сатурн')));
+const drishti = getGrahaDrishti(chart);
+assert.deepEqual(drishti.filter((item) => item.source === 'Марс').map((item) => item.targetHouse), [4, 7, 8]);
+assert.deepEqual(drishti.filter((item) => item.source === 'Юпитер').map((item) => item.targetHouse), [11, 1, 3]);
+assert.deepEqual(drishti.filter((item) => item.source === 'Сатурн').map((item) => item.targetHouse), [1, 5, 8]);
+assert.ok(!drishti.some((item) => item.source === 'Раху' || item.source === 'Кету'));
 
 const topics = analyzeLifeTopics(chart, new Date('2026-11-08T12:00:00Z'));
 assert.deepEqual(topics.map((topic) => topic.id), ['talents', 'money', 'career', 'children', 'relationships']);
