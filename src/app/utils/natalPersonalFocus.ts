@@ -310,7 +310,8 @@ export function getCoreInteractionsByLifeArea(chart: NatalChart): CoreLifeAreaIn
         ...getDispositorEvidence(link.sourceKey, link.source),
         ...getDispositorEvidence(link.targetKey, link.target),
       );
-      if (!evidence.length) return [];
+      const uniqueEvidence = [...new Map(evidence.map((item) => [item.id, item])).values()];
+      if (!uniqueEvidence.length) return [];
 
       return [{
         id: getPlanetaryLinkId(link),
@@ -322,7 +323,7 @@ export function getCoreInteractionsByLifeArea(chart: NatalChart): CoreLifeAreaIn
         offset: link.offset,
         sourceHouse: link.sourceHouse,
         targetHouse: link.targetHouse,
-        evidence,
+        evidence: uniqueEvidence,
         description: describePlanetaryLink(link),
       }];
     });
