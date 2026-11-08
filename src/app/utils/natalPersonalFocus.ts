@@ -164,7 +164,16 @@ export function getCoreInteractionsByLifeArea(chart: NatalChart): CoreLifeAreaIn
   if (!directLinks.length) return [];
 
   const areaLinks = CORE_LIFE_AREAS.map((area) => {
-    const relevant = directLinks.flatMap((link) => {
+    // Mutual aspects may produce A → B and B → A records. Preserve the
+    // directional records in the low-level API, but render one narrative
+    // per unordered pair in each life area to avoid duplicate explanations.
+    const seenPairs = new Set<string>();
+    const relevant = directLinks.filter((link) => {
+      const pairKey = [link.sourceKey, link.targetKey].sort().join(':');
+      if (seenPairs.has(pairKey)) return false;
+      seenPairs.add(pairKey);
+      return true;
+    }).flatMap((link) => {
       const sourceHouse = getPlanetHouse(chart, link.sourceKey);
       const targetHouse = getPlanetHouse(chart, link.targetKey);
       const sourceRules = chart.houses!.filter((house) => house.lord === link.sourceKey).map((house) => house.house);
