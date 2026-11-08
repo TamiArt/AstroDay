@@ -107,7 +107,8 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
   const sunFocus = getSunHouseFocus(natalChart, sunHouse);
   const ascendantLordFocus = getAscendantLordFocus(natalChart);
   const moonHouseFocus = getMoonHouseFocus(natalChart, moonHouse);
-  const coreChartSynthesis = getCoreChartSynthesis(natalChart);\n  const coreLifeAreaInteractions = getCoreInteractionsByLifeArea(natalChart);
+  const coreChartSynthesis = getCoreChartSynthesis(natalChart);
+  const coreLifeAreaInteractions = getCoreInteractionsByLifeArea(natalChart);
   const ascDesc = getAscendantDescription(natalChart.ascendant.signName);
   const sunSignRu = SIGNS_RU[natalChart.planets.Sun.sign] ?? natalChart.planets.Sun.signName;
   const moonSignRu = SIGNS_RU[natalChart.planets.Moon.sign] ?? natalChart.planets.Moon.signName;
