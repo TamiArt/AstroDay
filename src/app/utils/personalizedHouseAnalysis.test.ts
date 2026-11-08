@@ -64,7 +64,7 @@ assert.ok(virgoLagnaFocus.includes('анализ'));
 const moonFocus = getMoonHouseFocus(chart, 3);
 assert.ok(moonFocus.includes('3-м доме'));
 assert.ok(moonFocus.includes('Mrigashira'));
-assert.ok(moonFocus.includes('аспекты'));
+assert.ok(moonFocus.includes('Аспекты'));
 
 const houses = analyzePersonalizedHouses(chart);
 assert.equal(houses.length, 12);
