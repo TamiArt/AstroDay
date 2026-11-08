@@ -44,7 +44,7 @@ function searchSunEvent(
   from: Date,
   limitDays: number
 ): Date | null {
-  const event = AstronomyApi.SearchRiseSet(Astronomy.Body.Sun, observer, direction, from, limitDays);
+  const event = AstronomyApi.SearchRiseSet(AstronomyApi.Body.Sun, observer, direction, from, limitDays);
   return event?.date ?? null;
 }
 
