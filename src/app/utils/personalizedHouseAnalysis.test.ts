@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { analyzeLifeTopics, analyzePersonalizedHouses, getVargaEvidence } from './personalizedHouseAnalysis';
-import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition, getGrahaDrishti } from './natalStrengthAnalysis';
+import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition, getGrahaDrishti, getPlanetToPlanetAspects } from './natalStrengthAnalysis';
 import { getSunHouseFocus } from './natalAnalysisGuidance';
 import { getAscendantLordFocus, getCoreChartSynthesis, getMoonHouseFocus } from './natalPersonalFocus';
 import type { NatalChart, PlanetPosition } from './astrology';
@@ -77,6 +77,27 @@ const alignedCoreChart = {
 const alignedSynthesis = getCoreChartSynthesis(alignedCoreChart);
 assert.ok(alignedSynthesis.includes('Общая точка акцента'));
 assert.ok(alignedSynthesis.includes('Солнце и Луна связаны с 5-м домом'));
+
+const marsAspectsSunChart = {
+  ...chart,
+  planets: { ...chart.planets, Sun: position('Sun', 190, 'Libra', 'Swati') },
+} as NatalChart;
+const directLinks = getPlanetToPlanetAspects(marsAspectsSunChart, ['Mars', 'Sun', 'Moon']);
+assert.ok(directLinks.some((item) => item.source === 'Марс' && item.target === 'Солнце' && item.kind === 'graha-drishti' && item.offset === 7));
+const directSynthesis = getCoreChartSynthesis(marsAspectsSunChart);
+assert.ok(directSynthesis.includes('Марс из 1-го дома аспектирует Солнце'));
+const sameSignCoreChart = {
+  ...chart,
+  planets: {
+    ...chart.planets,
+    Sun: position('Sun', 130, 'Leo', 'Magha'),
+    Moon: position('Moon', 140, 'Leo', 'Purva Phalguni'),
+  },
+} as NatalChart;
+const conjunctions = getPlanetToPlanetAspects(sameSignCoreChart, ['Sun', 'Moon']);
+assert.equal(conjunctions.filter((item) => item.kind === 'conjunction').length, 1);
+assert.ok(getCoreChartSynthesis(sameSignCoreChart).includes('Солнце и Луна находятся в одном знаке'));
+assert.ok(!getPlanetToPlanetAspects(chart, ['Rahu', 'Ketu']).length);
 
 const houses = analyzePersonalizedHouses(chart);
 assert.equal(houses.length, 12);
