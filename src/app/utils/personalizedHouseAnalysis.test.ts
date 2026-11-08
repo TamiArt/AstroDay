@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { analyzeLifeTopics, analyzePersonalizedHouses, getVargaEvidence } from './personalizedHouseAnalysis';
-import { describeHouseDrishti, evaluatePlanetCondition } from './natalStrengthAnalysis';
+import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition } from './natalStrengthAnalysis';
 import type { NatalChart, PlanetPosition } from './astrology';
 
 function position(name: string, longitude: number, signName: string, nakshatraName: string) {
@@ -49,6 +49,10 @@ assert.ok(fifth?.evidence.some((item) => item.includes('Достоинство �
 assert.ok(fifth?.evidence.some((item) => item.includes('Сатурн') && item.includes('аспект')));
 assert.equal(evaluatePlanetCondition(chart, 'Mercury')?.dignity, 'own');
 assert.equal(evaluatePlanetCondition(chart, 'Jupiter')?.dignity, 'other');
+assert.equal(evaluatePlanetCondition(chart, 'Rahu')?.dignity, 'not_applicable');
+assert.equal(evaluatePlanetCondition(chart, 'Ketu')?.score, null);
+assert.ok(describePeriodConnection(chart, 'Rahu', [4], []).includes('Диспозитор Луна'));
+assert.ok(describePeriodConnection(chart, 'Ketu', [10], []).includes('Диспозитор Сатурн'));
 assert.ok(describeHouseDrishti(chart, 5).some((item) => item.includes('Сатурн')));
 
 const topics = analyzeLifeTopics(chart, new Date('2026-11-08T12:00:00Z'));
