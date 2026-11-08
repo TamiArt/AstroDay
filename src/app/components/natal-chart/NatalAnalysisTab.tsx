@@ -271,6 +271,13 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                   <div key={bridge.id} className="space-y-1">
                     <p className="text-sm font-medium text-gray-800">{bridge.connection}</p>
                     <p className="text-sm text-gray-700">Подтверждённые сферы: {bridge.areas.join(', ')}.</p>
+                    <ul className="space-y-2 pl-3 border-l border-indigo-200">
+                      {bridge.evidenceByArea.map((item) => (
+                        <li key={item.areaId} className="text-xs leading-relaxed text-gray-600">
+                          <span className="font-semibold">{item.areaTitle}:</span> {item.evidence.join('; ')}.
+                        </li>
+                      ))}
+                    </ul>
                     <p className="text-xs leading-relaxed text-gray-600">{bridge.explanation}</p>
                   </div>
                 ))}
