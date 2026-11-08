@@ -21,7 +21,7 @@ Vite покажет локальный адрес, обычно `http://localhos
 npm run verify
 ```
 
-`verify` выполняет production build и TypeScript-проверку.
+`verify` выполняет unit-тесты, строгую TypeScript-проверку (`noUnusedLocals` и `noUnusedParameters`) и production build. Те же проверки автоматически запускаются в GitHub Actions при push в рабочие ветки и при pull request в `main`.
 
 ## Команды
 
@@ -29,7 +29,7 @@ npm run verify
 npm run dev        # локальный dev-сервер
 npm run build      # production build в dist/
 npm run typecheck  # TypeScript без emit
-npm run verify     # build + typecheck
+npm run verify     # unit tests + typecheck + production build
 ```
 
 ## Что Делает Приложение

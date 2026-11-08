@@ -87,14 +87,44 @@ export interface HomeRoomRect {
   vastuZone: string;
 }
 
+export type VastuMarkerType = 'entrance' | 'window' | 'obstruction' | 'water' | 'clutter' | 'kitchen' | 'bathroom' | 'workspace';
+
+export interface VastuPlanMarker {
+  id: string;
+  type: VastuMarkerType;
+  x: number;
+  y: number;
+  label: string;
+}
+
 export interface HomeFloorPlanData {
   imageDataUrl: string;
   rooms: HomeRoomRect[];
   northOffset: number;
+  /** Clockwise bearing of geographic north from the image's top edge. */
+  northBearingDegrees?: number;
+  markers?: VastuPlanMarker[];
 }
 
 export interface HomeProgressItem {
   id: string;
+  label: string;
+  done: boolean;
+}
+
+export interface PartnerBirthProfile {
+  name: string;
+  birthDate: string;
+  birthTime: string;
+  birthPlace: string;
+  latitude: number;
+  longitude: number;
+  timezone: string;
+}
+
+export interface VastuChecklistItem {
+  id: string;
+  goal: 'abundance' | 'relationships' | 'wellbeing';
   label: string;
   done: boolean;
 }
@@ -105,6 +135,8 @@ const LEGACY_OBFUSCATION_KEY = 'jyotish-2026';
 const HOME_CALIBRATION_KEY = 'astroday_home_calibration';
 const HOME_FLOORPLAN_KEY = 'astroday_home_floorplan';
 const HOME_PROGRESS_KEY = 'astroday_home_progress';
+const HOME_VASTU_CHECKLIST_KEY = 'astroday_vastu_checklist';
+const PARTNER_PROFILE_KEY = 'astroday_partner_profile';
 
 export function saveUserProfile(profile: UserProfile): void {
   try {
@@ -153,7 +185,7 @@ export function saveHomeCalibration(data: HomeCalibrationData): void {
 }
 
 export function loadHomeCalibration(): HomeCalibrationData | null {
-  return loadLegacyHomeValue<HomeCalibrationData>(HOME_CALIBRATION_KEY, null);
+  return loadLegacyHomeValue<HomeCalibrationData | null>(HOME_CALIBRATION_KEY, null);
 }
 
 export function saveHomeFloorPlan(data: HomeFloorPlanData): void {
@@ -161,7 +193,7 @@ export function saveHomeFloorPlan(data: HomeFloorPlanData): void {
 }
 
 export function loadHomeFloorPlan(): HomeFloorPlanData | null {
-  return loadLegacyHomeValue<HomeFloorPlanData>(HOME_FLOORPLAN_KEY, null);
+  return loadLegacyHomeValue<HomeFloorPlanData | null>(HOME_FLOORPLAN_KEY, null);
 }
 
 export function saveHomeProgress(items: HomeProgressItem[]): void {
@@ -170,6 +202,24 @@ export function saveHomeProgress(items: HomeProgressItem[]): void {
 
 export function loadHomeProgress(): HomeProgressItem[] {
   return loadLegacyHomeValue<HomeProgressItem[]>(HOME_PROGRESS_KEY, []);
+}
+
+export function saveVastuChecklist(items: VastuChecklistItem[]): void {
+  saveLegacyHomeValue(HOME_VASTU_CHECKLIST_KEY, items);
+}
+
+export function loadVastuChecklist(): VastuChecklistItem[] {
+  const stored = loadLegacyHomeValue<unknown>(HOME_VASTU_CHECKLIST_KEY, []);
+  if (!Array.isArray(stored)) return [];
+
+  return stored.filter((item): item is VastuChecklistItem => {
+    if (typeof item !== 'object' || item === null) return false;
+    const value = item as Record<string, unknown>;
+    return typeof value.id === 'string'
+      && typeof value.label === 'string'
+      && typeof value.done === 'boolean'
+      && (value.goal === 'abundance' || value.goal === 'relationships' || value.goal === 'wellbeing');
+  });
 }
 
 function saveLegacyHomeValue(key: string, value: unknown): void {
@@ -191,16 +241,41 @@ function loadLegacyHomeValue<T>(key: string, fallback: T): T {
   }
 }
 
+export function savePartnerProfile(profile: PartnerBirthProfile): void {
+  saveLegacyHomeValue(PARTNER_PROFILE_KEY, profile);
+}
+
+export function loadPartnerProfile(): PartnerBirthProfile | null {
+  const stored = loadLegacyHomeValue<unknown>(PARTNER_PROFILE_KEY, null);
+  if (!isRecord(stored)) return null;
+  const name = readString(stored, 'name');
+  const birthDate = readString(stored, 'birthDate');
+  const birthTime = readString(stored, 'birthTime');
+  const birthPlace = readString(stored, 'birthPlace');
+  const latitude = readNumber(stored, 'latitude');
+  const longitude = readNumber(stored, 'longitude');
+  const timezone = readString(stored, 'timezone');
+  if (!name || !birthDate || !birthTime || !birthPlace || latitude === null || longitude === null || !timezone) return null;
+  if (!isValidCoordinates(latitude, longitude) || !isValidIanaTimezone(timezone)) return null;
+  return { name, birthDate, birthTime, birthPlace, latitude, longitude, timezone };
+}
+
+export function deletePartnerProfile(): void {
+  localStorage.removeItem(PARTNER_PROFILE_KEY);
+}
+
 export function deleteHomeData(): void {
   localStorage.removeItem(HOME_CALIBRATION_KEY);
   localStorage.removeItem(HOME_FLOORPLAN_KEY);
   localStorage.removeItem(HOME_PROGRESS_KEY);
+  localStorage.removeItem(HOME_VASTU_CHECKLIST_KEY);
 }
 
 export async function deleteAllData(): Promise<void> {
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(FEEDBACK_KEY);
   deleteHomeData();
+  deletePartnerProfile();
 
   try {
     await clearForecastCache();
@@ -216,6 +291,8 @@ export function exportData(): string {
     homeCalibration: loadHomeCalibration(),
     homeFloorPlan: loadHomeFloorPlan(),
     homeProgress: loadHomeProgress(),
+    vastuChecklist: loadVastuChecklist(),
+    partnerProfile: loadPartnerProfile(),
   }, null, 2);
 }
 

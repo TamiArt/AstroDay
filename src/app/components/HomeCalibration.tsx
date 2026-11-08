@@ -137,7 +137,7 @@ export function HomeCalibration() {
       <div className="space-y-4">
         <div>
           <h2 className="text-xl font-semibold">Калибровка севера</h2>
-          <p className="opacity-70">Определите север один раз, чтобы сетка Багуа и Васту правильно повернулась на плане.</p>
+          <p className="opacity-70">Калибровка помогает определить направление телефона. Она не поворачивает загруженный план автоматически: для корректной разметки север на чертеже должен быть сверху.</p>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">

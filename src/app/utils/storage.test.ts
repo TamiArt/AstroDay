@@ -1,6 +1,18 @@
 import assert from 'node:assert/strict';
 import { PROFILE_SCHEMA_VERSION, unwrapProfilePayload, wrapProfilePayload } from './profileMigrations';
-import { importUserProfile, validateUserProfile } from './storage';
+import {
+  deleteHomeData,
+  deletePartnerProfile,
+  importUserProfile,
+  loadVastuChecklist,
+  loadHomeFloorPlan,
+  saveHomeFloorPlan,
+  loadPartnerProfile,
+  saveVastuChecklist,
+  savePartnerProfile,
+  validateUserProfile,
+  type VastuChecklistItem,
+} from './storage';
 
 const legacyProfile = {
   name: 'Test',
@@ -25,5 +37,47 @@ assert.throws(
   () => unwrapProfilePayload({ schemaVersion: PROFILE_SCHEMA_VERSION + 1, profile: legacyProfile }),
   /более новой версией/,
 );
+
+const storageValues = new Map<string, string>();
+Object.defineProperty(globalThis, 'localStorage', {
+  configurable: true,
+  value: {
+    getItem: (key: string) => storageValues.get(key) ?? null,
+    setItem: (key: string, value: string) => storageValues.set(key, value),
+    removeItem: (key: string) => storageValues.delete(key),
+  },
+});
+
+const checklist: VastuChecklistItem[] = [
+  { id: 'abundance-north', goal: 'abundance', label: 'Освободить север', done: true },
+  { id: 'relationships-southwest', goal: 'relationships', label: 'Организовать спальню', done: false },
+];
+saveVastuChecklist(checklist);
+assert.deepEqual(loadVastuChecklist(), checklist, 'Vastu checklist must persist locally');
+const floorPlan = {
+  imageDataUrl: '',
+  rooms: [],
+  northOffset: 0,
+  northBearingDegrees: 90,
+  markers: [{ id: 'entry-1', type: 'entrance' as const, x: 0.2, y: 0.4, label: 'Вход' }],
+};
+saveHomeFloorPlan(floorPlan);
+assert.deepEqual(loadHomeFloorPlan(), floorPlan, 'Vastu compass alignment and plan markers must persist locally');
+const partner = {
+  name: 'Partner',
+  birthDate: '1988-05-12',
+  birthTime: '08:30',
+  birthPlace: 'London',
+  latitude: 51.5074,
+  longitude: -0.1278,
+  timezone: 'Europe/London',
+};
+savePartnerProfile(partner);
+assert.deepEqual(loadPartnerProfile(), partner, 'Partner profile must persist locally');
+deleteHomeData();
+assert.deepEqual(loadVastuChecklist(), [], 'Deleting home data must also delete the Vastu checklist');
+assert.deepEqual(loadPartnerProfile(), partner, 'Deleting home data must preserve the separate partner chart');
+deletePartnerProfile();
+assert.equal(loadPartnerProfile(), null, 'Partner profile can be deleted separately');
 
 console.log('storage migration tests passed');

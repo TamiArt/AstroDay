@@ -8,16 +8,18 @@ import { NatalAnalysisTab } from './natal-chart/NatalAnalysisTab';
 import { NatalDashaTab } from './natal-chart/NatalDashaTab';
 import { NatalHousesTab } from './natal-chart/NatalHousesTab';
 import { NatalOverviewTab } from './natal-chart/NatalOverviewTab';
+import { LifePathAnalysisTab } from './natal-chart/LifePathAnalysisTab';
 
 interface NatalChartDetailedProps {
   natalChart: NatalChartType;
 }
 
-type TabType = 'overview' | 'analysis' | 'aspects' | 'houses' | 'dasha' | 'divisional';
+type TabType = 'overview' | 'analysis' | 'life' | 'aspects' | 'houses' | 'dasha' | 'divisional';
 
 const TABS = [
   { id: 'overview', label: 'Обзор', icon: Eye },
   { id: 'analysis', label: 'Анализ', icon: BookOpen },
+  { id: 'life', label: 'Деньги и отношения', icon: Star },
   { id: 'aspects', label: 'Аспекты', icon: Zap },
   { id: 'houses', label: 'Дома', icon: Layers },
   { id: 'dasha', label: 'Даша', icon: Clock },
@@ -61,6 +63,8 @@ export function NatalChartDetailed({ natalChart }: NatalChartDetailedProps) {
         return <NatalOverviewTab natalChart={natalChart} />;
       case 'analysis':
         return <NatalAnalysisTab natalChart={natalChart} />;
+      case 'life':
+        return <LifePathAnalysisTab natalChart={natalChart} />;
       case 'aspects':
         return <AspectsTableEnhanced natalChart={natalChart} />;
       case 'houses':

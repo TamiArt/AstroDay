@@ -8,7 +8,8 @@ import { FloorPlanEditor } from './FloorPlanEditor';
 import { RoomDashboard } from './RoomDashboard';
 import { HomeProgressTracker } from './HomeProgressTracker';
 import { HomeARView } from './HomeARView';
-import { getHomePersonalizedRecommendations, HOME_LEARNING_CARDS } from '../utils/homeRecommendations';
+import { getHomePersonalizedRecommendations } from '../utils/homeRecommendations';
+import { VastuGuide } from './VastuGuide';
 import { getDataPrecision } from '../utils/personalRecommendations';
 
 interface HomeAssistantProps {
@@ -35,10 +36,10 @@ export function HomeAssistant({ profile, natalChart, currentChart: _currentChart
         <div className="space-y-4">
           <h2 className="text-2xl font-semibold">Дом</h2>
           <p className="opacity-70">
-            Интеллектуальный помощник по гармонизации пространства на основе Фэн-шуй, Васту и ведической астрологии.
+            Инструменты для дома: отдельные традиции Багуа (фэн-шуй) и Васту. В редакторе плана можно наложить компасную сетку Васту, отметить входы, окна, санузлы и препятствия. Астрологические подсказки не определяют географические направления.
           </p>
           <p className="text-sm opacity-70">
-            Мы используем только локальные данные и бесплатные библиотеки. Все рекомендации сохраняются в браузере.
+            План квартиры, калибровка и отметки прогресса хранятся в этом браузере. Для определения севера приложение может запросить геопозицию устройства.
           </p>
           {precision.level !== 'high' && (
             <div className="rounded-2xl border border-yellow-400/40 bg-yellow-500/10 p-4 text-sm text-yellow-900">
@@ -62,6 +63,8 @@ export function HomeAssistant({ profile, natalChart, currentChart: _currentChart
         </div>
       </GlassCard>
 
+      <VastuGuide />
+
       <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
         <div className="space-y-6">
           <HomeCalibration />
@@ -80,17 +83,6 @@ export function HomeAssistant({ profile, natalChart, currentChart: _currentChart
         </div>
       </div>
 
-      <GlassCard>
-        <h3 className="mb-4 text-xl font-semibold">Обучающие карточки</h3>
-        <div className="grid gap-4 md:grid-cols-2">
-          {HOME_LEARNING_CARDS.map((card) => (
-            <div key={card.title} className="rounded-3xl p-5 bg-secondary border border-border">
-              <h4 className="mb-2 font-semibold">{card.title}</h4>
-              <p className="opacity-80 text-sm">{card.text}</p>
-            </div>
-          ))}
-        </div>
-      </GlassCard>
     </div>
   );
 }

@@ -3,10 +3,12 @@ import { GlassCard } from './common/GlassCard';
 import { HomeProgressItem, loadHomeProgress, saveHomeProgress } from '../utils/storage';
 
 const DEFAULT_TASKS: HomeProgressItem[] = [
-  { id: 'plant-northeast', label: 'Поставил растение в зоне северо-востока', done: false },
-  { id: 'mirror-southwest', label: 'Убрал зеркало из юго-западной зоны', done: false },
-  { id: 'light-south', label: 'Добавил освещение в южной зоне', done: false },
-  { id: 'work-north', label: 'Открыл рабочее место на севере', done: false },
+  { id: 'vastu-entry', label: 'Освободить вход и проверить освещение', done: false },
+  { id: 'vastu-north', label: 'Навести порядок в северном секторе и документах', done: false },
+  { id: 'vastu-northeast', label: 'Освободить северо-восток от тяжёлого хранения', done: false },
+  { id: 'vastu-southeast', label: 'Проверить безопасность кухни и вентиляцию', done: false },
+  { id: 'vastu-southwest', label: 'Организовать спокойное место для отдыха', done: false },
+  { id: 'vastu-center', label: 'Освободить центральные проходы', done: false },
 ];
 
 export function HomeProgressTracker() {

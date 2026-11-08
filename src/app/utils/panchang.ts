@@ -6,6 +6,7 @@ import * as Astronomy from 'astronomy-engine';
 import { NAKSHATRAS, tropicalToSidereal } from './astrology';
 import { getWeekdayIndex } from './dateUtils';
 
+const AstronomyApi = (Reflect.get(Astronomy, 'default') as typeof Astronomy | undefined) ?? Astronomy;
 // Tithi (Lunar day) - 30 tithis in a lunar month
 export const TITHIS = [
   { name: 'Шукла Пратипада', meaning: 'Начало растущего лунного цикла, новые возможности' },
@@ -103,11 +104,11 @@ export function calculatePanchang(date: Date, context: PanchangContext = {}): Pa
   // Солнце требует SunPosition(), Луна - EclipticGeoMoon()
   try {
     // Для Солнца используем SunPosition (геоцентрическая позиция)
-    const sunPos = Astronomy.SunPosition(date);
+    const sunPos = AstronomyApi.SunPosition(date);
     const sunLon = tropicalToSidereal(sunPos.elon, date);
 
     // Для Луны используем EclipticGeoMoon (геоцентрическая эклиптическая позиция)
-    const moonPos = Astronomy.EclipticGeoMoon(date);
+    const moonPos = AstronomyApi.EclipticGeoMoon(date);
     const moonLon = tropicalToSidereal(moonPos.lon, date);
 
     // Tithi calculation

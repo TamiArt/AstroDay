@@ -3,6 +3,7 @@ import { formatDateKey, formatTime, getWeekdayIndex } from './dateUtils';
 import { isValidCoordinates, isValidIanaTimezone } from './locationValidation';
 import { createDateInTimezone } from './timezones';
 
+const AstronomyApi = (Reflect.get(Astronomy, 'default') as typeof Astronomy | undefined) ?? Astronomy;
 const CHALDEAN_ORDER = ['Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon'] as const;
 const DAY_RULERS = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'] as const;
 
@@ -42,12 +43,12 @@ function searchSunEvent(
   from: Date,
   limitDays: number
 ): Date | null {
-  const event = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, direction, from, limitDays);
+  const event = AstronomyApi.SearchRiseSet(AstronomyApi.Body.Sun, observer, direction, from, limitDays);
   return event?.date ?? null;
 }
 
 function getLocalDayBounds(date: Date, latitude: number, longitude: number, timezone: string) {
-  const observer = new Astronomy.Observer(latitude, longitude, 0);
+  const observer = new AstronomyApi.Observer(latitude, longitude, 0);
   const dateKey = formatDateKey(date, timezone);
   const dayStart = createDateInTimezone(dateKey, '00:00', timezone);
 
@@ -138,7 +139,7 @@ export function calculatePlanetaryHour(
   );
   const hourNumber = offsetBase + hourInPeriod + 1;
   const start = new Date(periodStart.getTime() + hourInPeriod * hourLength);
-  const end = new Date(start.getTime() + hourLength);
+  const end = new Date(periodStart.getTime() + (hourInPeriod + 1) * hourLength);
   const rulerIndex = CHALDEAN_ORDER.indexOf(dayRuler as typeof CHALDEAN_ORDER[number]);
   const planet = CHALDEAN_ORDER[(rulerIndex + offsetBase + hourInPeriod) % CHALDEAN_ORDER.length];
 
@@ -176,7 +177,7 @@ export function calculatePlanetaryHoursForDay(
     const periodStart = isDaytime ? sunrise : sunset;
     const hourLength = isDaytime ? dayLength : nightLength;
     const start = new Date(periodStart.getTime() + hourInPeriod * hourLength);
-    const end = new Date(start.getTime() + hourLength);
+    const end = new Date(periodStart.getTime() + (hourInPeriod + 1) * hourLength);
     const planet = CHALDEAN_ORDER[(rulerIndex + i) % CHALDEAN_ORDER.length];
 
     hours.push({

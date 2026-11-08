@@ -23,6 +23,7 @@ const NatalChartDetailed = lazy(() => import('./NatalChartDetailed').then(module
 const PanchangWidget = lazy(() => import('./PanchangWidget').then(module => ({ default: module.PanchangWidget })));
 const RemediesLibrary = lazy(() => import('./RemediesLibrary').then(module => ({ default: module.RemediesLibrary })));
 const HomeAssistant = lazy(() => import('./HomeAssistant').then(module => ({ default: module.HomeAssistant })));
+const Palmistry = lazy(() => import('./Palmistry').then(module => ({ default: module.Palmistry })));
 
 interface DashboardProps {
   profile: UserProfile;
@@ -30,7 +31,7 @@ interface DashboardProps {
   onProfileUpdate?: (profile: UserProfile) => void;
 }
 
-type DashboardView = 'dayoverview' | 'overview' | 'home' | 'panchang' | 'natalchart' | 'remedies' | 'calendar' | 'now' | 'settings';
+type DashboardView = 'dayoverview' | 'overview' | 'home' | 'panchang' | 'natalchart' | 'remedies' | 'calendar' | 'now' | 'settings' | 'palmistry';
 
 const NAV_ITEMS: Array<{ id: DashboardView; label: string }> = [
   { id: 'dayoverview', label: 'Обзор дня' },
@@ -38,6 +39,7 @@ const NAV_ITEMS: Array<{ id: DashboardView; label: string }> = [
   { id: 'home', label: 'Дом' },
   { id: 'panchang', label: 'Панчанг' },
   { id: 'natalchart', label: 'Натальная карта' },
+  { id: 'palmistry', label: 'Хиромантия' },
   { id: 'remedies', label: 'Упайи' },
   { id: 'calendar', label: 'Календарь' },
   { id: 'now', label: 'Сейчас' },
@@ -280,6 +282,12 @@ export function Dashboard({ profile, onReset, onProfileUpdate }: DashboardProps)
           </Suspense>
         )}
 
+        {selectedView === 'palmistry' && (
+          <Suspense fallback={<ViewFallback />}>
+            <Palmistry />
+          </Suspense>
+        )}
+
         {selectedView === 'home' && (
           <Suspense fallback={<ViewFallback />}>
             <HomeAssistant
@@ -383,7 +391,7 @@ export function Dashboard({ profile, onReset, onProfileUpdate }: DashboardProps)
                   <div>
                     <h3 className="mb-1">Приватность</h3>
                     <p className="opacity-80">
-                      Все ваши данные хранятся только в этом браузере. Мы не отправляем их никуда.
+                      Профиль и расчёты хранятся локально в этом браузере. Для поиска места и определения названия по координатам приложение обращается к OpenStreetMap Nominatim: сервис получает поисковый запрос или координаты, но не весь профиль.
                     </p>
                   </div>
                 </div>

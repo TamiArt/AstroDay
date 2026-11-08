@@ -30,8 +30,9 @@ export function RoomDashboard({ room, recommendations, planetaryHour, panchang }
           <p className="opacity-70">Сектор: {room.baguaZone} / {room.vastuZone}</p>
         </div>
         <div className="rounded-3xl p-4 bg-secondary border border-border">
-          <p className="text-sm opacity-70">Ведический управляющий</p>
+          <p className="text-sm opacity-70">Планета текущей Даши</p>
           <p className="mt-2 font-semibold">{analysis?.owner ?? 'Проверяем...'}</p>
+          <p className="text-xs opacity-60 mt-2">Астрологический акцент периода, а не управитель направления Васту.</p>
         </div>
         <div className="grid gap-3">
           <div className="rounded-3xl p-4 bg-secondary border border-border">
@@ -47,14 +48,14 @@ export function RoomDashboard({ room, recommendations, planetaryHour, panchang }
             <p className="mt-2">{analysis ? analysis.colors.join(', ') : 'Пока нет данных.'}</p>
           </div>
           <div className="rounded-3xl p-4 bg-secondary border border-border">
-            <p className="text-sm opacity-70">Упая</p>
+            <p className="text-sm opacity-70">Практика</p>
             <p className="mt-2">{analysis?.practice ?? 'Пока нет данных.'}</p>
           </div>
         </div>
         <div className="rounded-3xl p-4 border border-border bg-secondary">
           <p className="text-sm opacity-70">Сейчас</p>
-          <p className="mt-2">{planetaryHour} — подходящее время для мягкой работы в этой зоне.</p>
-          <p className="text-sm opacity-70 mt-3">{panchang.tithi.name === 'Пурнима' ? 'Сегодня благоприятно активировать зону богатства.' : 'Следите за энергетикой дня и регулируйте обстановку.'}</p>
+          <p className="mt-2">Час {planetaryHour} — традиционный астрологический ориентир. Он не оценивает качество сектора и не гарантирует результат.</p>
+          <p className="text-sm opacity-70 mt-3">Сегодня титхи: {panchang.tithi.name}. Выберите одно небольшое и безопасное действие по улучшению пространства.</p>
         </div>
       </div>
     </GlassCard>
