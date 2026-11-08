@@ -47,6 +47,7 @@ const leoTwelfthFocus = getSunHouseFocus(leoTwelfthChart, 12);
 assert.ok(leoTwelfthFocus.includes('закулисная стратегия'));
 assert.ok(leoTwelfthFocus.includes('Лев добавляет лидерский и творческий способ проявления'));
 assert.ok(leoTwelfthFocus.includes('собственный знак'));
+assert.ok(leoTwelfthFocus.includes('управляет 12-м домом'));
 const virgoAscendantFirstHouse = analyzePersonalizedHouses(leoTwelfthChart).find((item) => item.house === 1);
 assert.equal(virgoAscendantFirstHouse?.sign, 'Дева');
 assert.equal(virgoAscendantFirstHouse?.lord, 'Меркурий');
