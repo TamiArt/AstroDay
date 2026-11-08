@@ -276,7 +276,9 @@ function getTopicEvidence(chart: NatalChart, houses: number[]): string[] {
     if (!house) return `${houseNumber}-й дом: данные недоступны`;
     const occupants = Object.keys(chart.planets).filter((name) => getPlanetHouseForChart(chart, name) === houseNumber);
     const lordHouse = getPlanetHouseForChart(chart, house.lord);
-    return `${houseNumber}-й дом (${SIGN_RU[house.signName] ?? house.signName}): управитель ${PLANET_RU[house.lord] ?? house.lord}${lordHouse ? ` расположен в ${lordHouse}-м доме` : ''}; планеты в доме: ${occupants.length ? occupants.map((name) => PLANET_RU[name] ?? name).join(', ') : 'нет'}.`;
+    const condition = evaluatePlanetCondition(chart, house.lord);
+    const aspects = describeHouseDrishti(chart, houseNumber);
+    return `${houseNumber}-й дом (${SIGN_RU[house.signName] ?? house.signName}): управитель ${PLANET_RU[house.lord] ?? house.lord}${lordHouse ? ` расположен в ${lordHouse}-м доме` : ''}${condition ? `, достоинство — ${condition.label} (${condition.score}/100)` : ''}; планеты в доме: ${occupants.length ? occupants.map((name) => PLANET_RU[name] ?? name).join(', ') : 'нет'}. ${aspects.length ? aspects.join(' ') : 'Граха-дришти на дом не обнаружена.'}`;
   });
 }
 
