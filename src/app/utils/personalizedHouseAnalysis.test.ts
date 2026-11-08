@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { analyzeLifeTopics, analyzePersonalizedHouses, getVargaEvidence } from './personalizedHouseAnalysis';
 import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition, getGrahaDrishti, getPlanetToPlanetAspects } from './natalStrengthAnalysis';
 import { getSunHouseFocus } from './natalAnalysisGuidance';
-import { getAscendantLordFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getMoonHouseFocus } from './natalPersonalFocus';
+import { getAscendantLordFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus } from './natalPersonalFocus';
 import type { NatalChart, PlanetPosition } from './astrology';
 
 function position(name: string, longitude: number, signName: string, nakshatraName: string) {
@@ -105,6 +105,12 @@ assert.ok(areaInteractions.some((area) => area.id === 'relationships'));
 assert.ok(areaInteractions.find((area) => area.id === 'relationships')?.connections.some((line) => line.includes('Солнце расположен в 7-м доме')));
 assert.ok(!areaInteractions.some((area) => area.id === 'career'));
 assert.ok(areaInteractions.find((area) => area.id === 'money')?.connections.some((line) => line.includes('Марс управляет 8-м домом')));
+const lifeAreaBridges = getCoreLifeAreaBridges(marsAspectsSunChart);
+assert.equal(lifeAreaBridges.length, 1);
+assert.deepEqual(lifeAreaBridges[0].areas, ['Профессия и работа', 'Отношения и партнёрство', 'Деньги и ресурсы'].filter((title) =>
+  areaInteractions.some((area) => area.title === title && area.connections.some((line) => line.startsWith(lifeAreaBridges[0].connection))),
+));
+assert.ok(lifeAreaBridges[0].explanation.includes('не означает'));
 const dispositorAreaChart = {
   ...marsAspectsSunChart,
   planets: {
