@@ -140,7 +140,7 @@ export function calculatePlanetaryHour(
   );
   const hourNumber = offsetBase + hourInPeriod + 1;
   const start = new Date(periodStart.getTime() + hourInPeriod * hourLength);
-  const end = new Date(start.getTime() + hourLength);
+  const end = new Date(periodStart.getTime() + (hourInPeriod + 1) * hourLength);
   const rulerIndex = CHALDEAN_ORDER.indexOf(dayRuler as typeof CHALDEAN_ORDER[number]);
   const planet = CHALDEAN_ORDER[(rulerIndex + offsetBase + hourInPeriod) % CHALDEAN_ORDER.length];
 
@@ -178,7 +178,7 @@ export function calculatePlanetaryHoursForDay(
     const periodStart = isDaytime ? sunrise : sunset;
     const hourLength = isDaytime ? dayLength : nightLength;
     const start = new Date(periodStart.getTime() + hourInPeriod * hourLength);
-    const end = new Date(start.getTime() + hourLength);
+    const end = new Date(periodStart.getTime() + (hourInPeriod + 1) * hourLength);
     const planet = CHALDEAN_ORDER[(rulerIndex + i) % CHALDEAN_ORDER.length];
 
     hours.push({
