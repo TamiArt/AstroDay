@@ -178,17 +178,32 @@ export function getCoreInteractionsByLifeArea(chart: NatalChart): CoreLifeAreaIn
         ...(targetRules.filter((house) => area.houses.includes(house)).map((house) => `${link.target} управляет ${house}-м домом этой сферы`)),
       ];
       const getDispositorEvidence = (planetKey: string, planetLabel: string): string[] => {
-        const dispositor = getSignDispositor(chart, planetKey);
-        if (!dispositor || dispositor === planetKey || !chart.planets[dispositor as keyof NatalChart['planets']]) return [];
-        const dispositorHouse = getPlanetHouse(chart, dispositor);
-        const dispositorRules = chart.houses!.filter((house) => house.lord === dispositor).map((house) => house.house);
-        return [
-          ...(dispositorHouse && area.houses.includes(dispositorHouse)
-            ? [`${PLANET_RU[dispositor] ?? dispositor} — диспозитор ${planetLabel}; расположен в ${dispositorHouse}-м доме этой сферы`]
-            : []),
-          ...dispositorRules.filter((house) => area.houses.includes(house))
-            .map((house) => `${PLANET_RU[dispositor] ?? dispositor} — диспозитор ${planetLabel}; управляет ${house}-м домом этой сферы`),
-        ];
+        const evidence: string[] = [];
+        const visited = new Set([planetKey]);
+        let currentKey = planetKey;
+        let currentLabel = planetLabel;
+
+        // Follow a short, bounded chain; never loop through mutual dispositors indefinitely.
+        for (let depth = 0; depth < 3; depth += 1) {
+          const dispositor = getSignDispositor(chart, currentKey);
+          if (!dispositor || visited.has(dispositor)) break;
+          visited.add(dispositor);
+          if (!chart.planets[dispositor as keyof NatalChart['planets']]) break;
+
+          const dispositorLabel = PLANET_RU[dispositor] ?? dispositor;
+          const dispositorHouse = getPlanetHouse(chart, dispositor);
+          const dispositorRules = chart.houses!.filter((house) => house.lord === dispositor).map((house) => house.house);
+          if (dispositorHouse && area.houses.includes(dispositorHouse)) {
+            evidence.push(`${dispositorLabel} — диспозитор ${currentLabel}; расположен в ${dispositorHouse}-м доме этой сферы`);
+          }
+          for (const house of dispositorRules.filter((item) => area.houses.includes(item))) {
+            evidence.push(`${dispositorLabel} — диспозитор ${currentLabel}; управляет ${house}-м домом этой сферы`);
+          }
+
+          currentKey = dispositor;
+          currentLabel = dispositorLabel;
+        }
+        return evidence;
       };
       const evidence = [
         ...sourceEvidence,
