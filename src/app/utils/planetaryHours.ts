@@ -1,5 +1,4 @@
 import * as Astronomy from 'astronomy-engine';
-
 import { formatDateKey, formatTime, getWeekdayIndex } from './dateUtils';
 import { isValidCoordinates, isValidIanaTimezone } from './locationValidation';
 import { createDateInTimezone } from './timezones';
