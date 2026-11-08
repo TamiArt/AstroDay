@@ -60,7 +60,7 @@ assert.ok(lagnaFocus.includes('1-м доме'));
 assert.ok(lagnaFocus.includes('собственный знак'));
 const virgoLagnaFocus = getAscendantLordFocus(leoTwelfthChart);
 assert.ok(virgoLagnaFocus.includes('управитель — Меркурий'));
-assert.ok(virgoLagnaFocus.includes('анализа'));
+assert.ok(virgoLagnaFocus.includes('анализ'));
 const moonFocus = getMoonHouseFocus(chart, 3);
 assert.ok(moonFocus.includes('3-м доме'));
 assert.ok(moonFocus.includes('Mrigashira'));
