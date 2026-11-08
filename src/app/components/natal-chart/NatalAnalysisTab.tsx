@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { SIGNS_RU } from '../../utils/astrology';
 import type { NatalChart as NatalChartType } from '../../utils/astrology';
 import { analyzePersonalizedHouses } from '../../utils/personalizedHouseAnalysis';
 import { getPlanetHouse } from '../../utils/natalStrengthAnalysis';
@@ -104,8 +105,10 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
   const personalizedHouses = analyzePersonalizedHouses(natalChart);
   const sunFocus = getSunHouseFocus(natalChart, sunHouse);
   const ascDesc = getAscendantDescription(natalChart.ascendant.signName);
-  const sunDesc = getSunDescription(natalChart.planets.Sun.signName, sunHouse);
-  const moonDesc = getMoonDescription(natalChart.planets.Moon.signName, moonHouse);
+  const sunSignRu = SIGNS_RU[natalChart.planets.Sun.sign] ?? natalChart.planets.Sun.signName;
+  const moonSignRu = SIGNS_RU[natalChart.planets.Moon.sign] ?? natalChart.planets.Moon.signName;
+  const sunDesc = getSunDescription(sunSignRu, sunHouse);
+  const moonDesc = getMoonDescription(moonSignRu, moonHouse);
 
   return (
     <div className="space-y-6">
@@ -166,7 +169,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
       <InsightCard
         icon={Sun}
         title={sunDesc.title}
-        subtitle={`Солнце в ${natalChart.planets.Sun.signName}, ${sunHouse}-й дом`}
+        subtitle={`Солнце в ${sunSignRu}, ${sunHouse}-й дом`}
         accent="border-yellow-200"
       >
         <div className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border-l-4 border-yellow-600">
@@ -196,7 +199,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
       <InsightCard
         icon={Moon}
         title={moonDesc.title}
-        subtitle={`Луна в ${natalChart.planets.Moon.signName}, ${moonHouse}-й дом`}
+        subtitle={`Луна в ${moonSignRu}, ${moonHouse}-й дом`}
         accent="border-blue-200"
       >
         <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-600">
