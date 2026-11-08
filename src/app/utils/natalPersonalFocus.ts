@@ -14,6 +14,23 @@ function aspectText(chart: NatalChart, house: number): string {
   const aspects = describeHouseDrishti(chart, house);
   return aspects.length ? 'Аспекты на эту сферу: ' + aspects.join(' ') : 'По используемой схеме классической граха-дришти прямые аспекты на этот дом не найдены.';
 }
+function dispositorText(chart: NatalChart, name: string): string {
+  const planet = chart.planets[name as keyof NatalChart['planets']];
+  if (!planet) return '';
+  const signHouse = chart.houses?.find((house) => house.sign === planet.sign);
+  const dispositor = signHouse?.lord;
+  if (!dispositor) return ' Диспозитор знака не определён по данным домов.';
+  if (dispositor === name) return ' Диспозитор знака — сама планета: она находится в собственном знаке.';
+  const dispositorPosition = chart.planets[dispositor as keyof NatalChart['planets']];
+  if (!dispositorPosition) return ' Диспозитор знака — ' + (PLANET_RU[dispositor] ?? dispositor) + ', но его положение в карте не найдено.';
+  const house = getPlanetHouse(chart, dispositor);
+  const ruledHouses = chart.houses?.filter((item) => item.lord === dispositor).map((item) => item.house) ?? [];
+  const condition = evaluatePlanetCondition(chart, dispositor);
+  const location = house ? 'расположен в ' + house + '-м доме' : 'его дом не определён';
+  const rulership = ruledHouses.length ? ' и управляет домами ' + ruledHouses.join(', ') : '';
+  return ' Диспозитор знака — ' + (PLANET_RU[dispositor] ?? dispositor) + ': ' + location + rulership + (condition ? '; достоинство — ' + condition.label : '') + '.';
+}
+
 function placementText(chart: NatalChart, name: string, role: string): string {
   const planet = chart.planets[name as keyof NatalChart['planets']];
   if (!planet) return role + ': данные планеты отсутствуют.';
@@ -21,7 +38,7 @@ function placementText(chart: NatalChart, name: string, role: string): string {
   const sign = SIGN_NAMES[planet.sign] ?? planet.signName;
   const nakshatra = planet.nakshatraName ? '; накшатра ' + planet.nakshatraName + ', пада ' + planet.pada : '';
   const houseText = house ? house + '-й дом (' + HOUSE_THEMES[house] + ')' : 'дом не определён';
-  return role + ' — ' + (PLANET_RU[name] ?? name) + ' в знаке ' + sign + ', ' + houseText + nakshatra + '. Функция планеты: ' + (PLANET_THEMES[name] ?? 'символические качества планеты') + '. ' + conditionText(chart, name) + ' ' + (house ? aspectText(chart, house) : '');
+  return role + ' — ' + (PLANET_RU[name] ?? name) + ' в знаке ' + sign + ', ' + houseText + nakshatra + '. Функция планеты: ' + (PLANET_THEMES[name] ?? 'символические качества планеты') + '. ' + conditionText(chart, name) + dispositorText(chart, name) + ' ' + (house ? aspectText(chart, house) : '');
 }
 
 export function getAscendantLordFocus(chart: NatalChart): string {
