@@ -20,7 +20,7 @@ import type { NatalChart as NatalChartType } from '../../utils/astrology';
 import { analyzePersonalizedHouses } from '../../utils/personalizedHouseAnalysis';
 import { getPlanetHouse } from '../../utils/natalStrengthAnalysis';
 import { getSunHouseFocus } from '../../utils/natalAnalysisGuidance';
-import { getAscendantLordFocus, getCoreChartSynthesis, getMoonHouseFocus } from '../../utils/natalPersonalFocus';
+import { getAscendantLordFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getMoonHouseFocus } from '../../utils/natalPersonalFocus';
 import { getAscendantDescription, getMoonDescription, getSunDescription } from '../../utils/natalChartDescriptions';
 import { GlassCard } from '../common/GlassCard';
 import { TermTooltip } from '../common/TermTooltip';
@@ -107,7 +107,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
   const sunFocus = getSunHouseFocus(natalChart, sunHouse);
   const ascendantLordFocus = getAscendantLordFocus(natalChart);
   const moonHouseFocus = getMoonHouseFocus(natalChart, moonHouse);
-  const coreChartSynthesis = getCoreChartSynthesis(natalChart);
+  const coreChartSynthesis = getCoreChartSynthesis(natalChart);\n  const coreLifeAreaInteractions = getCoreInteractionsByLifeArea(natalChart);
   const ascDesc = getAscendantDescription(natalChart.ascendant.signName);
   const sunSignRu = SIGNS_RU[natalChart.planets.Sun.sign] ?? natalChart.planets.Sun.signName;
   const moonSignRu = SIGNS_RU[natalChart.planets.Moon.sign] ?? natalChart.planets.Moon.signName;
@@ -237,6 +237,35 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
           <p className="text-sm text-gray-700 leading-relaxed">{moonDesc.comfort}</p>
         </div>
       </InsightCard>
+
+      {coreLifeAreaInteractions.length > 0 ? (
+        <GlassCard>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 pb-3 border-b border-gray-200">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-600 to-blue-600">
+                <Target className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Где взаимодействия показателей затрагивают жизненные сферы</h3>
+                <p className="text-sm text-gray-600">Только связи, подтверждённые положением планет или управлением домами</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {coreLifeAreaInteractions.map((area) => (
+                <section key={area.id} className="rounded-lg border border-cyan-100 bg-cyan-50/60 p-4 space-y-2">
+                  <h4 className="font-semibold text-gray-900">{area.title}</h4>
+                  <ul className="space-y-2">
+                    {area.connections.map((connection) => (
+                      <li key={connection} className="text-sm leading-relaxed text-gray-700">{connection}</li>
+                    ))}
+                  </ul>
+                </section>
+              ))}
+            </div>
+            <p className="text-xs leading-relaxed text-gray-500">Если связь планет не имеет опоры в домах конкретной сферы, она здесь не показывается. Это традиционная символическая интерпретация, а не прогноз событий.</p>
+          </div>
+        </GlassCard>
+      ) : null}
 
       <GlassCard>
         <div className="space-y-3">
