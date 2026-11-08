@@ -5,8 +5,6 @@
 
 import * as Astronomy from 'astronomy-engine';
 
-// Node's ESM interop can expose the CommonJS build under `default`, while Vite
-// exposes the ESM namespace directly. Normalize both shapes in one place.
 import { calculateAdditionalVargas, type AdditionalVargas } from './divisionalCharts';
 import { getLahiriAyanamsha } from './ayanamsha';
 
