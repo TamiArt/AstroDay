@@ -17,7 +17,7 @@ import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { NatalChart as NatalChartType, PlanetPosition } from '../../utils/astrology';
 import { analyzePersonalizedHouses } from '../../utils/personalizedHouseAnalysis';
-import { describeHouseDrishti, evaluatePlanetCondition } from '../../utils/natalStrengthAnalysis';
+import { describeHouseDrishti, evaluatePlanetCondition, getPlanetHouse } from '../../utils/natalStrengthAnalysis';
 import { getAscendantDescription, getMoonDescription, getSunDescription } from '../../utils/natalChartDescriptions';
 import { GlassCard } from '../common/GlassCard';
 import { TermTooltip } from '../common/TermTooltip';
@@ -56,11 +56,6 @@ const LIFE_AREA_STYLES = {
     meta: 'text-green-700',
   },
 } as const;
-
-function getHouseForPlanet(planet: PlanetPosition, chart: NatalChartType): number {
-  // The app uses whole-sign houses; keep this tab consistent with the rest of the chart.
-  return chart.houses?.find((house) => house.sign === planet.sign)?.house ?? 1;
-}
 
 const SUN_HOUSE_FOCUS: Record<number, string> = {
   1: 'личная инициатива, самостоятельные проекты, роли, где важно принимать решения и задавать направление',
@@ -133,8 +128,8 @@ function InsightCard({ icon: Icon, title, subtitle, accent, children }: InsightC
 }
 
 export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
-  const sunHouse = getHouseForPlanet(natalChart.planets.Sun, natalChart);
-  const moonHouse = getHouseForPlanet(natalChart.planets.Moon, natalChart);
+  const sunHouse = (getPlanetHouse(natalChart, 'Sun') ?? 1);
+  const moonHouse = (getPlanetHouse(natalChart, 'Moon') ?? 1);
   const personalizedHouses = analyzePersonalizedHouses(natalChart);
   const sunFocus = getSunFocus(natalChart, sunHouse);
   const ascDesc = getAscendantDescription(natalChart.ascendant.signName);
