@@ -243,6 +243,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
             ].map((area) => {
               const Icon = area.icon;
               const house = natalChart.houses?.find((item) => item.house === area.house);
+              const personal = personalizedHouses.find((item) => item.house === area.house);
               const styles = LIFE_AREA_STYLES[area.tone as keyof typeof LIFE_AREA_STYLES];
 
               return (
@@ -253,13 +254,13 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                   </div>
                   <p className="text-sm text-gray-600 leading-relaxed mb-2">{area.text}</p>
                   <p className={`text-xs ${styles.meta} font-medium mb-2`}>
-                    {house ? `${house.signName}, управитель ${house.lord}` : 'Данные дома недоступны'}
+                    {personal ? `${personal.sign}, управитель ${personal.lord}` : house ? 'Знак и управитель дома определены, подробности недоступны' : 'Данные дома недоступны'}
                   </p>
-                  {personalizedHouses.find((item) => item.house === area.house) ? (
+                  {personal ? (
                     <div className="space-y-2 border-t border-white/70 pt-3">
                       <p className="text-xs font-semibold uppercase tracking-wide text-gray-600">Что это означает именно в вашей карте</p>
                       <p className="text-sm leading-relaxed text-gray-800">
-                        {personalizedHouses.find((item) => item.house === area.house)?.interpretation}
+                        {personal.interpretation}
                       </p>
                     </div>
                   ) : null}
