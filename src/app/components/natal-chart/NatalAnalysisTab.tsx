@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { NatalChart as NatalChartType, PlanetPosition } from '../../utils/astrology';
+import type { NatalChart as NatalChartType } from '../../utils/astrology';
 import { analyzePersonalizedHouses } from '../../utils/personalizedHouseAnalysis';
 import { describeHouseDrishti, evaluatePlanetCondition, getPlanetHouse } from '../../utils/natalStrengthAnalysis';
 import { getAscendantDescription, getMoonDescription, getSunDescription } from '../../utils/natalChartDescriptions';
