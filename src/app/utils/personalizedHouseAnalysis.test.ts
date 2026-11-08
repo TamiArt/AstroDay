@@ -105,6 +105,21 @@ assert.ok(areaInteractions.some((area) => area.id === 'relationships'));
 assert.ok(areaInteractions.find((area) => area.id === 'relationships')?.connections.some((line) => line.includes('Солнце расположен в 7-м доме')));
 assert.ok(!areaInteractions.some((area) => area.id === 'career'));
 assert.ok(areaInteractions.find((area) => area.id === 'money')?.connections.some((line) => line.includes('Марс управляет 8-м домом')));
+const dispositorAreaChart = {
+  ...marsAspectsSunChart,
+  planets: {
+    ...marsAspectsSunChart.planets,
+    Venus: position('Venus', 275, 'Capricorn', 'Uttara Ashadha'),
+  },
+} as NatalChart;
+const dispositorAreaInteractions = getCoreInteractionsByLifeArea(dispositorAreaChart);
+assert.ok(dispositorAreaInteractions.find((area) => area.id === 'career')?.connections.some((line) =>
+  line.includes('Венера — диспозитор Солнце; расположен в 10-м доме этой сферы'),
+));
+assert.ok(dispositorAreaInteractions.find((area) => area.id === 'career')?.connections.some((line) =>
+  line.includes('Сатурн — диспозитор Венера; расположен в 11-м доме этой сферы'),
+));
+
 assert.deepEqual(getCoreInteractionsByLifeArea(chart), []);
 
 const sameSignCoreChart = {
