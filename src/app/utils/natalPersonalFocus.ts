@@ -232,3 +232,37 @@ export function getCoreInteractionsByLifeArea(chart: NatalChart): CoreLifeAreaIn
   return areaLinks.filter((item): item is CoreLifeAreaInteraction => item !== null);
 }
 
+export interface CoreLifeAreaBridge {
+  id: string;
+  connection: string;
+  areas: string[];
+  explanation: string;
+}
+
+/**
+ * Finds the same direct planetary connection when it has independent house
+ * or dispositor evidence in at least two different life areas.
+ */
+export function getCoreLifeAreaBridges(chart: NatalChart): CoreLifeAreaBridge[] {
+  const interactions = getCoreInteractionsByLifeArea(chart);
+  const grouped = new Map<string, string[]>();
+
+  for (const area of interactions) {
+    for (const line of area.connections) {
+      const [connection] = line.split(' Основание связи со сферой:');
+      if (!connection) continue;
+      const areas = grouped.get(connection) ?? [];
+      if (!areas.includes(area.title)) areas.push(area.title);
+      grouped.set(connection, areas);
+    }
+  }
+
+  return [...grouped.entries()]
+    .filter(([, areas]) => areas.length >= 2)
+    .map(([connection, areas]) => ({
+      id: connection,
+      connection,
+      areas,
+      explanation: 'Одна и та же связь ключевых показателей имеет отдельные подтверждения в нескольких сферах. Это помогает увидеть пересечение тем, но не означает, что одна сфера автоматически вызывает события в другой.',
+    }));
+}
