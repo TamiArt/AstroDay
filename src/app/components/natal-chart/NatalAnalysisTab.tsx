@@ -17,7 +17,8 @@ import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { NatalChart as NatalChartType } from '../../utils/astrology';
 import { analyzePersonalizedHouses } from '../../utils/personalizedHouseAnalysis';
-import { describeHouseDrishti, evaluatePlanetCondition, getPlanetHouse } from '../../utils/natalStrengthAnalysis';
+import { getPlanetHouse } from '../../utils/natalStrengthAnalysis';
+import { getSunHouseFocus } from '../../utils/natalAnalysisGuidance';
 import { getAscendantDescription, getMoonDescription, getSunDescription } from '../../utils/natalChartDescriptions';
 import { GlassCard } from '../common/GlassCard';
 import { TermTooltip } from '../common/TermTooltip';
@@ -57,36 +58,6 @@ const LIFE_AREA_STYLES = {
   },
 } as const;
 
-const SUN_HOUSE_FOCUS: Record<number, string> = {
-  1: 'личная инициатива, самостоятельные проекты, роли, где важно принимать решения и задавать направление',
-  2: 'создание личного дохода, развитие оплачиваемых навыков, управление ресурсами, голос и экспертная коммуникация',
-  3: 'письмо, обучение, медиа, продажи, переговоры, создание контента и проекты, где важны связи и собственная инициатива',
-  4: 'недвижимость, образование, управление домашними и семейными проектами, психология, гостеприимство и создание устойчивой среды',
-  5: 'творческие и авторские проекты, дизайн, сцена, преподавание, наставничество и создание интеллектуальных продуктов',
-  6: 'операционные и сервисные роли, контроль качества, аналитика ошибок, управление процессами и решение ежедневных сложных задач',
-  7: 'работа с клиентами, консультирование, переговоры, партнёрские проекты и публичная деятельность через взаимодействие с людьми',
-  8: 'исследование, аудит, управление рисками, налоги и страхование, кризисные задачи, психология и работа с конфиденциальной информацией',
-  9: 'высшее образование, преподавание, публикации, международные проекты, право, исследования и профессиональное наставничество',
-  10: 'профессиональное руководство, управление, собственная практика, ответственность за результат и роли с заметным общественным вкладом',
-  11: 'технологические и сетевые проекты, крупные команды, сообщества, развитие аудитории, управление несколькими источниками дохода и долгосрочные цели',
-  12: 'закулисная стратегия и управление проектами, удалённые и международные команды, исследования, аналитика, работа в крупных учреждениях и организациях, где важны конфиденциальность и самостоятельность',
-};
-
-function getSunFocus(chart: NatalChartType, house: number): string {
-  const sun = chart.planets.Sun;
-  const condition = evaluatePlanetCondition(chart, 'Sun');
-  const aspects = describeHouseDrishti(chart, house);
-  const signSpecific = sun.signName === 'Leo'
-    ? 'Лев добавляет лидерский и творческий способ проявления: важно не только выполнять задачу, но и иметь авторство, право принимать решения и видеть результат своей работы.'
-    : `Знак ${sun.signName} описывает стиль проявления Солнца; его качества нужно читать вместе с конкретной сферой ${house}-го дома.`;
-  const dignity = condition
-    ? `Достоинство Солнца: ${condition.label}. ${condition.explanation}`
-    : '';
-  const aspectNote = aspects.length
-    ? `На эту сферу также влияют аспекты: ${aspects.join(' ')}`
-    : 'По используемой схеме классической граха-дришти прямые аспекты на этот дом не обнаружены.';
-  return `Конкретные направления: ${SUN_HOUSE_FOCUS[house] ?? 'сфера определяется положением Солнца и связями управителей'}. ${signSpecific} ${dignity} ${aspectNote}`;
-}
 
 function BulletList({ items, tone }: { items: string[]; tone: 'green' | 'orange' | 'blue' | 'yellow' }) {
   const toneClass = {
@@ -131,7 +102,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
   const sunHouse = (getPlanetHouse(natalChart, 'Sun') ?? 1);
   const moonHouse = (getPlanetHouse(natalChart, 'Moon') ?? 1);
   const personalizedHouses = analyzePersonalizedHouses(natalChart);
-  const sunFocus = getSunFocus(natalChart, sunHouse);
+  const sunFocus = getSunHouseFocus(natalChart, sunHouse);
   const ascDesc = getAscendantDescription(natalChart.ascendant.signName);
   const sunDesc = getSunDescription(natalChart.planets.Sun.signName, sunHouse);
   const moonDesc = getMoonDescription(natalChart.planets.Moon.signName, moonHouse);
