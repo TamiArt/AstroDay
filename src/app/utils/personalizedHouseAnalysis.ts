@@ -266,8 +266,8 @@ function getTopicEvidence(chart: NatalChart, houses: number[]): string[] {
   return houses.map((houseNumber) => {
     const house = chart.houses?.find((item) => item.house === houseNumber);
     if (!house) return `${houseNumber}-й дом: данные недоступны`;
-    const occupants = Object.keys(chart.planets).filter((name) => getPlanetHouse(chart, name) === houseNumber);
-    const lordHouse = getPlanetHouse(chart, house.lord);
+    const occupants = Object.keys(chart.planets).filter((name) => getPlanetHouseForChart(chart, name) === houseNumber);
+    const lordHouse = getPlanetHouseForChart(chart, house.lord);
     return `${houseNumber}-й дом (${SIGN_RU[house.signName] ?? house.signName}): управитель ${PLANET_RU[house.lord] ?? house.lord}${lordHouse ? ` расположен в ${lordHouse}-м доме` : ''}; планеты в доме: ${occupants.length ? occupants.map((name) => PLANET_RU[name] ?? name).join(', ') : 'нет'}.`;
   });
 }
