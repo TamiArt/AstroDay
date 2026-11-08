@@ -107,6 +107,8 @@ const structuredCareerLink = areaInteractions.flatMap((area) => area.links).find
 assert.ok(structuredCareerLink);
 assert.equal(structuredCareerLink?.id, 'Mars:Sun:graha-drishti:7');
 assert.ok(structuredCareerLink?.evidence.length);
+assert.equal(new Set(structuredCareerLink?.evidence.map((item) => item.id)).size, structuredCareerLink?.evidence.length);
+assert.ok(structuredCareerLink?.evidence.every((item) => item.chainDepth >= 0 && item.chainDepth <= 3));
 assert.equal(structuredCareerLink?.sourceHouse, 1);
 assert.equal(structuredCareerLink?.targetHouse, 7);
 assert.ok(areaInteractions.some((area) => area.id === 'relationships'));
