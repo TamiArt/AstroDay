@@ -131,6 +131,32 @@ export function getCoreChartSynthesis(chart: NatalChart): string {
   return lines.join('\n\n') + '\n\n' + synthesis + '\n\n' + relationshipText + '\n\nЭто обобщение традиционной астрологической символики, а не научная оценка личности или прогноз событий.';
 }
 
+export interface CoreLifeAreaEvidence {
+  id: string;
+  type: 'planet-placement' | 'house-rulership' | 'dispositor-placement' | 'dispositor-rulership';
+  planetKey: string;
+  planetLabel: string;
+  /** Present for dispositor evidence: the planet whose sign is ruled by this dispositor. */
+  dispositedPlanetKey?: string;
+  dispositedPlanetLabel?: string;
+  house: number;
+  /** 0 for a direct placement/rulership; 1–3 for a dispositor-chain step. */
+  chainDepth: number;
+}
+
+export function formatCoreLifeAreaEvidence(evidence: CoreLifeAreaEvidence): string {
+  if (evidence.type === 'planet-placement') {
+    return `${evidence.planetLabel} расположен в ${evidence.house}-м доме этой сферы`;
+  }
+  if (evidence.type === 'house-rulership') {
+    return `${evidence.planetLabel} управляет ${evidence.house}-м домом этой сферы`;
+  }
+  const relation = `диспозитор ${evidence.dispositedPlanetLabel ?? evidence.dispositedPlanetKey ?? 'планеты'}`;
+  return evidence.type === 'dispositor-placement'
+    ? `${evidence.planetLabel} — ${relation}; расположен в ${evidence.house}-м доме этой сферы`
+    : `${evidence.planetLabel} — ${relation}; управляет ${evidence.house}-м домом этой сферы`;
+}
+
 export interface CorePlanetaryLink {
   /** Stable, locale-independent identity for this directed planetary relationship. */
   id: string;
@@ -143,7 +169,7 @@ export interface CorePlanetaryLink {
   sourceHouse: number;
   targetHouse: number;
   /** Concrete chart facts supporting the link's relevance to a life area. */
-  evidence: string[];
+  evidence: CoreLifeAreaEvidence[];
   description: string;
 }
 
@@ -222,15 +248,27 @@ export function getCoreInteractionsByLifeArea(chart: NatalChart): CoreLifeAreaIn
       const targetHouse = getPlanetHouse(chart, link.targetKey);
       const sourceRules = chart.houses!.filter((house) => house.lord === link.sourceKey).map((house) => house.house);
       const targetRules = chart.houses!.filter((house) => house.lord === link.targetKey).map((house) => house.house);
-      const evidence = [
-        ...(sourceHouse && area.houses.includes(sourceHouse) ? [`${link.source} расположен в ${sourceHouse}-м доме этой сферы`] : []),
-        ...sourceRules.filter((house) => area.houses.includes(house)).map((house) => `${link.source} управляет ${house}-м домом этой сферы`),
-        ...(targetHouse && area.houses.includes(targetHouse) ? [`${link.target} расположен в ${targetHouse}-м доме этой сферы`] : []),
-        ...targetRules.filter((house) => area.houses.includes(house)).map((house) => `${link.target} управляет ${house}-м домом этой сферы`),
+      const evidence: CoreLifeAreaEvidence[] = [
+        ...(sourceHouse && area.houses.includes(sourceHouse) ? [{
+          id: `placement:${link.sourceKey}:${sourceHouse}`, type: 'planet-placement' as const,
+          planetKey: link.sourceKey, planetLabel: link.source, house: sourceHouse, chainDepth: 0,
+        }] : []),
+        ...sourceRules.filter((house) => area.houses.includes(house)).map((house) => ({
+          id: `rulership:${link.sourceKey}:${house}`, type: 'house-rulership' as const,
+          planetKey: link.sourceKey, planetLabel: link.source, house, chainDepth: 0,
+        })),
+        ...(targetHouse && area.houses.includes(targetHouse) ? [{
+          id: `placement:${link.targetKey}:${targetHouse}`, type: 'planet-placement' as const,
+          planetKey: link.targetKey, planetLabel: link.target, house: targetHouse, chainDepth: 0,
+        }] : []),
+        ...targetRules.filter((house) => area.houses.includes(house)).map((house) => ({
+          id: `rulership:${link.targetKey}:${house}`, type: 'house-rulership' as const,
+          planetKey: link.targetKey, planetLabel: link.target, house, chainDepth: 0,
+        })),
       ];
 
-      const getDispositorEvidence = (planetKey: string, planetLabel: string): string[] => {
-        const result: string[] = [];
+      const getDispositorEvidence = (planetKey: string, planetLabel: string): CoreLifeAreaEvidence[] => {
+        const result: CoreLifeAreaEvidence[] = [];
         const visited = new Set([planetKey]);
         let currentKey = planetKey;
         let currentLabel = planetLabel;
@@ -246,10 +284,20 @@ export function getCoreInteractionsByLifeArea(chart: NatalChart): CoreLifeAreaIn
           const dispositorHouse = getPlanetHouse(chart, dispositor);
           const dispositorRules = chart.houses!.filter((house) => house.lord === dispositor).map((house) => house.house);
           if (dispositorHouse && area.houses.includes(dispositorHouse)) {
-            result.push(`${dispositorLabel} — диспозитор ${currentLabel}; расположен в ${dispositorHouse}-м доме этой сферы`);
+            result.push({
+              id: `dispositor-placement:${dispositor}:${currentKey}:${dispositorHouse}`,
+              type: 'dispositor-placement', planetKey: dispositor, planetLabel: dispositorLabel,
+              dispositedPlanetKey: currentKey, dispositedPlanetLabel: currentLabel,
+              house: dispositorHouse, chainDepth: depth + 1,
+            });
           }
           for (const house of dispositorRules.filter((item) => area.houses.includes(item))) {
-            result.push(`${dispositorLabel} — диспозитор ${currentLabel}; управляет ${house}-м домом этой сферы`);
+            result.push({
+              id: `dispositor-rulership:${dispositor}:${currentKey}:${house}`,
+              type: 'dispositor-rulership', planetKey: dispositor, planetLabel: dispositorLabel,
+              dispositedPlanetKey: currentKey, dispositedPlanetLabel: currentLabel,
+              house, chainDepth: depth + 1,
+            });
           }
 
           currentKey = dispositor;
@@ -285,7 +333,7 @@ export function getCoreInteractionsByLifeArea(chart: NatalChart): CoreLifeAreaIn
       title: area.title,
       links,
       connections: links.map((link) =>
-        `${link.description}. Основание связи со сферой: ${link.evidence.join('; ')}. Это показывает символическую связь показателей с темой, но не гарантирует событие или результат.`,
+        `${link.description}. Основание связи со сферой: ${link.evidence.map(formatCoreLifeAreaEvidence).join('; ')}. Это показывает символическую связь показателей с темой, но не гарантирует событие или результат.`,
       ),
     };
   });
