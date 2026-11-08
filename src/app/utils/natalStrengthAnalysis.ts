@@ -193,7 +193,9 @@ export function getPlanetToPlanetAspects(chart: NatalChart, planetNames: string[
       if (!targetHouse) continue;
 
       if (sourcePosition.sign === targetPosition.sign) {
-        results.push({ source: PLANET_RU[source] ?? source, target: PLANET_RU[target] ?? target, sourceHouse, targetHouse, kind: 'conjunction', offset: null });
+        if (uniqueNames.indexOf(source) < uniqueNames.indexOf(target)) {
+          results.push({ source: PLANET_RU[source] ?? source, target: PLANET_RU[target] ?? target, sourceHouse, targetHouse, kind: 'conjunction', offset: null });
+        }
         continue;
       }
 
