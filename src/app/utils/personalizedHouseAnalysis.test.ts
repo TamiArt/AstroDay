@@ -119,6 +119,11 @@ assert.ok(dispositorAreaInteractions.find((area) => area.id === 'career')?.conne
 assert.ok(dispositorAreaInteractions.find((area) => area.id === 'career')?.connections.some((line) =>
   line.includes('Сатурн — диспозитор Венера; расположен в 11-м доме этой сферы'),
 ));
+assert.equal(
+  dispositorAreaInteractions.find((area) => area.id === 'career')?.connections
+    .filter((line) => line.includes('Сатурн — диспозитор Венера')).length,
+  1,
+);
 
 assert.deepEqual(getCoreInteractionsByLifeArea(chart), []);
 
