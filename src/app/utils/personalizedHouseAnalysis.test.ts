@@ -69,6 +69,13 @@ const moonDispositorSynthesis = getCoreChartSynthesis(chart);
 assert.ok(moonDispositorSynthesis.includes('Диспозитор знака — Меркурий'));
 assert.ok(moonDispositorSynthesis.includes('расположен в 6-м доме и управляет домами 3, 6'));
 assert.ok(moonDispositorSynthesis.includes('достоинство — экзальтация'));
+assert.ok(moonDispositorSynthesis.includes('Диспозитор знака — сама планета: она находится в собственном знаке.'));
+const chartWithoutMercury = {
+  ...chart,
+  planets: Object.fromEntries(Object.entries(chart.planets).filter(([name]) => name !== 'Mercury')),
+} as unknown as NatalChart;
+assert.ok(getCoreChartSynthesis(chartWithoutMercury).includes('Диспозитор знака — Меркурий, но его положение в карте не найдено.'));
+
 const synthesis = getCoreChartSynthesis(chart);
 assert.ok(synthesis.includes('Базовый способ действовать'));
 assert.ok(synthesis.includes('Вектор воли и самореализации'));
