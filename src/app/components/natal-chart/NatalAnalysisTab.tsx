@@ -20,7 +20,7 @@ import type { NatalChart as NatalChartType } from '../../utils/astrology';
 import { analyzePersonalizedHouses } from '../../utils/personalizedHouseAnalysis';
 import { getPlanetHouse } from '../../utils/natalStrengthAnalysis';
 import { getSunHouseFocus } from '../../utils/natalAnalysisGuidance';
-import { getAscendantLordFocus, getMoonHouseFocus } from '../../utils/natalPersonalFocus';
+import { getAscendantLordFocus, getCoreChartSynthesis, getMoonHouseFocus } from '../../utils/natalPersonalFocus';
 import { getAscendantDescription, getMoonDescription, getSunDescription } from '../../utils/natalChartDescriptions';
 import { GlassCard } from '../common/GlassCard';
 import { TermTooltip } from '../common/TermTooltip';
@@ -107,6 +107,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
   const sunFocus = getSunHouseFocus(natalChart, sunHouse);
   const ascendantLordFocus = getAscendantLordFocus(natalChart);
   const moonHouseFocus = getMoonHouseFocus(natalChart, moonHouse);
+  const coreChartSynthesis = getCoreChartSynthesis(natalChart);
   const ascDesc = getAscendantDescription(natalChart.ascendant.signName);
   const sunSignRu = SIGNS_RU[natalChart.planets.Sun.sign] ?? natalChart.planets.Sun.signName;
   const moonSignRu = SIGNS_RU[natalChart.planets.Moon.sign] ?? natalChart.planets.Moon.signName;
@@ -236,6 +237,21 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
           <p className="text-sm text-gray-700 leading-relaxed">{moonDesc.comfort}</p>
         </div>
       </InsightCard>
+
+      <GlassCard>
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 pb-3 border-b border-gray-200">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Как три главных показателя складываются вместе</h3>
+              <p className="text-sm text-gray-600">Лагна, Солнце и Луна: общий акцент и разные функции</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{coreChartSynthesis}</p>
+        </div>
+      </GlassCard>
 
       <GlassCard>
         <div className="space-y-4">
