@@ -1,4 +1,6 @@
 import * as Astronomy from 'astronomy-engine';
+
+const AstronomyApi = (Astronomy as unknown as { default?: typeof Astronomy }).default ?? Astronomy;
 import { formatDateKey, formatTime, getWeekdayIndex } from './dateUtils';
 import { isValidCoordinates, isValidIanaTimezone } from './locationValidation';
 import { createDateInTimezone } from './timezones';
@@ -42,12 +44,12 @@ function searchSunEvent(
   from: Date,
   limitDays: number
 ): Date | null {
-  const event = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, direction, from, limitDays);
+  const event = AstronomyApi.SearchRiseSet(Astronomy.Body.Sun, observer, direction, from, limitDays);
   return event?.date ?? null;
 }
 
 function getLocalDayBounds(date: Date, latitude: number, longitude: number, timezone: string) {
-  const observer = new Astronomy.Observer(latitude, longitude, 0);
+  const observer = new AstronomyApi.Observer(latitude, longitude, 0);
   const dateKey = formatDateKey(date, timezone);
   const dayStart = createDateInTimezone(dateKey, '00:00', timezone);
 
