@@ -93,6 +93,7 @@ const areaInteractions = getCoreInteractionsByLifeArea(marsAspectsSunChart);
 assert.ok(areaInteractions.some((area) => area.id === 'relationships'));
 assert.ok(areaInteractions.find((area) => area.id === 'relationships')?.connections.some((line) => line.includes('Солнце расположен в 7-м доме')));
 assert.ok(!areaInteractions.some((area) => area.id === 'career'));
+assert.ok(areaInteractions.find((area) => area.id === 'money')?.connections.some((line) => line.includes('Марс управляет 8-м домом')));
 assert.deepEqual(getCoreInteractionsByLifeArea(chart), []);
 
 const sameSignCoreChart = {
