@@ -131,9 +131,27 @@ export function getCoreChartSynthesis(chart: NatalChart): string {
   return lines.join('\n\n') + '\n\n' + synthesis + '\n\n' + relationshipText + '\n\nЭто обобщение традиционной астрологической символики, а не научная оценка личности или прогноз событий.';
 }
 
+export interface CorePlanetaryLink {
+  /** Stable, locale-independent identity for this directed planetary relationship. */
+  id: string;
+  sourceKey: string;
+  targetKey: string;
+  source: string;
+  target: string;
+  kind: 'conjunction' | 'graha-drishti';
+  offset: number | null;
+  sourceHouse: number;
+  targetHouse: number;
+  /** Concrete chart facts supporting the link's relevance to a life area. */
+  evidence: string[];
+  description: string;
+}
+
 export interface CoreLifeAreaInteraction {
   id: 'career' | 'relationships' | 'money' | 'talents' | 'home';
   title: string;
+  /** Structured links are the source of truth; connections remains a display-ready compatibility field. */
+  links: CorePlanetaryLink[];
   connections: string[];
 }
 
@@ -149,10 +167,32 @@ const CORE_LIFE_AREAS: Array<{
   { id: 'home', title: 'Дом и эмоциональная опора', houses: [4, 12] },
 ];
 
+function getPlanetaryLinkId(link: {
+  sourceKey: string;
+  targetKey: string;
+  kind: 'conjunction' | 'graha-drishti';
+  offset: number | null;
+}): string {
+  // Keys are astronomical identifiers, not translated labels. Direction is
+  // retained because a graha-drishti relationship is directional.
+  return [link.sourceKey, link.targetKey, link.kind, link.offset ?? 'same-sign'].join(':');
+}
+
+function describePlanetaryLink(link: {
+  source: string;
+  target: string;
+  kind: 'conjunction' | 'graha-drishti';
+  offset: number | null;
+}): string {
+  return link.kind === 'conjunction'
+    ? `${link.source} и ${link.target} связаны соединением по знаку`
+    : `${link.source} и ${link.target} связаны аспектом ${link.offset}-го дома`;
+}
+
 /**
- * Connects only calculated direct links between Lagna lord, Sun and Moon
- * with life areas evidenced by the planets' placements or house lordships.
- * This is a symbolic mapping, not a prediction.
+ * Connects calculated direct links between Lagna lord, Sun and Moon with
+ * life areas supported by placement, house lordship, or a bounded dispositor
+ * chain. Structured link identity and evidence are independent of UI copy.
  */
 export function getCoreInteractionsByLifeArea(chart: NatalChart): CoreLifeAreaInteraction[] {
   const firstHouse = chart.houses?.find((house) => house.house === 1);
@@ -164,35 +204,35 @@ export function getCoreInteractionsByLifeArea(chart: NatalChart): CoreLifeAreaIn
   if (!directLinks.length) return [];
 
   const areaLinks = CORE_LIFE_AREAS.map((area) => {
-    // Mutual aspects may produce A → B and B → A records. Preserve the
-    // directional records in the low-level API, but render one narrative
-    // per unordered pair in each life area to avoid duplicate explanations.
-    const seenPairs = new Set<string>();
-    const relevant = directLinks.filter((link) => {
+    // Preserve the existing one-narrative-per-unordered-pair behavior, but
+    // select the representative deterministically rather than by input order.
+    const uniquePairs = new Map<string, typeof directLinks[number]>();
+    for (const link of [...directLinks].sort((a, b) =>
+      getPlanetaryLinkId(a).localeCompare(getPlanetaryLinkId(b)),
+    )) {
       const pairKey = [link.sourceKey, link.targetKey].sort().join(':');
-      if (seenPairs.has(pairKey)) return false;
-      seenPairs.add(pairKey);
-      return true;
-    }).flatMap((link) => {
+      if (!uniquePairs.has(pairKey)) uniquePairs.set(pairKey, link);
+    }
+
+    const links = [...uniquePairs.values()].flatMap((link): CorePlanetaryLink[] => {
       const sourceHouse = getPlanetHouse(chart, link.sourceKey);
       const targetHouse = getPlanetHouse(chart, link.targetKey);
       const sourceRules = chart.houses!.filter((house) => house.lord === link.sourceKey).map((house) => house.house);
       const targetRules = chart.houses!.filter((house) => house.lord === link.targetKey).map((house) => house.house);
-      const sourceEvidence = [
+      const evidence = [
         ...(sourceHouse && area.houses.includes(sourceHouse) ? [`${link.source} расположен в ${sourceHouse}-м доме этой сферы`] : []),
-        ...(sourceRules.filter((house) => area.houses.includes(house)).map((house) => `${link.source} управляет ${house}-м домом этой сферы`)),
-      ];
-      const targetEvidence = [
+        ...sourceRules.filter((house) => area.houses.includes(house)).map((house) => `${link.source} управляет ${house}-м домом этой сферы`),
         ...(targetHouse && area.houses.includes(targetHouse) ? [`${link.target} расположен в ${targetHouse}-м доме этой сферы`] : []),
-        ...(targetRules.filter((house) => area.houses.includes(house)).map((house) => `${link.target} управляет ${house}-м домом этой сферы`)),
+        ...targetRules.filter((house) => area.houses.includes(house)).map((house) => `${link.target} управляет ${house}-м домом этой сферы`),
       ];
+
       const getDispositorEvidence = (planetKey: string, planetLabel: string): string[] => {
-        const evidence: string[] = [];
+        const result: string[] = [];
         const visited = new Set([planetKey]);
         let currentKey = planetKey;
         let currentLabel = planetLabel;
 
-        // Follow a short, bounded chain; never loop through mutual dispositors indefinitely.
+        // The depth bound and visited set protect against incomplete data and cycles.
         for (let depth = 0; depth < 3; depth += 1) {
           const dispositor = getSignDispositor(chart, currentKey);
           if (!dispositor || visited.has(dispositor)) break;
@@ -203,66 +243,100 @@ export function getCoreInteractionsByLifeArea(chart: NatalChart): CoreLifeAreaIn
           const dispositorHouse = getPlanetHouse(chart, dispositor);
           const dispositorRules = chart.houses!.filter((house) => house.lord === dispositor).map((house) => house.house);
           if (dispositorHouse && area.houses.includes(dispositorHouse)) {
-            evidence.push(`${dispositorLabel} — диспозитор ${currentLabel}; расположен в ${dispositorHouse}-м доме этой сферы`);
+            result.push(`${dispositorLabel} — диспозитор ${currentLabel}; расположен в ${dispositorHouse}-м доме этой сферы`);
           }
           for (const house of dispositorRules.filter((item) => area.houses.includes(item))) {
-            evidence.push(`${dispositorLabel} — диспозитор ${currentLabel}; управляет ${house}-м домом этой сферы`);
+            result.push(`${dispositorLabel} — диспозитор ${currentLabel}; управляет ${house}-м домом этой сферы`);
           }
 
           currentKey = dispositor;
           currentLabel = dispositorLabel;
         }
-        return evidence;
+        return result;
       };
-      const evidence = [
-        ...sourceEvidence,
-        ...targetEvidence,
+
+      evidence.push(
         ...getDispositorEvidence(link.sourceKey, link.source),
         ...getDispositorEvidence(link.targetKey, link.target),
-      ];
+      );
       if (!evidence.length) return [];
-      const interaction = link.kind === 'conjunction'
-        ? 'связаны соединением по знаку'
-        : `связаны аспектом ${link.offset}-го дома`;
-      return [`${link.source} и ${link.target} ${interaction}. Основание связи со сферой: ${evidence.join('; ')}. Это показывает символическую связь показателей с темой, но не гарантирует событие или результат.`];
+
+      return [{
+        id: getPlanetaryLinkId(link),
+        sourceKey: link.sourceKey,
+        targetKey: link.targetKey,
+        source: link.source,
+        target: link.target,
+        kind: link.kind,
+        offset: link.offset,
+        sourceHouse: link.sourceHouse,
+        targetHouse: link.targetHouse,
+        evidence,
+        description: describePlanetaryLink(link),
+      }];
     });
-    return relevant.length ? { id: area.id, title: area.title, connections: relevant } : null;
+
+    if (!links.length) return null;
+    return {
+      id: area.id,
+      title: area.title,
+      links,
+      connections: links.map((link) =>
+        `${link.description}. Основание связи со сферой: ${link.evidence.join('; ')}. Это показывает символическую связь показателей с темой, но не гарантирует событие или результат.`,
+      ),
+    };
   });
 
   return areaLinks.filter((item): item is CoreLifeAreaInteraction => item !== null);
 }
 
 export interface CoreLifeAreaBridge {
+  /** Stable planetary-link identity; never derived from localized prose. */
   id: string;
   connection: string;
   areas: string[];
+  evidenceByArea: Array<{ areaId: CoreLifeAreaInteraction['id']; areaTitle: string; evidence: string[] }>;
   explanation: string;
 }
 
 /**
- * Finds the same direct planetary connection when it has independent house
- * or dispositor evidence in at least two different life areas.
+ * Finds one structured planetary link when it has independent evidence in
+ * at least two life areas. Grouping uses the stable link id, not UI text.
  */
 export function getCoreLifeAreaBridges(chart: NatalChart): CoreLifeAreaBridge[] {
   const interactions = getCoreInteractionsByLifeArea(chart);
-  const grouped = new Map<string, string[]>();
+  const grouped = new Map<string, {
+    link: CorePlanetaryLink;
+    areas: string[];
+    evidenceByArea: CoreLifeAreaBridge['evidenceByArea'];
+  }>();
 
   for (const area of interactions) {
-    for (const line of area.connections) {
-      const [connection] = line.split(' Основание связи со сферой:');
-      if (!connection) continue;
-      const areas = grouped.get(connection) ?? [];
-      if (!areas.includes(area.title)) areas.push(area.title);
-      grouped.set(connection, areas);
+    for (const link of area.links) {
+      const current = grouped.get(link.id) ?? {
+        link,
+        areas: [],
+        evidenceByArea: [],
+      };
+      if (!current.areas.includes(area.title)) {
+        current.areas.push(area.title);
+        current.evidenceByArea.push({
+          areaId: area.id,
+          areaTitle: area.title,
+          evidence: [...link.evidence],
+        });
+      }
+      grouped.set(link.id, current);
     }
   }
 
   return [...grouped.entries()]
-    .filter(([, areas]) => areas.length >= 2)
-    .map(([connection, areas]) => ({
-      id: connection,
-      connection,
-      areas,
+    .filter(([, value]) => value.areas.length >= 2)
+    .map(([id, value]) => ({
+      id,
+      connection: value.link.description,
+      areas: value.areas,
+      evidenceByArea: value.evidenceByArea,
       explanation: 'Одна и та же связь ключевых показателей имеет отдельные подтверждения в нескольких сферах. Это помогает увидеть пересечение тем, но не означает, что одна сфера автоматически вызывает события в другой.',
     }));
 }
