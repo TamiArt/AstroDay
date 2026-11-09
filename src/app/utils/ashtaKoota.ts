@@ -121,7 +121,9 @@ export function calculateAshtaKoota(personA: CompatibilityPerson, personB: Compa
   // Varna: directional traditional rule, with A treated as the first (bride) chart and B as the second (groom) chart.
   const varnaRank = [1,2,3,0,1,2,3,0,1,2,3,0]; // fire=Kshatriya, earth=Vaishya, air=Shudra, water=Brahmin
   const varnaRoleA = options.varnaRoleA ?? 'bride';
-  const brideRank = varnaRoleA === 'bride' ? varnaRank[aSign] : varnaRank[bSign];\n  const groomRank = varnaRoleA === 'groom' ? varnaRank[aSign] : varnaRank[bSign];\n  const varnaScore = groomRank <= brideRank ? 1 : 0;
+  const brideRank = varnaRoleA === 'bride' ? varnaRank[aSign] : varnaRank[bSign];
+  const groomRank = varnaRoleA === 'groom' ? varnaRank[aSign] : varnaRank[bSign];
+  const varnaScore = groomRank <= brideRank ? 1 : 0;
   const varnaNames = ['Brahmin','Kshatriya','Vaishya','Shudra'];
   const varna = kuta('varna','Варна',varnaScore,1,'Сопоставление традиционных варн по знакам Луны.',[
     `Партнёр A: ${varnaNames[varnaRank[aSign]]}; партнёр B: ${varnaNames[varnaRank[bSign]]}.`,
