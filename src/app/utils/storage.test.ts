@@ -86,6 +86,8 @@ const propertyAssessment = {
   vacancyRatePercent: 4,
   monthlyOperatingCosts: 450,
   annualPropertyTax: 3200,
+  annualInsurance: 900,
+  annualCapitalReserve: 1500,
   monthlyMortgagePayment: 1800,
   notes: 'Check electrical panel',
 };
