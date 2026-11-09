@@ -470,17 +470,24 @@ export function analyzeLifeTopics(chart: NatalChart, currentDate: Date = new Dat
     };
   });
 }
-export function getVargaEvidence(chart: NatalChart, division: 7 | 10): string[] {
+export function getVargaEvidence(chart: NatalChart, division: 2 | 7 | 9 | 10 | 24): string[] {
+  const definitions = {
+    2: { name: 'D2 — Хора', sanskrit: 'Hora', area: 'Ресурсы и материальная устойчивость', relevant: ['Sun', 'Jupiter', 'Venus'] },
+    7: { name: 'D7 — Саптамша', sanskrit: 'Saptamsha', area: 'Дети и продолжение рода', relevant: ['Jupiter', 'Moon', 'Venus'] },
+    9: { name: 'D9 — Навамша', sanskrit: 'Navamsha', area: 'Партнёрство, ценности и дхарма', relevant: ['Venus', 'Jupiter', 'Saturn', 'Moon'] },
+    10: { name: 'D10 — Дашамша', sanskrit: 'Dashamsha', area: 'Профессия и реализация', relevant: ['Sun', 'Mercury', 'Saturn', 'Mars'] },
+    24: { name: 'D24 — Сиддхамша', sanskrit: 'Siddhamsha', area: 'Обучение и знания', relevant: ['Mercury', 'Jupiter', 'Sun'] },
+  } as const;
+  const definition = definitions[division];
   const varga = calculateDivisionalChart(
     Object.fromEntries(Object.entries(chart.planets).map(([name, position]) => [name, position.siderealLon])),
     chart.ascendant.siderealLon,
     division,
-    division === 7 ? 'D7 — Саптамша' : 'D10 — Дашамша',
-    division === 7 ? 'Saptamsha' : 'Dashamsha',
-    division === 7 ? 'Дети и творчество' : 'Профессия',
+    definition.name,
+    definition.sanskrit,
+    definition.area,
   );
-  const relevant = division === 7 ? ['Jupiter', 'Moon', 'Venus'] : ['Sun', 'Mercury', 'Saturn', 'Mars'];
-  return relevant
+  return definition.relevant
     .filter((name) => Boolean(varga.planets[name]))
     .map((name) => {
       const planet = varga.planets[name];
