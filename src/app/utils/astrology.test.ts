@@ -35,6 +35,15 @@ assert.equal(getSign(0), 0);
 assert.equal(getSign(359.999), 11);
 assert.equal(getNakshatra(0), 0);
 assert.equal(getNakshatra(359.9), 26);
+const nakshatraWidth = 360 / 27;
+assert.equal(getNakshatra(nakshatraWidth - 1e-10), 0, 'longitude immediately before a nakshatra boundary stays in the previous nakshatra');
+assert.equal(getNakshatra(nakshatraWidth), 1, 'exact nakshatra boundary starts the next nakshatra');
+assert.equal(getNakshatra(360), 0, '360° normalizes to the first nakshatra');
+assert.equal(getSign(360), 0, '360° normalizes to Aries');
+assert.equal(getSign(-0.001), 11, 'negative longitudes normalize across 0°');
+assert.throws(() => getNakshatra(Number.NaN), /конечным числом/);
+assert.throws(() => calculateDasha(birthMoment, 27, currentDate), /от 0 до 26/);
+assert.throws(() => calculateDasha(birthMoment, moonNakshatra, new Date('1989-01-01T00:00:00Z')), /раньше даты рождения/);
 
 const moonNakshatra = chart.planets.Moon.nakshatra;
 const currentDate = new Date('2026-08-19T12:00:00.000Z');
@@ -43,5 +52,16 @@ assert.ok(dasha.startDate <= currentDate && currentDate < dasha.endDate, 'Curren
 const antardasha = getCurrentAntardasha(dasha, currentDate);
 assert.ok(antardasha, 'Active Mahadasha must expose an active Antardasha');
 assert.ok(antardasha!.startDate <= currentDate && currentDate < antardasha!.endDate);
+
+assert.throws(
+  () => calculateNatalChart(birthMoment, 91, -0.1278),
+  /Некорректная широта/,
+  'latitude outside the geographic range must be rejected',
+);
+assert.throws(
+  () => calculateNatalChart(birthMoment, 51.5074, 181),
+  /Некорректная долгота/,
+  'longitude outside the geographic range must be rejected',
+);
 
 console.log('astrology tests passed');
