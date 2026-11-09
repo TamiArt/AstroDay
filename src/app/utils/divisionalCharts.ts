@@ -94,7 +94,8 @@ function calculateDivisionalLongitude(natLon: number, division: number): number 
   if (!Number.isFinite(natLon) || !Number.isInteger(division) || division < 1 || division > 60) {
     throw new Error('Для дробной карты нужны конечная долгота и целое деление от 1 до 60');
   }
-  const normalizedLongitude = ((natLon % 360) + 360) % 360;
+  const longitudeRemainder = natLon % 360;
+  const normalizedLongitude = longitudeRemainder < 0 ? longitudeRemainder + 360 : longitudeRemainder;
   const signIndex = Math.floor(normalizedLongitude / 30);
   const degreeInSign = normalizedLongitude % 30;
 
