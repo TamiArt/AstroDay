@@ -24,7 +24,8 @@ export function tropicalToSidereal(tropicalLon: number, date: Date): number {
 }
 
 function normalizeDegrees(value: number): number {
-  return ((value % FULL_CIRCLE) + FULL_CIRCLE) % FULL_CIRCLE;
+  const remainder = value % FULL_CIRCLE;
+  return remainder < 0 ? remainder + FULL_CIRCLE : remainder;
 }
 
 function getMeanObliquity(date: Date): number {
