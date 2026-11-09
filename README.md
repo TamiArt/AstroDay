@@ -626,7 +626,7 @@ npm run verify
 - [`TECHNICAL_ROADMAP.md`](TECHNICAL_ROADMAP.md) — этапы разработки, приоритеты и критерии завершения.
 - [`CODE_AUDIT.md`](CODE_AUDIT.md) — подтверждённые технические риски и необходимые проверки.
 - [`docs/ASTROLOGY_ACCURACY.md`](docs/ASTROLOGY_ACCURACY.md) — расчётные конвенции, независимые эталоны и ограничения.
-- [`docs/INTERPRETATION_QUALITY.md`](docs/INTERPRETATION_QUALITY.md) — критерии контроля качества интерпретаций и ограничения автоматической проверки.
+- [`docs/INTERPRETATION_QUALITY.md`](docs/INTERPRETATION_QUALITY.md) — критерии контроля качества интерпретаций и ограничения автоматической проверки.\n- [`docs/VASTU_PROPERTY_ANALYSIS.md`](docs/VASTU_PROPERTY_ANALYSIS.md) — методика Васту, проверка недвижимости и финансовые формулы.
 
 ## Дисклеймер
 
