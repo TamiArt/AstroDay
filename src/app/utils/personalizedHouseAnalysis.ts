@@ -1,7 +1,7 @@
 import { calculateDasha, getCurrentAntardasha, getPlanetHouse as resolvePlanetHouse, type NatalChart } from './astrology';
 import { calculateDivisionalChart } from './divisionalCharts';
 import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition, getGrahaDrishti } from './natalStrengthAnalysis';
-import { describeHousePlanetConnections, describePlanetInHouse } from './natalHouseInterpretation';
+import { describeHousePlanetConnections, describeHouseSignStyle, describePlanetInHouse } from './natalHouseInterpretation';
 
 export interface PlanetEvidence {
   name: string;
@@ -299,12 +299,14 @@ export function analyzePersonalizedHouses(chart: NatalChart): PersonalizedHouseI
     const houseAspects = describeHouseDrishti(chart, house.house);
     const lordHouseAspects = lordHouse ? describeHouseDrishti(chart, lordHouse) : [];
     const sign = SIGN_RU[house.signName] ?? house.signName;
+    const houseSignStyle = describeHouseSignStyle(house.signName, house.house);
     const interpretation = lordHouse
-      ? `В традиционной Джйотиш этот дом связан с темой: ${HOUSE_MEANING[house.house]}. В твоей карте он начинается в знаке ${sign}. Управитель — ${PLANET_RU[house.lord] ?? house.lord}; он расположен в ${lordHouse}-м доме (${getLordHouseMeaning(lordHouse)}). Поэтому темы этих двух домов стоит рассматривать вместе: решения и опыт в сфере «${getLordHouseMeaning(lordHouse)}» символически связываются с темой этого дома.`
+      ? `В традиционной Джйотиш этот дом связан с темой: ${HOUSE_MEANING[house.house]}. В твоей карте он начинается в знаке ${sign}. ${houseSignStyle ?? ''} Управитель — ${PLANET_RU[house.lord] ?? house.lord}; он расположен в ${lordHouse}-м доме (${getLordHouseMeaning(lordHouse)}). Поэтому темы этих двух домов стоит рассматривать вместе: решения и опыт в сфере «${getLordHouseMeaning(lordHouse)}» символически связываются с темой этого дома.`
       : `Дом в знаке ${sign}; положение его управителя в доступных данных определить не удалось. Общая тема: ${HOUSE_MEANING[house.house]}.`;
 
     const evidence = [
       `Знак дома: ${sign}`,
+      ...(houseSignStyle ? [`Стиль знака дома: ${houseSignStyle}`] : []),
       `Управитель: ${PLANET_RU[house.lord] ?? house.lord}${lordEvidence ? ` — ${formatPlanetEvidence(lordEvidence)}` : ''}`,
       lordCondition ? `Достоинство управителя: ${lordCondition.label}; качественная шкала ${lordCondition.score}/100. Это не Shadbala.` : 'Достоинство управителя: нет данных.',
       ...occupantInterpretations.map((item) => `Планета в доме: ${item}`),
