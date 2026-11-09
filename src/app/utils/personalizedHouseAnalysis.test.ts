@@ -193,7 +193,7 @@ assert.equal(fifth?.occupantInterpretations.length, 1);
 assert.ok(fifth?.occupantInterpretations[0].includes('Солнце в 5-м доме'));
 assert.ok(fifth?.occupantInterpretations[0].includes('авторское творчество'));
 assert.ok(fifth?.occupantInterpretations[0].includes('Лев'));
-assert.ok(fifth?.planetaryConnections.some((item) => item.includes('Сатурн') && item.includes('аспектирует Солнце')));
+assert.ok(fifth?.planetaryConnections.some((item) => item.includes('Сатурн') && item.includes('полный 7-й аспект на Солнце')));
 const sixth = houses.find((item) => item.house === 6);
 assert.ok(sixth?.occupantInterpretations.some((item) =>
   item.includes('Меркурий в 6-м доме') && item.includes('анализ процессов') && item.includes('Дева'),
