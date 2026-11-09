@@ -616,10 +616,17 @@ export function getVargaEvidence(chart: NatalChart, division: 2 | 7 | 9 | 10 | 2
     definition.sanskrit,
     definition.area,
   );
-  return definition.relevant
-    .filter((name) => Boolean(varga.planets[name]))
-    .map((name) => {
-      const planet = varga.planets[name];
-      return `${PLANET_RU[name] ?? name} в D${division}: ${SIGN_RU[planet.signName] ?? planet.signName}, ${planet.house}-й дом.`;
-    });
+  const ascendantSign = SIGN_RU[varga.ascendant.signName] ?? varga.ascendant.signName;
+  const evidence = [
+    `Лагна D${division}: ${ascendantSign}; дробная карта рассчитана по отдельному правилу для этой варги.`,
+    ...definition.relevant
+      .filter((name) => Boolean(varga.planets[name]) && Boolean(chart.planets[name as keyof NatalChart['planets']]))
+      .map((name) => {
+        const planet = varga.planets[name];
+        const natalPlanet = chart.planets[name as keyof NatalChart['planets']];
+        const natalHouse = getPlanetHouseForChart(chart, name);
+        return `${PLANET_RU[name] ?? name} в D${division}: ${SIGN_RU[planet.signName] ?? planet.signName}, ${planet.house}-й дом; в D1 — ${SIGN_RU[natalPlanet.signName] ?? natalPlanet.signName}, ${natalHouse ? natalHouse + '-й дом' : 'дом не определён'}.`;
+      }),
+  ];
+  return evidence;
 }
