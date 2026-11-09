@@ -203,7 +203,7 @@ assert.deepEqual(drishti.filter((item) => item.source === 'Сатурн').map((i
 assert.ok(!drishti.some((item) => item.source === 'Раху' || item.source === 'Кету'));
 
 const topics = analyzeLifeTopics(chart, new Date('2026-11-08T12:00:00Z'));
-assert.deepEqual(topics.map((topic) => topic.id), ['talents', 'money', 'career', 'children', 'relationships']);
+assert.deepEqual(topics.map((topic) => topic.id), ['talents', 'money', 'career', 'children', 'home_family', 'wellbeing', 'inner_growth', 'relationships']);
 assert.ok(topics.find((topic) => topic.id === 'money')?.evidence.length);
 const moneyTopic = topics.find((topic) => topic.id === 'money');
 assert.ok(moneyTopic?.keyFactors.some((factor) => factor.includes('2-й дом') && factor.includes('управитель')));
@@ -214,6 +214,10 @@ const careerTopic = topics.find((topic) => topic.id === 'career');
 assert.ok(careerTopic?.keyFactors.some((factor) => factor.includes('10-й дом')));
 assert.ok(careerTopic?.evidence.some((item) => item.includes('аспект')));
 assert.ok(topics.every((topic) => topic.keyFactors.length === topic.houses.length));
+assert.deepEqual(topics.find((topic) => topic.id === 'home_family')?.houses, [4, 2]);
+assert.deepEqual(topics.find((topic) => topic.id === 'wellbeing')?.houses, [1, 6, 8, 12]);
+assert.ok(topics.find((topic) => topic.id === 'wellbeing')?.actions.some((action) => action.includes('не диагностирует')));
+assert.deepEqual(topics.find((topic) => topic.id === 'inner_growth')?.houses, [9, 12, 5]);
 assert.ok(topics.find((topic) => topic.id === 'children')?.timingNote.includes('зачатия'));
 assert.ok(topics.find((topic) => topic.id === 'talents')?.directions.length);
 assert.ok(topics.find((topic) => topic.id === 'money')?.timingNote.includes('Связь Махадаши с этой сферой'));
