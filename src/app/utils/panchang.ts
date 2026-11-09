@@ -4,7 +4,8 @@
 
 import * as Astronomy from 'astronomy-engine';
 import { NAKSHATRAS, tropicalToSidereal } from './astrology';
-import { getWeekdayIndex } from './dateUtils';
+import { formatDateKey, getWeekdayIndex } from './dateUtils';
+import { createDateInTimezone } from './timezones';
 
 const AstronomyApi = (Reflect.get(Astronomy, 'default') as typeof Astronomy | undefined) ?? Astronomy;
 // Tithi (Lunar day) - 30 tithis in a lunar month
@@ -199,10 +200,27 @@ export interface ImportantDate {
 }
 
 export function getImportantDates(startDate: Date, days: number = 30, context: PanchangContext = {}): ImportantDate[] {
+  if (!(startDate instanceof Date) || !Number.isFinite(startDate.getTime())) {
+    throw new Error('Для поиска важных дат нужна корректная начальная дата');
+  }
+  if (!Number.isInteger(days) || days < 0 || days > 3660) {
+    throw new Error('Количество дней должно быть целым числом от 0 до 3660');
+  }
+
   const dates: ImportantDate[] = [];
-  const currentDate = new Date(startDate);
+  const timezone = context.timezone ?? 'UTC';
+  const startDateKey = formatDateKey(startDate, timezone);
+  const [startYear, startMonth, startDay] = startDateKey.split('-').map(Number);
 
   for (let i = 0; i < days; i++) {
+    // Iterate civil calendar days in the requested IANA zone, not the host machine zone.
+    // Noon is deliberately used as a stable daily sample; this is not an exact event time.
+    const civilDate = new Date(Date.UTC(startYear, startMonth - 1, startDay + i));
+    const dateKey = civilDate.toISOString().slice(0, 10);
+    const currentDate = createDateInTimezone(dateKey, '12:00', timezone);
+    if (!Number.isFinite(currentDate.getTime())) {
+      throw new Error(`Не удалось определить полдень даты ${dateKey} в зоне ${timezone}`);
+    }
     const panchang = calculatePanchang(currentDate, context);
 
     // Purnima (Full Moon)
@@ -235,7 +253,6 @@ export function getImportantDates(startDate: Date, days: number = 30, context: P
       });
     }
 
-    currentDate.setDate(currentDate.getDate() + 1);
   }
 
   return dates;
