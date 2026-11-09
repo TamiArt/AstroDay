@@ -371,6 +371,33 @@ export function NatalHousesTab({ natalChart }: NatalHousesTabProps) {
                     <p className="text-sm leading-relaxed text-gray-700">{personal.interpretation}</p>
                   </div>
 
+                  {personal.occupantInterpretations.length > 0 && (
+                    <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4">
+                      <h5 className="mb-3 text-sm font-semibold text-indigo-900">Что конкретно означает планета в этом доме</h5>
+                      <div className="space-y-3">
+                        {personal.occupantInterpretations.map((item) => (
+                          <p key={item} className="text-sm leading-relaxed text-gray-700">{item}</p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                    <h5 className="mb-2 text-sm font-semibold text-blue-900">Как планеты связаны между собой</h5>
+                    {personal.planetaryConnections.length > 0 ? (
+                      <ul className="space-y-2">
+                        {personal.planetaryConnections.map((item) => (
+                          <li key={item} className="text-sm leading-relaxed text-gray-700">• {item}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm leading-relaxed text-gray-600">
+                        Среди планет, связанных с этим домом, не найдено соединений или классических граха-дришти по используемой схеме Парашари.
+                        Это не означает отсутствия любых других астрологических связей.
+                      </p>
+                    )}
+                  </div>
+
                   <div className="rounded-lg border border-green-200 bg-green-50 p-4">
                     <h5 className="mb-2 flex items-center gap-2 text-sm font-semibold text-green-800">
                       <Lightbulb className="h-4 w-4" /> Как применить в жизни
