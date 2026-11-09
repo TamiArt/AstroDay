@@ -300,6 +300,8 @@ export function VastuPropertyAssessment() {
             <NumberField label="Вакантность" value={assessment.vacancyRatePercent} onChange={(value) => update('vacancyRatePercent', value)} suffix="%" max={100} />
             <NumberField label="Операционные расходы в месяц" value={assessment.monthlyOperatingCosts} onChange={(value) => update('monthlyOperatingCosts', value)} />
             <NumberField label="Налог на недвижимость в год" value={assessment.annualPropertyTax} onChange={(value) => update('annualPropertyTax', value)} />
+            <NumberField label="Страхование в год" value={assessment.annualInsurance} onChange={(value) => update('annualInsurance', value)} />
+            <NumberField label="Резерв на капитальный ремонт в год" value={assessment.annualCapitalReserve} onChange={(value) => update('annualCapitalReserve', value)} />
             <NumberField label="Платёж по ипотеке в месяц" value={assessment.monthlyMortgagePayment} onChange={(value) => update('monthlyMortgagePayment', value)} />
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
