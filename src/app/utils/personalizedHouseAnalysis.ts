@@ -1,6 +1,6 @@
 import { calculateDasha, getCurrentAntardasha, getPlanetHouse as resolvePlanetHouse, type NatalChart } from './astrology';
 import { calculateDivisionalChart } from './divisionalCharts';
-import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition } from './natalStrengthAnalysis';
+import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition, getGrahaDrishti } from './natalStrengthAnalysis';
 
 export interface PlanetEvidence {
   name: string;
@@ -320,6 +320,10 @@ function getTopicPlanetNames(chart: NatalChart, houses: number[]): string[] {
       if (getPlanetHouseForChart(chart, name) === houseNumber) names.add(name);
     }
   }
+  for (const aspect of getGrahaDrishti(chart).filter((item) => houses.includes(item.targetHouse))) {
+    const sourceKey = Object.keys(PLANET_RU).find((name) => PLANET_RU[name] === aspect.source);
+    if (sourceKey) names.add(sourceKey);
+  }
   return [...names];
 }
 
@@ -386,7 +390,7 @@ function getTopicHouseNarrative(chart: NatalChart, houseNumber: number): { narra
           : 'Достоинство управителя по используемой схеме не оценивается.';
   const occupancyText = occupiedNames.length
     ? 'В самом доме находятся ' + occupiedNames.join(', ') + '; их символические темы непосредственно включаются в трактовку этой сферы.'
-    : 'В доме нет планет, поэтому основной акцент анализа приходится на знак, управителя и его связи, а не на планетных occupants.';
+    : 'В доме нет планет, поэтому основной акцент анализа приходится на знак, управителя и его связи, а не на планет, расположенных в доме.';
   const aspectText = houseAspects.length
     ? 'Дом получает следующие граха-дришти: ' + houseAspects.join(' ')
     : 'По используемой классической схеме прямые граха-дришти на этот дом не обнаружены.';
