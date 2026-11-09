@@ -78,6 +78,23 @@ function TopicCard({ topic, natalChart }: { topic: LifeTopicInsight; natalChart:
           </div>
         )}
 
+        <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+          <h4 className="mb-2 text-sm font-semibold text-green-900">Что поддерживает эту сферу</h4>
+          {topic.supportingFactors.length > 0
+            ? <EvidenceList items={topic.supportingFactors} />
+            : <p className="text-xs leading-relaxed text-gray-600">По выбранным критериям выраженных поддерживающих достоинств управителей не обнаружено. Это не означает отсутствия возможностей.</p>}
+        </div>
+
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <h4 className="mb-2 text-sm font-semibold text-amber-900">Факторы, требующие внимания</h4>
+          <EvidenceList items={topic.attentionPoints} />
+        </div>
+
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+          <h4 className="mb-2 text-sm font-semibold text-gray-900">Общий вывод по сфере</h4>
+          <p className="text-sm leading-relaxed text-gray-700">{topic.synthesis}</p>
+        </div>
+
         {topic.developmentPoints.length > 0 && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
             <h4 className="mb-2 text-sm font-semibold text-amber-900">Как читать эти связи на практике</h4>
