@@ -53,7 +53,7 @@ const YONI: Yoni[] = [
   'Rat','Rat','Cow','Buffalo','Tiger','Buffalo','Tiger','Deer','Deer',
   'Dog','Monkey','Mongoose','Monkey','Lion','Horse','Lion','Cow','Elephant'
 ];
-const NADI: Nadi[] = Array.from({ length: 27 }, (_, index) => (['Adi','Madhya','Antya'] as Nadi[])[index % 3]);
+const NADI: Nadi[] = ['Adi','Madhya','Antya','Antya','Madhya','Adi','Adi','Madhya','Antya','Antya','Madhya','Adi','Adi','Madhya','Antya','Antya','Madhya','Adi','Adi','Madhya','Antya','Antya','Madhya','Adi','Adi','Madhya','Antya'];
 
 const YONI_ENEMIES: Array<[Yoni, Yoni]> = [
   ['Horse','Buffalo'], ['Elephant','Lion'], ['Sheep','Monkey'], ['Serpent','Mongoose'],
