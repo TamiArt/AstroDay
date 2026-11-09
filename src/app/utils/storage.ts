@@ -281,6 +281,8 @@ export function loadVastuPropertyAssessment(): VastuPropertyAssessment {
     vacancyRatePercent: Math.min(100, numeric('vacancyRatePercent', 5)),
     monthlyOperatingCosts: numeric('monthlyOperatingCosts', 0),
     annualPropertyTax: numeric('annualPropertyTax', 0),
+    annualInsurance: numeric('annualInsurance', 0),
+    annualCapitalReserve: numeric('annualCapitalReserve', 0),
     monthlyMortgagePayment: numeric('monthlyMortgagePayment', 0),
     notes: typeof stored.notes === 'string' ? stored.notes.slice(0, 4000) : '',
   };
