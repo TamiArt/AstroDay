@@ -64,7 +64,7 @@ const YONI_ENEMIES: Array<[Yoni, Yoni]> = [
   ['Dog','Deer'], ['Cat','Rat'], ['Cow','Tiger']
 ];
 const YONI_FRIENDS: Array<[Yoni, Yoni]> = [
-  ['Sheep','Buffalo'], ['Serpent','Rat'], ['Dog','Rat'],
+  ['Horse','Elephant'], ['Sheep','Buffalo'], ['Serpent','Rat'], ['Dog','Rat'],
   ['Monkey','Cat'], ['Cow','Buffalo'], ['Tiger','Deer']
 ];
 const YONI_UNFRIENDLY: Array<[Yoni, Yoni]> = [
