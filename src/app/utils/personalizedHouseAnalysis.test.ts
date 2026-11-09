@@ -212,6 +212,7 @@ assert.ok(moneyTopic?.interpretation.includes('диспозитор'));
 assert.ok(moneyTopic?.interpretation.includes('Функция управителя'));
 assert.ok(moneyTopic?.developmentPoints.length);
 assert.ok(moneyTopic?.directions.some((direction) => direction.includes('управление') || direction.includes('эксперт')));
+assert.ok(moneyTopic?.directions.some((direction) => direction.startsWith('Солнце:')));
 const careerTopic = topics.find((topic) => topic.id === 'career');
 assert.ok(careerTopic?.keyFactors.some((factor) => factor.includes('10-й дом')));
 assert.ok(careerTopic?.evidence.some((item) => item.includes('аспект')));
