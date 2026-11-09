@@ -116,7 +116,8 @@ export function DivisionalChartWheel({ chart, size = 280 }: DivisionalChartWheel
         {/* 12 домов (внутреннее кольцо) */}
         {Array.from({ length: 12 }, (_, i) => {
           const houseNumber = i + 1;
-          const houseAngle = (chart.ascendant.longitude + i * 30) % 360;
+          const ascendantSignStart = Math.floor(chart.ascendant.longitude / 30) * 30;
+          const houseAngle = (ascendantSignStart + i * 30) % 360;
           const numPos = polarToCartesian(houseAngle + 15, innerRadius * 0.4);
 
           return (
