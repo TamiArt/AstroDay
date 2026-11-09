@@ -59,6 +59,20 @@ function TopicCard({ topic, natalChart }: { topic: LifeTopicInsight; natalChart:
 
         <p className="text-sm leading-relaxed text-gray-800">{topic.interpretation}</p>
 
+        {topic.keyFactors.length > 0 && (
+          <div className="rounded-lg border border-purple-200 bg-purple-50 p-4">
+            <h4 className="mb-2 text-sm font-semibold text-purple-900">Ключевые показатели именно этой карты</h4>
+            <EvidenceList items={topic.keyFactors} />
+          </div>
+        )}
+
+        {topic.developmentPoints.length > 0 && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+            <h4 className="mb-2 text-sm font-semibold text-amber-900">Как читать эти связи на практике</h4>
+            <EvidenceList items={topic.developmentPoints} />
+          </div>
+        )}
+
         {topic.directions.length > 0 && (
           <div>
             <h4 className="mb-2 text-sm font-semibold text-purple-800">Направления, которые стоит проверить на практике</h4>
