@@ -30,6 +30,8 @@ npm run dev        # локальный dev-сервер
 npm run build      # production build в dist/
 npm run typecheck  # TypeScript без emit
 npm run verify     # strict typecheck + unit tests + production build
+npm audit          # audit all dependencies
+npm audit --omit=dev # audit production dependency tree
 ```
 
 ## Что Делает Приложение
