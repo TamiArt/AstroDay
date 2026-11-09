@@ -2,10 +2,29 @@ import assert from 'node:assert/strict';
 import {
   calculateDasha,
   calculateNatalChart,
+  calculatePlanetPosition,
   getCurrentAntardasha,
   getNakshatra,
   getSign,
 } from './astrology';
+
+// Independent Swiss Ephemeris sidereal (Lahiri) geocentric table:
+ // 1990-03-15 00:00 UT, Sun 0°25′05″ Aries and Moon 10°04′ Pisces.
+ // Minute-rounded source values are compared with conservative angular tolerances.
+const referenceMoment = new Date('1990-03-15T00:00:00.000Z');
+const referenceSun = calculatePlanetPosition('Sun', referenceMoment);
+const referenceMoon = calculatePlanetPosition('Moon', referenceMoment);
+const sunReferenceLongitude = 25 / 60 + 5 / 3600;
+const moonReferenceLongitude = 330 + 10 + 4 / 60;
+const angularDifference = (left: number, right: number) => Math.abs(((left - right + 540) % 360) - 180);
+assert.ok(
+  angularDifference(referenceSun.siderealLon, sunReferenceLongitude) < 0.03,
+  `Swiss Ephemeris Sun reference: expected ${sunReferenceLongitude}°, got ${referenceSun.siderealLon}°`,
+);
+assert.ok(
+  angularDifference(referenceMoon.siderealLon, moonReferenceLongitude) < 0.1,
+  `Swiss Ephemeris Moon reference: expected ${moonReferenceLongitude}°, got ${referenceMoon.siderealLon}°`,
+);
 
 const birthMoment = new Date('1990-06-15T08:30:00.000Z');
 const chart = calculateNatalChart(birthMoment, 51.5074, -0.1278);
