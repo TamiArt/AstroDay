@@ -382,4 +382,29 @@ const qualifiedClaim = validateInterpretationQuality({
 });
 assert.equal(qualifiedClaim.publishable, true);
 
+const incompleteChartReport = auditNatalChartInterpretations({
+  ...chart,
+  houses: chart.houses?.slice(0, 11),
+} as NatalChart);
+assert.equal(incompleteChartReport.blocked, 1);
+assert.ok(incompleteChartReport.results[0].issues.some((item) => item.code === 'incomplete-chart'));
+
+const duplicateEvidence = validateInterpretationQuality({
+  id: 'duplicate-evidence',
+  title: 'Повторяющиеся основания',
+  narrative: 'Короткий нейтральный вывод.',
+  evidence: ['Марс в 1-м доме.', 'Марс в 1-м доме.'],
+});
+assert.equal(duplicateEvidence.publishable, true);
+assert.ok(duplicateEvidence.issues.some((item) => item.code === 'duplicate-evidence' && item.severity === 'warning'));
+
+const medicalDisclaimer = validateInterpretationQuality({
+  id: 'medical-disclaimer',
+  title: 'Корректное ограничение',
+  narrative: 'Натальная карта не диагностирует заболевание и не заменяет консультацию врача.',
+  evidence: ['Это символическая интерпретация, не медицинский факт.'],
+});
+assert.equal(medicalDisclaimer.publishable, true);
+
+
 console.log('personalized house analysis tests passed');
