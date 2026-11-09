@@ -1,0 +1,73 @@
+name: Dependency audit
+
+on:
+  push:
+    branches:
+      - main
+      - "feat/**"
+      - "fix/**"
+      - "chore/**"
+      - "refactor/**"
+      - "docs/**"
+    paths:
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/dependency-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: npm dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Audit all dependencies
+        id: all
+        continue-on-error: true
+        run: npm audit --json > npm-audit-all.json
+      - name: Audit production dependencies
+        id: production
+        continue-on-error: true
+        run: npm audit --omit=dev --json > npm-audit-production.json
+      - name: Summarize audit
+        if: always()
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          for (const file of ['npm-audit-all.json', 'npm-audit-production.json']) {
+            if (!fs.existsSync(file)) continue;
+            const report = JSON.parse(fs.readFileSync(file, 'utf8'));
+            const counts = report.metadata?.vulnerabilities ?? {};
+            const lines = [
+              `## ${file}`,
+              '',
+              `Total: ${counts.total ?? 'unknown'}; critical: ${counts.critical ?? 0}; high: ${counts.high ?? 0}; moderate: ${counts.moderate ?? 0}; low: ${counts.low ?? 0}; info: ${counts.info ?? 0}`,
+              '',
+              ...Object.entries(report.vulnerabilities ?? {}).map(([name, item]) =>
+                `- ${name}: severity=${item.severity}; direct=${item.isDirect}; range=${item.range}; fixAvailable=${JSON.stringify(item.fixAvailable)}; via=${item.via.map(v => typeof v === 'string' ? v : v.name).join(', ')}`
+              ),
+              ''
+            ];
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n'));
+          }
+          NODE
+      - name: Upload raw audit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-reports
+          path: npm-audit-*.json
+          if-no-files-found: warn
+          retention-days: 7
