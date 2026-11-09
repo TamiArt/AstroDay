@@ -38,11 +38,11 @@ AstroDay — клиентское приложение на React 18, TypeScript
 | 12 | Интеграционные и E2E-сценарии | Не завершён |
 | 13 | Контроль качества астрологических интерпретаций | **Завершён**; полный verify прошёл в [run 42675046869](https://github.com/TamiArt/AstroDay/actions/runs/42675046869) на commit [446bbf5](https://github.com/TamiArt/AstroDay/commit/446bbf5ecb97f56c082ff6a3aa467404c5ca4c05) |
 | 14 | Полноценная совместимость партнёров (Ашта-Кута / Гуна-милан) | **Завершён**; полный verify — [run 42677465957](https://github.com/TamiArt/AstroDay/actions/runs/42677465957), commit [4c1a430](https://github.com/TamiArt/AstroDay/commit/4c1a4301837a3fe92fec8f287c3e9619b0ae4170) |
-| 15 | Углубление Васту и анализа недвижимости | **Завершён**; полный verify — [run 42679497021](https://github.com/TamiArt/AstroDay/actions/runs/42679497021), commit `cc61aedf63c90b4c4e1ff8f8c4bb2096e3d234b6` |
+| 15 | Углубление Васту и анализа недвижимости | **Завершён**; полный verify — [run 42679836562](https://github.com/TamiArt/AstroDay/actions/runs/42679836562), commit `f644104f94686e20f25f1229db35a6adf9d00e29` |
 
 Завершённый этап означает, что реализация и полный `npm run verify` подтверждены для указанного commit/run. Это не означает, что все ручные сценарии или все астрологические школы проверены.
 
-Для последнего состояния этапа 15 полный `npm run verify` прошёл в GitHub Actions run [42679497021](https://github.com/TamiArt/AstroDay/actions/runs/42679497021) на кодовом commit `cc61aedf63c90b4c4e1ff8f8c4bb2096e3d234b6`.
+Для последнего состояния этапа 15 полный `npm run verify` прошёл в GitHub Actions run [42679836562](https://github.com/TamiArt/AstroDay/actions/runs/42679836562) на кодовом commit `f644104f94686e20f25f1229db35a6adf9d00e29`.
 
 ## Команды проверки
 
