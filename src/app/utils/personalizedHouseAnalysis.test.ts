@@ -181,6 +181,7 @@ assert.ok(!getPlanetToPlanetAspects(chart, ['Rahu', 'Ketu']).length);
 
 const houses = analyzePersonalizedHouses(chart);
 assert.equal(houses.length, 12);
+assert.ok(houses.find((item) => item.house === 1)?.interpretation.includes('Овен на куспиде 1-го дома задаёт инициативный'));
 const fifth = houses.find((item) => item.house === 5);
 assert.ok(fifth);
 assert.equal(fifth?.sign, 'Лев');
