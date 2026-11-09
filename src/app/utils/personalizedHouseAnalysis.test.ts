@@ -209,6 +209,7 @@ const moneyTopic = topics.find((topic) => topic.id === 'money');
 assert.ok(moneyTopic?.keyFactors.some((factor) => factor.includes('2-й дом') && factor.includes('управитель')));
 assert.ok(moneyTopic?.interpretation.includes('Управитель'));
 assert.ok(moneyTopic?.interpretation.includes('диспозитор'));
+assert.ok(moneyTopic?.interpretation.includes('Функция управителя'));
 assert.ok(moneyTopic?.developmentPoints.length);
 assert.ok(moneyTopic?.directions.some((direction) => direction.includes('управление') || direction.includes('эксперт')));
 const careerTopic = topics.find((topic) => topic.id === 'career');
