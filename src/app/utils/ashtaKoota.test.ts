@@ -37,3 +37,18 @@ assert.throws(
 );
 
 console.log('ashtaKoota.test.ts: all assertions passed');
+
+const directionalA = calculateAshtaKoota(
+  { name: 'A', moonLongitude: 3 * 30 },
+  { name: 'B', moonLongitude: 0 },
+  { varnaRoleA: 'bride' },
+);
+const directionalB = calculateAshtaKoota(
+  { name: 'A', moonLongitude: 3 * 30 },
+  { name: 'B', moonLongitude: 0 },
+  { varnaRoleA: 'groom' },
+);
+assert.notEqual(
+  directionalA.kutas.find(item => item.id === 'varna')?.score,
+  directionalB.kutas.find(item => item.id === 'varna')?.score,
+);
