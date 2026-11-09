@@ -75,8 +75,8 @@ assert.equal(getNakshatra(360), 0, '360° normalizes to the first nakshatra');
 assert.equal(getSign(360), 0, '360° normalizes to Aries');
 assert.equal(getSign(-0.001), 11, 'negative longitudes normalize across 0°');
 assert.throws(() => getNakshatra(Number.NaN), /конечным числом/);
-assert.throws(() => calculateDasha(birthMoment, 27, currentDate), /от 0 до 26/);
-assert.throws(() => calculateDasha(birthMoment, moonNakshatra, new Date('1989-01-01T00:00:00Z')), /раньше даты рождения/);
+assert.throws(() => calculateDasha(birthMoment, 27, new Date('2026-08-19T12:00:00.000Z')), /от 0 до 26/);
+assert.throws(() => calculateDasha(birthMoment, 0, new Date('1989-01-01T00:00:00Z')), /раньше даты рождения/);
 
 const moonNakshatra = chart.planets.Moon.nakshatra;
 const currentDate = new Date('2026-08-19T12:00:00.000Z');
