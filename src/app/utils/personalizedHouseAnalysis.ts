@@ -645,14 +645,26 @@ export function analyzeLifeTopics(chart: NatalChart, currentDate: Date = new Dat
     };
   });
 }
-export function getVargaEvidence(chart: NatalChart, division: 2 | 7 | 9 | 10 | 24): string[] {
-  const definitions = {
+export type VargaEvidenceDivision = 2 | 4 | 7 | 9 | 10 | 12 | 16 | 20 | 24 | 27;
+
+export function getVargaEvidence(chart: NatalChart, division: VargaEvidenceDivision): string[] {
+  const definitions: Record<VargaEvidenceDivision, {
+    name: string;
+    sanskrit: string;
+    area: string;
+    relevant: string[];
+  }> = {
     2: { name: 'D2 — Хора', sanskrit: 'Hora', area: 'Ресурсы и материальная устойчивость', relevant: ['Sun', 'Jupiter', 'Venus'] },
-    7: { name: 'D7 — Саптамша', sanskrit: 'Saptamsha', area: 'Дети и продолжение рода', relevant: ['Jupiter', 'Moon', 'Venus'] },
+    4: { name: 'D4 — Чатуртхамша', sanskrit: 'Chaturthamsha', area: 'Дом, недвижимость и устойчивость места', relevant: ['Moon', 'Mars', 'Venus', 'Saturn'] },
+    7: { name: 'D7 — Саптамша', sanskrit: 'Saptamsha', area: 'Дети, творчество и передача опыта', relevant: ['Jupiter', 'Moon', 'Venus'] },
     9: { name: 'D9 — Навамша', sanskrit: 'Navamsha', area: 'Партнёрство, ценности и дхарма', relevant: ['Venus', 'Jupiter', 'Saturn', 'Moon'] },
     10: { name: 'D10 — Дашамша', sanskrit: 'Dashamsha', area: 'Профессия и реализация', relevant: ['Sun', 'Mercury', 'Saturn', 'Mars'] },
+    12: { name: 'D12 — Двадашамша', sanskrit: 'Dvadashamsha', area: 'Родители, происхождение и семейные темы', relevant: ['Sun', 'Moon', 'Saturn', 'Jupiter'] },
+    16: { name: 'D16 — Шодашамша', sanskrit: 'Shodashamsha', area: 'Комфорт, транспорт и условия повседневной жизни', relevant: ['Venus', 'Moon', 'Mars', 'Mercury'] },
+    20: { name: 'D20 — Вимшамша', sanskrit: 'Vimshamsha', area: 'Духовная практика и мировоззрение', relevant: ['Jupiter', 'Ketu', 'Sun', 'Moon'] },
     24: { name: 'D24 — Сиддхамша', sanskrit: 'Siddhamsha', area: 'Обучение и знания', relevant: ['Mercury', 'Jupiter', 'Sun'] },
-  } as const;
+    27: { name: 'D27 — Бхамша', sanskrit: 'Bhamsha', area: 'Традиционная оценка устойчивости и ресурсов', relevant: ['Mars', 'Saturn', 'Jupiter', 'Sun'] },
+  };
   const definition = definitions[division];
   const varga = calculateDivisionalChart(
     Object.fromEntries(Object.entries(chart.planets).map(([name, position]) => [name, position.siderealLon])),
@@ -663,8 +675,8 @@ export function getVargaEvidence(chart: NatalChart, division: 2 | 7 | 9 | 10 | 2
     definition.area,
   );
   const ascendantSign = SIGN_RU[varga.ascendant.signName] ?? varga.ascendant.signName;
-  const evidence = [
-    `Лагна D${division}: ${ascendantSign}; дробная карта рассчитана по отдельному правилу для этой варги.`,
+  return [
+    `Лагна D${division}: ${ascendantSign}; используется отдельное правило расчёта этой варги.`,
     ...definition.relevant
       .filter((name) => Boolean(varga.planets[name]) && Boolean(chart.planets[name as keyof NatalChart['planets']]))
       .map((name) => {
@@ -674,5 +686,4 @@ export function getVargaEvidence(chart: NatalChart, division: 2 | 7 | 9 | 10 | 2
         return `${PLANET_RU[name] ?? name} в D${division}: ${SIGN_RU[planet.signName] ?? planet.signName}, ${planet.house}-й дом; в D1 — ${SIGN_RU[natalPlanet.signName] ?? natalPlanet.signName}, ${natalHouse ? natalHouse + '-й дом' : 'дом не определён'}.`;
       }),
   ];
-  return evidence;
 }
