@@ -3,6 +3,7 @@ import { analyzeLifeTopics, analyzePersonalizedHouses, getVargaEvidence } from '
 import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition, getGrahaDrishti, getPlanetToPlanetAspects } from './natalStrengthAnalysis';
 import { getSunHouseFocus } from './natalAnalysisGuidance';
 import { getAscendantLordFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus } from './natalPersonalFocus';
+import { analyzeHouseLords } from './natalHouseLordAnalysis';
 import type { NatalChart, PlanetPosition } from './astrology';
 
 function position(name: string, longitude: number, signName: string, nakshatraName: string) {
@@ -263,4 +264,34 @@ assert.ok(getVargaEvidence(chart, 7).some((item) => item.includes('D7')));
 assert.ok(getVargaEvidence(chart, 9).some((item) => item.includes('D9')));
 assert.ok(getVargaEvidence(chart, 10).some((item) => item.includes('D10')));
 assert.ok(getVargaEvidence(chart, 24).some((item) => item.includes('D24')));
+
+const houseLordInsights = analyzeHouseLords(chart);
+assert.equal(houseLordInsights.length, 12);
+const firstHouseLord = houseLordInsights.find((item) => item.house === 1);
+assert.ok(firstHouseLord);
+assert.equal(firstHouseLord?.lordKey, 'Mars');
+assert.equal(firstHouseLord?.lordHouse, 1);
+assert.equal(firstHouseLord?.dignity, 'собственный знак');
+assert.deepEqual(firstHouseLord?.ruledHouses, [1, 8]);
+assert.ok(firstHouseLord?.repeatedRulership?.includes('управляет также домами 8'));
+assert.ok(firstHouseLord?.dispositorChain.some((step) => step.planetKey === 'Mars' && step.depth === 0));
+assert.equal(firstHouseLord?.chainCycleDetected, true);
+assert.ok(firstHouseLord?.attentionFactors.some((item) => item.includes('цикл')));
+assert.ok(firstHouseLord?.incomingAspects.some((item) => item.source === 'Юпитер'));
+assert.ok(firstHouseLord?.outgoingAspects.some((item) => item.targetHouse === 7));
+assert.ok(firstHouseLord?.evidence.some((item) => item.includes('Цепочка, шаг 0')));
+const fifthHouseLord = houseLordInsights.find((item) => item.house === 5);
+assert.equal(fifthHouseLord?.lordKey, 'Sun');
+assert.equal(fifthHouseLord?.lordHouse, 5);
+assert.ok(fifthHouseLord?.interpretation.includes('творчество, интеллект'));
+assert.ok(fifthHouseLord?.evidence.some((item) => item.includes('накшатра Magha')));
+const missingHouseLordChart = {
+  ...chart,
+  planets: Object.fromEntries(Object.entries(chart.planets).filter(([name]) => name !== 'Sun')),
+} as unknown as NatalChart;
+const missingLordInsight = analyzeHouseLords(missingHouseLordChart).find((item) => item.house === 5);
+assert.equal(missingLordInsight?.lordHouse, null);
+assert.equal(missingLordInsight?.chainMissingPlanet, 'Sun');
+assert.ok(missingLordInsight?.interpretation.includes('положение не найдено'));
+
 console.log('personalized house analysis tests passed');
