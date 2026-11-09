@@ -31,6 +31,22 @@ assertIso(
   'ambiguous DST civil time uses earlier occurrence'
 );
 
+// Historical DST rules must be applied using the IANA zone, not a present-day offset.
+assertIso(
+  createDateInTimezone('2021-03-28', '02:30', 'Europe/Paris'),
+  '2021-03-28T00:30:00.000Z',
+  'Paris spring-forward transition'
+);
+assertIso(
+  createDateInTimezone('2021-10-31', '02:30', 'Europe/Paris'),
+  '2021-10-31T00:30:00.000Z',
+  'Paris fall-back overlap uses earlier occurrence'
+);
+
+// Civil dates must reject impossible calendar dates and malformed time input.
+assert.equal(Number.isNaN(createDateInTimezone('2024-02-30', '12:00', 'Europe/Paris').getTime()), true);
+assert.equal(Number.isNaN(createDateInTimezone('2024-02-29', '24:00', 'Europe/Paris').getTime()), true);
+
 // Half-hour zones must continue to work even though longitude fallback is whole-hour only.
 assertIso(
   createDateInTimezone('2024-07-15', '12:00', 'Asia/Kolkata'),
