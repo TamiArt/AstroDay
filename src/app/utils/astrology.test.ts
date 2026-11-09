@@ -54,7 +54,7 @@ const drikReferenceChart = calculateNatalChart(
   28.6139,
   77.2090,
 );
-const drikPlanetReferences: Record<string, number> = {
+const drikPlanetReferences = {
   Sun: 60.21,
   Moon: 319.03,
   Mars: 347.17,
@@ -62,16 +62,27 @@ const drikPlanetReferences: Record<string, number> = {
   Jupiter: 82.11,
   Venus: 24.81,
   Saturn: 270.31,
-  Uranus: 254.44,
-  Neptune: 259.99,
-  Pluto: 201.83,
   Rahu: 285.97,
   Ketu: 105.97,
 };
-for (const [planetName, expectedLongitude] of Object.entries(drikPlanetReferences)) {
-  const actualLongitude = drikReferenceChart.planets[planetName]?.siderealLon;
+for (const planetName of Object.keys(drikPlanetReferences) as Array<keyof typeof drikPlanetReferences>) {
+  const expectedLongitude = drikPlanetReferences[planetName];
+  const actualLongitude = drikReferenceChart.planets[planetName].siderealLon;
   assert.ok(
-    typeof actualLongitude === 'number' && angularDifference(actualLongitude, expectedLongitude) < 0.1,
+    angularDifference(actualLongitude, expectedLongitude) < 0.1,
+    `Drik Panchang ${planetName} reference: expected ${expectedLongitude}°, got ${actualLongitude}°`,
+  );
+}
+const drikOuterPlanetReferences = {
+  Uranus: 254.44,
+  Neptune: 259.99,
+  Pluto: 201.83,
+};
+for (const planetName of Object.keys(drikOuterPlanetReferences) as Array<keyof typeof drikOuterPlanetReferences>) {
+  const expectedLongitude = drikOuterPlanetReferences[planetName];
+  const actualLongitude = calculatePlanetPosition(planetName, new Date('1990-06-15T07:19:25.000Z')).siderealLon;
+  assert.ok(
+    angularDifference(actualLongitude, expectedLongitude) < 0.1,
     `Drik Panchang ${planetName} reference: expected ${expectedLongitude}°, got ${actualLongitude}°`,
   );
 }
