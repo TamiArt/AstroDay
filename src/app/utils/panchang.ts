@@ -112,10 +112,14 @@ export function getPanchangAngularIndices(sunLongitude: number, moonLongitude: n
   if (!Number.isFinite(sunLongitude) || !Number.isFinite(moonLongitude)) {
     throw new Error('Долготы Солнца и Луны должны быть конечными числами');
   }
-  const sun = ((sunLongitude % 360) + 360) % 360;
-  const moon = ((moonLongitude % 360) + 360) % 360;
-  const tithiAngle = ((moon - sun) % 360 + 360) % 360;
-  const yogaAngle = (moon + sun) % 360;
+  const normalizeAngle = (value: number) => {
+    const remainder = value % 360;
+    return remainder < 0 ? remainder + 360 : remainder;
+  };
+  const sun = normalizeAngle(sunLongitude);
+  const moon = normalizeAngle(moonLongitude);
+  const tithiAngle = normalizeAngle(moon - sun);
+  const yogaAngle = normalizeAngle(moon + sun);
   const halfTithiIndex = Math.floor(tithiAngle / 6) % 60;
   const karanaIndex = halfTithiIndex === 0 ? 10
     : halfTithiIndex === 57 ? 7
