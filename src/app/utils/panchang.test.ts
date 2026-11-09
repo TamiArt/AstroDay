@@ -30,4 +30,21 @@ for (const importantDate of dates) {
   assert.ok(importantDate.date instanceof Date && Number.isFinite(importantDate.date.getTime()));
 }
 
+const losAngelesDates = getImportantDates(
+  new Date('2024-03-09T20:00:00.000Z'),
+  40,
+  { timezone: 'America/Los_Angeles' },
+);
+const localClock = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'America/Los_Angeles',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+for (const importantDate of losAngelesDates) {
+  assert.equal(localClock.format(importantDate.date), '12:00', 'daily panchang samples must stay at local noon across DST');
+}
+assert.throws(() => getImportantDates(new Date(Number.NaN)), /корректная начальная дата/);
+assert.throws(() => getImportantDates(date, -1), /от 0 до 3660/);
+
 console.log('panchang tests passed');
