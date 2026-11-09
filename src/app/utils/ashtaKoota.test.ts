@@ -98,3 +98,19 @@ const bhakootCancellation = calculateAshtaKoota(
 );
 assert.equal(bhakootCancellation.kutas.find(item => item.id === 'bhakoot')?.score, 7);
 assert.ok(bhakootCancellation.kutas.find(item => item.id === 'bhakoot')?.details.some(detail => detail.includes('общего управителя')));
+
+const yoniFriendly = calculateAshtaKoota(
+  { name: 'Horse', moonLongitude: 0 },
+  { name: 'Elephant', moonLongitude: 13.34 },
+);
+assert.equal(yoniFriendly.kutas.find(item => item.id === 'yoni')?.score, 3);
+const yoniEnemy = calculateAshtaKoota(
+  { name: 'Horse', moonLongitude: 0 },
+  { name: 'Buffalo', moonLongitude: 160 },
+);
+assert.equal(yoniEnemy.kutas.find(item => item.id === 'yoni')?.score, 0);
+const yoniUnfriendly = calculateAshtaKoota(
+  { name: 'Sheep', moonLongitude: 26.67 },
+  { name: 'Rat', moonLongitude: 120 },
+);
+assert.equal(yoniUnfriendly.kutas.find(item => item.id === 'yoni')?.score, 1);
