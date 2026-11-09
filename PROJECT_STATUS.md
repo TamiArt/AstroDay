@@ -37,11 +37,12 @@ AstroDay — клиентское приложение на React 18, TypeScript
 | 11 | Синхронизация документации | **Завершён в этой ветке**; изменения документационные, код приложения не менялся |
 | 12 | Интеграционные и E2E-сценарии | Не завершён |
 | 13 | Контроль качества астрологических интерпретаций | **Завершён**; полный verify прошёл в [run 42675046869](https://github.com/TamiArt/AstroDay/actions/runs/42675046869) на commit [446bbf5](https://github.com/TamiArt/AstroDay/commit/446bbf5ecb97f56c082ff6a3aa467404c5ca4c05) |
-| 14 | Полноценная совместимость партнёров (Ашта-Кута / Гуна-милан) | **Завершён**; полный verify — [run 42677465957](https://github.com/TamiArt/AstroDay/actions/runs/42677465957), commit [4c1a430](https://github.com/TamiArt/AstroDay/commit/4c1a4301837a3fe92fec8f287c3e9619b0ae4170) |\n| 15 | Углубление Васту и анализа недвижимости | Реализовано в коде; ожидает полного CI verify |
+| 14 | Полноценная совместимость партнёров (Ашта-Кута / Гуна-милан) | **Завершён**; полный verify — [run 42677465957](https://github.com/TamiArt/AstroDay/actions/runs/42677465957), commit [4c1a430](https://github.com/TamiArt/AstroDay/commit/4c1a4301837a3fe92fec8f287c3e9619b0ae4170) |
+| 15 | Углубление Васту и анализа недвижимости | **Завершён**; полный verify — [run 42679497021](https://github.com/TamiArt/AstroDay/actions/runs/42679497021), commit `cc61aedf63c90b4c4e1ff8f8c4bb2096e3d234b6` |
 
 Завершённый этап означает, что реализация и полный `npm run verify` подтверждены для указанного commit/run. Это не означает, что все ручные сценарии или все астрологические школы проверены.
 
-Для текущего документационного этапа полный `npm run verify` не запускался: изменялись только Markdown-файлы, а workflow `.github/workflows/ci.yml` не включает ветки `docs/**` в push-фильтр.
+Для последнего состояния этапа 15 полный `npm run verify` прошёл в GitHub Actions run [42679497021](https://github.com/TamiArt/AstroDay/actions/runs/42679497021) на кодовом commit `cc61aedf63c90b4c4e1ff8f8c4bb2096e3d234b6`.
 
 ## Команды проверки
 
@@ -71,3 +72,4 @@ AstroDay — клиентское приложение на React 18, TypeScript
 - [CODE_AUDIT.md](CODE_AUDIT.md) — подтверждённые технические риски.
 - [docs/ASTROLOGY_ACCURACY.md](docs/ASTROLOGY_ACCURACY.md) — конвенции, эталоны и ограничения расчётов.
 - [docs/INTERPRETATION_QUALITY.md](docs/INTERPRETATION_QUALITY.md) — контроль доказательности, категоричности и ограничений трактовок.
+- [docs/VASTU_PROPERTY_ANALYSIS.md](docs/VASTU_PROPERTY_ANALYSIS.md) — методика анализа Васту и недвижимости.
