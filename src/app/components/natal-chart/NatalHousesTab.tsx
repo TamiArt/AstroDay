@@ -41,11 +41,20 @@ function EvidenceList({ items }: { items: string[] }) {
 
 function TopicCard({ topic, natalChart }: { topic: LifeTopicInsight; natalChart: NatalChartType }) {
   const Icon = TOPIC_ICONS[topic.id];
-  const vargaEvidence = topic.id === 'children'
-    ? getVargaEvidence(natalChart, 7)
-    : topic.id === 'career'
-      ? getVargaEvidence(natalChart, 10)
-      : [];
+  const vargaDivision = topic.id === 'money'
+    ? 2
+    : topic.id === 'talents'
+      ? 24
+      : topic.id === 'children'
+        ? 7
+        : topic.id === 'relationships' || topic.id === 'inner_growth'
+          ? 9
+          : topic.id === 'career'
+            ? 10
+            : null;
+  const vargaEvidence = vargaDivision
+    ? getVargaEvidence(natalChart, vargaDivision)
+    : [];
 
   return (
     <GlassCard>
@@ -104,7 +113,7 @@ function TopicCard({ topic, natalChart }: { topic: LifeTopicInsight; natalChart:
         {vargaEvidence.length > 0 && (
           <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4">
             <h4 className="mb-2 text-sm font-semibold text-indigo-900">
-              Дополнительная карта {topic.id === 'children' ? 'D7 — Саптамша' : 'D10 — Дашамша'}
+              Дополнительная карта {vargaDivision === 2 ? 'D2 — Хора' : vargaDivision === 7 ? 'D7 — Саптамша' : vargaDivision === 9 ? 'D9 — Навамша' : vargaDivision === 10 ? 'D10 — Дашамша' : 'D24 — Сиддхамша'}
             </h4>
             <EvidenceList items={vargaEvidence} />
             <p className="mt-2 text-xs text-gray-600">
