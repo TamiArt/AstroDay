@@ -199,16 +199,10 @@ const HOUSE_LABELS: Record<number, string> = {
   12: 'уединение, восстановление, закулисная работа и завершение циклов',
 };
 
-const PLANET_RU: Record<string, string> = Object.fromEntries(
-  Object.entries(PLANETS).map(([key, value]) => [key, value.name]),
-);
-
-function getHouse(chart: NatalChart, planetName: string): number | null {
-  const planet = chart.planets[planetName as keyof NatalChart['planets']];
-  return planet && chart.houses
-    ? chart.houses.find((house) => house.sign === planet.sign)?.house ?? null
-    : null;
-}
+const SIGN_RU: Record<string, string> = {
+  Aries: 'Овен', Taurus: 'Телец', Gemini: 'Близнецы', Cancer: 'Рак', Leo: 'Лев', Virgo: 'Дева',
+  Libra: 'Весы', Scorpio: 'Скорпион', Sagittarius: 'Стрелец', Capricorn: 'Козерог', Aquarius: 'Водолей', Pisces: 'Рыбы',
+};
 
 function dignityText(chart: NatalChart, planetName: string): string {
   const condition = evaluatePlanetCondition(chart, planetName);
@@ -226,8 +220,7 @@ export function describePlanetInHouse(chart: NatalChart, planetName: string, hou
   const house = HOUSE_LABELS[houseNumber];
   const sign = planet.signName;
   const manifestation = profile.examples[houseNumber];
-  const condition = evaluatePlanetCondition(chart, planetName);
-  const signText = sign ? ` Планета находится в знаке ${sign}; знак окрашивает способ выражения её функций.` : '';
+  const signText = sign ? ` Планета находится в знаке ${SIGN_RU[sign] ?? sign}; знак окрашивает способ выражения её функций.` : '';
   const dignity = dignityText(chart, planetName);
   return `${profile.name} в ${houseNumber}-м доме: ${profile.core}. В сфере «${house}» это может проявляться как ${manifestation}. Сильная сторона такого положения — ${profile.constructive}. Возможная сложность — ${profile.risk}.${signText} ${dignity}`.trim();
 }
@@ -236,7 +229,7 @@ export function describeHousePlanetConnections(chart: NatalChart, houseNumber: n
   const relevant = new Set([...occupants, houseLord].filter((name) =>
     Boolean(chart.planets[name as keyof NatalChart['planets']]),
   ));
-  if (relevant.size < 2) return [];
+  if (relevant.size === 0) return [];
   const aspects = getPlanetToPlanetAspects(chart, Object.keys(chart.planets));
   const seen = new Set<string>();
   const results: string[] = [];
@@ -261,11 +254,4 @@ export function describeHousePlanetConnections(chart: NatalChart, houseNumber: n
     }
   }
   return results.filter((item) => item.length > 0);
-}
-
-export function getHouseInterpretationLabels(houseNumber: number): { house: string; planet: string } {
-  return {
-    house: HOUSE_LABELS[houseNumber] ?? 'жизненная сфера',
-    planet: PLANET_RU.Sun ? 'планетная функция' : 'планетная функция',
-  };
 }
