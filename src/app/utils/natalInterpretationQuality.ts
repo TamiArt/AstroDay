@@ -70,8 +70,11 @@ function isNegated(text: string, index: number): boolean {
 
 function containsUnqualifiedPattern(text: string, patterns: RegExp[]): boolean {
   return patterns.some((pattern) => {
-    const match = pattern.exec(text);
-    return Boolean(match && !isNegated(text, match.index));
+    const scanner = new RegExp(pattern.source, pattern.flags.includes('g') ? pattern.flags : `${pattern.flags}g`);
+    for (const match of text.matchAll(scanner)) {
+      if (!isNegated(text, match.index ?? 0)) return true;
+    }
+    return false;
   });
 }
 
@@ -103,12 +106,8 @@ export function validateInterpretationQuality(
   }
 
   const certaintyText = narrative;
-  for (const pattern of CERTAINTY_PATTERNS) {
-    const match = pattern.exec(certaintyText);
-    if (match && !isNegated(certaintyText, match.index)) {
-      add('unsupported-certainty', 'error', 'Обнаружено категоричное обещание или предсказание события.');
-      break;
-    }
+  if (containsUnqualifiedPattern(certaintyText, CERTAINTY_PATTERNS)) {
+    add('unsupported-certainty', 'error', 'Обнаружено категоричное обещание или предсказание события.');
   }
 
   const medicalPatterns = [
