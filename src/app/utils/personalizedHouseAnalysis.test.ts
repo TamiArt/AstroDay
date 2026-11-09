@@ -214,6 +214,7 @@ assert.ok(moneyTopic?.interpretation.includes('международные кон
 assert.ok(moneyTopic?.interpretation.includes('источники дохода'));
 assert.ok(moneyTopic?.developmentPoints.length);
 assert.ok(moneyTopic?.supportingFactors.length);
+assert.ok(moneyTopic?.supportingFactors.some((item) => item.includes('Юпитера')));
 assert.ok(moneyTopic?.attentionPoints.length);
 assert.ok(moneyTopic?.synthesis.includes('картина'));
 assert.ok(moneyTopic?.interpretation.includes('поддерживающие'));
