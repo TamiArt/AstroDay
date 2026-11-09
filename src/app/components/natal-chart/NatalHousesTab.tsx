@@ -221,6 +221,11 @@ function HouseLordCard({ insight }: { insight: HouseLordInsight }) {
           </div>
         )}
 
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+          <h5 className="mb-1 text-sm font-semibold text-blue-900">Сводная оценка сочетания факторов</h5>
+          <p className="text-xs leading-relaxed text-gray-700">{insight.overallSynthesis}</p>
+        </div>
+
         <div className="grid gap-3 md:grid-cols-2">
           <div className="rounded-lg border border-green-200 bg-green-50 p-3">
             <h5 className="mb-2 text-sm font-semibold text-green-900">Поддерживающие факторы</h5>
