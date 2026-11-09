@@ -231,6 +231,9 @@ assert.deepEqual(topics.find((topic) => topic.id === 'wellbeing')?.houses, [1, 6
 assert.ok(topics.find((topic) => topic.id === 'wellbeing')?.actions.some((action) => action.includes('не диагностирует')));
 assert.deepEqual(topics.find((topic) => topic.id === 'inner_growth')?.houses, [9, 12, 5]);
 assert.deepEqual(topics.find((topic) => topic.id === 'children')?.houses, [2, 5, 9, 11]);
+assert.deepEqual(topics.find((topic) => topic.id === 'children')?.primaryHouses, [5]);
+assert.deepEqual(topics.find((topic) => topic.id === 'children')?.supportingHouses, [2, 9, 11]);
+assert.deepEqual(topics.find((topic) => topic.id === 'relationships')?.primaryHouses, [7]);
 assert.deepEqual(topics.find((topic) => topic.id === 'relationships')?.houses, [2, 5, 7, 8, 12]);
 assert.deepEqual(topics.find((topic) => topic.id === 'career')?.houses, [2, 6, 10, 11]);
 assert.ok(topics.every((topic) => topic.supportingFactors.length + topic.attentionPoints.length > 0));
