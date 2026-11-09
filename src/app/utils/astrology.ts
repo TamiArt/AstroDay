@@ -284,7 +284,7 @@ export function calculateAscendant(
     const sign = getSign(siderealAsc);
     const degree = siderealAsc % 30;
     const nakshatra = getNakshatra(siderealAsc);
-    const pada = Math.floor((siderealAsc % 13.333333) / 3.333333) + 1;
+    const pada = Math.floor((siderealAsc % (FULL_CIRCLE / 27)) / (FULL_CIRCLE / 108)) + 1;
 
     return {
       name: 'Ascendant',
