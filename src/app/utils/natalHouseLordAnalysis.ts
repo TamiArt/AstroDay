@@ -58,6 +58,7 @@ export interface HouseLordInsight {
   repeatedRulership: string | null;
   supportingFactors: string[];
   attentionFactors: string[];
+  overallSynthesis: string;
   interpretation: string;
   evidence: string[];
 }
@@ -190,6 +191,16 @@ export function analyzeHouseLords(chart: NatalChart): HouseLordInsight[] {
     if (!attentionFactors.length) {
       attentionFactors.push('По выбранным критериям падения и аспектов Марса/Сатурна отдельный фактор повышенного внимания не выделен.');
     }
+    const hasSupport = lordCondition?.dignity === 'exalted' || lordCondition?.dignity === 'own'
+      || incomingAspects.some((item) => item.source === 'Юпитер');
+    const hasAttention = lordCondition?.dignity === 'debilitated' || challengingAspects.length > 0 || chain.cycleDetected;
+    const overallSynthesis = hasSupport && hasAttention
+      ? 'Смешанная картина: у управителя есть поддерживающие показатели и одновременно факторы, требующие внимания. Их следует читать вместе, не сводя положение к ярлыку «хорошее» или «плохое».'
+      : hasSupport
+        ? 'В выбранной системе критериев заметнее поддерживающие показатели. Это символический ресурс, а не гарантия результата.'
+        : hasAttention
+          ? 'В выбранной системе критериев заметнее факторы дополнительной нагрузки. Они обозначают темы для осознанной работы, а не неизбежные препятствия.'
+          : 'Выраженного перевеса по выбранным критериям нет. Вывод остаётся нейтральным и зависит от контекста всей карты.';
 
     const houseTheme = HOUSE_THEMES[house.house] ?? 'сфера дома';
     const placementTheme = lordHouse ? HOUSE_THEMES[lordHouse] : null;
@@ -235,6 +246,7 @@ export function analyzeHouseLords(chart: NatalChart): HouseLordInsight[] {
       repeatedRulership,
       supportingFactors,
       attentionFactors,
+      overallSynthesis,
       interpretation,
       evidence,
     };
