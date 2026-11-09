@@ -35,6 +35,11 @@ const fixtures = [
     expected: dmsToDegrees(24, 7, 21.1353),
   },
   {
+    label: '1990-01-01 mean Lahiri (Swiss Ephemeris swetest -nonut)',
+    date: new Date('1990-01-01T00:00:00Z'),
+    expected: dmsToDegrees(23, 43, 2.6259),
+  },
+  {
     label: '2020-01-01',
     date: new Date('2020-01-01T12:00:00Z'),
     expected: dmsToDegrees(24, 8, 11.3962),

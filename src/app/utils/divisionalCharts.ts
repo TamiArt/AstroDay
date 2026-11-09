@@ -80,7 +80,8 @@ export function calculateDivisionalChart(
 }
 
 export function calculateAdditionalVargas(planetLongitude: number): AdditionalVargas {
-  const degreeInSign = ((planetLongitude % 30) + 30) % 30;
+  const longitudeRemainder = planetLongitude % 30;
+  const degreeInSign = longitudeRemainder < 0 ? longitudeRemainder + 30 : longitudeRemainder;
 
   return {
     D12: Math.floor(degreeInSign / (30 / 12)) + 1,
@@ -91,16 +92,47 @@ export function calculateAdditionalVargas(planetLongitude: number): AdditionalVa
 
 // Вспомогательная функция для расчета долготы в дробной карте
 function calculateDivisionalLongitude(natLon: number, division: number): number {
-  const signIndex = Math.floor(natLon / 30);
-  const degreeInSign = natLon % 30;
-  const partIndex = Math.floor((degreeInSign * division) / 30);
+  if (!Number.isFinite(natLon) || !Number.isInteger(division) || division < 1 || division > 60) {
+    throw new Error('Для дробной карты нужны конечная долгота и целое деление от 1 до 60');
+  }
+  const longitudeRemainder = natLon % 360;
+  const normalizedLongitude = longitudeRemainder < 0 ? longitudeRemainder + 360 : longitudeRemainder;
+  const signIndex = Math.floor(normalizedLongitude / 30);
+  const degreeInSign = normalizedLongitude % 30;
+
+  if (division === 30) {
+    return calculateTrimshamshaLongitude(signIndex, degreeInSign);
+  }
+
+  const partIndex = Math.min(division - 1, Math.floor((degreeInSign * division) / 30));
   const newSignIndex = getDivisionalSign(signIndex, degreeInSign, partIndex, division);
-  const newDegreeInSign = ((degreeInSign * division) % 30);
+  const newDegreeInSign = (degreeInSign * division) % 30;
   return newSignIndex * 30 + newDegreeInSign;
 }
 
+function calculateTrimshamshaLongitude(signIndex: number, degreeInSign: number): number {
+  const oddSignSegments = [
+    { end: 5, sign: 0 }, { end: 10, sign: 10 }, { end: 18, sign: 8 },
+    { end: 25, sign: 2 }, { end: 30, sign: 6 },
+  ];
+  const evenSignSegments = [
+    { end: 5, sign: 1 }, { end: 12, sign: 5 }, { end: 20, sign: 11 },
+    { end: 25, sign: 9 }, { end: 30, sign: 7 },
+  ];
+  const segments = signIndex % 2 === 0 ? oddSignSegments : evenSignSegments;
+  let segmentStart = 0;
+  for (const segment of segments) {
+    if (degreeInSign < segment.end || segment.end === 30) {
+      const scaledDegree = ((degreeInSign - segmentStart) / (segment.end - segmentStart)) * 30;
+      return segment.sign * 30 + scaledDegree;
+    }
+    segmentStart = segment.end;
+  }
+  return 0;
+}
+
 function hasSpecificVargaRule(division: number): boolean {
-  return [2, 3, 7, 9, 10, 12, 20, 24].includes(division);
+  return [2, 3, 4, 7, 9, 10, 12, 16, 20, 24, 27, 30, 40, 45].includes(division);
 }
 
 function getDivisionalSign(signIndex: number, degreeInSign: number, partIndex: number, division: number): number {
@@ -116,6 +148,11 @@ function getDivisionalSign(signIndex: number, degreeInSign: number, partIndex: n
 
   if (division === 3) {
     return (signIndex + partIndex * 4) % 12; // same, 5th, 9th
+  }
+
+  if (division === 4) {
+    const start = isMovable ? signIndex : isFixed ? (signIndex + 3) % 12 : (signIndex + 6) % 12;
+    return (start + partIndex) % 12;
   }
 
   if (division === 7) {
@@ -137,6 +174,12 @@ function getDivisionalSign(signIndex: number, degreeInSign: number, partIndex: n
     return (signIndex + partIndex) % 12; // Dvadasamsha: count from the natal sign
   }
 
+  if (division === 16) {
+    const isDual = !isMovable && !isFixed;
+    const start = isMovable ? 0 : isFixed ? 4 : isDual ? 8 : signIndex;
+    return (start + partIndex) % 12;
+  }
+
   if (division === 20) {
     const isDual = !isMovable && !isFixed;
     const start = isMovable ? 0 : isFixed ? 8 : isDual ? 4 : signIndex; // Aries/Sagittarius/Leo
@@ -145,6 +188,23 @@ function getDivisionalSign(signIndex: number, degreeInSign: number, partIndex: n
 
   if (division === 24) {
     const start = isOddSign ? 4 : 3; // Leo for odd signs, Cancer for even signs
+    return (start + partIndex) % 12;
+  }
+
+  if (division === 27) {
+    const elementStart = [0, 4, 8].includes(signIndex) ? 0
+      : [1, 5, 9].includes(signIndex) ? 3
+        : [2, 6, 10].includes(signIndex) ? 6 : 9;
+    return (elementStart + partIndex) % 12;
+  }
+
+  if (division === 40) {
+    return ((isOddSign ? 0 : 6) + partIndex) % 12;
+  }
+
+  if (division === 45) {
+    const isDual = !isMovable && !isFixed;
+    const start = isMovable ? 0 : isFixed ? 4 : isDual ? 8 : signIndex;
     return (start + partIndex) % 12;
   }
 

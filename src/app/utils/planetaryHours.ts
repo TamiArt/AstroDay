@@ -91,6 +91,9 @@ export function calculatePlanetaryHour(
   longitude: number,
   timezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone
 ): PlanetaryHourInfo {
+  if (!(date instanceof Date) || !Number.isFinite(date.getTime())) {
+    throw new Error('Для расчёта планетарного часа нужна корректная дата');
+  }
   validatePlanetaryHourInput(latitude, longitude, timezone);
 
   const { sunrise, sunset, nextSunrise, previousSunrise, previousSunset, isFallback } = getLocalDayBounds(
@@ -162,6 +165,9 @@ export function calculatePlanetaryHoursForDay(
   longitude: number,
   timezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone
 ): PlanetaryHourInfo[] {
+  if (!(date instanceof Date) || !Number.isFinite(date.getTime())) {
+    throw new Error('Для расчёта планетарных часов нужна корректная дата');
+  }
   validatePlanetaryHourInput(latitude, longitude, timezone);
 
   const { sunrise, sunset, nextSunrise, isFallback } = getLocalDayBounds(date, latitude, longitude, timezone);

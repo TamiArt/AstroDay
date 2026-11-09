@@ -1,6 +1,7 @@
 import { calculateDasha, getCurrentAntardasha, getPlanetHouse as resolvePlanetHouse, type NatalChart } from './astrology';
 import { calculateDivisionalChart } from './divisionalCharts';
 import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition, getGrahaDrishti } from './natalStrengthAnalysis';
+import { describeHousePlanetConnections, describeHouseSignStyle, describePlanetInHouse } from './natalHouseInterpretation';
 
 export interface PlanetEvidence {
   name: string;
@@ -18,6 +19,8 @@ export interface PersonalizedHouseInsight {
   lordSign: string | null;
   lordNakshatra: string | null;
   occupants: PlanetEvidence[];
+  occupantInterpretations: string[];
+  planetaryConnections: string[];
   interpretation: string;
   practicalActions: string[];
   watchouts: string[];
@@ -284,18 +287,30 @@ export function analyzePersonalizedHouses(chart: NatalChart): PersonalizedHouseI
       .filter((name) => getPlanetHouseForChart(chart, name) === house.house)
       .map((name) => toEvidence(name, chart));
     const lordEvidence = lord ? toEvidence(house.lord, chart) : null;
+    const occupantInterpretations = occupants
+      .map((item) => describePlanetInHouse(chart, Object.keys(PLANET_RU).find((key) => PLANET_RU[key] === item.name) ?? item.name, house.house))
+      .filter((item): item is string => Boolean(item));
+    const planetaryConnections = describeHousePlanetConnections(
+      chart,
+      occupants.map((item) => Object.keys(PLANET_RU).find((key) => PLANET_RU[key] === item.name) ?? item.name),
+      house.lord,
+    );
     const lordCondition = evaluatePlanetCondition(chart, house.lord);
     const houseAspects = describeHouseDrishti(chart, house.house);
     const lordHouseAspects = lordHouse ? describeHouseDrishti(chart, lordHouse) : [];
     const sign = SIGN_RU[house.signName] ?? house.signName;
+    const houseSignStyle = describeHouseSignStyle(house.signName, house.house);
     const interpretation = lordHouse
-      ? `В традиционной Джйотиш этот дом связан с темой: ${HOUSE_MEANING[house.house]}. В твоей карте он начинается в знаке ${sign}. Управитель — ${PLANET_RU[house.lord] ?? house.lord}; он расположен в ${lordHouse}-м доме (${getLordHouseMeaning(lordHouse)}). Поэтому темы этих двух домов стоит рассматривать вместе: решения и опыт в сфере «${getLordHouseMeaning(lordHouse)}» символически связываются с темой этого дома.`
-      : `Дом в знаке ${sign}; положение его управителя в доступных данных определить не удалось. Общая тема: ${HOUSE_MEANING[house.house]}.`;
+      ? `В традиционной Джйотиш этот дом связан с темой: ${HOUSE_MEANING[house.house]}. В твоей карте он начинается в знаке ${sign}. ${houseSignStyle ?? ''} Управитель — ${PLANET_RU[house.lord] ?? house.lord}; он расположен в ${lordHouse}-м доме (${getLordHouseMeaning(lordHouse)}). Поэтому темы этих двух домов стоит рассматривать вместе: решения и опыт в сфере «${getLordHouseMeaning(lordHouse)}» символически связываются с темой этого дома.`
+      : `Дом в знаке ${sign}; ${houseSignStyle ?? ''} Положение его управителя в доступных данных определить не удалось. Общая тема: ${HOUSE_MEANING[house.house]}.`;
 
     const evidence = [
       `Знак дома: ${sign}`,
+      ...(houseSignStyle ? [`Стиль знака дома: ${houseSignStyle}`] : []),
       `Управитель: ${PLANET_RU[house.lord] ?? house.lord}${lordEvidence ? ` — ${formatPlanetEvidence(lordEvidence)}` : ''}`,
       lordCondition ? `Достоинство управителя: ${lordCondition.label}; качественная шкала ${lordCondition.score}/100. Это не Shadbala.` : 'Достоинство управителя: нет данных.',
+      ...occupantInterpretations.map((item) => `Планета в доме: ${item}`),
+      ...planetaryConnections.map((item) => `Связь планет: ${item}`),
       ...houseAspects,
       ...lordHouseAspects.map((item) => `Аспект на положение управителя: ${item}`),
       occupants.length ? `Планеты в доме: ${occupants.map((item) => formatPlanetEvidence(item)).join('; ')}` : 'В доме нет планет; интерпретация опирается прежде всего на знак и управителя.',
@@ -313,6 +328,8 @@ export function analyzePersonalizedHouses(chart: NatalChart): PersonalizedHouseI
       lordSign: lord ? SIGN_RU[lord.signName] ?? lord.signName : null,
       lordNakshatra: lord?.nakshatraName ?? null,
       occupants,
+      occupantInterpretations,
+      planetaryConnections,
       interpretation: `${interpretation} Символические качества управителя: ${planetThemes.join('; ')}. Состояние управителя: ${lordCondition ? `${lordCondition.label} в знаке ${lordCondition.sign} (качественная оценка ${lordCondition.score}/100): ${lordCondition.explanation}` : 'не удалось определить'}. ${houseAspects.length ? `Влияние на сам дом: ${houseAspects.join(' ')}` : 'Прямых граха-дришти на этот дом по используемой схеме не найдено.'} ${lordHouseAspects.length ? `Дополнительные аспекты на дом, где расположен управитель: ${lordHouseAspects.join(' ')}` : ''}`,
       practicalActions: HOUSE_ACTIONS[house.house] ?? [],
       watchouts: house.house === 5

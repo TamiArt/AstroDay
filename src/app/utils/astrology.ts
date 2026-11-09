@@ -24,12 +24,14 @@ export function tropicalToSidereal(tropicalLon: number, date: Date): number {
 }
 
 function normalizeDegrees(value: number): number {
-  return ((value % FULL_CIRCLE) + FULL_CIRCLE) % FULL_CIRCLE;
+  const remainder = value % FULL_CIRCLE;
+  return remainder < 0 ? remainder + FULL_CIRCLE : remainder;
 }
 
 function getMeanObliquity(date: Date): number {
   const astroTime = AstronomyApi.MakeTime(date);
-  const t = (astroTime.ut - 2451545.0) / 36525.0;
+  // Astronomy Engine expresses AstroTime.ut in days since J2000, not as a Julian Day Number.
+  const t = astroTime.ut / 36525.0;
   const seconds = 21.448 - t * (46.8150 + t * (0.00059 - t * 0.001813));
   return 23 + (26 / 60) + (seconds / 3600);
 }
@@ -177,12 +179,21 @@ export const NAKSHATRAS = [
 
 // Get sign from longitude
 export function getSign(longitude: number): number {
-  return Math.floor(longitude / 30);
+  if (!Number.isFinite(longitude)) throw new Error('Долгота должна быть конечным числом');
+  return Math.floor(normalizeDegrees(longitude) / 30);
 }
 
-// Get nakshatra from longitude
+// Get nakshatra from longitude using the exact 360° / 27 division.
 export function getNakshatra(longitude: number): number {
-  return Math.floor(longitude / 13.333333);
+  if (!Number.isFinite(longitude)) throw new Error('Долгота должна быть конечным числом');
+  return Math.floor(normalizeDegrees(longitude) / (FULL_CIRCLE / 27));
+}
+
+export function getNakshatraPada(longitude: number): number {
+  if (!Number.isFinite(longitude)) throw new Error('Долгота должна быть конечным числом');
+  const normalizedLongitude = normalizeDegrees(longitude);
+  const positionInNakshatra = normalizedLongitude % (FULL_CIRCLE / 27);
+  return Math.min(4, Math.floor(positionInNakshatra / (FULL_CIRCLE / 108)) + 1);
 }
 
 // Calculate planetary position
@@ -223,9 +234,17 @@ export function calculatePlanetPosition(
     } else {
       const body = bodyName as Astronomy.Body;
       try {
-        tropicalLon = AstronomyApi.EclipticLongitude(body, date);
+        if (bodyName === 'Moon') {
+          // EclipticLongitude is heliocentric; the Moon requires its geocentric ecliptic position.
+          tropicalLon = AstronomyApi.EclipticGeoMoon(date).lon;
+        } else {
+          // Natal astrology uses geocentric positions. Convert the geocentric EQJ vector
+          // to the true ecliptic of date instead of using heliocentric EclipticLongitude.
+          const geocentricVector = AstronomyApi.GeoVector(body, date, true);
+          tropicalLon = AstronomyApi.Ecliptic(geocentricVector).elon;
+        }
       } catch (err) {
-        console.error(`EclipticLongitude error for ${bodyName}:`, err);
+        console.error(`Geocentric ecliptic position error for ${bodyName}:`, err);
         throw new Error(`API astronomy-engine вернул ошибку для ${bodyName}: ${err instanceof Error ? err.message : String(err)}`);
       }
     }
@@ -238,7 +257,7 @@ export function calculatePlanetPosition(
     const sign = getSign(siderealLon);
     const degree = siderealLon % 30;
     const nakshatra = getNakshatra(siderealLon);
-    const pada = Math.floor((siderealLon % 13.333333) / 3.333333) + 1;
+    const pada = getNakshatraPada(siderealLon);
 
     return {
       name: bodyName,
@@ -269,11 +288,11 @@ export function calculateAscendant(
       throw new Error(`Некорректная дата: ${date}`);
     }
 
-    if (typeof latitude !== 'number' || isNaN(latitude)) {
+    if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) {
       throw new Error(`Некорректная широта: ${latitude}`);
     }
 
-    if (typeof longitude !== 'number' || isNaN(longitude)) {
+    if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
       throw new Error(`Некорректная долгота: ${longitude}`);
     }
 
@@ -282,7 +301,7 @@ export function calculateAscendant(
     const sign = getSign(siderealAsc);
     const degree = siderealAsc % 30;
     const nakshatra = getNakshatra(siderealAsc);
-    const pada = Math.floor((siderealAsc % 13.333333) / 3.333333) + 1;
+    const pada = getNakshatraPada(siderealAsc);
 
     return {
       name: 'Ascendant',
@@ -306,7 +325,7 @@ function createCalculatedPoint(name: string, tropicalLon: number, siderealLon: n
   const sign = getSign(siderealLon);
   const degree = siderealLon % 30;
   const nakshatra = getNakshatra(siderealLon);
-  const pada = Math.floor((siderealLon % (360 / 27)) / (360 / 108)) + 1;
+  const pada = getNakshatraPada(siderealLon);
 
   return {
     name,
@@ -410,6 +429,22 @@ export function calculateDasha(
   currentDate: Date = new Date(),
   moonSiderealLon?: number
 ): DashaPeriod {
+  if (!(birthDate instanceof Date) || !Number.isFinite(birthDate.getTime())) {
+    throw new Error('Некорректная дата рождения для расчёта Вимшоттари-даши');
+  }
+  if (!(currentDate instanceof Date) || !Number.isFinite(currentDate.getTime())) {
+    throw new Error('Некорректная текущая дата для расчёта Вимшоттари-даши');
+  }
+  if (currentDate < birthDate) {
+    throw new Error('Дата расчёта Вимшоттари-даши не может быть раньше даты рождения');
+  }
+  if (!Number.isInteger(moonNakshatra) || moonNakshatra < 0 || moonNakshatra >= 27) {
+    throw new Error('Номер накшатры Луны должен быть целым числом от 0 до 26');
+  }
+  if (moonSiderealLon !== undefined && (!Number.isFinite(moonSiderealLon) || moonSiderealLon < 0 || moonSiderealLon >= 360)) {
+    throw new Error('Сидерическая долгота Луны должна находиться в диапазоне от 0° до 360°');
+  }
+
   const dashaLordIndex = moonNakshatra % 9;
   const startingLord = DASHA_ORDER[dashaLordIndex];
   const startingBalanceRatio = getDashaBalanceRatio(moonSiderealLon);
@@ -471,7 +506,7 @@ function getDashaBalanceRatio(moonSiderealLon?: number): number {
     return 1;
   }
 
-  const positionInNakshatra = ((moonSiderealLon % NAKSHATRA_SIZE) + NAKSHATRA_SIZE) % NAKSHATRA_SIZE;
+  const positionInNakshatra = moonSiderealLon % NAKSHATRA_SIZE;
   const remainingRatio = (NAKSHATRA_SIZE - positionInNakshatra) / NAKSHATRA_SIZE;
   return Math.max(0.001, Math.min(1, remainingRatio));
 }
@@ -525,11 +560,11 @@ export function calculateNatalChart(
       throw new Error('Некорректная дата рождения');
     }
 
-    if (typeof latitude !== 'number' || isNaN(latitude)) {
+    if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) {
       throw new Error('Некорректная широта');
     }
 
-    if (typeof longitude !== 'number' || isNaN(longitude)) {
+    if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
       throw new Error('Некорректная долгота');
     }
 
@@ -553,8 +588,8 @@ export function calculateNatalChart(
 
     try {
       const astroTime = AstronomyApi.MakeTime(birthDate);
-      const jd = astroTime.ut;
-      const T = (jd - 2451545.0) / 36525.0;
+      // Astronomy Engine's ut is fractional days since J2000; use it directly for Julian centuries.
+      const T = astroTime.ut / 36525.0;
       let meanNodeLon = 125.0445479 - 1934.1362891 * T + 0.0020754 * T * T + (T * T * T) / 467441.0 - (T * T * T * T) / 60616000.0;
 
       meanNodeLon = meanNodeLon % 360;

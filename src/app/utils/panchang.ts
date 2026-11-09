@@ -4,7 +4,8 @@
 
 import * as Astronomy from 'astronomy-engine';
 import { NAKSHATRAS, tropicalToSidereal } from './astrology';
-import { getWeekdayIndex } from './dateUtils';
+import { formatDateKey, getWeekdayIndex } from './dateUtils';
+import { createDateInTimezone } from './timezones';
 
 const AstronomyApi = (Reflect.get(Astronomy, 'default') as typeof Astronomy | undefined) ?? Astronomy;
 // Tithi (Lunar day) - 30 tithis in a lunar month
@@ -99,10 +100,49 @@ export interface PanchangContext {
   timezone?: string;
 }
 
+export interface PanchangAngularIndices {
+  tithiIndex: number;
+  nakshatraIndex: number;
+  yogaIndex: number;
+  karanaIndex: number;
+}
+
+/** Pure angular rules, separated so exact segment boundaries can be regression-tested. */
+export function getPanchangAngularIndices(sunLongitude: number, moonLongitude: number): PanchangAngularIndices {
+  if (!Number.isFinite(sunLongitude) || !Number.isFinite(moonLongitude)) {
+    throw new Error('Долготы Солнца и Луны должны быть конечными числами');
+  }
+  const normalizeAngle = (value: number) => {
+    const remainder = value % 360;
+    return remainder < 0 ? remainder + 360 : remainder;
+  };
+  const sun = normalizeAngle(sunLongitude);
+  const moon = normalizeAngle(moonLongitude);
+  const tithiAngle = normalizeAngle(moon - sun);
+  const yogaAngle = normalizeAngle(moon + sun);
+  const halfTithiIndex = Math.floor(tithiAngle / 6) % 60;
+  const karanaIndex = halfTithiIndex === 0 ? 10
+    : halfTithiIndex === 57 ? 7
+      : halfTithiIndex === 58 ? 8
+        : halfTithiIndex === 59 ? 9
+          : (halfTithiIndex - 1) % 7;
+
+  return {
+    tithiIndex: Math.floor(tithiAngle / (360 / 30)),
+    nakshatraIndex: Math.floor(moon / (360 / 27)),
+    yogaIndex: Math.floor(yogaAngle / (360 / 27)),
+    karanaIndex,
+  };
+}
+
 export function calculatePanchang(date: Date, context: PanchangContext = {}): PanchangData {
   // [ИСПРАВЛЕНО] Добавлена специальная обработка для Солнца и Луны
   // Солнце требует SunPosition(), Луна - EclipticGeoMoon()
   try {
+    if (!(date instanceof Date) || !Number.isFinite(date.getTime())) {
+      throw new Error('Для расчёта панчанга нужна корректная дата');
+    }
+
     // Для Солнца используем SunPosition (геоцентрическая позиция)
     const sunPos = AstronomyApi.SunPosition(date);
     const sunLon = tropicalToSidereal(sunPos.elon, date);
@@ -112,26 +152,8 @@ export function calculatePanchang(date: Date, context: PanchangContext = {}): Pa
     const moonLon = tropicalToSidereal(moonPos.lon, date);
 
     // Tithi calculation
-    let tithiAngle = moonLon - sunLon;
-    if (tithiAngle < 0) tithiAngle += 360;
-    const tithiIndex = Math.floor(tithiAngle / 12) % 30;
-
-    // Nakshatra
-    const nakshatraIndex = Math.floor(moonLon / 13.333333) % 27;
-
-    // Yoga
-    const yogaAngle = (moonLon + sunLon) % 360;
-    const yogaIndex = Math.floor(yogaAngle / 13.333333) % 27;
-
-    // Karana. The first seven are repeating chara karanas; the final four
-    // fixed karanas occur near the end/start of the lunar month.
-    const halfTithiIndex = Math.floor(tithiAngle / 6) % 60;
-    let karanaIndex: number;
-    if (halfTithiIndex === 0) karanaIndex = 10; // Kimstughna
-    else if (halfTithiIndex === 57) karanaIndex = 7; // Shakuni
-    else if (halfTithiIndex === 58) karanaIndex = 8; // Chatushpada
-    else if (halfTithiIndex === 59) karanaIndex = 9; // Naga
-    else karanaIndex = (halfTithiIndex - 1) % 7;
+    const { tithiIndex, nakshatraIndex, yogaIndex, karanaIndex } =
+      getPanchangAngularIndices(sunLon, moonLon);
 
     // Vara (day of week) in the target timezone.
     const dayOfWeek = getWeekdayIndex(date, context.timezone);
@@ -182,10 +204,27 @@ export interface ImportantDate {
 }
 
 export function getImportantDates(startDate: Date, days: number = 30, context: PanchangContext = {}): ImportantDate[] {
+  if (!(startDate instanceof Date) || !Number.isFinite(startDate.getTime())) {
+    throw new Error('Для поиска важных дат нужна корректная начальная дата');
+  }
+  if (!Number.isInteger(days) || days < 0 || days > 3660) {
+    throw new Error('Количество дней должно быть целым числом от 0 до 3660');
+  }
+
   const dates: ImportantDate[] = [];
-  const currentDate = new Date(startDate);
+  const timezone = context.timezone ?? 'UTC';
+  const startDateKey = formatDateKey(startDate, timezone);
+  const [startYear, startMonth, startDay] = startDateKey.split('-').map(Number);
 
   for (let i = 0; i < days; i++) {
+    // Iterate civil calendar days in the requested IANA zone, not the host machine zone.
+    // Noon is deliberately used as a stable daily sample; this is not an exact event time.
+    const civilDate = new Date(Date.UTC(startYear, startMonth - 1, startDay + i));
+    const dateKey = civilDate.toISOString().slice(0, 10);
+    const currentDate = createDateInTimezone(dateKey, '12:00', timezone);
+    if (!Number.isFinite(currentDate.getTime())) {
+      throw new Error(`Не удалось определить полдень даты ${dateKey} в зоне ${timezone}`);
+    }
     const panchang = calculatePanchang(currentDate, context);
 
     // Purnima (Full Moon)
@@ -199,7 +238,7 @@ export function getImportantDates(startDate: Date, days: number = 30, context: P
     }
 
     // Amavasya (New Moon)
-  if (panchang.tithi.index === 29) {
+    if (panchang.tithi.index === 29) {
       dates.push({
         date: new Date(currentDate),
         type: 'Amavasya',
@@ -218,7 +257,6 @@ export function getImportantDates(startDate: Date, days: number = 30, context: P
       });
     }
 
-    currentDate.setDate(currentDate.getDate() + 1);
   }
 
   return dates;
