@@ -168,6 +168,8 @@ export function describePeriodConnection(
 export interface PlanetToPlanetAspect {
   source: string;
   target: string;
+  sourceKey: string;
+  targetKey: string;
   sourceHouse: number;
   targetHouse: number;
   kind: 'conjunction' | 'graha-drishti';
@@ -195,7 +197,7 @@ export function getPlanetToPlanetAspects(chart: NatalChart, planetNames: string[
 
       if (sourcePosition.sign === targetPosition.sign) {
         if (uniqueNames.indexOf(source) < uniqueNames.indexOf(target)) {
-          results.push({ source: PLANET_RU[source] ?? source, target: PLANET_RU[target] ?? target, sourceHouse, targetHouse, kind: 'conjunction', offset: null });
+          results.push({ source: PLANET_RU[source] ?? source, target: PLANET_RU[target] ?? target, sourceKey: source, targetKey: target, sourceHouse, targetHouse, kind: 'conjunction', offset: null });
         }
         continue;
       }
@@ -203,7 +205,7 @@ export function getPlanetToPlanetAspects(chart: NatalChart, planetNames: string[
       const offset = ((targetHouse - sourceHouse + 12) % 12) + 1;
       const allowedOffsets = SPECIAL_DRISHTI[source] ?? [7];
       if (allowedOffsets.includes(offset)) {
-        results.push({ source: PLANET_RU[source] ?? source, target: PLANET_RU[target] ?? target, sourceHouse, targetHouse, kind: 'graha-drishti', offset });
+        results.push({ source: PLANET_RU[source] ?? source, target: PLANET_RU[target] ?? target, sourceKey: source, targetKey: target, sourceHouse, targetHouse, kind: 'graha-drishti', offset });
       }
     }
   }

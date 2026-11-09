@@ -1,6 +1,6 @@
 import { calculateDasha, getCurrentAntardasha, getPlanetHouse as resolvePlanetHouse, type NatalChart } from './astrology';
 import { calculateDivisionalChart } from './divisionalCharts';
-import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition } from './natalStrengthAnalysis';
+import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition, getGrahaDrishti } from './natalStrengthAnalysis';
 
 export interface PlanetEvidence {
   name: string;
@@ -25,14 +25,21 @@ export interface PersonalizedHouseInsight {
 }
 
 export interface LifeTopicInsight {
-  id: 'talents' | 'money' | 'career' | 'children' | 'relationships';
+  id: 'talents' | 'money' | 'career' | 'children' | 'relationships' | 'home_family' | 'wellbeing' | 'inner_growth';
   title: string;
   houses: number[];
+  primaryHouses: number[];
+  supportingHouses: number[];
   interpretation: string;
   directions: string[];
   actions: string[];
   evidence: string[];
   timingNote: string;
+  keyFactors: string[];
+  developmentPoints: string[];
+  supportingFactors: string[];
+  attentionPoints: string[];
+  synthesis: string;
 }
 
 const PLANET_RU: Record<string, string> = {
@@ -92,13 +99,15 @@ const TOPIC_CONFIG: Array<{
   id: LifeTopicInsight['id'];
   title: string;
   houses: number[];
+  primaryHouses: number[];
   directions: Record<string, string>;
   actions: string[];
 }> = [
   {
     id: 'talents',
     title: 'Таланты, обучение и творчество',
-    houses: [3, 5, 9],
+    houses: [1, 3, 5, 9, 10],
+    primaryHouses: [3, 5, 9],
     directions: {
       Mercury: 'аналитика, IT, тестирование, программирование, работа с данными и обучение',
       Venus: 'музыка, рисунок, визуальный дизайн, эстетика и творческие ремёсла',
@@ -115,7 +124,8 @@ const TOPIC_CONFIG: Array<{
   {
     id: 'money',
     title: 'Деньги и источники дохода',
-    houses: [2, 10, 11],
+    houses: [2, 5, 9, 10, 11],
+    primaryHouses: [2, 11],
     directions: {
       Mercury: 'интеллектуальные услуги, IT, аналитика, тестирование, документация и работа с данными',
       Venus: 'дизайн, визуальные продукты, красота, искусство и сервис',
@@ -132,7 +142,8 @@ const TOPIC_CONFIG: Array<{
   {
     id: 'career',
     title: 'Профессия и карьера',
-    houses: [6, 10, 11],
+    houses: [2, 6, 10, 11],
+    primaryHouses: [6, 10],
     directions: {
       Mercury: 'QA, аналитика, разработка, системный анализ и коммуникация между командами',
       Saturn: 'процессы, надёжность, тестирование, управление качеством и сложные долгие проекты',
@@ -149,7 +160,8 @@ const TOPIC_CONFIG: Array<{
   {
     id: 'children',
     title: 'Дети и родительство',
-    houses: [5],
+    houses: [2, 5, 9, 11],
+    primaryHouses: [5],
     directions: {
       Jupiter: 'традиционно рассматривается как один из сигнификаторов детей, заботы, наставничества и передачи знаний',
       Moon: 'символически связан с заботой, эмоциональной включённостью и повседневным уходом',
@@ -164,9 +176,64 @@ const TOPIC_CONFIG: Array<{
     actions: ['Обсудите с партнёром практическую готовность, поддержку и распределение ответственности.', 'Медицинские вопросы фертильности, сроков зачатия и беременности решайте с врачом; карта не определяет число детей или дату беременности.'],
   },
   {
+    id: 'home_family',
+    title: 'Дом, семья и личная опора',
+    houses: [2, 4, 12],
+    primaryHouses: [4],
+    directions: {
+      Moon: 'эмоциональная атмосфера дома, забота, семейные ритмы и чувство безопасности',
+      Venus: 'создание комфортной среды, эстетика пространства и согласование бытовых потребностей',
+      Saturn: 'ответственность за дом, долгосрочные обязательства, структура и устойчивые семейные правила',
+      Mars: 'инициатива в решении бытовых вопросов, ремонт, защита границ и распределение нагрузки',
+      Mercury: 'семейные договорённости, обучение, общение и организация повседневных дел',
+      Jupiter: 'семейные ценности, поддержка, обучение и передача знаний между поколениями',
+      Sun: 'роль и ответственность внутри семьи, самостоятельность и личные границы',
+      Rahu: 'нестандартный формат дома или семейного уклада, адаптация к переменам',
+      Ketu: 'потребность в личном пространстве и осознанное отношение к семейным ожиданиям',
+    },
+    actions: ['Обсуждайте бытовую нагрузку и ожидания заранее, распределяя ответственность конкретно.', 'Отслеживайте, какие условия дома действительно помогают восстанавливаться и чувствовать опору.'],
+  },
+  {
+    id: 'wellbeing',
+    title: 'Повседневный ритм, нагрузка и восстановление',
+    houses: [1, 6, 8, 12],
+    primaryHouses: [1, 6],
+    directions: {
+      Moon: 'режим отдыха, эмоциональная регуляция и внимательность к повседневным потребностям',
+      Mars: 'физическая активность, управление нагрузкой и конструктивное расходование энергии',
+      Mercury: 'информационная гигиена, планирование, переключение задач и умственная нагрузка',
+      Jupiter: 'обучение полезным привычкам, наставничество и расширение способов заботы о себе',
+      Venus: 'удовольствие, баланс нагрузки и восстановления, комфортная среда',
+      Saturn: 'регулярность, дисциплина, долгосрочные привычки и устойчивый распорядок',
+      Sun: 'осознанное распределение энергии, самостоятельность и ответственность за режим',
+      Rahu: 'нестандартные режимы и цифровые привычки, требующие осознанного контроля',
+      Ketu: 'уединение, снижение лишних стимулов и периоды глубокой концентрации',
+    },
+    actions: ['Сопоставляйте нагрузку и восстановление по фактическому самочувствию, а не по символическим трактовкам.', 'При симптомах или медицинских вопросах ориентируйтесь на врача: натальная карта не диагностирует заболевания и не оценивает прогноз здоровья.'],
+  },
+  {
+    id: 'inner_growth',
+    title: 'Мировоззрение, смысл и внутреннее развитие',
+    houses: [9, 12, 5],
+    primaryHouses: [9],
+    directions: {
+      Jupiter: 'философия, обучение, наставничество и формирование системы ценностей',
+      Ketu: 'созерцание, исследование, углублённая специализация и пересмотр привязанностей',
+      Rahu: 'знакомство с новыми культурами, нетипичными знаниями и альтернативными подходами',
+      Mercury: 'чтение, анализ идей, языки и систематизация знаний',
+      Moon: 'личные смыслы, эмоциональная связь с традициями и потребность в тишине',
+      Sun: 'самостоятельная позиция, личные принципы и осознанный выбор направления',
+      Saturn: 'последовательная практика, дисциплина и проверка убеждений временем',
+      Venus: 'искусство, эстетический опыт, отношения и ценности как источник смысла',
+      Mars: 'практическое воплощение убеждений, смелость менять подход и отстаивать принципы',
+    },
+    actions: ['Выберите одну область знаний или практику и оценивайте её по тому, как она меняет реальные решения и поведение.', 'Сравнивайте разные источники и традиции, не принимая одну трактовку за единственно возможную.'],
+  },
+  {
     id: 'relationships',
     title: 'Отношения и партнёрство',
-    houses: [7],
+    houses: [2, 5, 7, 8, 12],
+    primaryHouses: [7],
     actions: ['Обсуждайте ожидания, личные границы и распределение ответственности до возникновения конфликта.', 'Регулярно сверяйте общие цели и способы поддержки друг друга.'],
     directions: {
       Venus: 'близость, гармония, эстетика и способы проявления привязанности',
@@ -267,66 +334,328 @@ function getTopicPlanetNames(chart: NatalChart, houses: number[]): string[] {
       if (getPlanetHouseForChart(chart, name) === houseNumber) names.add(name);
     }
   }
+  const relatedHouses = new Set(houses);
+  for (const houseNumber of houses) {
+    const houseLord = chart.houses?.find((item) => item.house === houseNumber)?.lord;
+    if (houseLord) {
+      const lordHouse = getPlanetHouseForChart(chart, houseLord);
+      if (lordHouse) relatedHouses.add(lordHouse);
+    }
+  }
+  for (const aspect of getGrahaDrishti(chart).filter((item) => relatedHouses.has(item.targetHouse))) {
+    const sourceKey = Object.keys(PLANET_RU).find((name) => PLANET_RU[name] === aspect.source);
+    if (sourceKey) names.add(sourceKey);
+  }
   return [...names];
 }
+
 
 function getTopicEvidence(chart: NatalChart, houses: number[]): string[] {
   return houses.map((houseNumber) => {
     const house = chart.houses?.find((item) => item.house === houseNumber);
-    if (!house) return `${houseNumber}-й дом: данные недоступны`;
+    if (!house) return String(houseNumber) + '-й дом: данные недоступны';
     const occupants = Object.keys(chart.planets).filter((name) => getPlanetHouseForChart(chart, name) === houseNumber);
     const lordHouse = getPlanetHouseForChart(chart, house.lord);
+    const lord = chart.planets[house.lord as keyof NatalChart['planets']];
     const condition = evaluatePlanetCondition(chart, house.lord);
     const aspects = describeHouseDrishti(chart, houseNumber);
-    return `${houseNumber}-й дом (${SIGN_RU[house.signName] ?? house.signName}): управитель ${PLANET_RU[house.lord] ?? house.lord}${lordHouse ? ` расположен в ${lordHouse}-м доме` : ''}${condition ? `, достоинство — ${condition.label} (${condition.score}/100)` : ''}; планеты в доме: ${occupants.length ? occupants.map((name) => PLANET_RU[name] ?? name).join(', ') : 'нет'}. ${aspects.length ? aspects.join(' ') : 'Граха-дришти на дом не обнаружена.'}`;
+    const lordAspects = lordHouse ? describeHouseDrishti(chart, lordHouse) : [];
+    const dispositor = lord ? chart.houses?.find((item) => item.sign === lord.sign)?.lord : undefined;
+    const dispositorHouse = dispositor ? getPlanetHouseForChart(chart, dispositor) : null;
+    const dispositorCondition = dispositor ? evaluatePlanetCondition(chart, dispositor) : null;
+    const sign = SIGN_RU[house.signName] ?? house.signName;
+    const parts = [
+      String(houseNumber) + '-й дом в знаке ' + sign + ' управляется ' + (PLANET_RU[house.lord] ?? house.lord),
+      lordHouse ? 'управитель находится в ' + lordHouse + '-м доме (' + getLordHouseMeaning(lordHouse) + ')' : 'положение управителя не определено',
+      condition ? 'достоинство управителя: ' + condition.label : '',
+      occupants.length ? 'в доме расположены ' + occupants.map((name) => PLANET_RU[name] ?? name).join(', ') : 'планет в доме нет',
+      aspects.length ? 'дом получает влияния: ' + aspects.join(' ') : 'прямые граха-дришти на дом не обнаружены',
+      lordAspects.length ? 'положение управителя дополнительно аспектируют: ' + lordAspects.join(' ') : '',
+      dispositor ? 'диспозитор управителя — ' + (PLANET_RU[dispositor] ?? dispositor) +
+        (dispositorHouse ? ', расположен в ' + dispositorHouse + '-м доме' : '') +
+        (dispositorCondition ? ', достоинство: ' + dispositorCondition.label : '') : '',
+    ];
+    return parts.filter(Boolean).join('; ') + '.';
   });
 }
 
+const TOPIC_DESTINATION_MEANINGS: Partial<Record<LifeTopicInsight['id'], Record<number, string>>> = {
+  money: {
+    1: 'личная инициатива, самостоятельная деятельность и персональная репутация могут становиться частью финансовой стратегии',
+    3: 'доходы могут быть связаны с коммуникацией, обучением навыкам, продажами, контентом и собственными проектами',
+    6: 'заработок может быть связан с регулярной работой, сервисом, решением проблем и выстроенными процессами',
+    7: 'финансовые возможности могут приходить через клиентов, договоры, партнёрства и совместные проекты',
+    9: 'обучение, преподавание, консультирование, международные контакты и экспертность могут влиять на финансовые решения и источники дохода',
+    10: 'профессиональная роль, ответственность и карьерная реализация непосредственно связаны с темой заработка',
+    11: 'профессиональные сообщества, аудитория, рекомендации и долгосрочные цели могут влиять на рост дохода',
+    12: 'удалённая работа, международные организации, закрытые структуры и расходы на восстановление требуют отдельного внимания в финансовом планировании',
+  },
+  career: {
+    3: 'коммуникация, документация, обучение и самостоятельные инициативы могут быть важной частью профессиональной реализации',
+    6: 'карьера тесно связана с повседневными задачами, сервисом, устранением проблем, качеством и рабочими процессами',
+    7: 'клиенты, партнёры, переговоры и договорные отношения могут определять формат профессиональной деятельности',
+    9: 'экспертность, высшее обучение, преподавание и международный контекст могут влиять на карьерный путь',
+    11: 'профессиональные сообщества, команды, аудитория и рекомендации могут поддерживать развитие и результаты работы',
+    12: 'удалённый формат, международные или крупные закрытые организации, исследовательская и закулисная работа могут стать заметным контекстом профессии',
+  },
+  talents: {
+    3: 'навыки раскрываются через практику, коммуникацию, повторение и самостоятельные проекты',
+    5: 'интеллектуальные и творческие способности могут проявляться через авторские идеи, обучение, творчество и работу с детьми',
+    6: 'таланты получают практическое применение через регулярные задачи, сервис, диагностику ошибок и улучшение процессов',
+    9: 'обучение, преподавание, наставничество и изучение разных систем знаний могут становиться каналом развития способностей',
+    10: 'способности могут получать профессиональное применение и становиться частью видимой экспертной роли',
+    11: 'сообщества, совместные проекты и профессиональная аудитория могут помогать развивать и показывать навыки',
+  },
+  children: {
+    2: 'тема детей может быть связана с семейными ценностями, ресурсами и обсуждением финансовой ответственности',
+    4: 'домашняя атмосфера, эмоциональная опора и условия проживания становятся важным контекстом темы родительства',
+    9: 'воспитание, обучение, мировоззрение и передача ценностей могут занимать заметное место в родительском опыте',
+    11: 'долгосрочные семейные планы, социальная поддержка и круг общения могут быть связаны с темой детей',
+    12: 'уединение, приватность, восстановление и необходимость личного пространства могут быть важными условиями семейной жизни',
+  },
+  relationships: {
+    2: 'общие ценности, семейные установки, речь и договорённости о личных и совместных финансах становятся важной частью партнёрства',
+    4: 'совместный быт, место проживания и эмоциональная безопасность могут быть центральными темами отношений',
+    5: 'романтика, творчество, удовольствие и общие увлечения могут заметно влиять на динамику пары',
+    8: 'доверие, уязвимость, общие ресурсы и способность проходить перемены вместе требуют особого внимания',
+    9: 'общие убеждения, образование, культурные различия и жизненные ориентиры могут сближать или требовать согласования',
+    10: 'карьерные цели, публичная роль и распределение ответственности вне дома могут влиять на баланс пары',
+    11: 'дружеский круг, сообщества и общие долгосрочные планы могут поддерживать отношения',
+    12: 'личное пространство, приватность, расстояние или международный контекст могут становиться значимой темой отношений',
+  },
+  home_family: {
+    2: 'семейная опора тесно связана с бюджетом, накоплениями, общими ценностями и тем, как в семье принято разговаривать о ресурсах',
+    6: 'домашняя атмосфера зависит от распределения повседневных обязанностей, режима и баланса работы с бытом',
+    10: 'карьерные обязанности и общественная роль могут заметно влиять на устройство дома и семейное время',
+    11: 'друзья, родственники, сообщества и внешняя поддержка могут участвовать в создании чувства семейной опоры',
+    12: 'приватность, уединение, переезды или жизнь вдали от привычного окружения могут быть важной темой дома',
+  },
+  wellbeing: {
+    1: 'самоощущение и личный способ действовать связаны с тем, как человек организует нагрузку и заботу о себе',
+    6: 'повседневные обязанности, рабочая среда и повторяющиеся привычки становятся главным контекстом этой темы',
+    8: 'перемены, кризисные периоды и управление неопределённостью требуют внимания к ресурсам и восстановлению',
+    12: 'сон, отдых, уединение и снижение внешней нагрузки становятся особенно важной частью баланса',
+  },
+  inner_growth: {
+    3: 'самостоятельное обучение, чтение, письмо и исследование через практику поддерживают развитие мировоззрения',
+    5: 'творчество, интеллектуальные интересы и личные проекты становятся способом осмысления ценностей',
+    9: 'высшее обучение, философия, наставники и культурный опыт непосредственно связаны с формированием убеждений',
+    12: 'созерцание, уединение, ретриты и исследование внутренних мотивов могут становиться важным пространством развития',
+  },
+};
+
+function getTopicHouseBridge(topicId: LifeTopicInsight['id'], destinationHouse: number): string | null {
+  return TOPIC_DESTINATION_MEANINGS[topicId]?.[destinationHouse] ?? null;
+}
+
+function getTopicHouseNarrative(chart: NatalChart, topicId: LifeTopicInsight['id'], houseNumber: number): { narrative: string; factor: string; development: string; support: string[]; attention: string[] } | null {
+  const house = chart.houses?.find((item) => item.house === houseNumber);
+  if (!house) return null;
+  const lord = chart.planets[house.lord as keyof NatalChart['planets']];
+  if (!lord) return null;
+
+  const lordHouse = getPlanetHouseForChart(chart, house.lord);
+  const condition = evaluatePlanetCondition(chart, house.lord);
+  const occupants = Object.keys(chart.planets).filter((name) => getPlanetHouseForChart(chart, name) === houseNumber);
+  const sign = SIGN_RU[house.signName] ?? house.signName;
+  const lordName = PLANET_RU[house.lord] ?? house.lord;
+  const occupiedNames = occupants.map((name) => PLANET_RU[name] ?? name);
+  const houseAspects = describeHouseDrishti(chart, houseNumber);
+  const lordAspects = lordHouse ? describeHouseDrishti(chart, lordHouse) : [];
+  const dispositorName = chart.houses?.find((item) => item.sign === lord.sign)?.lord;
+  const dispositor = dispositorName ? chart.planets[dispositorName as keyof NatalChart['planets']] : undefined;
+  const dispositorHouse = dispositorName ? getPlanetHouseForChart(chart, dispositorName) : null;
+  const dispositorCondition = dispositorName ? evaluatePlanetCondition(chart, dispositorName) : null;
+  const lordRoleText = PLANET_THEMES[house.lord]
+    ? 'Функция управителя в этой сфере: ' + PLANET_THEMES[house.lord] + '.'
+    : '';
+  const occupantRoleText = occupants.length
+    ? 'Планеты, непосредственно расположенные в доме, добавляют темы: ' +
+      occupants.map((name) => (PLANET_RU[name] ?? name) + ' — ' + (PLANET_THEMES[name] ?? 'индивидуальная планетная тема')).join('; ') + '.'
+    : '';
+
+  const bridgeMeaning = lordHouse ? getTopicHouseBridge(topicId, lordHouse) : null;
+  const destination = lordHouse
+    ? 'Управитель ' + lordName + ' находится в ' + lordHouse + '-м доме — ' + getLordHouseMeaning(lordHouse) + '. ' +
+      (bridgeMeaning
+        ? 'Для темы «' + (TOPIC_CONFIG.find((item) => item.id === topicId)?.title ?? 'этой сферы') + '» это означает возможную связь: ' + bridgeMeaning + '.'
+        : 'Это связывает рассматриваемую сферу с темами ' + getLordHouseMeaning(lordHouse) + '.')
+    : 'Положение управителя ' + lordName + ' по дому не удалось определить, поэтому вывод о связи сфер ограничен.';
+  const conditionText = condition?.dignity === 'exalted'
+    ? 'В традиционной системе экзальтация считается поддерживающим достоинством: ' + lordName + ' может проявлять свои функции более заметно и уверенно.'
+    : condition?.dignity === 'own'
+      ? 'Собственный знак традиционно связывают с большей самостоятельностью и устойчивостью функций ' + lordName + '.'
+      : condition?.dignity === 'debilitated'
+        ? 'Положение в знаке падения традиционно трактуют как требующее большей осознанности и настройки в темах, за которые отвечает ' + lordName + '; это не означает отсутствие результата.'
+        : condition?.dignity === 'other'
+          ? 'Управитель находится не в собственном, экзальтационном или знаке падения; одной этой характеристики недостаточно, чтобы объявить его сильным или слабым.'
+          : 'Достоинство управителя по используемой схеме не оценивается.';
+  const occupancyText = occupiedNames.length
+    ? 'В самом доме находятся ' + occupiedNames.join(', ') + '; их символические темы непосредственно включаются в трактовку этой сферы.'
+    : 'В доме нет планет, поэтому основной акцент анализа приходится на знак, управителя и его связи, а не на планет, расположенных в доме.';
+  const aspectText = houseAspects.length
+    ? 'Дом получает следующие граха-дришти: ' + houseAspects.join(' ')
+    : 'По используемой классической схеме прямые граха-дришти на этот дом не обнаружены.';
+  const dispositorText = dispositorName
+    ? 'Знак управителя занят диспозитором ' + (PLANET_RU[dispositorName] ?? dispositorName) +
+      (dispositorHouse ? ', который расположен в ' + dispositorHouse + '-м доме (' + getLordHouseMeaning(dispositorHouse) + ')' : '') +
+      '; это дополнительное звено в цепочке интерпретации.'
+    : '';
+  const lordAspectText = lordAspects.length
+    ? ' Сам дом, где расположен управитель, получает аспекты: ' + lordAspects.join(' ')
+    : '';
+  const factor = String(houseNumber) + '-й дом: ' + sign + '; управитель ' + lordName +
+    (lordHouse ? ' в ' + lordHouse + '-м доме' : '') +
+    (condition ? '; ' + condition.label : '') +
+    (occupiedNames.length ? '; планеты: ' + occupiedNames.join(', ') : '; без планет') + '.';
+  const development = condition?.dignity === 'debilitated'
+    ? 'Не делайте выводов по одному показателю: отдельно оценивайте положение диспозитора, аспекты и реальные обстоятельства этой сферы.'
+    : lordHouse
+      ? 'Наблюдайте, как решения в области «' + getLordHouseMeaning(lordHouse) + '» отражаются на теме ' + HOUSE_MEANING[houseNumber] + '.'
+      : 'Для более точной интерпретации нужны надёжные данные о положении управителя.';
+  const support: string[] = [];
+  const attention: string[] = [];
+  if (condition?.dignity === 'exalted' || condition?.dignity === 'own') {
+    support.push(lordName + ' — управитель ' + houseNumber + '-го дома — находится в положении ' + condition.label + '. В традиционной трактовке это поддерживает более устойчивое проявление функций управителя.');
+  }
+  const jupiterHouseAspects = houseAspects.filter((item) => item.startsWith('Юпитер '));
+  if (jupiterHouseAspects.length) {
+    support.push('Дом получает граха-дришти Юпитера: ' + jupiterHouseAspects.join(' ') + ' В традиционной трактовке это рассматривается как поддерживающий фактор, но не отменяет остальные показатели.');
+  }
+  const jupiterLordAspects = lordAspects.filter((item) => item.startsWith('Юпитер '));
+  if (jupiterLordAspects.length) {
+    support.push('Положение управителя получает граха-дришти Юпитера: ' + jupiterLordAspects.join(' ') + ' Это дополнительный поддерживающий фактор в символической трактовке.');
+  }
+  if (dispositorName && dispositorName !== house.lord && dispositor && dispositorCondition && (dispositorCondition.dignity === 'exalted' || dispositorCondition.dignity === 'own')) {
+    support.push('Диспозитор ' + (PLANET_RU[dispositorName] ?? dispositorName) + ' также находится в ' + (dispositorCondition.label) + ', что добавляет ещё одно поддерживающее звено.');
+  }
+  if (condition?.dignity === 'debilitated') {
+    attention.push(lordName + ' находится в знаке падения. В традиционной трактовке это указывает на необходимость внимательнее оценивать диспозитора, аспекты и реальные обстоятельства; само по себе положение не означает неудачу.');
+  }
+  const pressureAspects = houseAspects.filter((item) => item.startsWith('Сатурн ') || item.startsWith('Марс '));
+  if (pressureAspects.length) {
+    attention.push('Дом получает аспекты Марса и/или Сатурна: ' + pressureAspects.join(' ') + ' Это не однозначно негативный знак, но в символической трактовке может добавлять интенсивность, необходимость дисциплины, решительных действий или управления нагрузкой.');
+  }
+  const lordPressureAspects = lordAspects.filter((item) => item.startsWith('Сатурн ') || item.startsWith('Марс '));
+  if (lordPressureAspects.length) {
+    attention.push('Положение управителя дополнительно аспектируют Марс и/или Сатурн: ' + lordPressureAspects.join(' ') + ' Важно учитывать, как эти темы влияют на способы реализации сферы.');
+  }
+  if (!support.length && !attention.length) {
+    attention.push('По используемым здесь критериям нет оснований объявлять эту связь ни особенно поддержанной, ни ослабленной. Нейтральная оценка не означает отсутствия потенциала.');
+  }
+  return {
+    narrative: destination + ' ' + lordRoleText + ' ' + conditionText + ' ' + occupancyText + ' ' + occupantRoleText + ' ' + aspectText + lordAspectText + ' ' + dispositorText,
+    factor,
+    development,
+    support,
+    attention,
+  };
+}
+
 export function analyzeLifeTopics(chart: NatalChart, currentDate: Date = new Date()): LifeTopicInsight[] {
+  if (!chart.houses?.length) return [];
   const moonNakshatra = chart.planets.Moon.nakshatra;
   const dasha = calculateDasha(chart.date, moonNakshatra, currentDate, chart.planets.Moon.siderealLon);
   const antar = getCurrentAntardasha(dasha, currentDate);
   const formatDate = (date: Date) => date.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
-  const periodLabel = `Махадаша ${PLANET_RU[dasha.planet] ?? dasha.planet} действует с ${formatDate(dasha.startDate)} по ${formatDate(dasha.endDate)}${antar ? `; Антардаша ${PLANET_RU[antar.planet] ?? antar.planet} — с ${formatDate(antar.startDate)} по ${formatDate(antar.endDate)}` : ''}.`;
+  const periodLabel = 'Махадаша ' + (PLANET_RU[dasha.planet] ?? dasha.planet) + ' действует с ' +
+    formatDate(dasha.startDate) + ' по ' + formatDate(dasha.endDate) +
+    (antar ? '; Антардаша ' + (PLANET_RU[antar.planet] ?? antar.planet) + ' — с ' +
+      formatDate(antar.startDate) + ' по ' + formatDate(antar.endDate) : '') + '.';
 
   return TOPIC_CONFIG.map((topic) => {
     const planets = getTopicPlanetNames(chart, topic.houses);
-    const directions = [...new Set(planets.map((name) => topic.directions[name]).filter((value): value is string => Boolean(value)))];
+    const directions = [...new Set(planets.map((name) => topic.directions[name] ? (PLANET_RU[name] ?? name) + ': ' + topic.directions[name] : null).filter((value): value is string => Boolean(value)))];
     const evidence = getTopicEvidence(chart, topic.houses);
-    const focus = planets.map((name) => `${PLANET_RU[name] ?? name}: ${PLANET_THEMES[name]}`).join('; ');
+    const houseReadings = topic.houses
+      .map((houseNumber) => getTopicHouseNarrative(chart, topic.id, houseNumber))
+      .filter((item): item is NonNullable<typeof item> => Boolean(item));
+    const keyFactors = houseReadings.map((item) => item.factor);
+    const developmentPoints = houseReadings.map((item) => item.development);
+    const houseInterpretations = houseReadings.map((item) => item.narrative);
+    const supportingFactors = [...new Set(houseReadings.flatMap((item) => item.support))];
+    const attentionPoints = [...new Set(houseReadings.flatMap((item) => item.attention))];
+    const sharedLords = new Map<string, number[]>();
+    for (const houseNumber of topic.houses) {
+      const house = chart.houses?.find((item) => item.house === houseNumber);
+      if (house) sharedLords.set(house.lord, [...(sharedLords.get(house.lord) ?? []), houseNumber]);
+    }
+    const repeatedLordLinks = [...sharedLords.entries()]
+      .filter(([, ruled]) => ruled.length > 1)
+      .map(([lord, ruled]) => (PLANET_RU[lord] ?? lord) + ' управляет сразу несколькими домами этой сферы (' + ruled.join(', ') + '), поэтому их темы в традиционной трактовке объединяются через одну планету.');
+    const synthesis = supportingFactors.length && attentionPoints.length
+      ? 'Смешанная картина: в карте есть поддерживающие показатели и одновременно факторы, требующие внимания. Не следует сводить сферу к одному сильному или сложному положению; итоговая трактовка зависит от сочетания управителей, диспозиторов, аспектов и реальных обстоятельств.'
+      : supportingFactors.length
+        ? 'В выбранных показателях заметны поддерживающие факторы. Это символические ресурсы сферы, а не гарантия результата.'
+        : attentionPoints.length
+          ? 'В выбранных показателях больше факторов, требующих осознанного обращения. Это не приговор и не предсказание неудачи: важно смотреть на компенсирующие связи и практические обстоятельства.'
+          : 'Выбранные показатели не дают однозначного перевеса в сторону поддержки или напряжения. Сфера требует целостного прочтения, а не упрощённой оценки.';
     const mahaConnection = describePeriodConnection(chart, dasha.planet, topic.houses, planets);
     const antarConnection = antar ? describePeriodConnection(chart, antar.planet, topic.houses, planets) : 'Текущая Антардаша не определена в доступных данных.';
-    const periodMeaning = `Связь Махадаши с этой сферой: ${mahaConnection} Связь Антардаши: ${antarConnection}`;
+    const periodMeaning = 'Связь Махадаши с этой сферой: ' + mahaConnection + ' Связь Антардаши: ' + antarConnection;
+    const directionText = directions.length
+      ? 'Планетные сигнификаторы и управители указывают на направления для практического исследования: ' + directions.join('; ') + '.'
+      : 'В этой карте не найдено достаточно прямых планетных указаний, чтобы уверенно перечислять конкретные направления.';
+    const interpretation = [
+      'Основные дома сферы: ' + topic.primaryHouses.join(', ') + '; дополнительные дома-связи: ' + topic.houses.filter((house) => !topic.primaryHouses.includes(house)).join(', ') + '. Основные дома задают предмет разбора, дополнительные показывают связанные области жизни. Важно также, куда попадают управители этих домов.',
+      ...houseInterpretations,
+      directionText,
+      repeatedLordLinks.length ? 'Повторяющаяся связь внутри сферы: ' + repeatedLordLinks.join(' ') : '',
+      synthesis,
+      'Эти связи описывают символические акценты карты, а не гарантированные события, способности или ограничения.',
+    ].join(' ');
+
     const timingNote = topic.id === 'children'
-      ? `${periodLabel} ${periodMeaning} Это символическая трактовка периода, а не прогноз фертильности, даты зачатия или количества детей. Медицинское планирование беременности следует обсуждать с врачом.`
-      : `${periodLabel} ${periodMeaning} Период показывает символический акцент, а не гарантирует событие и не определяет лучший день для финансовой операции.`;
+      ? periodLabel + ' ' + periodMeaning + ' Это символическая трактовка периода, а не прогноз фертильности, даты зачатия или количества детей. Медицинское планирование беременности следует обсуждать с врачом.'
+      : periodLabel + ' ' + periodMeaning + ' Период показывает символический акцент, а не гарантирует событие и не определяет лучший день для финансовой операции.';
 
     return {
       id: topic.id,
       title: topic.title,
       houses: topic.houses,
-      interpretation: `В анализ включены дома ${topic.houses.join(', ')}. В их управителях и планетах встречаются темы: ${focus || 'недостаточно планетных указаний для конкретизации'}. Рассматривай перечисленные направления как гипотезы для практической проверки, а не как предопределённый выбор.`,
+      primaryHouses: topic.primaryHouses,
+      supportingHouses: topic.houses.filter((house) => !topic.primaryHouses.includes(house)),
+      interpretation,
       directions,
       actions: topic.actions,
       evidence,
       timingNote,
+      keyFactors,
+      developmentPoints,
+      supportingFactors,
+      attentionPoints,
+      synthesis,
     };
   });
 }
-export function getVargaEvidence(chart: NatalChart, division: 7 | 10): string[] {
+export function getVargaEvidence(chart: NatalChart, division: 2 | 7 | 9 | 10 | 24): string[] {
+  const definitions = {
+    2: { name: 'D2 — Хора', sanskrit: 'Hora', area: 'Ресурсы и материальная устойчивость', relevant: ['Sun', 'Jupiter', 'Venus'] },
+    7: { name: 'D7 — Саптамша', sanskrit: 'Saptamsha', area: 'Дети и продолжение рода', relevant: ['Jupiter', 'Moon', 'Venus'] },
+    9: { name: 'D9 — Навамша', sanskrit: 'Navamsha', area: 'Партнёрство, ценности и дхарма', relevant: ['Venus', 'Jupiter', 'Saturn', 'Moon'] },
+    10: { name: 'D10 — Дашамша', sanskrit: 'Dashamsha', area: 'Профессия и реализация', relevant: ['Sun', 'Mercury', 'Saturn', 'Mars'] },
+    24: { name: 'D24 — Сиддхамша', sanskrit: 'Siddhamsha', area: 'Обучение и знания', relevant: ['Mercury', 'Jupiter', 'Sun'] },
+  } as const;
+  const definition = definitions[division];
   const varga = calculateDivisionalChart(
     Object.fromEntries(Object.entries(chart.planets).map(([name, position]) => [name, position.siderealLon])),
     chart.ascendant.siderealLon,
     division,
-    division === 7 ? 'D7 — Саптамша' : 'D10 — Дашамша',
-    division === 7 ? 'Saptamsha' : 'Dashamsha',
-    division === 7 ? 'Дети и творчество' : 'Профессия',
+    definition.name,
+    definition.sanskrit,
+    definition.area,
   );
-  const relevant = division === 7 ? ['Jupiter', 'Moon', 'Venus'] : ['Sun', 'Mercury', 'Saturn', 'Mars'];
-  return relevant
-    .filter((name) => Boolean(varga.planets[name]))
-    .map((name) => {
-      const planet = varga.planets[name];
-      return `${PLANET_RU[name] ?? name} в D${division}: ${SIGN_RU[planet.signName] ?? planet.signName}, ${planet.house}-й дом.`;
-    });
+  const ascendantSign = SIGN_RU[varga.ascendant.signName] ?? varga.ascendant.signName;
+  const evidence = [
+    `Лагна D${division}: ${ascendantSign}; дробная карта рассчитана по отдельному правилу для этой варги.`,
+    ...definition.relevant
+      .filter((name) => Boolean(varga.planets[name]) && Boolean(chart.planets[name as keyof NatalChart['planets']]))
+      .map((name) => {
+        const planet = varga.planets[name];
+        const natalPlanet = chart.planets[name as keyof NatalChart['planets']];
+        const natalHouse = getPlanetHouseForChart(chart, name);
+        return `${PLANET_RU[name] ?? name} в D${division}: ${SIGN_RU[planet.signName] ?? planet.signName}, ${planet.house}-й дом; в D1 — ${SIGN_RU[natalPlanet.signName] ?? natalPlanet.signName}, ${natalHouse ? natalHouse + '-й дом' : 'дом не определён'}.`;
+      }),
+  ];
+  return evidence;
 }

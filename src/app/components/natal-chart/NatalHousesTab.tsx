@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
-  AlertCircle, CheckCircle, ChevronDown, ChevronUp, Home, Lightbulb,
+  Activity, AlertCircle, CheckCircle, ChevronDown, ChevronUp, Compass, Home, Lightbulb,
   Sparkles, Target, Wallet, BriefcaseBusiness, Baby, Palette, HeartHandshake,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -12,6 +12,7 @@ import {
   type LifeTopicInsight,
 } from '../../utils/personalizedHouseAnalysis';
 import { HOUSES_DETAILED } from '../../utils/housesDescriptions';
+import { analyzeHouseLords, type HouseLordInsight } from '../../utils/natalHouseLordAnalysis';
 import { GlassCard } from '../common/GlassCard';
 
 interface NatalHousesTabProps {
@@ -24,6 +25,9 @@ const TOPIC_ICONS: Record<LifeTopicInsight['id'], LucideIcon> = {
   career: BriefcaseBusiness,
   children: Baby,
   relationships: HeartHandshake,
+  home_family: Home,
+  wellbeing: Activity,
+  inner_growth: Compass,
 };
 
 function EvidenceList({ items }: { items: string[] }) {
@@ -38,11 +42,20 @@ function EvidenceList({ items }: { items: string[] }) {
 
 function TopicCard({ topic, natalChart }: { topic: LifeTopicInsight; natalChart: NatalChartType }) {
   const Icon = TOPIC_ICONS[topic.id];
-  const vargaEvidence = topic.id === 'children'
-    ? getVargaEvidence(natalChart, 7)
-    : topic.id === 'career'
-      ? getVargaEvidence(natalChart, 10)
-      : [];
+  const vargaDivision = topic.id === 'money'
+    ? 2
+    : topic.id === 'talents'
+      ? 24
+      : topic.id === 'children'
+        ? 7
+        : topic.id === 'relationships' || topic.id === 'inner_growth'
+          ? 9
+          : topic.id === 'career'
+            ? 10
+            : null;
+  const vargaEvidence = vargaDivision
+    ? getVargaEvidence(natalChart, vargaDivision)
+    : [];
 
   return (
     <GlassCard>
@@ -53,11 +66,46 @@ function TopicCard({ topic, natalChart }: { topic: LifeTopicInsight; natalChart:
           </div>
           <div>
             <h3 className="font-bold text-gray-900">{topic.title}</h3>
-            <p className="text-xs text-gray-500">Анализ домов {topic.houses.join(', ')}</p>
+            <p className="text-xs text-gray-500">Основные дома: {topic.primaryHouses.join(', ')} · Дополнительные связи: {topic.supportingHouses.length ? topic.supportingHouses.join(', ') : 'нет'}</p>
           </div>
         </div>
 
         <p className="text-sm leading-relaxed text-gray-800">{topic.interpretation}</p>
+
+        {topic.keyFactors.length > 0 && (
+          <div className="rounded-lg border border-purple-200 bg-purple-50 p-4">
+            <h4 className="mb-2 text-sm font-semibold text-purple-900">Ключевые показатели именно этой карты</h4>
+            <EvidenceList items={topic.keyFactors} />
+          </div>
+        )}
+
+        <p className="text-xs leading-relaxed text-gray-500">
+          Основные дома задают предмет анализа; дополнительные дома показывают связанные темы и не имеют автоматически равного веса. Поддержка оценивается здесь по достоинству управителей и их диспозиторов, а не по полной Shadbala.
+        </p>
+
+        <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+          <h4 className="mb-2 text-sm font-semibold text-green-900">Что поддерживает эту сферу</h4>
+          {topic.supportingFactors.length > 0
+            ? <EvidenceList items={topic.supportingFactors} />
+            : <p className="text-xs leading-relaxed text-gray-600">По выбранным критериям выраженных поддерживающих достоинств управителей не обнаружено. Это не означает отсутствия возможностей.</p>}
+        </div>
+
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <h4 className="mb-2 text-sm font-semibold text-amber-900">Факторы, требующие внимания</h4>
+          <EvidenceList items={topic.attentionPoints} />
+        </div>
+
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+          <h4 className="mb-2 text-sm font-semibold text-gray-900">Общий вывод по сфере</h4>
+          <p className="text-sm leading-relaxed text-gray-700">{topic.synthesis}</p>
+        </div>
+
+        {topic.developmentPoints.length > 0 && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+            <h4 className="mb-2 text-sm font-semibold text-amber-900">Как читать эти связи на практике</h4>
+            <EvidenceList items={topic.developmentPoints} />
+          </div>
+        )}
 
         {topic.directions.length > 0 && (
           <div>
@@ -87,7 +135,7 @@ function TopicCard({ topic, natalChart }: { topic: LifeTopicInsight; natalChart:
         {vargaEvidence.length > 0 && (
           <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4">
             <h4 className="mb-2 text-sm font-semibold text-indigo-900">
-              Дополнительная карта {topic.id === 'children' ? 'D7 — Саптамша' : 'D10 — Дашамша'}
+              Дополнительная карта {vargaDivision === 2 ? 'D2 — Хора' : vargaDivision === 7 ? 'D7 — Саптамша' : vargaDivision === 9 ? 'D9 — Навамша' : vargaDivision === 10 ? 'D10 — Дашамша' : 'D24 — Сиддхамша'}
             </h4>
             <EvidenceList items={vargaEvidence} />
             <p className="mt-2 text-xs text-gray-600">
@@ -112,10 +160,112 @@ function TopicCard({ topic, natalChart }: { topic: LifeTopicInsight; natalChart:
   );
 }
 
+
+function HouseLordCard({ insight }: { insight: HouseLordInsight }) {
+  return (
+    <GlassCard>
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-purple-100 pb-3">
+          <div>
+            <h4 className="font-bold text-gray-900">{insight.house}-й дом · управитель {insight.lord}</h4>
+            <p className="text-xs text-gray-500">{insight.houseSign} · {insight.houseTheme}</p>
+          </div>
+          <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-800">
+            {insight.lordHouse ? `${insight.lordHouse}-й дом` : 'положение неизвестно'}
+          </span>
+        </div>
+
+        <p className="text-sm leading-relaxed text-gray-800">{insight.interpretation}</p>
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+            <h5 className="mb-2 text-sm font-semibold text-gray-900">Положение и достоинство</h5>
+            <p className="text-xs leading-relaxed text-gray-700">
+              {insight.lordSign ?? 'Знак не определён'} · {insight.dignity}. {insight.dignityExplanation}
+            </p>
+            <p className="mt-2 text-xs text-gray-600">
+              Управляемые дома: {insight.ruledHouses.length ? insight.ruledHouses.join(', ') : 'не определены'}
+            </p>
+            {insight.lordNakshatra && (
+              <p className="mt-1 text-xs text-gray-600">Накшатра: {insight.lordNakshatra}</p>
+            )}
+          </div>
+
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+            <h5 className="mb-2 text-sm font-semibold text-gray-900">Цепочка диспозиторов</h5>
+            {insight.dispositorChain.length ? (
+              <ol className="space-y-1.5">
+                {insight.dispositorChain.map((step) => (
+                  <li key={step.planetKey + step.depth} className="text-xs leading-relaxed text-gray-700">
+                    <span className="font-semibold">{step.depth === 0 ? 'Управитель' : `Шаг ${step.depth}`}: {step.planet}</span>
+                    {' — '}{step.sign}, {step.house ? `${step.house}-й дом` : 'дом не определён'}; управляет: {step.ruledHouses.join(', ') || 'нет данных'}; {step.dignity}
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="text-xs text-gray-600">Цепочку построить нельзя: положение управителя отсутствует.</p>
+            )}
+            {insight.chainCycleDetected && (
+              <p className="mt-2 text-xs font-medium text-amber-700">Обнаружен цикл: обход остановлен на повторе планеты.</p>
+            )}
+            {insight.chainMissingPlanet && (
+              <p className="mt-2 text-xs text-amber-700">Нет данных планеты {insight.chainMissingPlanet}.</p>
+            )}
+          </div>
+        </div>
+
+        {insight.repeatedRulership && (
+          <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-3">
+            <h5 className="mb-1 text-sm font-semibold text-indigo-900">Повторяющаяся связь домов</h5>
+            <p className="text-xs leading-relaxed text-gray-700">{insight.repeatedRulership}</p>
+          </div>
+        )}
+
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+          <h5 className="mb-1 text-sm font-semibold text-blue-900">Сводная оценка сочетания факторов</h5>
+          <p className="text-xs leading-relaxed text-gray-700">{insight.overallSynthesis}</p>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="rounded-lg border border-green-200 bg-green-50 p-3">
+            <h5 className="mb-2 text-sm font-semibold text-green-900">Поддерживающие факторы</h5>
+            <EvidenceList items={insight.supportingFactors} />
+          </div>
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <h5 className="mb-2 text-sm font-semibold text-amber-900">Факторы внимания</h5>
+            <EvidenceList items={insight.attentionFactors} />
+          </div>
+        </div>
+
+        <details className="rounded-lg border border-gray-200 bg-white p-3">
+          <summary className="cursor-pointer text-sm font-semibold text-gray-800">Аспекты, соединения и исходные доказательства</summary>
+          <div className="mt-3 space-y-3">
+            <div>
+              <h5 className="mb-1 text-xs font-semibold text-gray-800">Аспекты на положение управителя</h5>
+              <EvidenceList items={insight.incomingAspects.map((item) => `${item.source} из ${item.sourceHouse}-го дома: ${item.kind}`)} />
+            </div>
+            <div>
+              <h5 className="mb-1 text-xs font-semibold text-gray-800">Аспекты самого управителя</h5>
+              <EvidenceList items={insight.outgoingAspects.map((item) => `${item.kind} на ${item.targetHouse}-й дом`)} />
+            </div>
+            <div>
+              <h5 className="mb-1 text-xs font-semibold text-gray-800">Соединения по знаку</h5>
+              <EvidenceList items={insight.conjunctions.length ? insight.conjunctions : ['Других планет в том же знаке нет.']} />
+              <p className="mt-1 text-xs text-gray-500">Соединение определяется по общему знаку; точный градусный орбис здесь не рассчитывается.</p>
+            </div>
+            <EvidenceList items={insight.evidence} />
+          </div>
+        </details>
+      </div>
+    </GlassCard>
+  );
+}
+
 export function NatalHousesTab({ natalChart }: NatalHousesTabProps) {
   const [expandedHouse, setExpandedHouse] = useState<number | null>(1);
   const personalizedHouses = useMemo(() => analyzePersonalizedHouses(natalChart), [natalChart]);
   const lifeTopics = useMemo(() => analyzeLifeTopics(natalChart), [natalChart]);
+  const houseLordInsights = useMemo(() => analyzeHouseLords(natalChart), [natalChart]);
 
   return (
     <div className="space-y-6">
@@ -145,6 +295,22 @@ export function NatalHousesTab({ natalChart }: NatalHousesTabProps) {
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
           {lifeTopics.map((topic) => (
             <TopicCard key={topic.id} topic={topic} natalChart={natalChart} />
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <h3 className="text-xl font-bold text-gray-900">Управители домов — углублённый анализ</h3>
+          <p className="text-sm text-gray-600">
+            Для каждого дома показаны положение и достоинство управителя, управляемые им дома,
+            цепочка диспозиторов, аспекты, соединения и повторяющиеся связи. Цепочка ограничена
+            тремя переходами и останавливается при обнаружении цикла.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          {houseLordInsights.map((insight) => (
+            <HouseLordCard key={insight.house} insight={insight} />
           ))}
         </div>
       </section>

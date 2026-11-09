@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { analyzeLifeTopics, analyzePersonalizedHouses, getVargaEvidence } from './personalizedHouseAnalysis';
 import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition, getGrahaDrishti, getPlanetToPlanetAspects } from './natalStrengthAnalysis';
 import { getSunHouseFocus } from './natalAnalysisGuidance';
-import { getAscendantLordFocus, getCoreChartSynthesis, getMoonHouseFocus } from './natalPersonalFocus';
+import { getAscendantLordFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus } from './natalPersonalFocus';
+import { analyzeHouseLords } from './natalHouseLordAnalysis';
 import type { NatalChart, PlanetPosition } from './astrology';
 
 function position(name: string, longitude: number, signName: string, nakshatraName: string) {
@@ -65,6 +66,17 @@ const moonFocus = getMoonHouseFocus(chart, 3);
 assert.ok(moonFocus.includes('3-м доме'));
 assert.ok(moonFocus.includes('Mrigashira'));
 assert.ok(moonFocus.includes('Аспекты'));
+const moonDispositorSynthesis = getCoreChartSynthesis(chart);
+assert.ok(moonDispositorSynthesis.includes('Диспозитор знака — Меркурий'));
+assert.ok(moonDispositorSynthesis.includes('расположен в 6-м доме и управляет домами 3, 6'));
+assert.ok(moonDispositorSynthesis.includes('достоинство — экзальтация'));
+assert.ok(moonDispositorSynthesis.includes('Диспозитор знака — сама планета: она находится в собственном знаке.'));
+const chartWithoutMercury = {
+  ...chart,
+  planets: Object.fromEntries(Object.entries(chart.planets).filter(([name]) => name !== 'Mercury')),
+} as unknown as NatalChart;
+assert.ok(getCoreChartSynthesis(chartWithoutMercury).includes('Диспозитор знака — Меркурий, но его положение в карте не найдено.'));
+
 const synthesis = getCoreChartSynthesis(chart);
 assert.ok(synthesis.includes('Базовый способ действовать'));
 assert.ok(synthesis.includes('Вектор воли и самореализации'));
@@ -84,8 +96,68 @@ const marsAspectsSunChart = {
 } as NatalChart;
 const directLinks = getPlanetToPlanetAspects(marsAspectsSunChart, ['Mars', 'Sun', 'Moon']);
 assert.ok(directLinks.some((item) => item.source === 'Марс' && item.target === 'Солнце' && item.kind === 'graha-drishti' && item.offset === 7));
+assert.ok(directLinks.some((item) => item.sourceKey === 'Mars' && item.targetKey === 'Sun'));
+assert.ok(getCoreChartSynthesis(marsAspectsSunChart).includes('воля и самореализация'));
+assert.ok(getCoreChartSynthesis(marsAspectsSunChart).includes('направлять намерения в конкретные действия'));
 const directSynthesis = getCoreChartSynthesis(marsAspectsSunChart);
 assert.ok(directSynthesis.includes('Марс из 1-го дома аспектирует Солнце'));
+const areaInteractions = getCoreInteractionsByLifeArea(marsAspectsSunChart);
+const structuredCareerLink = areaInteractions.flatMap((area) => area.links).find((link) =>
+  link.sourceKey === 'Mars' && link.targetKey === 'Sun' && link.kind === 'graha-drishti' && link.offset === 7,
+);
+assert.ok(structuredCareerLink);
+assert.equal(structuredCareerLink?.id, 'Mars:Sun:graha-drishti:7');
+assert.ok(structuredCareerLink?.evidence.length);
+assert.equal(new Set(structuredCareerLink?.evidence.map((item) => item.id)).size, structuredCareerLink?.evidence.length);
+assert.ok(structuredCareerLink?.evidence.every((item) => item.chainDepth >= 0 && item.chainDepth <= 3));
+assert.equal(structuredCareerLink?.sourceHouse, 1);
+assert.equal(structuredCareerLink?.targetHouse, 7);
+assert.ok(areaInteractions.some((area) => area.id === 'relationships'));
+assert.ok(areaInteractions.find((area) => area.id === 'relationships')?.connections.some((line) => line.includes('Солнце расположен в 7-м доме')));
+assert.ok(!areaInteractions.some((area) => area.id === 'career'));
+assert.ok(areaInteractions.find((area) => area.id === 'money')?.connections.some((line) => line.includes('Марс управляет 8-м домом')));
+const lifeAreaBridges = getCoreLifeAreaBridges(marsAspectsSunChart);
+assert.equal(lifeAreaBridges.length, 1);
+assert.equal(lifeAreaBridges[0].id, 'Mars:Sun:graha-drishti:7');
+// The fixture links Mars (1st/8th-house lord) and Sun (5th-house lord in the 7th):
+// their direct placements/rulerships and bounded dispositors support these four areas.
+assert.deepEqual(lifeAreaBridges[0].evidenceByArea.map((item) => item.areaId), ['relationships', 'money', 'talents', 'home']);
+assert.ok(lifeAreaBridges[0].evidenceByArea.every((item) => item.evidence.length > 0));
+assert.deepEqual(lifeAreaBridges[0].areas, ['Отношения и партнёрство', 'Деньги и ресурсы', 'Обучение и таланты', 'Дом и эмоциональная опора'].filter((title) =>
+  areaInteractions.some((area) => area.title === title && area.connections.some((line) => line.startsWith(lifeAreaBridges[0].connection))),
+));
+assert.ok(lifeAreaBridges[0].explanation.includes('не означает'));
+const dispositorAreaChart = {
+  ...marsAspectsSunChart,
+  planets: {
+    ...marsAspectsSunChart.planets,
+    Venus: position('Venus', 275, 'Capricorn', 'Uttara Ashadha'),
+  },
+} as NatalChart;
+const dispositorAreaInteractions = getCoreInteractionsByLifeArea(dispositorAreaChart);
+assert.ok(dispositorAreaInteractions.find((area) => area.id === 'career')?.connections.some((line) =>
+  line.includes('Венера — диспозитор Солнце; расположен в 10-м доме этой сферы'),
+));
+assert.ok(dispositorAreaInteractions.find((area) => area.id === 'career')?.connections.some((line) =>
+  line.includes('Сатурн — диспозитор Венера; расположен в 11-м доме этой сферы'),
+));
+const structuredDispositorLinks = dispositorAreaInteractions.find((area) => area.id === 'career')?.links ?? [];
+assert.ok(structuredDispositorLinks.some((link) => link.evidence.some((item) =>
+  item.type === 'dispositor-placement' && item.planetKey === 'Venus' &&
+  item.dispositedPlanetKey === 'Sun' && item.house === 10 && item.chainDepth === 1,
+)));
+assert.ok(structuredDispositorLinks.some((link) => link.evidence.some((item) =>
+  item.type === 'dispositor-placement' && item.planetKey === 'Saturn' &&
+  item.dispositedPlanetKey === 'Venus' && item.house === 11 && item.chainDepth === 2,
+)));
+assert.equal(
+  dispositorAreaInteractions.find((area) => area.id === 'career')?.connections
+    .filter((line) => line.includes('Сатурн — диспозитор Венера')).length,
+  1,
+);
+
+assert.deepEqual(getCoreInteractionsByLifeArea(chart), []);
+
 const sameSignCoreChart = {
   ...chart,
   planets: {
@@ -95,8 +167,15 @@ const sameSignCoreChart = {
   },
 } as NatalChart;
 const conjunctions = getPlanetToPlanetAspects(sameSignCoreChart, ['Sun', 'Moon']);
+assert.equal(conjunctions.find((item) => item.kind === 'conjunction')?.sourceKey, 'Sun');
+assert.equal(conjunctions.find((item) => item.kind === 'conjunction')?.targetKey, 'Moon');
 assert.equal(conjunctions.filter((item) => item.kind === 'conjunction').length, 1);
+const conjunctionAreaLink = getCoreInteractionsByLifeArea(sameSignCoreChart)
+  .flatMap((area) => area.links)
+  .find((link) => link.kind === 'conjunction');
+assert.equal(conjunctionAreaLink?.id, 'Moon:Sun:conjunction:same-sign');
 assert.ok(getCoreChartSynthesis(sameSignCoreChart).includes('Солнце и Луна находятся в одном знаке'));
+assert.ok(getCoreChartSynthesis(sameSignCoreChart).includes('темы «самостоятельность, авторство, воля и ответственность» и «эмоциональные потребности'));
 assert.ok(!getPlanetToPlanetAspects(chart, ['Rahu', 'Ketu']).length);
 
 const houses = analyzePersonalizedHouses(chart);
@@ -127,14 +206,93 @@ assert.deepEqual(drishti.filter((item) => item.source === 'Сатурн').map((i
 assert.ok(!drishti.some((item) => item.source === 'Раху' || item.source === 'Кету'));
 
 const topics = analyzeLifeTopics(chart, new Date('2026-11-08T12:00:00Z'));
-assert.deepEqual(topics.map((topic) => topic.id), ['talents', 'money', 'career', 'children', 'relationships']);
+assert.deepEqual(topics.map((topic) => topic.id), ['talents', 'money', 'career', 'children', 'home_family', 'wellbeing', 'inner_growth', 'relationships']);
 assert.ok(topics.find((topic) => topic.id === 'money')?.evidence.length);
+const moneyTopic = topics.find((topic) => topic.id === 'money');
+assert.ok(moneyTopic?.keyFactors.some((factor) => factor.includes('2-й дом') && factor.includes('управитель')));
+assert.ok(moneyTopic?.interpretation.includes('Управитель'));
+assert.ok(moneyTopic?.interpretation.includes('диспозитор'));
+assert.ok(moneyTopic?.interpretation.includes('Функция управителя'));
+assert.ok(moneyTopic?.interpretation.includes('международные контакты'));
+assert.ok(moneyTopic?.interpretation.includes('источники дохода'));
+assert.ok(moneyTopic?.developmentPoints.length);
+assert.ok(moneyTopic?.supportingFactors.length);
+assert.ok(moneyTopic?.supportingFactors.some((item) => item.includes('Юпитера')));
+assert.ok(moneyTopic?.attentionPoints.length);
+assert.ok(moneyTopic?.synthesis.includes('картина'));
+assert.ok(moneyTopic?.interpretation.includes('поддерживающие'));
+assert.ok(moneyTopic?.interpretation.includes('требующие внимания'));
+assert.ok(moneyTopic?.keyFactors.some((factor) => factor.includes('9-й дом')));
+assert.ok(moneyTopic?.keyFactors.some((factor) => factor.includes('11-й дом')));
+assert.ok(moneyTopic?.directions.some((direction) => direction.includes('управление') || direction.includes('эксперт')));
+assert.ok(moneyTopic?.directions.some((direction) => direction.startsWith('Солнце:')));
+const careerTopic = topics.find((topic) => topic.id === 'career');
+assert.ok(careerTopic?.keyFactors.some((factor) => factor.includes('10-й дом')));
+assert.ok(careerTopic?.evidence.some((item) => item.includes('аспект')));
+assert.ok(topics.every((topic) => topic.keyFactors.length === topic.houses.length));
+assert.deepEqual(topics.find((topic) => topic.id === 'home_family')?.houses, [2, 4, 12]);
+assert.deepEqual(topics.find((topic) => topic.id === 'wellbeing')?.houses, [1, 6, 8, 12]);
+assert.ok(topics.find((topic) => topic.id === 'wellbeing')?.actions.some((action) => action.includes('не диагностирует')));
+assert.deepEqual(topics.find((topic) => topic.id === 'inner_growth')?.houses, [9, 12, 5]);
+assert.deepEqual(topics.find((topic) => topic.id === 'children')?.houses, [2, 5, 9, 11]);
+assert.deepEqual(topics.find((topic) => topic.id === 'children')?.primaryHouses, [5]);
+assert.deepEqual(topics.find((topic) => topic.id === 'children')?.supportingHouses, [2, 9, 11]);
+assert.deepEqual(topics.find((topic) => topic.id === 'relationships')?.primaryHouses, [7]);
+assert.deepEqual(topics.find((topic) => topic.id === 'relationships')?.houses, [2, 5, 7, 8, 12]);
+assert.deepEqual(topics.find((topic) => topic.id === 'career')?.houses, [2, 6, 10, 11]);
+assert.ok(topics.every((topic) => topic.supportingFactors.length + topic.attentionPoints.length > 0));
+assert.ok(topics.every((topic) => topic.synthesis.length > 30));
 assert.ok(topics.find((topic) => topic.id === 'children')?.timingNote.includes('зачатия'));
 assert.ok(topics.find((topic) => topic.id === 'talents')?.directions.length);
+const debilitatedTalentChart = {
+  ...chart,
+  planets: { ...chart.planets, Mercury: position('Mercury', 335, 'Pisces', 'Revati') },
+} as NatalChart;
+const debilitatedTalentTopic = analyzeLifeTopics(debilitatedTalentChart, new Date('2026-11-08T12:00:00Z'))
+  .find((topic) => topic.id === 'talents');
+assert.ok(debilitatedTalentTopic?.attentionPoints.some((item) => item.includes('падения')));
+assert.ok(debilitatedTalentTopic?.supportingFactors.length);
+assert.ok(debilitatedTalentTopic?.synthesis.includes('Смешанная картина'));
 assert.ok(topics.find((topic) => topic.id === 'money')?.timingNote.includes('Связь Махадаши с этой сферой'));
 assert.ok(topics.find((topic) => topic.id === 'career')?.timingNote.includes('Сатурн'));
 assert.ok(topics.find((topic) => topic.id === 'children')?.timingNote.includes('Связь Антардаши'));
 
+assert.ok(getVargaEvidence(chart, 2).some((item) => item.includes('D2')));
+assert.ok(getVargaEvidence(chart, 2).some((item) => item.includes('Лагна D2')));
+assert.ok(getVargaEvidence(chart, 2).some((item) => item.includes('в D1')));
 assert.ok(getVargaEvidence(chart, 7).some((item) => item.includes('D7')));
+assert.ok(getVargaEvidence(chart, 9).some((item) => item.includes('D9')));
 assert.ok(getVargaEvidence(chart, 10).some((item) => item.includes('D10')));
+assert.ok(getVargaEvidence(chart, 24).some((item) => item.includes('D24')));
+
+const houseLordInsights = analyzeHouseLords(chart);
+assert.equal(houseLordInsights.length, 12);
+const firstHouseLord = houseLordInsights.find((item) => item.house === 1);
+assert.ok(firstHouseLord);
+assert.equal(firstHouseLord?.lordKey, 'Mars');
+assert.equal(firstHouseLord?.lordHouse, 1);
+assert.equal(firstHouseLord?.dignity, 'собственный знак');
+assert.deepEqual(firstHouseLord?.ruledHouses, [1, 8]);
+assert.ok(firstHouseLord?.repeatedRulership?.includes('управляет также домами 8'));
+assert.ok(firstHouseLord?.dispositorChain.some((step) => step.planetKey === 'Mars' && step.depth === 0));
+assert.equal(firstHouseLord?.chainCycleDetected, true);
+assert.ok(firstHouseLord?.attentionFactors.some((item) => item.includes('цикл')));
+assert.ok(firstHouseLord?.overallSynthesis.includes('Смешанная картина'));
+assert.ok(firstHouseLord?.incomingAspects.some((item) => item.source === 'Юпитер'));
+assert.ok(firstHouseLord?.outgoingAspects.some((item) => item.targetHouse === 7));
+assert.ok(firstHouseLord?.evidence.some((item) => item.includes('Цепочка, шаг 0')));
+const fifthHouseLord = houseLordInsights.find((item) => item.house === 5);
+assert.equal(fifthHouseLord?.lordKey, 'Sun');
+assert.equal(fifthHouseLord?.lordHouse, 5);
+assert.ok(fifthHouseLord?.interpretation.includes('творчество, интеллект'));
+assert.ok(fifthHouseLord?.evidence.some((item) => item.includes('накшатра Magha')));
+const missingHouseLordChart = {
+  ...chart,
+  planets: Object.fromEntries(Object.entries(chart.planets).filter(([name]) => name !== 'Sun')),
+} as unknown as NatalChart;
+const missingLordInsight = analyzeHouseLords(missingHouseLordChart).find((item) => item.house === 5);
+assert.equal(missingLordInsight?.lordHouse, null);
+assert.equal(missingLordInsight?.chainMissingPlanet, 'Sun');
+assert.ok(missingLordInsight?.interpretation.includes('положение не найдено'));
+
 console.log('personalized house analysis tests passed');
