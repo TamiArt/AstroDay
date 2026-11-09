@@ -10,6 +10,7 @@ import {
   analyzePersonalizedHouses,
   getVargaEvidence,
   type LifeTopicInsight,
+  type VargaEvidenceDivision,
 } from '../../utils/personalizedHouseAnalysis';
 import { HOUSES_DETAILED } from '../../utils/housesDescriptions';
 import { analyzeHouseLords, type HouseLordInsight } from '../../utils/natalHouseLordAnalysis';
@@ -42,7 +43,7 @@ function EvidenceList({ items }: { items: string[] }) {
 
 function TopicCard({ topic, natalChart }: { topic: LifeTopicInsight; natalChart: NatalChartType }) {
   const Icon = TOPIC_ICONS[topic.id];
-  const vargaDivisions = topic.id === 'money'
+  const vargaDivisions: VargaEvidenceDivision[] = topic.id === 'money'
     ? [2]
     : topic.id === 'talents'
       ? [24]
