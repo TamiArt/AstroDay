@@ -56,7 +56,7 @@ assert.equal(mappedSign(0, 45), 'Aries');
 assert.equal(mappedSign(30, 45), 'Leo');
 assert.equal(mappedSign(60, 45), 'Sagittarius');
 
-// D30 uses unequal 5°/7°/8°/7°/5° divisions and rescales within each segment.
+// D30 uses unequal 5°/5°/8°/7°/5° odd-sign and 5°/7°/8°/5°/5° even-sign divisions.
 assert.equal(mappedSign(0, 30), 'Aries');
 assert.equal(mappedSign(5, 30), 'Aquarius');
 assert.equal(mappedSign(10, 30), 'Sagittarius');
