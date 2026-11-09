@@ -237,11 +237,22 @@ assert.ok(topics.every((topic) => topic.supportingFactors.length + topic.attenti
 assert.ok(topics.every((topic) => topic.synthesis.length > 30));
 assert.ok(topics.find((topic) => topic.id === 'children')?.timingNote.includes('зачатия'));
 assert.ok(topics.find((topic) => topic.id === 'talents')?.directions.length);
+const debilitatedTalentChart = {
+  ...chart,
+  planets: { ...chart.planets, Mercury: position('Mercury', 335, 'Pisces', 'Revati') },
+} as NatalChart;
+const debilitatedTalentTopic = analyzeLifeTopics(debilitatedTalentChart, new Date('2026-11-08T12:00:00Z'))
+  .find((topic) => topic.id === 'talents');
+assert.ok(debilitatedTalentTopic?.attentionPoints.some((item) => item.includes('падения')));
+assert.ok(debilitatedTalentTopic?.supportingFactors.length);
+assert.ok(debilitatedTalentTopic?.synthesis.includes('Смешанная картина'));
 assert.ok(topics.find((topic) => topic.id === 'money')?.timingNote.includes('Связь Махадаши с этой сферой'));
 assert.ok(topics.find((topic) => topic.id === 'career')?.timingNote.includes('Сатурн'));
 assert.ok(topics.find((topic) => topic.id === 'children')?.timingNote.includes('Связь Антардаши'));
 
 assert.ok(getVargaEvidence(chart, 2).some((item) => item.includes('D2')));
+assert.ok(getVargaEvidence(chart, 2).some((item) => item.includes('Лагна D2')));
+assert.ok(getVargaEvidence(chart, 2).some((item) => item.includes('в D1')));
 assert.ok(getVargaEvidence(chart, 7).some((item) => item.includes('D7')));
 assert.ok(getVargaEvidence(chart, 9).some((item) => item.includes('D9')));
 assert.ok(getVargaEvidence(chart, 10).some((item) => item.includes('D10')));
