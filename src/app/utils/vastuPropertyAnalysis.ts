@@ -99,12 +99,12 @@ const EXPECTED_ROOMS: Record<VastuSector, VastuRoomUse[]> = {
   northwest: ['guest-bedroom', 'bedroom', 'laundry', 'bathroom', 'toilet', 'living'],
   north: ['living', 'study', 'office', 'prayer', 'water', 'open'],
   northeast: ['prayer', 'study', 'water', 'open', 'living'],
-  west: ['dining', 'bedroom', 'children' as VastuRoomUse, 'storage', 'living'],
+  west: ['dining', 'bedroom', 'storage', 'living'],
   center: ['open', 'living', 'dining'],
   east: ['living', 'study', 'prayer', 'balcony', 'open'],
   southwest: ['master-bedroom', 'storage', 'bedroom'],
   south: ['stairs', 'storage', 'bedroom', 'bathroom'],
-  southeast: ['kitchen', 'laundry', 'electrical' as VastuRoomUse, 'dining'],
+  southeast: ['kitchen', 'laundry', 'dining'],
 };
 
 export function createEmptyVastuPropertyAssessment(): VastuPropertyAssessment {
