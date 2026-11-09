@@ -21,7 +21,7 @@ Vite покажет локальный адрес, обычно `http://localhos
 npm run verify
 ```
 
-`verify` последовательно выполняет строгую TypeScript-проверку (`noUnusedLocals` и `noUnusedParameters`), полный набор unit-тестов и production build. Workflow GitHub Actions запускается при push в `main`, `feat/**`, `fix/**`, `chore/**`, `refactor/**` и при pull request в `main`. Ветки `docs/**` в текущем фильтре не перечислены; документационные ветки не запускают этот workflow автоматически.
+`verify` последовательно выполняет строгую TypeScript-проверку (`noUnusedLocals` и `noUnusedParameters`), полный набор unit-тестов и production build. Workflow GitHub Actions запускается при push в `main`, `feat/**`, `fix/**`, `chore/**`, `refactor/**`, `docs/**` и при pull request в `main`.
 
 ## Команды
 
@@ -627,7 +627,7 @@ npm run verify
 - [`CODE_AUDIT.md`](CODE_AUDIT.md) — подтверждённые технические риски и необходимые проверки.
 - [`docs/ASTROLOGY_ACCURACY.md`](docs/ASTROLOGY_ACCURACY.md) — расчётные конвенции, независимые эталоны и ограничения.
 - [`docs/INTERPRETATION_QUALITY.md`](docs/INTERPRETATION_QUALITY.md) — критерии контроля качества интерпретаций и ограничения автоматической проверки.
-- [`docs/VASTU_PROPERTY_ANALYSIS.md`](docs/VASTU_PROPERTY_ANALYSIS.md) — методика Васту, проверка недвижимости и финансовые формулы.
+- [`docs/VASTU_PROPERTY_ANALYSIS.md`](docs/VASTU_PROPERTY_ANALYSIS.md) — методика Васту, проверка недвижимости и финансовые формулы.\n- [`docs/ADVANCED_ASTROLOGY.md`](docs/ADVANCED_ASTROLOGY.md) — Вимшоттари до Пратьянтардаши, методика варг и ограничения.
 
 ## Дисклеймер
 
