@@ -65,7 +65,7 @@ function TopicCard({ topic, natalChart }: { topic: LifeTopicInsight; natalChart:
           </div>
           <div>
             <h3 className="font-bold text-gray-900">{topic.title}</h3>
-            <p className="text-xs text-gray-500">Анализ домов {topic.houses.join(', ')}</p>
+            <p className="text-xs text-gray-500">Основные дома: {topic.primaryHouses.join(', ')} · Дополнительные связи: {topic.supportingHouses.length ? topic.supportingHouses.join(', ') : 'нет'}</p>
           </div>
         </div>
 
@@ -77,6 +77,10 @@ function TopicCard({ topic, natalChart }: { topic: LifeTopicInsight; natalChart:
             <EvidenceList items={topic.keyFactors} />
           </div>
         )}
+
+        <p className="text-xs leading-relaxed text-gray-500">
+          Основные дома задают предмет анализа; дополнительные дома показывают связанные темы и не имеют автоматически равного веса. Поддержка оценивается здесь по достоинству управителей и их диспозиторов, а не по полной Shadbala.
+        </p>
 
         <div className="rounded-lg border border-green-200 bg-green-50 p-4">
           <h4 className="mb-2 text-sm font-semibold text-green-900">Что поддерживает эту сферу</h4>
