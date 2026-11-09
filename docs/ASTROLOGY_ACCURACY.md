@@ -7,7 +7,7 @@ This document records the calculation conventions, independent regression refere
 ## Calculation conventions
 
 - Zodiac: sidereal zodiac with a **mean Lahiri ayanamsha** implementation based on the IAU 1976/Lieske general precession polynomial anchored at J2000.0.
-- Planetary positions: geocentric ecliptic longitudes from `astronomy-engine`; tropical longitudes are converted to sidereal by subtracting the configured ayanamsha.
+- Planetary positions: geocentric ecliptic-of-date longitudes from `astronomy-engine` (`GeoVector` + `Ecliptic` for planets, `EclipticGeoMoon` for the Moon); tropical longitudes are converted to sidereal by subtracting the configured ayanamsha. Do not use `EclipticLongitude` for natal geocentric positions because that API is heliocentric.
 - Lunar nodes: mean ascending node (Rahu); Ketu is placed exactly 180° opposite. True-node positions are not implemented.
 - Houses: whole-sign houses from the sidereal Ascendant.
 - Nakshatras: 27 equal sectors of exactly 360° / 27; padas use exactly 360° / 108.
@@ -20,7 +20,7 @@ This document records the calculation conventions, independent regression refere
 | Calculation | Reference | Tolerance / assertion |
 |---|---|---|
 | Mean Lahiri ayanamsha | Swiss Ephemeris `swetest -nonut`, 1990-01-01 00:00 UT: 23°43′02.6259″ | 0.02 arcsec |
-| Sidereal Sun and Moon | Astrodienst Swiss Ephemeris sidereal (Lahiri), geocentric, 1990-03-15 00:00 UT: Sun 0°25′05″ Pisces; Moon 10°04′ Pisces | Sun 0.03°; Moon 0.1° (source table rounded to minutes) |
+| Sidereal Sun and Moon | Astrodienst Swiss Ephemeris sidereal (Lahiri), geocentric, 1990-03-15 00:00 UT: Sun 0°25′05″ Pisces; Moon 10°04′ Libra; Mercury 26°32′ Aquarius | Sun 0.03°; Moon and Mercury 0.1° (source table rounded to minutes) |
 | Ascendant | Drik Panchang, New Delhi, 1990-06-15 12:49:25 IST: 6°48′13″ Virgo | 0.2° |
 | Timezone conversion | IANA Europe/London and Europe/Paris DST transition fixtures | Exact UTC instant, including gap/overlap behavior |
 | Angular divisions | Exact mathematical boundaries for signs, nakshatras, tithis, yogas and karanas | Exact index at and immediately before each tested boundary |
