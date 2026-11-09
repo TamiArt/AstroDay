@@ -282,6 +282,11 @@ assert.ok(getVargaEvidence(chart, 7).some((item) => item.includes('D7')));
 assert.ok(getVargaEvidence(chart, 9).some((item) => item.includes('D9')));
 assert.ok(getVargaEvidence(chart, 10).some((item) => item.includes('D10')));
 assert.ok(getVargaEvidence(chart, 24).some((item) => item.includes('D24')));
+assert.ok(getVargaEvidence(chart, 4).some((item) => item.includes('Лагна D4')));
+assert.ok(getVargaEvidence(chart, 12).some((item) => item.includes('Лагна D12')));
+assert.ok(getVargaEvidence(chart, 16).some((item) => item.includes('Лагна D16')));
+assert.ok(getVargaEvidence(chart, 20).some((item) => item.includes('Лагна D20')));
+assert.ok(getVargaEvidence(chart, 27).some((item) => item.includes('Лагна D27')));
 
 const houseLordInsights = analyzeHouseLords(chart);
 assert.equal(houseLordInsights.length, 12);
