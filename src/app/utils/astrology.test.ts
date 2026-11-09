@@ -188,9 +188,9 @@ assert.ok(Math.abs(
   halfNakshatra.endDate.getTime() - (dashaBirth.getTime() + 3.5 * 365.2425 * 86400000),
 ) < 2);
 const birthAntar = getCurrentAntardasha(halfNakshatra, dashaBirth);
-assert.equal(birthAntar?.planet, 'Jupiter', 'At the midpoint of Ketu Mahadasha, the active Antardasha is Jupiter');
+assert.equal(birthAntar?.planet, 'Rahu', 'At the midpoint of Ketu Mahadasha, the active Antardasha is Rahu');
 assert.equal(birthAntar?.startDate.getTime(), dashaBirth.getTime(), 'A running Antardasha is clipped at birth');
-assert.ok(birthAntar!.endDate.getTime() - dashaBirth.getTime() < 40 * 86400000,
+assert.ok(birthAntar!.endDate.getTime() - dashaBirth.getTime() < 180 * 86400000,
   'The birth-time Antardasha must retain its full-period boundary instead of being rescaled to the remaining Mahadasha');
 const birthPratyantar = getCurrentPratyantardasha(birthAntar, dashaBirth);
 assert.ok(birthPratyantar, 'The birth-time Antardasha must expose the active Pratyantardasha');
