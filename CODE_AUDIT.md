@@ -106,7 +106,7 @@ Push-фильтр workflow перечисляет `main`, `feat/**`, `fix/**`, `
 
 **Ограничение:** правила не доказывают астрологическую/научную истинность текста и не заменяют экспертную оценку смысла. Детали — в `docs/INTERPRETATION_QUALITY.md`.
 
-**Статус:** реализация добавлена; полный CI verify ожидает выполнения на итоговом commit.
+**Статус:** реализовано и проверено полным `npm run verify`: [run 42675046869](https://github.com/TamiArt/AstroDay/actions/runs/42675046869) на commit [446bbf5](https://github.com/TamiArt/AstroDay/commit/446bbf5ecb97f56c082ff6a3aa467404c5ca4c05).
 
 ## Подтверждённые защитные меры и ограничения
 
