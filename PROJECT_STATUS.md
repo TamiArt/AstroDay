@@ -3,7 +3,9 @@
 Краткий актуальный срез AstroDay. Подробный план и журнал этапов находятся в [TECHNICAL_ROADMAP.md](TECHNICAL_ROADMAP.md), подтверждённые технические риски — в [CODE_AUDIT.md](CODE_AUDIT.md).
 
 **Дата актуализации:** 2026-11-09  
-**Ветка текущего этапа:** `docs/stage-11-documentation-sync` (Этап 9 — аудит зависимостей)  
+**Ветка:** `docs/stage-11-documentation-sync`  
+**Последний завершённый этап:** 9 — аудит зависимостей  
+**Следующий этап по плану:** 10 — надёжность сохранения и восстановления данных  
 **База:** `feat/astrology-accuracy-validation`  
 **Основная ветка:** `main` не изменялась; PR не создавался.
 
@@ -33,7 +35,7 @@ AstroDay — клиентское приложение на React 18, TypeScript
 | 5 | Персонализированный анализ жизненных сфер | **Завершён**; полный verify — [run 42599679818](https://github.com/TamiArt/AstroDay/actions/runs/42599679818) |
 | 7 | Проверка астрологической точности | **Завершён**; полный verify — [run 42621721221](https://github.com/TamiArt/AstroDay/actions/runs/42621721221) |
 | 8 | Углубление персонализации и качества интерпретаций | **Завершён**; полный verify — [run 42623962654](https://github.com/TamiArt/AstroDay/actions/runs/42623962654), commit [482ac43](https://github.com/TamiArt/AstroDay/commit/482ac43a86fa13f0045140074837a16f8c853f84) |
-| 9 | Аудит и исправление зависимостей | **Завершён**; оба npm audit = 0, полный verify и аудит — [run 42683427348](https://github.com/TamiArt/AstroDay/actions/runs/42683427348); commit `1372a75` |
+| 9 | Аудит и исправление зависимостей | **Завершён**; оба npm audit = 0, полный verify — [run 42683883776](https://github.com/TamiArt/AstroDay/actions/runs/42683883776); повторный аудит и verify — [run 42684023555](https://github.com/TamiArt/AstroDay/actions/runs/42684023555); commit `1372a75` |
 | 10 | Надёжность сохранения и восстановления данных | Не завершён |
 | 11 | Синхронизация документации | **Завершён в этой ветке**; изменения документационные, код приложения не менялся |
 | 12 | Интеграционные и E2E-сценарии | Не завершён |
