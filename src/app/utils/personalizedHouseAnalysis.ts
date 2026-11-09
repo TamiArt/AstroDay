@@ -1,4 +1,4 @@
-import { calculateDasha, getCurrentAntardasha, getPlanetHouse as resolvePlanetHouse, type NatalChart } from './astrology';
+import { calculateDasha, getCurrentAntardasha, getCurrentPratyantardasha, getPlanetHouse as resolvePlanetHouse, type NatalChart } from './astrology';
 import { calculateDivisionalChart } from './divisionalCharts';
 import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition, getGrahaDrishti } from './natalStrengthAnalysis';
 import { describeHousePlanetConnections, describeHouseSignStyle, describePlanetInHouse } from './natalHouseInterpretation';
@@ -574,11 +574,14 @@ export function analyzeLifeTopics(chart: NatalChart, currentDate: Date = new Dat
   const moonNakshatra = chart.planets.Moon.nakshatra;
   const dasha = calculateDasha(chart.date, moonNakshatra, currentDate, chart.planets.Moon.siderealLon);
   const antar = getCurrentAntardasha(dasha, currentDate);
+  const pratyantar = getCurrentPratyantardasha(antar, currentDate);
   const formatDate = (date: Date) => date.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
   const periodLabel = 'Махадаша ' + (PLANET_RU[dasha.planet] ?? dasha.planet) + ' действует с ' +
     formatDate(dasha.startDate) + ' по ' + formatDate(dasha.endDate) +
     (antar ? '; Антардаша ' + (PLANET_RU[antar.planet] ?? antar.planet) + ' — с ' +
-      formatDate(antar.startDate) + ' по ' + formatDate(antar.endDate) : '') + '.';
+      formatDate(antar.startDate) + ' по ' + formatDate(antar.endDate) : '') +
+    (pratyantar ? '; Пратьянтардаша ' + (PLANET_RU[pratyantar.planet] ?? pratyantar.planet) + ' — с ' +
+      formatDate(pratyantar.startDate) + ' по ' + formatDate(pratyantar.endDate) : '') + '.';
 
   return TOPIC_CONFIG.map((topic) => {
     const planets = getTopicPlanetNames(chart, topic.houses);
@@ -609,7 +612,8 @@ export function analyzeLifeTopics(chart: NatalChart, currentDate: Date = new Dat
           : 'Выбранные показатели не дают однозначного перевеса в сторону поддержки или напряжения. Сфера требует целостного прочтения, а не упрощённой оценки.';
     const mahaConnection = describePeriodConnection(chart, dasha.planet, topic.houses, planets);
     const antarConnection = antar ? describePeriodConnection(chart, antar.planet, topic.houses, planets) : 'Текущая Антардаша не определена в доступных данных.';
-    const periodMeaning = 'Связь Махадаши с этой сферой: ' + mahaConnection + ' Связь Антардаши: ' + antarConnection;
+    const pratyantarConnection = pratyantar ? describePeriodConnection(chart, pratyantar.planet, topic.houses, planets) : 'Текущая Пратьянтардаша не определена в доступных данных.';
+    const periodMeaning = 'Связь Махадаши с этой сферой: ' + mahaConnection + ' Связь Антардаши: ' + antarConnection + ' Связь Пратьянтардаши: ' + pratyantarConnection;
     const directionText = directions.length
       ? 'Планетные сигнификаторы и управители указывают на направления для практического исследования: ' + directions.join('; ') + '.'
       : 'В этой карте не найдено достаточно прямых планетных указаний, чтобы уверенно перечислять конкретные направления.';
