@@ -7,6 +7,8 @@ import {
   loadVastuChecklist,
   loadHomeFloorPlan,
   saveHomeFloorPlan,
+  loadVastuPropertyAssessment,
+  saveVastuPropertyAssessment,
   loadPartnerProfile,
   saveVastuChecklist,
   savePartnerProfile,
@@ -63,6 +65,32 @@ const floorPlan = {
 };
 saveHomeFloorPlan(floorPlan);
 assert.deepEqual(loadHomeFloorPlan(), floorPlan, 'Vastu compass alignment and plan markers must persist locally');
+const propertyAssessment = {
+  schemaVersion: 1 as const,
+  propertyName: 'Test property',
+  propertyType: 'apartment' as const,
+  facingDirection: 'east' as const,
+  entranceWall: 'east' as const,
+  entrancePosition: 37.5,
+  plotShape: 'rectangle' as const,
+  plotSlope: 'flat' as const,
+  roadSides: ['east'] as Array<'east'>,
+  waterSides: [],
+  rooms: { northwest: '', north: 'office', northeast: 'prayer', west: '', center: 'open', east: '', southwest: 'master-bedroom', south: '', southeast: 'kitchen' } as const,
+  condition: { structure: 'ok', moisture: 'unknown', electrical: 'attention', fire: 'unknown', plumbing: 'unknown', ventilation: 'unknown', daylight: 'unknown', noise: 'unknown', accessibility: 'unknown', legal: 'unknown', permits: 'unknown', insurance: 'unknown' } as const,
+  currency: 'CAD',
+  purchasePrice: 500000,
+  closingCosts: 12000,
+  renovationCost: 8000,
+  monthlyRent: 2800,
+  vacancyRatePercent: 4,
+  monthlyOperatingCosts: 450,
+  annualPropertyTax: 3200,
+  monthlyMortgagePayment: 1800,
+  notes: 'Check electrical panel',
+};
+saveVastuPropertyAssessment(propertyAssessment);
+assert.deepEqual(loadVastuPropertyAssessment(), propertyAssessment, 'Property assessment must persist locally with room, condition and finance data');
 const partner = {
   name: 'Partner',
   birthDate: '1988-05-12',
@@ -76,6 +104,7 @@ savePartnerProfile(partner);
 assert.deepEqual(loadPartnerProfile(), partner, 'Partner profile must persist locally');
 deleteHomeData();
 assert.deepEqual(loadVastuChecklist(), [], 'Deleting home data must also delete the Vastu checklist');
+assert.equal(loadVastuPropertyAssessment().propertyName, '', 'Deleting home data must also delete property assessment');
 assert.deepEqual(loadPartnerProfile(), partner, 'Deleting home data must preserve the separate partner chart');
 deletePartnerProfile();
 assert.equal(loadPartnerProfile(), null, 'Partner profile can be deleted separately');
