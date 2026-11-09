@@ -103,6 +103,10 @@ export function calculatePanchang(date: Date, context: PanchangContext = {}): Pa
   // [ИСПРАВЛЕНО] Добавлена специальная обработка для Солнца и Луны
   // Солнце требует SunPosition(), Луна - EclipticGeoMoon()
   try {
+    if (!(date instanceof Date) || !Number.isFinite(date.getTime())) {
+      throw new Error('Для расчёта панчанга нужна корректная дата');
+    }
+
     // Для Солнца используем SunPosition (геоцентрическая позиция)
     const sunPos = AstronomyApi.SunPosition(date);
     const sunLon = tropicalToSidereal(sunPos.elon, date);
@@ -112,16 +116,15 @@ export function calculatePanchang(date: Date, context: PanchangContext = {}): Pa
     const moonLon = tropicalToSidereal(moonPos.lon, date);
 
     // Tithi calculation
-    let tithiAngle = moonLon - sunLon;
-    if (tithiAngle < 0) tithiAngle += 360;
-    const tithiIndex = Math.floor(tithiAngle / 12) % 30;
+    const tithiAngle = ((moonLon - sunLon) % 360 + 360) % 360;
+    const tithiIndex = Math.floor(tithiAngle / (360 / 30));
 
-    // Nakshatra
-    const nakshatraIndex = Math.floor(moonLon / 13.333333) % 27;
+    // Use exact astronomical divisions; rounded decimal constants drift at boundaries.
+    const nakshatraIndex = Math.floor(moonLon / (360 / 27));
 
-    // Yoga
+    // Yoga is based on the sidereal sum of the Sun and Moon longitudes.
     const yogaAngle = (moonLon + sunLon) % 360;
-    const yogaIndex = Math.floor(yogaAngle / 13.333333) % 27;
+    const yogaIndex = Math.floor(yogaAngle / (360 / 27));
 
     // Karana. The first seven are repeating chara karanas; the final four
     // fixed karanas occur near the end/start of the lunar month.
