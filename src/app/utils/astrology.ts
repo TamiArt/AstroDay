@@ -30,7 +30,8 @@ function normalizeDegrees(value: number): number {
 
 function getMeanObliquity(date: Date): number {
   const astroTime = AstronomyApi.MakeTime(date);
-  const t = (astroTime.ut - 2451545.0) / 36525.0;
+  // Astronomy Engine expresses AstroTime.ut in days since J2000, not as a Julian Day Number.
+  const t = astroTime.ut / 36525.0;
   const seconds = 21.448 - t * (46.8150 + t * (0.00059 - t * 0.001813));
   return 23 + (26 / 60) + (seconds / 3600);
 }
@@ -587,8 +588,8 @@ export function calculateNatalChart(
 
     try {
       const astroTime = AstronomyApi.MakeTime(birthDate);
-      const jd = astroTime.ut;
-      const T = (jd - 2451545.0) / 36525.0;
+      // Astronomy Engine's ut is fractional days since J2000; use it directly for Julian centuries.
+      const T = astroTime.ut / 36525.0;
       let meanNodeLon = 125.0445479 - 1934.1362891 * T + 0.0020754 * T * T + (T * T * T) / 467441.0 - (T * T * T * T) / 60616000.0;
 
       meanNodeLon = meanNodeLon % 360;
