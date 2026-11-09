@@ -3,7 +3,7 @@
 Краткий актуальный срез AstroDay. Подробный план и журнал этапов находятся в [TECHNICAL_ROADMAP.md](TECHNICAL_ROADMAP.md), подтверждённые технические риски — в [CODE_AUDIT.md](CODE_AUDIT.md).
 
 **Дата актуализации:** 2026-11-09  
-**Ветка текущего этапа:** `docs/stage-11-documentation-sync` (Этап 16)  
+**Ветка текущего этапа:** `docs/stage-11-documentation-sync` (Этап 9 — аудит зависимостей)  
 **База:** `feat/astrology-accuracy-validation`  
 **Основная ветка:** `main` не изменялась; PR не создавался.
 
@@ -33,7 +33,7 @@ AstroDay — клиентское приложение на React 18, TypeScript
 | 5 | Персонализированный анализ жизненных сфер | **Завершён**; полный verify — [run 42599679818](https://github.com/TamiArt/AstroDay/actions/runs/42599679818) |
 | 7 | Проверка астрологической точности | **Завершён**; полный verify — [run 42621721221](https://github.com/TamiArt/AstroDay/actions/runs/42621721221) |
 | 8 | Углубление персонализации и качества интерпретаций | **Завершён**; полный verify — [run 42623962654](https://github.com/TamiArt/AstroDay/actions/runs/42623962654), commit [482ac43](https://github.com/TamiArt/AstroDay/commit/482ac43a86fa13f0045140074837a16f8c853f84) |
-| 9 | Аудит и исправление зависимостей | Не завершён |
+| 9 | Аудит и исправление зависимостей | **Завершён**; оба npm audit = 0, полный verify и аудит — [run 42683427348](https://github.com/TamiArt/AstroDay/actions/runs/42683427348); commit `1372a75` |
 | 10 | Надёжность сохранения и восстановления данных | Не завершён |
 | 11 | Синхронизация документации | **Завершён в этой ветке**; изменения документационные, код приложения не менялся |
 | 12 | Интеграционные и E2E-сценарии | Не завершён |
@@ -54,6 +54,7 @@ AstroDay — клиентское приложение на React 18, TypeScript
 - `npm run test:unit` — полный перечисленный в package.json unit suite через `tsx`.
 - `npm run build` — production build через Vite.
 - `npm run verify` — строгий TypeScript check с `noUnusedLocals` и `noUnusedParameters`, затем unit suite, затем production build.
+- `npm audit` — аудит всех зависимостей; `npm audit --omit=dev` — аудит production-графа. Для изменений manifest/lock эти проверки выполняет отдельный workflow.
 
 ## Ограничения и незавершённые задачи
 
@@ -65,9 +66,11 @@ AstroDay — клиентское приложение на React 18, TypeScript
 6. Storage-функции перехватывают ошибки записи localStorage; вызывающий код не всегда узнаёт о неудаче. См. [CODE_AUDIT.md](CODE_AUDIT.md).
 7. XOR + Base64 — обратимая обфускация, а не криптографическое шифрование.
 8. PWA/offline service worker, голосовой интерфейс и push-уведомления не реализованы. Ашта-Кута / Гуна-милан реализован; региональные варианты правил и расширенная синастрия остаются отдельными направлениями.
-9. Свежий аудит npm advisory и полный E2E-набор ещё не завершены.
+9. npm audit на проверенном lock-файле не выявил известных advisory; повторять аудит при каждом изменении зависимостей. Полный browser E2E-набор ещё не завершён.
 
 ## Документы
+
+- [docs/DEPENDENCY_AUDIT.md](docs/DEPENDENCY_AUDIT.md) — dependency paths, исправленные версии и результаты npm audit.
 
 - [README.md](README.md) — обзор возможностей, запуск и устройство.
 - [TECHNICAL_ROADMAP.md](TECHNICAL_ROADMAP.md) — этапы, приоритеты и журнал работ.
