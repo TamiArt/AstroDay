@@ -97,7 +97,7 @@ const bhakootCancellation = calculateAshtaKoota(
   { name: 'B', moonLongitude: 210 },
 );
 assert.equal(bhakootCancellation.kutas.find(item => item.id === 'bhakoot')?.score, 7);
-assert.ok(bhakootCancellation.kutas.find(item => item.id === 'bhakoot')?.details.some(detail => detail.includes('общего управителя')));
+assert.ok(bhakootCancellation.kutas.find(item => item.id === 'bhakoot')?.details.some(detail => detail.includes('одного управителя')));
 
 const yoniFriendly = calculateAshtaKoota(
   { name: 'Horse', moonLongitude: 0 },
