@@ -33,9 +33,14 @@ assertIso(
 
 // Historical DST rules must be applied using the IANA zone, not a present-day offset.
 assertIso(
-  createDateInTimezone('2021-03-28', '02:30', 'Europe/Paris'),
-  '2021-03-28T00:30:00.000Z',
-  'Paris spring-forward transition'
+  createDateInTimezone('2021-03-28', '03:30', 'Europe/Paris'),
+  '2021-03-28T01:30:00.000Z',
+  'Paris time after the spring-forward transition'
+);
+assert.equal(
+  Number.isNaN(createDateInTimezone('2021-03-28', '02:30', 'Europe/Paris').getTime()),
+  true,
+  'Paris spring-forward gap must reject nonexistent local time'
 );
 assertIso(
   createDateInTimezone('2021-10-31', '02:30', 'Europe/Paris'),
