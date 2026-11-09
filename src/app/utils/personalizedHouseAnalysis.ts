@@ -292,7 +292,6 @@ export function analyzePersonalizedHouses(chart: NatalChart): PersonalizedHouseI
       .filter((item): item is string => Boolean(item));
     const planetaryConnections = describeHousePlanetConnections(
       chart,
-      house.house,
       occupants.map((item) => Object.keys(PLANET_RU).find((key) => PLANET_RU[key] === item.name) ?? item.name),
       house.lord,
     );
