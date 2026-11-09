@@ -438,7 +438,7 @@ export function analyzeLifeTopics(chart: NatalChart, currentDate: Date = new Dat
 
   return TOPIC_CONFIG.map((topic) => {
     const planets = getTopicPlanetNames(chart, topic.houses);
-    const directions = [...new Set(planets.map((name) => topic.directions[name]).filter((value): value is string => Boolean(value)))];
+    const directions = [...new Set(planets.map((name) => topic.directions[name] ? (PLANET_RU[name] ?? name) + ': ' + topic.directions[name] : null).filter((value): value is string => Boolean(value)))];
     const evidence = getTopicEvidence(chart, topic.houses);
     const houseReadings = topic.houses
       .map((houseNumber) => getTopicHouseNarrative(chart, houseNumber))
