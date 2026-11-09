@@ -76,7 +76,7 @@ function containsUnqualifiedPattern(text: string, patterns: RegExp[]): boolean {
 }
 
 function uniqueNonEmpty(values: string[] | undefined): string[] {
-  return (values ?? []).map((value) => value.trim()).filter(Boolean);
+  return [...new Set((values ?? []).map((value) => value.trim()).filter(Boolean))];
 }
 
 /**
