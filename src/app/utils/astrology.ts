@@ -226,9 +226,17 @@ export function calculatePlanetPosition(
     } else {
       const body = bodyName as Astronomy.Body;
       try {
-        tropicalLon = AstronomyApi.EclipticLongitude(body, date);
+        if (bodyName === 'Moon') {
+          // EclipticLongitude is heliocentric; the Moon requires its geocentric ecliptic position.
+          tropicalLon = AstronomyApi.EclipticGeoMoon(date).lon;
+        } else {
+          // Natal astrology uses geocentric positions. Convert the geocentric EQJ vector
+          // to the true ecliptic of date instead of using heliocentric EclipticLongitude.
+          const geocentricVector = AstronomyApi.GeoVector(body, date, true);
+          tropicalLon = AstronomyApi.Ecliptic(geocentricVector).elon;
+        }
       } catch (err) {
-        console.error(`EclipticLongitude error for ${bodyName}:`, err);
+        console.error(`Geocentric ecliptic position error for ${bodyName}:`, err);
         throw new Error(`API astronomy-engine вернул ошибку для ${bodyName}: ${err instanceof Error ? err.message : String(err)}`);
       }
     }
