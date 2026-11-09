@@ -490,7 +490,7 @@ function getDashaBalanceRatio(moonSiderealLon?: number): number {
     return 1;
   }
 
-  const positionInNakshatra = ((moonSiderealLon % NAKSHATRA_SIZE) + NAKSHATRA_SIZE) % NAKSHATRA_SIZE;
+  const positionInNakshatra = moonSiderealLon % NAKSHATRA_SIZE;
   const remainingRatio = (NAKSHATRA_SIZE - positionInNakshatra) / NAKSHATRA_SIZE;
   return Math.max(0.001, Math.min(1, remainingRatio));
 }
