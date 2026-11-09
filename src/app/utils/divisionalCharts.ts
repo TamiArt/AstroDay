@@ -229,7 +229,7 @@ export const DIVISIONAL_CHART_DEFINITIONS = [
   { division: 30, name: 'D30 — Тримшамша', sanskritName: 'Trimshamsha', area: 'Несчастья' },
   { division: 40, name: 'D40 — Кхаведамша', sanskritName: 'Khavedamsha', area: 'Благословения' },
   { division: 45, name: 'D45 — Акшаведамша', sanskritName: 'Akshavedamsha', area: 'Общее благополучие' },
-  { division: 60, name: 'D60 — Шаштьямша', sanskritName: 'Shashtiamsha', area: 'Карма прошлых жизней' }
+  { division: 60, name: 'D60 — общее деление (экспериментально)', sanskritName: 'Unverified generic division', area: 'Не интерпретировать как проверенную Шаштьямшу' }
 ];
 
 // Расчет всех дробных карт для натальной карты
