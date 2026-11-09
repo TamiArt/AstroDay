@@ -33,6 +33,8 @@ export interface LifeTopicInsight {
   actions: string[];
   evidence: string[];
   timingNote: string;
+  keyFactors: string[];
+  developmentPoints: string[];
 }
 
 const PLANET_RU: Record<string, string> = {
@@ -270,46 +272,146 @@ function getTopicPlanetNames(chart: NatalChart, houses: number[]): string[] {
   return [...names];
 }
 
+
 function getTopicEvidence(chart: NatalChart, houses: number[]): string[] {
   return houses.map((houseNumber) => {
     const house = chart.houses?.find((item) => item.house === houseNumber);
-    if (!house) return `${houseNumber}-й дом: данные недоступны`;
+    if (!house) return String(houseNumber) + '-й дом: данные недоступны';
     const occupants = Object.keys(chart.planets).filter((name) => getPlanetHouseForChart(chart, name) === houseNumber);
     const lordHouse = getPlanetHouseForChart(chart, house.lord);
+    const lord = chart.planets[house.lord as keyof NatalChart['planets']];
     const condition = evaluatePlanetCondition(chart, house.lord);
     const aspects = describeHouseDrishti(chart, houseNumber);
-    return `${houseNumber}-й дом (${SIGN_RU[house.signName] ?? house.signName}): управитель ${PLANET_RU[house.lord] ?? house.lord}${lordHouse ? ` расположен в ${lordHouse}-м доме` : ''}${condition ? `, достоинство — ${condition.label} (${condition.score}/100)` : ''}; планеты в доме: ${occupants.length ? occupants.map((name) => PLANET_RU[name] ?? name).join(', ') : 'нет'}. ${aspects.length ? aspects.join(' ') : 'Граха-дришти на дом не обнаружена.'}`;
+    const lordAspects = lordHouse ? describeHouseDrishti(chart, lordHouse) : [];
+    const dispositor = lord ? chart.houses?.find((item) => item.sign === lord.sign)?.lord : undefined;
+    const dispositorHouse = dispositor ? getPlanetHouseForChart(chart, dispositor) : null;
+    const dispositorCondition = dispositor ? evaluatePlanetCondition(chart, dispositor) : null;
+    const sign = SIGN_RU[house.signName] ?? house.signName;
+    const parts = [
+      String(houseNumber) + '-й дом в знаке ' + sign + ' управляется ' + (PLANET_RU[house.lord] ?? house.lord),
+      lordHouse ? 'управитель находится в ' + lordHouse + '-м доме (' + getLordHouseMeaning(lordHouse) + ')' : 'положение управителя не определено',
+      condition ? 'достоинство управителя: ' + condition.label : '',
+      occupants.length ? 'в доме расположены ' + occupants.map((name) => PLANET_RU[name] ?? name).join(', ') : 'планет в доме нет',
+      aspects.length ? 'дом получает влияния: ' + aspects.join(' ') : 'прямые граха-дришти на дом не обнаружены',
+      lordAspects.length ? 'положение управителя дополнительно аспектируют: ' + lordAspects.join(' ') : '',
+      dispositor ? 'диспозитор управителя — ' + (PLANET_RU[dispositor] ?? dispositor) +
+        (dispositorHouse ? ', расположен в ' + dispositorHouse + '-м доме' : '') +
+        (dispositorCondition ? ', достоинство: ' + dispositorCondition.label : '') : '',
+    ];
+    return parts.filter(Boolean).join('; ') + '.';
   });
 }
 
+function getTopicHouseNarrative(chart: NatalChart, houseNumber: number): { narrative: string; factor: string; development: string } | null {
+  const house = chart.houses?.find((item) => item.house === houseNumber);
+  if (!house) return null;
+  const lord = chart.planets[house.lord as keyof NatalChart['planets']];
+  if (!lord) return null;
+
+  const lordHouse = getPlanetHouseForChart(chart, house.lord);
+  const condition = evaluatePlanetCondition(chart, house.lord);
+  const occupants = Object.keys(chart.planets).filter((name) => getPlanetHouseForChart(chart, name) === houseNumber);
+  const sign = SIGN_RU[house.signName] ?? house.signName;
+  const lordName = PLANET_RU[house.lord] ?? house.lord;
+  const occupiedNames = occupants.map((name) => PLANET_RU[name] ?? name);
+  const houseAspects = describeHouseDrishti(chart, houseNumber);
+  const lordAspects = lordHouse ? describeHouseDrishti(chart, lordHouse) : [];
+  const dispositorName = chart.houses?.find((item) => item.sign === lord.sign)?.lord;
+  const dispositor = dispositorName ? chart.planets[dispositorName as keyof NatalChart['planets']] : undefined;
+  const dispositorHouse = dispositorName ? getPlanetHouseForChart(chart, dispositorName) : null;
+
+  const destination = lordHouse
+    ? 'Управитель ' + lordName + ' находится в ' + lordHouse + '-м доме — ' + getLordHouseMeaning(lordHouse) +
+      '. Поэтому темы рассматриваемой сферы символически переплетаются с этой областью жизни.'
+    : 'Положение управителя ' + lordName + ' по дому не удалось определить, поэтому вывод о связи сфер ограничен.';
+  const conditionText = condition?.dignity === 'exalted'
+    ? 'В традиционной системе экзальтация считается поддерживающим достоинством: ' + lordName + ' может проявлять свои функции более заметно и уверенно.'
+    : condition?.dignity === 'own'
+      ? 'Собственный знак традиционно связывают с большей самостоятельностью и устойчивостью функций ' + lordName + '.'
+      : condition?.dignity === 'debilitated'
+        ? 'Положение в знаке падения традиционно трактуют как требующее большей осознанности и настройки в темах, за которые отвечает ' + lordName + '; это не означает отсутствие результата.'
+        : condition?.dignity === 'other'
+          ? 'Управитель находится не в собственном, экзальтационном или знаке падения; одной этой характеристики недостаточно, чтобы объявить его сильным или слабым.'
+          : 'Достоинство управителя по используемой схеме не оценивается.';
+  const occupancyText = occupiedNames.length
+    ? 'В самом доме находятся ' + occupiedNames.join(', ') + '; их символические темы непосредственно включаются в трактовку этой сферы.'
+    : 'В доме нет планет, поэтому основной акцент анализа приходится на знак, управителя и его связи, а не на планетных occupants.';
+  const aspectText = houseAspects.length
+    ? 'Дом получает следующие граха-дришти: ' + houseAspects.join(' ')
+    : 'По используемой классической схеме прямые граха-дришти на этот дом не обнаружены.';
+  const dispositorText = dispositorName
+    ? 'Знак управителя занят диспозитором ' + (PLANET_RU[dispositorName] ?? dispositorName) +
+      (dispositorHouse ? ', который расположен в ' + dispositorHouse + '-м доме (' + getLordHouseMeaning(dispositorHouse) + ')' : '') +
+      '; это дополнительное звено в цепочке интерпретации.'
+    : '';
+  const lordAspectText = lordAspects.length
+    ? ' Сам дом, где расположен управитель, получает аспекты: ' + lordAspects.join(' ')
+    : '';
+  const factor = String(houseNumber) + '-й дом: ' + sign + '; управитель ' + lordName +
+    (lordHouse ? ' в ' + lordHouse + '-м доме' : '') +
+    (condition ? '; ' + condition.label : '') +
+    (occupiedNames.length ? '; планеты: ' + occupiedNames.join(', ') : '; без планет') + '.';
+  const development = condition?.dignity === 'debilitated'
+    ? 'Не делайте выводов по одному показателю: отдельно оценивайте положение диспозитора, аспекты и реальные обстоятельства этой сферы.'
+    : lordHouse
+      ? 'Наблюдайте, как решения в области «' + getLordHouseMeaning(lordHouse) + '» отражаются на теме ' + HOUSE_MEANING[houseNumber] + '.'
+      : 'Для более точной интерпретации нужны надёжные данные о положении управителя.';
+  return {
+    narrative: destination + ' ' + conditionText + ' ' + occupancyText + ' ' + aspectText + lordAspectText + ' ' + dispositorText,
+    factor,
+    development,
+  };
+}
+
 export function analyzeLifeTopics(chart: NatalChart, currentDate: Date = new Date()): LifeTopicInsight[] {
+  if (!chart.houses?.length) return [];
   const moonNakshatra = chart.planets.Moon.nakshatra;
   const dasha = calculateDasha(chart.date, moonNakshatra, currentDate, chart.planets.Moon.siderealLon);
   const antar = getCurrentAntardasha(dasha, currentDate);
   const formatDate = (date: Date) => date.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
-  const periodLabel = `Махадаша ${PLANET_RU[dasha.planet] ?? dasha.planet} действует с ${formatDate(dasha.startDate)} по ${formatDate(dasha.endDate)}${antar ? `; Антардаша ${PLANET_RU[antar.planet] ?? antar.planet} — с ${formatDate(antar.startDate)} по ${formatDate(antar.endDate)}` : ''}.`;
+  const periodLabel = 'Махадаша ' + (PLANET_RU[dasha.planet] ?? dasha.planet) + ' действует с ' +
+    formatDate(dasha.startDate) + ' по ' + formatDate(dasha.endDate) +
+    (antar ? '; Антардаша ' + (PLANET_RU[antar.planet] ?? antar.planet) + ' — с ' +
+      formatDate(antar.startDate) + ' по ' + formatDate(antar.endDate) : '') + '.';
 
   return TOPIC_CONFIG.map((topic) => {
     const planets = getTopicPlanetNames(chart, topic.houses);
     const directions = [...new Set(planets.map((name) => topic.directions[name]).filter((value): value is string => Boolean(value)))];
     const evidence = getTopicEvidence(chart, topic.houses);
-    const focus = planets.map((name) => `${PLANET_RU[name] ?? name}: ${PLANET_THEMES[name]}`).join('; ');
+    const houseReadings = topic.houses
+      .map((houseNumber) => getTopicHouseNarrative(chart, houseNumber))
+      .filter((item): item is NonNullable<typeof item> => Boolean(item));
+    const keyFactors = houseReadings.map((item) => item.factor);
+    const developmentPoints = houseReadings.map((item) => item.development);
+    const houseInterpretations = houseReadings.map((item) => item.narrative);
     const mahaConnection = describePeriodConnection(chart, dasha.planet, topic.houses, planets);
     const antarConnection = antar ? describePeriodConnection(chart, antar.planet, topic.houses, planets) : 'Текущая Антардаша не определена в доступных данных.';
-    const periodMeaning = `Связь Махадаши с этой сферой: ${mahaConnection} Связь Антардаши: ${antarConnection}`;
+    const periodMeaning = 'Связь Махадаши с этой сферой: ' + mahaConnection + ' Связь Антардаши: ' + antarConnection;
+    const directionText = directions.length
+      ? 'Планетные сигнификаторы и управители указывают на направления для практического исследования: ' + directions.join('; ') + '.'
+      : 'В этой карте не найдено достаточно прямых планетных указаний, чтобы уверенно перечислять конкретные направления.';
+    const interpretation = [
+      'Сфера рассматривается через дома ' + topic.houses.join(', ') + '. Важно не только значение самих домов, но и то, куда попадают их управители.',
+      ...houseInterpretations,
+      directionText,
+      'Эти связи описывают символические акценты карты, а не гарантированные события, способности или ограничения.',
+    ].join(' ');
+
     const timingNote = topic.id === 'children'
-      ? `${periodLabel} ${periodMeaning} Это символическая трактовка периода, а не прогноз фертильности, даты зачатия или количества детей. Медицинское планирование беременности следует обсуждать с врачом.`
-      : `${periodLabel} ${periodMeaning} Период показывает символический акцент, а не гарантирует событие и не определяет лучший день для финансовой операции.`;
+      ? periodLabel + ' ' + periodMeaning + ' Это символическая трактовка периода, а не прогноз фертильности, даты зачатия или количества детей. Медицинское планирование беременности следует обсуждать с врачом.'
+      : periodLabel + ' ' + periodMeaning + ' Период показывает символический акцент, а не гарантирует событие и не определяет лучший день для финансовой операции.';
 
     return {
       id: topic.id,
       title: topic.title,
       houses: topic.houses,
-      interpretation: `В анализ включены дома ${topic.houses.join(', ')}. В их управителях и планетах встречаются темы: ${focus || 'недостаточно планетных указаний для конкретизации'}. Рассматривай перечисленные направления как гипотезы для практической проверки, а не как предопределённый выбор.`,
+      interpretation,
       directions,
       actions: topic.actions,
       evidence,
       timingNote,
+      keyFactors,
+      developmentPoints,
     };
   });
 }
