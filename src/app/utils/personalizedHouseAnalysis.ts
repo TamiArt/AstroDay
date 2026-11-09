@@ -302,7 +302,7 @@ export function analyzePersonalizedHouses(chart: NatalChart): PersonalizedHouseI
     const houseSignStyle = describeHouseSignStyle(house.signName, house.house);
     const interpretation = lordHouse
       ? `В традиционной Джйотиш этот дом связан с темой: ${HOUSE_MEANING[house.house]}. В твоей карте он начинается в знаке ${sign}. ${houseSignStyle ?? ''} Управитель — ${PLANET_RU[house.lord] ?? house.lord}; он расположен в ${lordHouse}-м доме (${getLordHouseMeaning(lordHouse)}). Поэтому темы этих двух домов стоит рассматривать вместе: решения и опыт в сфере «${getLordHouseMeaning(lordHouse)}» символически связываются с темой этого дома.`
-      : `Дом в знаке ${sign}; положение его управителя в доступных данных определить не удалось. Общая тема: ${HOUSE_MEANING[house.house]}.`;
+      : `Дом в знаке ${sign}; ${houseSignStyle ?? ''} Положение его управителя в доступных данных определить не удалось. Общая тема: ${HOUSE_MEANING[house.house]}.`;
 
     const evidence = [
       `Знак дома: ${sign}`,
