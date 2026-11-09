@@ -7,7 +7,7 @@ const segment = 360 / 27;
 assert.equal(getPanchangAngularIndices(0, segment - 1e-10).nakshatraIndex, 0);
 assert.equal(getPanchangAngularIndices(0, segment).nakshatraIndex, 1);
 assert.equal(getPanchangAngularIndices(0, 360).nakshatraIndex, 0);
-assert.equal(getPanchangAngularIndices(350, 10).tithiIndex, 0, 'tithi angle wraps across 360°');
+assert.equal(getPanchangAngularIndices(355, 5).tithiIndex, 0, 'tithi angle wraps across 360°');
 assert.equal(getPanchangAngularIndices(0, 12).tithiIndex, 1, 'exact 12° starts the second tithi');
 assert.equal(getPanchangAngularIndices(0, 0).karanaIndex, 10, 'new-moon boundary uses Kimstughna');
 assert.throws(() => getPanchangAngularIndices(Number.NaN, 0), /конечными числами/);
