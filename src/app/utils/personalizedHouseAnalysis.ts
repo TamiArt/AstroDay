@@ -35,6 +35,9 @@ export interface LifeTopicInsight {
   timingNote: string;
   keyFactors: string[];
   developmentPoints: string[];
+  supportingFactors: string[];
+  attentionPoints: string[];
+  synthesis: string;
 }
 
 const PLANET_RU: Record<string, string> = {
@@ -100,7 +103,7 @@ const TOPIC_CONFIG: Array<{
   {
     id: 'talents',
     title: 'Таланты, обучение и творчество',
-    houses: [3, 5, 9],
+    houses: [1, 3, 5, 9, 10],
     directions: {
       Mercury: 'аналитика, IT, тестирование, программирование, работа с данными и обучение',
       Venus: 'музыка, рисунок, визуальный дизайн, эстетика и творческие ремёсла',
@@ -117,7 +120,7 @@ const TOPIC_CONFIG: Array<{
   {
     id: 'money',
     title: 'Деньги и источники дохода',
-    houses: [2, 10, 11],
+    houses: [2, 5, 9, 10, 11],
     directions: {
       Mercury: 'интеллектуальные услуги, IT, аналитика, тестирование, документация и работа с данными',
       Venus: 'дизайн, визуальные продукты, красота, искусство и сервис',
@@ -134,7 +137,7 @@ const TOPIC_CONFIG: Array<{
   {
     id: 'career',
     title: 'Профессия и карьера',
-    houses: [6, 10, 11],
+    houses: [2, 6, 10, 11],
     directions: {
       Mercury: 'QA, аналитика, разработка, системный анализ и коммуникация между командами',
       Saturn: 'процессы, надёжность, тестирование, управление качеством и сложные долгие проекты',
@@ -151,7 +154,7 @@ const TOPIC_CONFIG: Array<{
   {
     id: 'children',
     title: 'Дети и родительство',
-    houses: [5],
+    houses: [2, 5, 9, 11],
     directions: {
       Jupiter: 'традиционно рассматривается как один из сигнификаторов детей, заботы, наставничества и передачи знаний',
       Moon: 'символически связан с заботой, эмоциональной включённостью и повседневным уходом',
@@ -168,7 +171,7 @@ const TOPIC_CONFIG: Array<{
   {
     id: 'home_family',
     title: 'Дом, семья и личная опора',
-    houses: [4, 2],
+    houses: [2, 4, 12],
     directions: {
       Moon: 'эмоциональная атмосфера дома, забота, семейные ритмы и чувство безопасности',
       Venus: 'создание комфортной среды, эстетика пространства и согласование бытовых потребностей',
@@ -219,7 +222,7 @@ const TOPIC_CONFIG: Array<{
   {
     id: 'relationships',
     title: 'Отношения и партнёрство',
-    houses: [7],
+    houses: [2, 5, 7, 8, 12],
     actions: ['Обсуждайте ожидания, личные границы и распределение ответственности до возникновения конфликта.', 'Регулярно сверяйте общие цели и способы поддержки друг друга.'],
     directions: {
       Venus: 'близость, гармония, эстетика и способы проявления привязанности',
@@ -426,7 +429,7 @@ function getTopicHouseBridge(topicId: LifeTopicInsight['id'], destinationHouse: 
   return TOPIC_DESTINATION_MEANINGS[topicId]?.[destinationHouse] ?? null;
 }
 
-function getTopicHouseNarrative(chart: NatalChart, topicId: LifeTopicInsight['id'], houseNumber: number): { narrative: string; factor: string; development: string } | null {
+function getTopicHouseNarrative(chart: NatalChart, topicId: LifeTopicInsight['id'], houseNumber: number): { narrative: string; factor: string; development: string; support: string[]; attention: string[] } | null {
   const house = chart.houses?.find((item) => item.house === houseNumber);
   if (!house) return null;
   const lord = chart.planets[house.lord as keyof NatalChart['planets']];
@@ -490,10 +493,35 @@ function getTopicHouseNarrative(chart: NatalChart, topicId: LifeTopicInsight['id
     : lordHouse
       ? 'Наблюдайте, как решения в области «' + getLordHouseMeaning(lordHouse) + '» отражаются на теме ' + HOUSE_MEANING[houseNumber] + '.'
       : 'Для более точной интерпретации нужны надёжные данные о положении управителя.';
+  const support: string[] = [];
+  const attention: string[] = [];
+  if (condition?.dignity === 'exalted' || condition?.dignity === 'own') {
+    support.push(lordName + ' — управитель ' + houseNumber + '-го дома — находится в положении ' + condition.label + '. В традиционной трактовке это поддерживает более устойчивое проявление функций управителя.');
+  }
+  if (dispositorName && dispositor && (evaluatePlanetCondition(chart, dispositorName)?.dignity === 'exalted' || evaluatePlanetCondition(chart, dispositorName)?.dignity === 'own')) {
+    const dispositorCondition = evaluatePlanetCondition(chart, dispositorName);
+    support.push('Диспозитор ' + (PLANET_RU[dispositorName] ?? dispositorName) + ' также находится в ' + (dispositorCondition?.label ?? 'поддерживающем положении') + ', что добавляет ещё одно поддерживающее звено.');
+  }
+  if (condition?.dignity === 'debilitated') {
+    attention.push(lordName + ' находится в знаке падения. В традиционной трактовке это указывает на необходимость внимательнее оценивать диспозитора, аспекты и реальные обстоятельства; само по себе положение не означает неудачу.');
+  }
+  const pressureAspects = houseAspects.filter((item) => item.startsWith('Сатурн ') || item.startsWith('Марс '));
+  if (pressureAspects.length) {
+    attention.push('Дом получает аспекты Марса и/или Сатурна: ' + pressureAspects.join(' ') + ' Это не однозначно негативный знак, но в символической трактовке может добавлять интенсивность, необходимость дисциплины, решительных действий или управления нагрузкой.');
+  }
+  const lordPressureAspects = lordAspects.filter((item) => item.startsWith('Сатурн ') || item.startsWith('Марс '));
+  if (lordPressureAspects.length) {
+    attention.push('Положение управителя дополнительно аспектируют Марс и/или Сатурн: ' + lordPressureAspects.join(' ') + ' Важно учитывать, как эти темы влияют на способы реализации сферы.');
+  }
+  if (!support.length && !attention.length) {
+    attention.push('По используемым здесь критериям нет оснований объявлять эту связь ни особенно поддержанной, ни ослабленной. Нейтральная оценка не означает отсутствия потенциала.');
+  }
   return {
     narrative: destination + ' ' + lordRoleText + ' ' + conditionText + ' ' + occupancyText + ' ' + occupantRoleText + ' ' + aspectText + lordAspectText + ' ' + dispositorText,
     factor,
     development,
+    support,
+    attention,
   };
 }
 
@@ -518,6 +546,23 @@ export function analyzeLifeTopics(chart: NatalChart, currentDate: Date = new Dat
     const keyFactors = houseReadings.map((item) => item.factor);
     const developmentPoints = houseReadings.map((item) => item.development);
     const houseInterpretations = houseReadings.map((item) => item.narrative);
+    const supportingFactors = [...new Set(houseReadings.flatMap((item) => item.support))];
+    const attentionPoints = [...new Set(houseReadings.flatMap((item) => item.attention))];
+    const sharedLords = new Map<string, number[]>();
+    for (const houseNumber of topic.houses) {
+      const house = chart.houses.find((item) => item.house === houseNumber);
+      if (house) sharedLords.set(house.lord, [...(sharedLords.get(house.lord) ?? []), houseNumber]);
+    }
+    const repeatedLordLinks = [...sharedLords.entries()]
+      .filter(([, ruled]) => ruled.length > 1)
+      .map(([lord, ruled]) => (PLANET_RU[lord] ?? lord) + ' управляет сразу несколькими домами этой сферы (' + ruled.join(', ') + '), поэтому их темы в традиционной трактовке объединяются через одну планету.');
+    const synthesis = supportingFactors.length && attentionPoints.length
+      ? 'Смешанная картина: в карте есть поддерживающие показатели и одновременно факторы, требующие внимания. Не следует сводить сферу к одному сильному или сложному положению; итоговая трактовка зависит от сочетания управителей, диспозиторов, аспектов и реальных обстоятельств.'
+      : supportingFactors.length
+        ? 'В выбранных показателях заметны поддерживающие факторы. Это символические ресурсы сферы, а не гарантия результата.'
+        : attentionPoints.length
+          ? 'В выбранных показателях больше факторов, требующих осознанного обращения. Это не приговор и не предсказание неудачи: важно смотреть на компенсирующие связи и практические обстоятельства.'
+          : 'Выбранные показатели не дают однозначного перевеса в сторону поддержки или напряжения. Сфера требует целостного прочтения, а не упрощённой оценки.';
     const mahaConnection = describePeriodConnection(chart, dasha.planet, topic.houses, planets);
     const antarConnection = antar ? describePeriodConnection(chart, antar.planet, topic.houses, planets) : 'Текущая Антардаша не определена в доступных данных.';
     const periodMeaning = 'Связь Махадаши с этой сферой: ' + mahaConnection + ' Связь Антардаши: ' + antarConnection;
@@ -528,6 +573,8 @@ export function analyzeLifeTopics(chart: NatalChart, currentDate: Date = new Dat
       'Сфера рассматривается через дома ' + topic.houses.join(', ') + '. Важно не только значение самих домов, но и то, куда попадают их управители.',
       ...houseInterpretations,
       directionText,
+      repeatedLordLinks.length ? 'Повторяющаяся связь внутри сферы: ' + repeatedLordLinks.join(' ') : '',
+      synthesis,
       'Эти связи описывают символические акценты карты, а не гарантированные события, способности или ограничения.',
     ].join(' ');
 
@@ -546,6 +593,9 @@ export function analyzeLifeTopics(chart: NatalChart, currentDate: Date = new Dat
       timingNote,
       keyFactors,
       developmentPoints,
+      supportingFactors,
+      attentionPoints,
+      synthesis,
     };
   });
 }
