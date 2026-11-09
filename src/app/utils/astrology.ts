@@ -177,12 +177,14 @@ export const NAKSHATRAS = [
 
 // Get sign from longitude
 export function getSign(longitude: number): number {
-  return Math.floor(longitude / 30);
+  if (!Number.isFinite(longitude)) throw new Error('Долгота должна быть конечным числом');
+  return Math.floor(normalizeDegrees(longitude) / 30);
 }
 
-// Get nakshatra from longitude
+// Get nakshatra from longitude using the exact 360° / 27 division.
 export function getNakshatra(longitude: number): number {
-  return Math.floor(longitude / 13.333333);
+  if (!Number.isFinite(longitude)) throw new Error('Долгота должна быть конечным числом');
+  return Math.floor(normalizeDegrees(longitude) / (FULL_CIRCLE / 27));
 }
 
 // Calculate planetary position
@@ -238,7 +240,7 @@ export function calculatePlanetPosition(
     const sign = getSign(siderealLon);
     const degree = siderealLon % 30;
     const nakshatra = getNakshatra(siderealLon);
-    const pada = Math.floor((siderealLon % 13.333333) / 3.333333) + 1;
+    const pada = Math.floor((siderealLon % (FULL_CIRCLE / 27)) / (FULL_CIRCLE / 108)) + 1;
 
     return {
       name: bodyName,
@@ -269,11 +271,11 @@ export function calculateAscendant(
       throw new Error(`Некорректная дата: ${date}`);
     }
 
-    if (typeof latitude !== 'number' || isNaN(latitude)) {
+    if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) {
       throw new Error(`Некорректная широта: ${latitude}`);
     }
 
-    if (typeof longitude !== 'number' || isNaN(longitude)) {
+    if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
       throw new Error(`Некорректная долгота: ${longitude}`);
     }
 
@@ -410,6 +412,22 @@ export function calculateDasha(
   currentDate: Date = new Date(),
   moonSiderealLon?: number
 ): DashaPeriod {
+  if (!(birthDate instanceof Date) || !Number.isFinite(birthDate.getTime())) {
+    throw new Error('Некорректная дата рождения для расчёта Вимшоттари-даши');
+  }
+  if (!(currentDate instanceof Date) || !Number.isFinite(currentDate.getTime())) {
+    throw new Error('Некорректная текущая дата для расчёта Вимшоттари-даши');
+  }
+  if (currentDate < birthDate) {
+    throw new Error('Дата расчёта Вимшоттари-даши не может быть раньше даты рождения');
+  }
+  if (!Number.isInteger(moonNakshatra) || moonNakshatra < 0 || moonNakshatra >= 27) {
+    throw new Error('Номер накшатры Луны должен быть целым числом от 0 до 26');
+  }
+  if (moonSiderealLon !== undefined && (!Number.isFinite(moonSiderealLon) || moonSiderealLon < 0 || moonSiderealLon >= 360)) {
+    throw new Error('Сидерическая долгота Луны должна находиться в диапазоне от 0° до 360°');
+  }
+
   const dashaLordIndex = moonNakshatra % 9;
   const startingLord = DASHA_ORDER[dashaLordIndex];
   const startingBalanceRatio = getDashaBalanceRatio(moonSiderealLon);
@@ -525,11 +543,11 @@ export function calculateNatalChart(
       throw new Error('Некорректная дата рождения');
     }
 
-    if (typeof latitude !== 'number' || isNaN(latitude)) {
+    if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) {
       throw new Error('Некорректная широта');
     }
 
-    if (typeof longitude !== 'number' || isNaN(longitude)) {
+    if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
       throw new Error('Некорректная долгота');
     }
 
