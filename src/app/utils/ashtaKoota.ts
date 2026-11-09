@@ -101,7 +101,7 @@ function getVashyaScore(a: VashyaGroup, b: VashyaGroup): number {
   return pairs.some(([x,y]) => (x === a && y === b) || (x === b && y === a)) ? 1 : 0;
 }
 
-export function calculateAshtaKoota(personA: CompatibilityPerson, personB: CompatibilityPerson): AshtaKootaResult {
+export function calculateAshtaKoota(personA: CompatibilityPerson, personB: CompatibilityPerson, options: AshtaKootaOptions = {}): AshtaKootaResult {
   validatePerson(personA, 'Партнёр A');
   validatePerson(personB, 'Партнёр B');
 
@@ -116,11 +116,11 @@ export function calculateAshtaKoota(personA: CompatibilityPerson, personB: Compa
 
   // Varna: directional traditional rule, with A treated as the first (bride) chart and B as the second (groom) chart.
   const varnaRank = [1,2,3,0,1,2,3,0,1,2,3,0]; // fire=Kshatriya, earth=Vaishya, air=Shudra, water=Brahmin
-  const varnaScore = varnaRank[aSign] >= varnaRank[bSign] ? 1 : 0;
+  const varnaRoleA = options.varnaRoleA ?? 'bride';\n  const brideRank = varnaRoleA === 'bride' ? varnaRank[aSign] : varnaRank[bSign];\n  const groomRank = varnaRoleA === 'groom' ? varnaRank[aSign] : varnaRank[bSign];\n  const varnaScore = groomRank <= brideRank ? 1 : 0;
   const varnaNames = ['Brahmin','Kshatriya','Vaishya','Shudra'];
   const varna = kuta('varna','Варна',varnaScore,1,'Сопоставление традиционных варн по знакам Луны.',[
     `Партнёр A: ${varnaNames[varnaRank[aSign]]}; партнёр B: ${varnaNames[varnaRank[bSign]]}.`,
-    'Правило направленное: для этой оценки A рассматривается как первый партнёр, B — как второй; при смене ролей балл может измениться.'
+    'Правило направленное: роль A задана как ' + (varnaRoleA === 'bride' ? 'невеста' : 'жених') + ', роль B — как ' + (varnaRoleA === 'bride' ? 'жених' : 'невеста') + '; при смене ролей балл может измениться.'
   ]);
 
   const vashyaA = getVashya(aSign), vashyaB = getVashya(bSign);
