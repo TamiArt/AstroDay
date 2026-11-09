@@ -16,7 +16,8 @@ export type InterpretationIssueCode =
   | 'invalid-house'
   | 'invalid-primary-house'
   | 'duplicate-evidence'
-  | 'missing-balance-context';
+  | 'missing-balance-context'
+  | 'unbalanced-synthesis';
 
 export interface InterpretationQualityIssue {
   code: InterpretationIssueCode;
@@ -33,6 +34,7 @@ export interface InterpretationQualityInput {
   primaryHouses?: number[];
   supportingFactors?: string[];
   attentionPoints?: string[];
+  synthesis?: string;
   requiresEvidence?: boolean;
 }
 
@@ -153,6 +155,10 @@ export function validateInterpretationQuality(
   if (support.length === 0 && attention.length === 0 && input.supportingFactors !== undefined && input.attentionPoints !== undefined) {
     add('missing-balance-context', 'warning', 'Не указаны ни поддерживающие факторы, ни факторы, требующие внимания; нейтральность следует обозначить явно.');
   }
+  if (support.length > 0 && attention.length > 0 &&
+      !/(смешан|одновременно|сочетан|поддерживающ\w* фактор\w* и фактор\w* вниман)/iu.test(input.synthesis ?? '')) {
+    add('unbalanced-synthesis', 'warning', 'При разнонаправленных показателях итоговая сводка должна явно обозначать смешанную картину.');
+  }
 
   const errors = issues.filter((issue) => issue.severity === 'error').length;
   const warnings = issues.filter((issue) => issue.severity === 'warning').length;
@@ -217,6 +223,7 @@ export function auditNatalChartInterpretations(
       primaryHouses: topic.primaryHouses,
       supportingFactors: topic.supportingFactors,
       attentionPoints: topic.attentionPoints,
+      synthesis: topic.synthesis,
     });
   }
 
@@ -229,6 +236,7 @@ export function auditNatalChartInterpretations(
       houses: [insight.house, ...(insight.lordHouse ? [insight.lordHouse] : []), ...insight.ruledHouses],
       supportingFactors: insight.supportingFactors,
       attentionPoints: insight.attentionFactors,
+      synthesis: insight.overallSynthesis,
     });
   }
 
