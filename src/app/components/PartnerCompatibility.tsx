@@ -110,7 +110,7 @@ export function PartnerCompatibility({ natalChart }: PartnerCompatibilityProps) 
           <label className="text-sm">Долгота
             <input required type="number" step="any" value={Number.isFinite(profile.longitude) ? profile.longitude : ''} onChange={event => update('longitude', event.target.value === '' ? Number.NaN : Number(event.target.value))} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2" />
           </label>
-          <label className="text-sm md:col-span-2">Роль пользователя для направленного правила Варна
+          <label className="text-sm md:col-span-2">Роль пользователя для направленных правил Варна, Вашьи и Ганы
             <select value={varnaRoleA} onChange={event => setVarnaRoleA(event.target.value as 'bride' | 'groom')} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2">
               <option value="bride">Пользователь — невеста, партнёр — жених</option>
               <option value="groom">Пользователь — жених, партнёр — невеста</option>
