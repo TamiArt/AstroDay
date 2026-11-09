@@ -19,9 +19,9 @@ const EMPTY_PROFILE: PartnerBirthProfile = {
   birthDate: '',
   birthTime: '',
   birthPlace: '',
-  latitude: 0,
-  longitude: 0,
-  timezone: 'Europe/Moscow',
+  latitude: Number.NaN,
+  longitude: Number.NaN,
+  timezone: '',
 };
 
 const CLASSIFICATION: Record<AshtaKootaResult['classification'], string> = {
@@ -105,10 +105,10 @@ export function PartnerCompatibility({ natalChart }: PartnerCompatibilityProps) 
             <input required type="time" value={profile.birthTime} onChange={event => update('birthTime', event.target.value)} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2" />
           </label>
           <label className="text-sm">Широта
-            <input required type="number" step="any" value={profile.latitude} onChange={event => update('latitude', Number(event.target.value))} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2" />
+            <input required type="number" step="any" value={Number.isFinite(profile.latitude) ? profile.latitude : ''} onChange={event => update('latitude', event.target.value === '' ? Number.NaN : Number(event.target.value))} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2" />
           </label>
           <label className="text-sm">Долгота
-            <input required type="number" step="any" value={profile.longitude} onChange={event => update('longitude', Number(event.target.value))} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2" />
+            <input required type="number" step="any" value={Number.isFinite(profile.longitude) ? profile.longitude : ''} onChange={event => update('longitude', event.target.value === '' ? Number.NaN : Number(event.target.value))} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2" />
           </label>
           <label className="text-sm md:col-span-2">Роль пользователя для направленного правила Варна
             <select value={varnaRoleA} onChange={event => setVarnaRoleA(event.target.value as 'bride' | 'groom')} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2">
