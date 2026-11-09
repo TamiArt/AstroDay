@@ -40,11 +40,11 @@ AstroDay — клиентское приложение на React 18, TypeScript
 | 13 | Контроль качества астрологических интерпретаций | **Завершён**; полный verify прошёл в [run 42675046869](https://github.com/TamiArt/AstroDay/actions/runs/42675046869) на commit [446bbf5](https://github.com/TamiArt/AstroDay/commit/446bbf5ecb97f56c082ff6a3aa467404c5ca4c05) |
 | 14 | Полноценная совместимость партнёров (Ашта-Кута / Гуна-милан) | **Завершён**; полный verify — [run 42677465957](https://github.com/TamiArt/AstroDay/actions/runs/42677465957), commit [4c1a430](https://github.com/TamiArt/AstroDay/commit/4c1a4301837a3fe92fec8f287c3e9619b0ae4170) |
 | 15 | Углубление Васту и анализа недвижимости | **Завершён**; полный verify — [run 42679836562](https://github.com/TamiArt/AstroDay/actions/runs/42679836562), commit `f644104f94686e20f25f1229db35a6adf9d00e29` |
-| 16 | Расширение астрологических возможностей | **Завершён**; полный verify — [run 42681326113](https://github.com/TamiArt/AstroDay/actions/runs/42681326113), commit `2b31410f670920b3755d180d066bee352cbf9bf8` |
+| 16 | Расширение астрологических возможностей | **Завершён**; полный verify — [run 42681635349](https://github.com/TamiArt/AstroDay/actions/runs/42681635349), commit `1e485df7c5643195df174c4d2cc87c090a16bce3` |
 
 Завершённый этап означает, что реализация и полный `npm run verify` подтверждены для указанного commit/run. Это не означает, что все ручные сценарии или все астрологические школы проверены.
 
-Для этапа 15 полный `npm run verify` прошёл в GitHub Actions run [42679836562](https://github.com/TamiArt/AstroDay/actions/runs/42679836562). Этап 16 прошёл полный `npm run verify`: [run 42681326113](https://github.com/TamiArt/AstroDay/actions/runs/42681326113) на commit `2b31410f670920b3755d180d066bee352cbf9bf8`.
+Для этапа 15 полный `npm run verify` прошёл в GitHub Actions run [42679836562](https://github.com/TamiArt/AstroDay/actions/runs/42679836562). Этап 16 прошёл полный `npm run verify`: [run 42681635349](https://github.com/TamiArt/AstroDay/actions/runs/42681635349) на commit `1e485df7c5643195df174c4d2cc87c090a16bce3`.
 
 ## Команды проверки
 
