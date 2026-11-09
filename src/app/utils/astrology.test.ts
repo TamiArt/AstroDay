@@ -47,6 +47,35 @@ assert.ok(
   `Independent New Delhi ascendant reference: expected ${ascendantReferenceLongitude}°, got ${ascendantReference.siderealLon}°`,
 );
 
+// Independent full-chart fixture from Drik Panchang at the same birth instant.
+// Values are the published decimal sidereal longitudes (rounded to 0.01°).
+const drikReferenceChart = calculateNatalChart(
+  new Date('1990-06-15T07:19:25.000Z'),
+  28.6139,
+  77.2090,
+);
+const drikPlanetReferences: Record<string, number> = {
+  Sun: 60.21,
+  Moon: 319.03,
+  Mars: 347.17,
+  Mercury: 41.62,
+  Jupiter: 82.11,
+  Venus: 24.81,
+  Saturn: 270.31,
+  Uranus: 254.44,
+  Neptune: 259.99,
+  Pluto: 201.83,
+  Rahu: 285.97,
+  Ketu: 105.97,
+};
+for (const [planetName, expectedLongitude] of Object.entries(drikPlanetReferences)) {
+  const actualLongitude = drikReferenceChart.planets[planetName]?.siderealLon;
+  assert.ok(
+    typeof actualLongitude === 'number' && angularDifference(actualLongitude, expectedLongitude) < 0.1,
+    `Drik Panchang ${planetName} reference: expected ${expectedLongitude}°, got ${actualLongitude}°`,
+  );
+}
+
 const birthMoment = new Date('1990-06-15T08:30:00.000Z');
 const chart = calculateNatalChart(birthMoment, 51.5074, -0.1278);
 
