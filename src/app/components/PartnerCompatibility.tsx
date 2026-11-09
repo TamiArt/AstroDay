@@ -17,7 +17,7 @@ interface PartnerCompatibilityProps {
 const EMPTY_PROFILE: PartnerBirthProfile = {
   name: '',
   birthDate: '',
-  birthTime: '12:00',
+  birthTime: '',
   birthPlace: '',
   latitude: 0,
   longitude: 0,
