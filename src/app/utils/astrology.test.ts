@@ -88,6 +88,32 @@ const moonNakshatra = chart.planets.Moon.nakshatra;
 const currentDate = new Date('2026-08-19T12:00:00.000Z');
 const dasha = calculateDasha(birthMoment, moonNakshatra, currentDate, chart.planets.Moon.siderealLon);
 assert.ok(dasha.startDate <= currentDate && currentDate < dasha.endDate, 'Current Mahadasha must contain requested date');
+
+// Vimshottari boundaries: exact nakshatra start gives the full starting mahadasha;
+// antardashas are contiguous and their final boundary equals the mahadasha end.
+const dashaBirth = new Date('2000-01-01T00:00:00.000Z');
+const firstKetuDasha = calculateDasha(dashaBirth, 0, dashaBirth, 0);
+assert.equal(firstKetuDasha.planet, 'Ketu');
+assert.equal(firstKetuDasha.startDate.getTime(), dashaBirth.getTime());
+assert.ok(Math.abs(firstKetuDasha.endDate.getTime() - (dashaBirth.getTime() + 7 * 365.2425 * 86400000)) < 1);
+assert.equal(firstKetuDasha.antardasha?.[0].planet, 'Ketu');
+assert.equal(firstKetuDasha.antardasha?.[0].startDate.getTime(), firstKetuDasha.startDate.getTime());
+for (let index = 1; index < (firstKetuDasha.antardasha?.length ?? 0); index++) {
+  assert.equal(
+    firstKetuDasha.antardasha![index - 1].endDate.getTime(),
+    firstKetuDasha.antardasha![index].startDate.getTime(),
+    'Antardasha periods must be contiguous',
+  );
+}
+assert.equal(
+  firstKetuDasha.antardasha?.[8].endDate.getTime(),
+  firstKetuDasha.endDate.getTime(),
+  'The final antardasha must end with its mahadasha',
+);
+const nextMahadasha = calculateDasha(dashaBirth, 0, firstKetuDasha.endDate, 0);
+assert.equal(nextMahadasha.planet, 'Venus', 'The next mahadasha begins exactly at the prior end boundary');
+const nextNakshatraDasha = calculateDasha(dashaBirth, 1, dashaBirth, 360 / 27);
+assert.equal(nextNakshatraDasha.planet, 'Venus', 'A Moon exactly on the next nakshatra boundary starts its lord sequence');
 const antardasha = getCurrentAntardasha(dasha, currentDate);
 assert.ok(antardasha, 'Active Mahadasha must expose an active Antardasha');
 assert.ok(antardasha!.startDate <= currentDate && currentDate < antardasha!.endDate);
