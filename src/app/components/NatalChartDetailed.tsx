@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertCircle, BarChart3, BookOpen, Clock, Eye, Layers, Star, Zap } from 'lucide-react';
+import { AlertCircle, BarChart3, BookOpen, Clock, Eye, Layers, Star, Users, Zap } from 'lucide-react';
 import { NatalChart as NatalChartType } from '../utils/astrology';
 import { AspectsTableEnhanced } from './AspectsTableEnhanced';
 import { GlassCard } from './common/GlassCard';
@@ -9,17 +9,19 @@ import { NatalDashaTab } from './natal-chart/NatalDashaTab';
 import { NatalHousesTab } from './natal-chart/NatalHousesTab';
 import { NatalOverviewTab } from './natal-chart/NatalOverviewTab';
 import { LifePathAnalysisTab } from './natal-chart/LifePathAnalysisTab';
+import { PartnerCompatibility } from './PartnerCompatibility';
 
 interface NatalChartDetailedProps {
   natalChart: NatalChartType;
 }
 
-type TabType = 'overview' | 'analysis' | 'life' | 'aspects' | 'houses' | 'dasha' | 'divisional';
+type TabType = 'overview' | 'analysis' | 'life' | 'compatibility' | 'aspects' | 'houses' | 'dasha' | 'divisional';
 
 const TABS = [
   { id: 'overview', label: 'Обзор', icon: Eye },
   { id: 'analysis', label: 'Анализ', icon: BookOpen },
   { id: 'life', label: 'Деньги и отношения', icon: Star },
+  { id: 'compatibility', label: 'Совместимость', icon: Users },
   { id: 'aspects', label: 'Аспекты', icon: Zap },
   { id: 'houses', label: 'Дома', icon: Layers },
   { id: 'dasha', label: 'Даша', icon: Clock },
