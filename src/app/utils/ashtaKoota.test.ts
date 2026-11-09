@@ -52,3 +52,49 @@ assert.notEqual(
   directionalA.kutas.find(item => item.id === 'varna')?.score,
   directionalB.kutas.find(item => item.id === 'varna')?.score,
 );
+
+const vashyaForward = calculateAshtaKoota(
+  { name: 'A', moonLongitude: 0 },
+  { name: 'B', moonLongitude: 120 },
+  { varnaRoleA: 'bride' },
+);
+const vashyaReverse = calculateAshtaKoota(
+  { name: 'A', moonLongitude: 0 },
+  { name: 'B', moonLongitude: 120 },
+  { varnaRoleA: 'groom' },
+);
+assert.equal(vashyaForward.kutas.find(item => item.id === 'vashya')?.score, 1.5);
+assert.equal(vashyaReverse.kutas.find(item => item.id === 'vashya')?.score, 0);
+
+const splitSigns = calculateAshtaKoota(
+  { name: 'Sagittarius first half', moonLongitude: 250 },
+  { name: 'Sagittarius second half', moonLongitude: 260 },
+);
+assert.ok(splitSigns.kutas.find(item => item.id === 'vashya')?.details.some(detail => detail.includes('Manava')));
+assert.ok(splitSigns.kutas.find(item => item.id === 'vashya')?.details.some(detail => detail.includes('Chatushpada')));
+
+const directionalGanaBride = calculateAshtaKoota(
+  { name: 'A', moonLongitude: 0 },
+  { name: 'B', moonLongitude: 13.34 },
+  { varnaRoleA: 'bride' },
+);
+const directionalGanaGroom = calculateAshtaKoota(
+  { name: 'A', moonLongitude: 0 },
+  { name: 'B', moonLongitude: 13.34 },
+  { varnaRoleA: 'groom' },
+);
+assert.equal(directionalGanaBride.kutas.find(item => item.id === 'gana')?.score, 6);
+assert.equal(directionalGanaGroom.kutas.find(item => item.id === 'gana')?.score, 5);
+
+const maitri = calculateAshtaKoota(
+  { name: 'A', moonLongitude: 0 },
+  { name: 'B', moonLongitude: 60 },
+);
+assert.equal(maitri.kutas.find(item => item.id === 'grahaMaitri')?.score, 0.5);
+
+const bhakootCancellation = calculateAshtaKoota(
+  { name: 'A', moonLongitude: 0 },
+  { name: 'B', moonLongitude: 210 },
+);
+assert.equal(bhakootCancellation.kutas.find(item => item.id === 'bhakoot')?.score, 7);
+assert.ok(bhakootCancellation.kutas.find(item => item.id === 'bhakoot')?.details.some(detail => detail.includes('общего управителя')));
