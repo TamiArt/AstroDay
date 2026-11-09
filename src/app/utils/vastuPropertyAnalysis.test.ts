@@ -60,22 +60,24 @@ const investment = calculatePropertyInvestment({
   vacancyRatePercent: 5,
   monthlyOperatingCosts: 300,
   annualPropertyTax: 1200,
+  annualInsurance: 1200,
+  annualCapitalReserve: 1000,
   monthlyMortgagePayment: 1000,
 });
 assert.equal(investment.totalAcquisitionCost, 220000);
 assert.equal(investment.effectiveAnnualRent, 22800);
-assert.equal(investment.annualOperatingCosts, 4800);
-assert.equal(investment.annualNetOperatingIncome, 18000);
+assert.equal(investment.annualOperatingCosts, 7000);
+assert.equal(investment.annualNetOperatingIncome, 15800);
 assert.equal(investment.grossYieldPercent, 24000 / 220000 * 100);
-assert.equal(investment.netYieldPercent, 18000 / 220000 * 100);
-assert.equal(investment.monthlyCashFlowBeforeFinancing, 1500);
-assert.equal(investment.monthlyCashFlowAfterFinancing, 500);
-assert.equal(investment.breakEvenOccupancyPercent, 20);
+assert.equal(investment.netYieldPercent, 15800 / 220000 * 100);
+assert.equal(investment.monthlyCashFlowBeforeFinancing, 15800 / 12);
+assert.equal(investment.monthlyCashFlowAfterFinancing, 15800 / 12 - 1000);
+assert.equal(investment.breakEvenOccupancyPercent, 7000 / 24000 * 100);
 assert.equal(investment.isComplete, true);
 
 const noRent = calculatePropertyInvestment({
   purchasePrice: 0, closingCosts: 0, renovationCost: 0, monthlyRent: 0,
-  vacancyRatePercent: 150, monthlyOperatingCosts: 0, annualPropertyTax: 0, monthlyMortgagePayment: 0,
+  vacancyRatePercent: 150, monthlyOperatingCosts: 0, annualPropertyTax: 0, annualInsurance: 0, annualCapitalReserve: 0, monthlyMortgagePayment: 0,
 });
 assert.equal(noRent.grossYieldPercent, null);
 assert.equal(noRent.netYieldPercent, null);
@@ -84,3 +86,10 @@ assert.equal(noRent.effectiveAnnualRent, 0);
 assert.equal(noRent.isComplete, false);
 
 console.log('Vastu property analysis tests passed');
+
+const impossibleBreakEven = calculatePropertyInvestment({
+  purchasePrice: 100000, closingCosts: 0, renovationCost: 0, monthlyRent: 100,
+  vacancyRatePercent: 0, monthlyOperatingCosts: 200, annualPropertyTax: 0,
+  annualInsurance: 0, annualCapitalReserve: 0, monthlyMortgagePayment: 0,
+});
+assert.equal(impossibleBreakEven.breakEvenOccupancyPercent, 200);
