@@ -5,6 +5,7 @@ import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition
 import { getSunHouseFocus } from './natalAnalysisGuidance';
 import { getAscendantLordFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus } from './natalPersonalFocus';
 import { analyzeHouseLords } from './natalHouseLordAnalysis';
+import { auditNatalChartInterpretations, validateInterpretationQuality } from './natalInterpretationQuality';
 import type { NatalChart, PlanetPosition } from './astrology';
 
 function position(name: string, longitude: number, signName: string, nakshatraName: string) {
@@ -311,5 +312,74 @@ const missingLordInsight = analyzeHouseLords(missingHouseLordChart).find((item) 
 assert.equal(missingLordInsight?.lordHouse, null);
 assert.equal(missingLordInsight?.chainMissingPlanet, 'Sun');
 assert.ok(missingLordInsight?.interpretation.includes('положение не найдено'));
+
+
+const qualityReport = auditNatalChartInterpretations(chart, new Date('2026-11-08T12:00:00Z'));
+assert.ok(qualityReport.checked >= 140, 'quality gate should inspect all generated house, topic, lord and planet-placement narratives');
+assert.equal(qualityReport.blocked, 0, JSON.stringify(qualityReport.results.filter((item) => !item.publishable), null, 2));
+assert.equal(qualityReport.publishable, qualityReport.checked);
+assert.ok(qualityReport.averageScore >= 90);
+assert.ok(qualityReport.results.some((item) => item.id === 'topic:money'));
+assert.ok(qualityReport.results.some((item) => item.id === 'house-lord:1'));
+assert.ok(qualityReport.results.some((item) => item.id === 'placement:Sun:12'));
+
+const unsupportedClaim = validateInterpretationQuality({
+  id: 'bad-guarantee',
+  title: 'Недопустимый прогноз',
+  narrative: 'Положение Юпитера гарантирует богатство и доход в следующем году.',
+  evidence: ['Юпитер находится в 11-м доме.'],
+  houses: [11],
+});
+assert.equal(unsupportedClaim.publishable, false);
+assert.ok(unsupportedClaim.issues.some((item) => item.code === 'unsupported-certainty'));
+assert.ok(unsupportedClaim.issues.some((item) => item.code === 'financial-guarantee'));
+
+const medicalClaim = validateInterpretationQuality({
+  id: 'bad-medical',
+  title: 'Недопустимая медицинская трактовка',
+  narrative: 'Натальная карта диагностирует заболевание и определяет необходимое лечение.',
+  evidence: ['Марс в 6-м доме.'],
+});
+assert.equal(medicalClaim.publishable, false);
+assert.ok(medicalClaim.issues.some((item) => item.code === 'medical-determinism'));
+
+const fertilityClaim = validateInterpretationQuality({
+  id: 'bad-fertility',
+  title: 'Недопустимое обещание зачатия',
+  narrative: 'Положение планет гарантирует беременность в ближайший период.',
+  evidence: ['Юпитер аспектирует 5-й дом.'],
+});
+assert.equal(fertilityClaim.publishable, false);
+assert.ok(fertilityClaim.issues.some((item) => item.code === 'fertility-determinism'));
+
+const missingEvidence = validateInterpretationQuality({
+  id: 'missing-evidence',
+  title: 'Вывод без оснований',
+  narrative: 'Это развёрнутая интерпретация, которая описывает много аспектов жизни, но не содержит ни одного исходного показателя карты.',
+  evidence: [],
+});
+assert.equal(missingEvidence.publishable, false);
+assert.ok(missingEvidence.issues.some((item) => item.code === 'missing-evidence'));
+
+const invalidHouseScope = validateInterpretationQuality({
+  id: 'invalid-scope',
+  title: 'Неверная область',
+  narrative: 'Нейтральное краткое описание.',
+  evidence: ['Факт карты.'],
+  houses: [0, 13],
+  primaryHouses: [2],
+});
+assert.equal(invalidHouseScope.publishable, false);
+assert.ok(invalidHouseScope.issues.some((item) => item.code === 'invalid-house'));
+assert.ok(invalidHouseScope.issues.some((item) => item.code === 'invalid-primary-house'));
+
+const qualifiedClaim = validateInterpretationQuality({
+  id: 'qualified',
+  title: 'Осторожная формулировка',
+  narrative: 'Положение планеты не гарантирует финансовый результат и может рассматриваться только как символическая тема для размышления.',
+  evidence: ['Положение планеты в 11-м доме.'],
+  houses: [11],
+});
+assert.equal(qualifiedClaim.publishable, true);
 
 console.log('personalized house analysis tests passed');
