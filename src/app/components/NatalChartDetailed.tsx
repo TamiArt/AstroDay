@@ -67,6 +67,8 @@ export function NatalChartDetailed({ natalChart }: NatalChartDetailedProps) {
         return <NatalAnalysisTab natalChart={natalChart} />;
       case 'life':
         return <LifePathAnalysisTab natalChart={natalChart} />;
+      case 'compatibility':
+        return <PartnerCompatibility natalChart={natalChart} />;
       case 'aspects':
         return <AspectsTableEnhanced natalChart={natalChart} />;
       case 'houses':
