@@ -205,6 +205,15 @@ assert.ok(!drishti.some((item) => item.source === 'Раху' || item.source === 
 const topics = analyzeLifeTopics(chart, new Date('2026-11-08T12:00:00Z'));
 assert.deepEqual(topics.map((topic) => topic.id), ['talents', 'money', 'career', 'children', 'relationships']);
 assert.ok(topics.find((topic) => topic.id === 'money')?.evidence.length);
+const moneyTopic = topics.find((topic) => topic.id === 'money');
+assert.ok(moneyTopic?.keyFactors.some((factor) => factor.includes('2-й дом') && factor.includes('управитель')));
+assert.ok(moneyTopic?.interpretation.includes('Управитель'));
+assert.ok(moneyTopic?.interpretation.includes('диспозитор'));
+assert.ok(moneyTopic?.developmentPoints.length);
+const careerTopic = topics.find((topic) => topic.id === 'career');
+assert.ok(careerTopic?.keyFactors.some((factor) => factor.includes('10-й дом')));
+assert.ok(careerTopic?.evidence.some((item) => item.includes('граха-дришти')));
+assert.ok(topics.every((topic) => topic.keyFactors.length === topic.houses.length));
 assert.ok(topics.find((topic) => topic.id === 'children')?.timingNote.includes('зачатия'));
 assert.ok(topics.find((topic) => topic.id === 'talents')?.directions.length);
 assert.ok(topics.find((topic) => topic.id === 'money')?.timingNote.includes('Связь Махадаши с этой сферой'));
