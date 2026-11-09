@@ -33,6 +33,19 @@ jobs:
           cache: npm
       - name: Install locked dependencies
         run: npm ci
+      - name: Apply compatible security updates
+        id: fix
+        continue-on-error: true
+        run: npm audit fix
+      - name: Reinstall updated lockfile
+        if: steps.fix.outcome == 'success'
+        run: npm ci
+      - name: Explain production and vulnerable dependency paths
+        if: always()
+        run: |
+          for package in dompurify vite postcss browserslist baseline-browser-mapping nanoid tar source-map-js @babel/core esbuild; do
+            npm explain "$package" || true
+          done
       - name: Audit all dependencies
         id: all
         continue-on-error: true
@@ -68,6 +81,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: npm-audit-reports
-          path: npm-audit-*.json
+          path: |
+            npm-audit-*.json
+            package-lock.json
           if-no-files-found: warn
           retention-days: 7
