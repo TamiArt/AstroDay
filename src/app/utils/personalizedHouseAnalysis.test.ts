@@ -118,9 +118,11 @@ assert.ok(areaInteractions.find((area) => area.id === 'money')?.connections.some
 const lifeAreaBridges = getCoreLifeAreaBridges(marsAspectsSunChart);
 assert.equal(lifeAreaBridges.length, 1);
 assert.equal(lifeAreaBridges[0].id, 'Mars:Sun:graha-drishti:7');
-assert.deepEqual(lifeAreaBridges[0].evidenceByArea.map((item) => item.areaId), ['career', 'relationships', 'money']);
+// The fixture links Mars (1st/8th-house lord) and Sun (5th-house lord in the 7th):
+// their direct placements/rulerships and bounded dispositors support these four areas.
+assert.deepEqual(lifeAreaBridges[0].evidenceByArea.map((item) => item.areaId), ['relationships', 'money', 'talents', 'home']);
 assert.ok(lifeAreaBridges[0].evidenceByArea.every((item) => item.evidence.length > 0));
-assert.deepEqual(lifeAreaBridges[0].areas, ['Профессия и работа', 'Отношения и партнёрство', 'Деньги и ресурсы'].filter((title) =>
+assert.deepEqual(lifeAreaBridges[0].areas, ['Отношения и партнёрство', 'Деньги и ресурсы', 'Обучение и таланты', 'Дом и эмоциональная опора'].filter((title) =>
   areaInteractions.some((area) => area.title === title && area.connections.some((line) => line.startsWith(lifeAreaBridges[0].connection))),
 ));
 assert.ok(lifeAreaBridges[0].explanation.includes('не означает'));
