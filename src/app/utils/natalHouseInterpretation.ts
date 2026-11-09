@@ -225,7 +225,7 @@ export function describePlanetInHouse(chart: NatalChart, planetName: string, hou
   return `${profile.name} в ${houseNumber}-м доме: ${profile.core}. В сфере «${house}» это может проявляться как ${manifestation}. Сильная сторона такого положения — ${profile.constructive}. Возможная сложность — ${profile.risk}.${signText} ${dignity}`.trim();
 }
 
-export function describeHousePlanetConnections(chart: NatalChart, houseNumber: number, occupants: string[], houseLord: string): string[] {
+export function describeHousePlanetConnections(chart: NatalChart, occupants: string[], houseLord: string): string[] {
   const relevant = new Set([...occupants, houseLord].filter((name) =>
     Boolean(chart.planets[name as keyof NatalChart['planets']]),
   ));
