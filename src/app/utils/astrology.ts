@@ -188,6 +188,13 @@ export function getNakshatra(longitude: number): number {
   return Math.floor(normalizeDegrees(longitude) / (FULL_CIRCLE / 27));
 }
 
+export function getNakshatraPada(longitude: number): number {
+  if (!Number.isFinite(longitude)) throw new Error('Долгота должна быть конечным числом');
+  const normalizedLongitude = normalizeDegrees(longitude);
+  const positionInNakshatra = normalizedLongitude % (FULL_CIRCLE / 27);
+  return Math.min(4, Math.floor(positionInNakshatra / (FULL_CIRCLE / 108)) + 1);
+}
+
 // Calculate planetary position
 export interface PlanetPosition {
   name: string;
@@ -249,7 +256,7 @@ export function calculatePlanetPosition(
     const sign = getSign(siderealLon);
     const degree = siderealLon % 30;
     const nakshatra = getNakshatra(siderealLon);
-    const pada = Math.floor((siderealLon % (FULL_CIRCLE / 27)) / (FULL_CIRCLE / 108)) + 1;
+    const pada = getNakshatraPada(siderealLon);
 
     return {
       name: bodyName,
@@ -293,7 +300,7 @@ export function calculateAscendant(
     const sign = getSign(siderealAsc);
     const degree = siderealAsc % 30;
     const nakshatra = getNakshatra(siderealAsc);
-    const pada = Math.floor((siderealAsc % (FULL_CIRCLE / 27)) / (FULL_CIRCLE / 108)) + 1;
+    const pada = getNakshatraPada(siderealAsc);
 
     return {
       name: 'Ascendant',
@@ -317,7 +324,7 @@ function createCalculatedPoint(name: string, tropicalLon: number, siderealLon: n
   const sign = getSign(siderealLon);
   const degree = siderealLon % 30;
   const nakshatra = getNakshatra(siderealLon);
-  const pada = Math.floor((siderealLon % (360 / 27)) / (360 / 108)) + 1;
+  const pada = getNakshatraPada(siderealLon);
 
   return {
     name,
