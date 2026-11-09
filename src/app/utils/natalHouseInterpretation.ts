@@ -219,6 +219,12 @@ const SIGN_STYLE: Record<string, string> = {
   Pisces: 'интуитивный, образный и восприимчивый способ проявления',
 };
 
+export function describeHouseSignStyle(signName: string, houseNumber: number): string | null {
+  const style = SIGN_STYLE[signName];
+  if (!style) return null;
+  return `${SIGN_RU[signName] ?? signName} на куспиде ${houseNumber}-го дома задаёт ${style}.`;
+}
+
 function dignityText(chart: NatalChart, planetName: string): string {
   const condition = evaluatePlanetCondition(chart, planetName);
   if (!condition) return '';
