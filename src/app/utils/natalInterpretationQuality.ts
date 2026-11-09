@@ -7,6 +7,7 @@ import { getPlanetHouse } from './natalStrengthAnalysis';
 export type InterpretationIssueSeverity = 'error' | 'warning';
 export type InterpretationIssueCode =
   | 'empty-narrative'
+  | 'incomplete-chart'
   | 'missing-evidence'
   | 'unsupported-certainty'
   | 'medical-determinism'
@@ -169,6 +170,31 @@ export function auditNatalChartInterpretations(
   chart: NatalChart,
   currentDate: Date = new Date(),
 ): InterpretationQualityReport {
+  const houseNumbers = chart.houses?.map((house) => house.house) ?? [];
+  const hasCompleteHouseRing = houseNumbers.length === 12 && new Set(houseNumbers).size === 12 &&
+    houseNumbers.every((house) => Number.isInteger(house) && house >= 1 && house <= 12);
+  const hasValidBirthDate = chart.date instanceof Date && Number.isFinite(chart.date.getTime());
+  if (!hasCompleteHouseRing || !chart.planets?.Moon || !hasValidBirthDate) {
+    return {
+      checked: 1,
+      publishable: 0,
+      blocked: 1,
+      warningCount: 0,
+      averageScore: 0,
+      results: [{
+        id: 'chart:structure',
+        title: 'Полнота исходной натальной карты',
+        score: 0,
+        publishable: false,
+        issues: [{
+          code: 'incomplete-chart',
+          severity: 'error',
+          message: 'Для аудита необходимы 12 уникальных домов, Луна и корректная дата рождения.',
+        }],
+      }],
+    };
+  }
+
   const inputs: InterpretationQualityInput[] = [];
 
   for (const insight of analyzePersonalizedHouses(chart)) {
