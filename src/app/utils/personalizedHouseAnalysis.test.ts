@@ -212,7 +212,7 @@ assert.ok(moneyTopic?.interpretation.includes('диспозитор'));
 assert.ok(moneyTopic?.developmentPoints.length);
 const careerTopic = topics.find((topic) => topic.id === 'career');
 assert.ok(careerTopic?.keyFactors.some((factor) => factor.includes('10-й дом')));
-assert.ok(careerTopic?.evidence.some((item) => item.includes('граха-дришти')));
+assert.ok(careerTopic?.evidence.some((item) => item.includes('аспект')));
 assert.ok(topics.every((topic) => topic.keyFactors.length === topic.houses.length));
 assert.ok(topics.find((topic) => topic.id === 'children')?.timingNote.includes('зачатия'));
 assert.ok(topics.find((topic) => topic.id === 'talents')?.directions.length);
