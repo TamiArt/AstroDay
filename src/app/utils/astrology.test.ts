@@ -5,6 +5,7 @@ import {
   calculateNatalChart,
   calculatePlanetPosition,
   getCurrentAntardasha,
+  getCurrentPratyantardasha,
   getNakshatra,
   getNakshatraPada,
   getSign,
@@ -158,6 +159,44 @@ assert.equal(
   firstKetuDasha.endDate.getTime(),
   'The final antardasha must end with its mahadasha',
 );
+for (const antar of firstKetuDasha.antardasha ?? []) {
+  assert.equal(antar.pratyantardasha.length, 9, 'Each antardasha must contain nine pratyantardashas');
+  assert.equal(antar.pratyantardasha[0].planet, antar.planet, 'Pratyantardasha sequence starts with its antardasha lord');
+  assert.equal(antar.pratyantardasha[0].startDate.getTime(), antar.startDate.getTime());
+  assert.equal(antar.pratyantardasha[8].endDate.getTime(), antar.endDate.getTime());
+  for (let index = 1; index < antar.pratyantardasha.length; index += 1) {
+    assert.equal(
+      antar.pratyantardasha[index - 1].endDate.getTime(),
+      antar.pratyantardasha[index].startDate.getTime(),
+      'Pratyantardasha periods must be contiguous',
+    );
+  }
+}
+assert.equal(getCurrentPratyantardasha(firstKetuDasha.antardasha?.[0], dashaBirth)?.planet, 'Ketu');
+assert.equal(getCurrentPratyantardasha(firstKetuDasha.antardasha?.[0], firstKetuDasha.antardasha[0].endDate), null);
+
+// A Moon halfway through Ashwini leaves 3.5 years of Ketu Mahadasha.
+// Its Antardasha/Pratyantardasha schedule remains scaled to the FULL 7-year
+// Mahadasha and is clipped at birth, rather than compressed into the balance.
+const halfNakshatra = calculateDasha(
+  dashaBirth,
+  0,
+  dashaBirth,
+  (360 / 27) / 2,
+);
+assert.ok(Math.abs(
+  halfNakshatra.endDate.getTime() - (dashaBirth.getTime() + 3.5 * 365.2425 * 86400000),
+) < 2);
+const birthAntar = getCurrentAntardasha(halfNakshatra, dashaBirth);
+assert.equal(birthAntar?.planet, 'Jupiter', 'At the midpoint of Ketu Mahadasha, the active Antardasha is Jupiter');
+assert.equal(birthAntar?.startDate.getTime(), dashaBirth.getTime(), 'A running Antardasha is clipped at birth');
+assert.ok(birthAntar!.endDate.getTime() - dashaBirth.getTime() < 40 * 86400000,
+  'The birth-time Antardasha must retain its full-period boundary instead of being rescaled to the remaining Mahadasha');
+const birthPratyantar = getCurrentPratyantardasha(birthAntar, dashaBirth);
+assert.ok(birthPratyantar, 'The birth-time Antardasha must expose the active Pratyantardasha');
+assert.equal(birthPratyantar!.startDate.getTime(), dashaBirth.getTime(), 'A running Pratyantardasha is clipped at birth');
+assert.ok(birthAntar!.pratyantardasha.some((period) => period.endDate > dashaBirth));
+
 const nextMahadasha = calculateDasha(dashaBirth, 0, firstKetuDasha.endDate, 0);
 assert.equal(nextMahadasha.planet, 'Venus', 'The next mahadasha begins exactly at the prior end boundary');
 const nextNakshatraDasha = calculateDasha(dashaBirth, 1, dashaBirth, 360 / 27);
