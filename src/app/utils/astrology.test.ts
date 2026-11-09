@@ -10,13 +10,15 @@ import {
 } from './astrology';
 
 // Independent Swiss Ephemeris sidereal (Lahiri) geocentric table:
- // 1990-03-15 00:00 UT, Sun 0°25′05″ Pisces and Moon 10°04′ Pisces.
+ // 1990-03-15 00:00 UT, Sun 0°25′05″ Pisces, Moon 10°04′ Libra and Mercury 26°32′ Aquarius.
  // Minute-rounded source values are compared with conservative angular tolerances.
 const referenceMoment = new Date('1990-03-15T00:00:00.000Z');
 const referenceSun = calculatePlanetPosition('Sun', referenceMoment);
 const referenceMoon = calculatePlanetPosition('Moon', referenceMoment);
+const referenceMercury = calculatePlanetPosition('Mercury', referenceMoment);
 const sunReferenceLongitude = 330 + 25 / 60 + 5 / 3600;
-const moonReferenceLongitude = 330 + 10 + 4 / 60;
+const moonReferenceLongitude = 180 + 10 + 4 / 60;
+const mercuryReferenceLongitude = 300 + 26 + 32 / 60;
 const angularDifference = (left: number, right: number) => Math.abs(((left - right + 540) % 360) - 180);
 assert.ok(
   angularDifference(referenceSun.siderealLon, sunReferenceLongitude) < 0.03,
@@ -25,6 +27,10 @@ assert.ok(
 assert.ok(
   angularDifference(referenceMoon.siderealLon, moonReferenceLongitude) < 0.1,
   `Swiss Ephemeris Moon reference: expected ${moonReferenceLongitude}°, got ${referenceMoon.siderealLon}°`,
+);
+assert.ok(
+  angularDifference(referenceMercury.siderealLon, mercuryReferenceLongitude) < 0.1,
+  `Swiss Ephemeris Mercury reference: expected ${mercuryReferenceLongitude}°, got ${referenceMercury.siderealLon}°`,
 );
 
 // Independent chart-casting reference from Drik Panchang:
