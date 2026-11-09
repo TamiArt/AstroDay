@@ -37,9 +37,21 @@ jobs:
         id: fix
         continue-on-error: true
         run: npm audit fix
-      - name: Update Vite within the existing major version
+      - name: Resolve remaining direct Vite advisory when a compatible fix exists
         if: always()
-        run: npm install --save-dev --save-exact vite@6.4.6
+        run: |
+          npm audit --json > .audit-pre-vite.json || true
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { execFileSync } from 'node:child_process';
+          const report = JSON.parse(fs.readFileSync('.audit-pre-vite.json', 'utf8'));
+          const fix = report.vulnerabilities?.vite?.fixAvailable;
+          if (fix && typeof fix === 'object' && typeof fix.version === 'string') {
+            execFileSync('npm', ['install', '--save-dev', '--save-exact', `vite@${fix.version}`], { stdio: 'inherit' });
+          } else {
+            console.log('No remaining Vite advisory with an explicit compatible fix');
+          }
+          NODE
       - name: Reinstall updated lockfile
         if: always()
         run: npm ci
