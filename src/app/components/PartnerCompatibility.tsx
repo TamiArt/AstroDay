@@ -40,7 +40,7 @@ const STATUS: Record<string, string> = {
 export function PartnerCompatibility({ natalChart }: PartnerCompatibilityProps) {
   const [profile, setProfile] = useState<PartnerBirthProfile>(() => loadPartnerProfile() ?? EMPTY_PROFILE);
   const [result, setResult] = useState<AshtaKootaResult | null>(null);
-  const [varnaRoleA, setVarnaRoleA] = useState<'bride' | 'groom'>('bride');
+  const [varnaRoleA, setVarnaRoleA] = useState<'bride' | 'groom' | ''>('');
   const [error, setError] = useState<string | null>(null);
 
   const update = <K extends keyof PartnerBirthProfile>(key: K, value: PartnerBirthProfile[K]) => {
@@ -52,6 +52,7 @@ export function PartnerCompatibility({ natalChart }: PartnerCompatibilityProps) 
     setError(null);
     setResult(null);
     try {
+      if (!varnaRoleA) throw new Error('Выберите традиционные роли для направленных кут Варна, Вашьи и Ганы.');
       if (!profile.name.trim() || !profile.birthDate || !profile.birthTime || !profile.birthPlace.trim() || !profile.timezone.trim()) {
         throw new Error('Заполните имя, дату, время, место рождения и часовой пояс партнёра.');
       }
@@ -111,7 +112,8 @@ export function PartnerCompatibility({ natalChart }: PartnerCompatibilityProps) 
             <input required type="number" step="any" value={Number.isFinite(profile.longitude) ? profile.longitude : ''} onChange={event => update('longitude', event.target.value === '' ? Number.NaN : Number(event.target.value))} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2" />
           </label>
           <label className="text-sm md:col-span-2">Роль пользователя для направленных правил Варна, Вашьи и Ганы
-            <select value={varnaRoleA} onChange={event => setVarnaRoleA(event.target.value as 'bride' | 'groom')} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2">
+            <select value={varnaRoleA} required onChange={event => setVarnaRoleA(event.target.value as 'bride' | 'groom' | '')} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2">
+              <option value="">Выберите роль</option>
               <option value="bride">Пользователь — невеста, партнёр — жених</option>
               <option value="groom">Пользователь — жених, партнёр — невеста</option>
             </select>
