@@ -10,6 +10,7 @@ assert.equal(same.kutas.length, 8);
 assert.equal(same.kutas.reduce((sum, item) => sum + item.maxScore, 0), 36);
 assert.equal(same.kutas.reduce((sum, item) => sum + item.score, 0), same.totalScore);
 assert.equal(same.kutas.find(item => item.id === 'nadi')?.score, 0);
+assert.equal(same.kutas.find(item => item.id === 'tara')?.score, 0);
 assert.equal(same.kutas.find(item => item.id === 'bhakoot')?.score, 7);
 assert.equal(same.personA.nakshatra, same.personB.nakshatra);
 assert.equal(same.personA.pada, same.personB.pada);
@@ -115,3 +116,10 @@ const yoniUnfriendly = calculateAshtaKoota(
 assert.equal(yoniUnfriendly.kutas.find(item => item.id === 'yoni')?.score, 1);
 
 console.log('ashtaKoota.test.ts: all assertions passed');
+
+const taraModulo = calculateAshtaKoota(
+  { name: 'A', moonLongitude: 0 },
+  { name: 'B', moonLongitude: 26 * (360 / 27) },
+);
+assert.equal(taraModulo.kutas.find(item => item.id === 'tara')?.score, 3);
+assert.ok(taraModulo.kutas.find(item => item.id === 'tara')?.details.some(detail => detail.includes('номер Тары 9')));
