@@ -146,11 +146,13 @@ export function calculateAshtaKoota(personA: CompatibilityPerson, personB: Compa
 
   const taraForward = (bNak - aNak + 27) % 27;
   const taraBackward = (aNak - bNak + 27) % 27;
-  const taraGood = (distance: number) => [1,3,5,7,8].includes(distance % 9);
-  const taraScore = (Number(taraGood(taraForward)) + Number(taraGood(taraBackward))) * 1.5;
+  const taraCountForward = (taraForward % 9) + 1;
+  const taraCountBackward = (taraBackward % 9) + 1;
+  const taraGood = (count: number) => [2,4,6,8,9].includes(count);
+  const taraScore = (Number(taraGood(taraCountForward)) + Number(taraGood(taraCountBackward))) * 1.5;
   const tara = kuta('tara','Тара',taraScore,3,'Сопоставление звёздной совместимости по расстоянию между накшатрами.',[
-    `A → B: счёт ${taraForward + 1}; ${taraGood(taraForward) ? 'благоприятная' : 'напряжённая'} тара.`,
-    `B → A: счёт ${taraBackward + 1}; ${taraGood(taraBackward) ? 'благоприятная' : 'напряжённая'} тара.`,
+    `A → B: номер Тары ${taraCountForward}; ${taraGood(taraCountForward) ? 'благоприятная' : 'напряжённая'} тара.`,
+    `B → A: номер Тары ${taraCountBackward}; ${taraGood(taraCountBackward) ? 'благоприятная' : 'напряжённая'} тара.`,
     'Баллы начисляются отдельно в каждом направлении: по 1,5 за благоприятную тара.'
   ]);
 
