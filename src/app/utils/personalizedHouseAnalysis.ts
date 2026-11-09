@@ -374,6 +374,13 @@ function getTopicHouseNarrative(chart: NatalChart, houseNumber: number): { narra
   const dispositorName = chart.houses?.find((item) => item.sign === lord.sign)?.lord;
   const dispositor = dispositorName ? chart.planets[dispositorName as keyof NatalChart['planets']] : undefined;
   const dispositorHouse = dispositorName ? getPlanetHouseForChart(chart, dispositorName) : null;
+  const lordRoleText = PLANET_THEMES[house.lord]
+    ? 'Функция управителя в этой сфере: ' + PLANET_THEMES[house.lord] + '.'
+    : '';
+  const occupantRoleText = occupants.length
+    ? 'Планеты, непосредственно расположенные в доме, добавляют темы: ' +
+      occupants.map((name) => (PLANET_RU[name] ?? name) + ' — ' + (PLANET_THEMES[name] ?? 'индивидуальная планетная тема')).join('; ') + '.'
+    : '';
 
   const destination = lordHouse
     ? 'Управитель ' + lordName + ' находится в ' + lordHouse + '-м доме — ' + getLordHouseMeaning(lordHouse) +
@@ -412,7 +419,7 @@ function getTopicHouseNarrative(chart: NatalChart, houseNumber: number): { narra
       ? 'Наблюдайте, как решения в области «' + getLordHouseMeaning(lordHouse) + '» отражаются на теме ' + HOUSE_MEANING[houseNumber] + '.'
       : 'Для более точной интерпретации нужны надёжные данные о положении управителя.';
   return {
-    narrative: destination + ' ' + conditionText + ' ' + occupancyText + ' ' + aspectText + lordAspectText + ' ' + dispositorText,
+    narrative: destination + ' ' + lordRoleText + ' ' + conditionText + ' ' + occupancyText + ' ' + occupantRoleText + ' ' + aspectText + lordAspectText + ' ' + dispositorText,
     factor,
     development,
   };
