@@ -204,6 +204,21 @@ const SIGN_RU: Record<string, string> = {
   Libra: 'Весы', Scorpio: 'Скорпион', Sagittarius: 'Стрелец', Capricorn: 'Козерог', Aquarius: 'Водолей', Pisces: 'Рыбы',
 };
 
+const SIGN_STYLE: Record<string, string> = {
+  Aries: 'инициативный, прямой и быстрый способ проявления',
+  Taurus: 'устойчивый, практичный и ориентированный на качество способ проявления',
+  Gemini: 'подвижный, любознательный и коммуникационный способ проявления',
+  Cancer: 'чувствительный, защитный и ориентированный на эмоциональную безопасность способ проявления',
+  Leo: 'творческий, заметный и ориентированный на авторство способ проявления',
+  Virgo: 'аналитичный, точный и ориентированный на улучшение деталей способ проявления',
+  Libra: 'дипломатичный, партнёрский и ориентированный на баланс способ проявления',
+  Scorpio: 'глубокий, интенсивный и исследовательский способ проявления',
+  Sagittarius: 'свободолюбивый, смысловой и ориентированный на расширение горизонтов способ проявления',
+  Capricorn: 'структурный, сдержанный и ориентированный на долгосрочный результат способ проявления',
+  Aquarius: 'независимый, системный и ориентированный на нестандартные решения способ проявления',
+  Pisces: 'интуитивный, образный и восприимчивый способ проявления',
+};
+
 function dignityText(chart: NatalChart, planetName: string): string {
   const condition = evaluatePlanetCondition(chart, planetName);
   if (!condition) return '';
@@ -220,7 +235,7 @@ export function describePlanetInHouse(chart: NatalChart, planetName: string, hou
   const house = HOUSE_LABELS[houseNumber];
   const sign = planet.signName;
   const manifestation = profile.examples[houseNumber];
-  const signText = sign ? ` Планета находится в знаке ${SIGN_RU[sign] ?? sign}; знак окрашивает способ выражения её функций.` : '';
+  const signText = sign ? ` Знак ${SIGN_RU[sign] ?? sign} добавляет ${SIGN_STYLE[sign] ?? 'индивидуальный стиль'}.` : '';
   const dignity = dignityText(chart, planetName);
   return `${profile.name} в ${houseNumber}-м доме: ${profile.core}. В сфере «${house}» это может проявляться как ${manifestation}. Сильная сторона такого положения — ${profile.constructive}. Возможная сложность — ${profile.risk}.${signText} ${dignity}`.trim();
 }
@@ -248,8 +263,11 @@ export function describeHousePlanetConnections(chart: NatalChart, occupants: str
         `${aspect.source} и ${aspect.target} находятся в одном знаке (${aspect.sourceHouse}-й дом): их функции соединяются в одной жизненной сфере. ${sourceFunction} взаимодействуют с темой «${targetFunction}»; это может объединять задачи и одновременно делать их трудноразделимыми.`,
       );
     } else {
+      const aspectLabel = aspect.offset === 7
+        ? 'полный 7-й аспект'
+        : `специальный ${aspect.offset ?? ''}-й аспект`;
       results.push(
-        `${aspect.source} из ${aspect.sourceHouse}-го дома аспектирует ${aspect.target} в ${aspect.targetHouse}-м доме: темы «${sourceFunction}» влияют на проявление «${targetFunction}». Это связывает ${HOUSE_LABELS[aspect.sourceHouse]} с ${HOUSE_LABELS[aspect.targetHouse]}.`,
+        `${aspect.source} из ${aspect.sourceHouse}-го дома даёт ${aspectLabel} на ${aspect.target} в ${aspect.targetHouse}-м доме: темы «${sourceFunction}» влияют на проявление «${targetFunction}». Это связывает ${HOUSE_LABELS[aspect.sourceHouse]} с ${HOUSE_LABELS[aspect.targetHouse]}.`,
       );
     }
   }
