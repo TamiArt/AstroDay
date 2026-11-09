@@ -89,7 +89,7 @@
 
 **Файл:** `.github/workflows/ci.yml`
 
-В push-фильтр включена веточная маска `docs/**`. Для текущей ветки workflow запускает `npm ci` и полный `npm run verify`; результат подтверждён CI run [42683427706](https://github.com/TamiArt/AstroDay/actions/runs/42683427706) (успех на commit с обновлёнными зависимостями до автоматического коммита lock-файла; проверка того же набора обновлений также прошла в dependency audit run [42683427348](https://github.com/TamiArt/AstroDay/actions/runs/42683427348)).
+В push-фильтр включена веточная маска `docs/**`. Для текущей ветки workflow запускает `npm ci` и полный `npm run verify`; результат подтверждён CI run [42683883776](https://github.com/TamiArt/AstroDay/actions/runs/42683883776) на commit с обновлённым lock-файлом; повторный полный verify и dependency audit — [run 42684023555](https://github.com/TamiArt/AstroDay/actions/runs/42684023555).
 
 **Статус:** исправлено; изменения docs/** автоматически проверяются CI.
 
