@@ -52,8 +52,9 @@ export function calculateDivisionalChart(
 
     // Определяем дом относительно Асцендента дробной карты
     const divisionalAsc = calculateDivisionalLongitude(ascendantLon, division);
-    const houseDeg = (divisionalLon - divisionalAsc + 360) % 360;
-    const house = Math.floor(houseDeg / 30) + 1;
+    const divisionalSign = Math.floor(divisionalLon / 30);
+    const divisionalAscSign = Math.floor(divisionalAsc / 30);
+    const house = ((divisionalSign - divisionalAscSign + 12) % 12) + 1;
 
     planets[planetName] = {
       longitude: divisionalLon,
