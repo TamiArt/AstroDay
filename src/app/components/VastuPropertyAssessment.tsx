@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { GlassCard } from './common/GlassCard';
 import {
   analyzeVastuProperty,
@@ -47,7 +47,7 @@ const PROPERTY_TYPES: Array<{ value: VastuPropertyType; label: string }> = [
 
 const CURRENCIES = ['USD', 'CAD', 'EUR', 'GBP', 'INR', 'RUB', 'AUD', 'AED'];
 
-function Field({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
+function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) {
   return (
     <label className="block space-y-1.5">
       <span className="text-sm font-medium">{label}</span>
