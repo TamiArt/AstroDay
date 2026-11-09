@@ -33,7 +33,7 @@ assert.equal(mappedSign(0, 4), 'Aries', 'D4 movable signs start from themselves'
 assert.equal(mappedSign(30, 4), 'Leo', 'D4 fixed signs start from the fourth sign');
 assert.equal(mappedSign(60, 4), 'Sagittarius', 'D4 dual signs start from the seventh sign');
 assert.equal(mappedSign(0, 7), 'Aries');
-assert.equal(mappedSign(30, 7), 'Libra', 'D7 even signs start from the seventh sign');
+assert.equal(mappedSign(30, 7), 'Scorpio', 'D7 even signs start from the seventh sign');
 assert.equal(mappedSign(0, 9), 'Aries');
 assert.equal(mappedSign(30, 9), 'Capricorn', 'D9 fixed signs start from the ninth sign');
 assert.equal(mappedSign(60, 9), 'Libra', 'D9 dual signs start from the fifth sign');
