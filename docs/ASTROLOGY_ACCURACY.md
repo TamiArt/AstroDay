@@ -22,7 +22,7 @@ This document records the calculation conventions, independent regression refere
 | Mean Lahiri ayanamsha | Swiss Ephemeris `swetest -nonut`, 1990-01-01 00:00 UT: 23°43′02.6259″ | 0.02 arcsec |
 | Sidereal Sun and Moon | Astrodienst Swiss Ephemeris sidereal (Lahiri), geocentric, 1990-03-15 00:00 UT: Sun 0°25′05″ Pisces; Moon 10°04′ Libra; Mercury 26°32′ Aquarius | Sun 0.03°; Moon and Mercury 0.1° (source table rounded to minutes) |
 | Ascendant | Drik Panchang, New Delhi, 1990-06-15 12:49:25 IST: 6°48′13″ Virgo | 0.2° |
-| Full natal chart | Drik Panchang, same New Delhi instant: Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto, mean Rahu/Ketu | 0.1° per published decimal longitude (rounded to 0.01°) |
+| Full natal chart | Drik Panchang, same New Delhi instant: Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto, mean Rahu/Ketu | 0.1° for planets/nodes; 0.2° for Pluto (published decimal values rounded to 0.01°; Astronomy Engine's Pluto model is less precise) |
 | Timezone conversion | IANA Europe/London and Europe/Paris DST transition fixtures | Exact UTC instant, including gap/overlap behavior |
 | Angular divisions | Exact mathematical boundaries for signs, nakshatras, tithis, yogas and karanas | Exact index at and immediately before each tested boundary |
 | Vargas | Canonical sign-start fixtures for D2, D3, D4, D7, D9, D10, D12, D16, D20, D24, D27, D30, D40 and D45 | Exact sign and selected D30 longitude boundaries |
@@ -45,11 +45,12 @@ D60 remains marked `generic`. Its output is not considered a verified classical 
 1. **Mean versus true Lahiri:** the current ayanamsha is mean and does not add nutation. Published true Lahiri values can differ by up to roughly 17 arcseconds. The app must label its convention rather than claim exact agreement with every Swiss Ephemeris/Jagannatha Hora configuration.
 2. **Lunar nodes:** Rahu is a mean node; true-node mode is not supported.
 3. **Ascendant:** the independent fixture covers one location/date/time. High-latitude edge cases and a broad multi-epoch reference matrix still need additional checks.
-4. **Vimshottari dasha:** years currently use 365.2425 days. Alternative traditional year-length conventions can produce different period boundaries; this convention is not asserted to be universal.
-5. **Panchang event timing:** important-date search samples the panchang at local noon once per civil day. It identifies a day on which a tithi index is present; it does not calculate the exact start/end instant of that tithi. Eclipse and Sankranti event times are not currently calculated. Vara currently follows the local civil weekday; the sunrise-based Vedic day boundary is not calculated because panchang context does not yet require observer coordinates.
-6. **Planetary hours at polar latitudes:** when sunrise/sunset cannot be found, the existing 06:00/18:00 fallback is an estimate and is flagged with `isFallback`; it is not an astronomical sunrise calculation.
-7. **Varga coverage:** D60 and any other `generic` division are not validated as classical varga rules. Do not use them as a basis for specific life-area claims.
-8. **Interpretation versus astronomy:** accurate coordinates do not establish the scientific validity of astrological interpretations. All astrological readings remain symbolic/traditional and must not be presented as deterministic predictions.
+4. **Outer-planet ephemerides:** the Pluto reference uses a wider 0.2° tolerance because the Astronomy Engine Pluto model is less precise than the classical planets.
+5. **Vimshottari dasha:** years currently use 365.2425 days. Alternative traditional year-length conventions can produce different period boundaries; this convention is not asserted to be universal.
+6. **Panchang event timing:** important-date search samples the panchang at local noon once per civil day. It identifies a day on which a tithi index is present; it does not calculate the exact start/end instant of that tithi. Eclipse and Sankranti event times are not currently calculated. Vara currently follows the local civil weekday; the sunrise-based Vedic day boundary is not calculated because panchang context does not yet require observer coordinates.
+7. **Planetary hours at polar latitudes:** when sunrise/sunset cannot be found, the existing 06:00/18:00 fallback is an estimate and is flagged with `isFallback`; it is not an astronomical sunrise calculation.
+8. **Varga coverage:** D60 and any other `generic` division are not validated as classical varga rules. Do not use them as a basis for specific life-area claims.
+9. **Interpretation versus astronomy:** accurate coordinates do not establish the scientific validity of astrological interpretations. All astrological readings remain symbolic/traditional and must not be presented as deterministic predictions.
 
 ## Regression test entry points
 
