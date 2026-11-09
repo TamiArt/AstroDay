@@ -210,6 +210,8 @@ assert.ok(moneyTopic?.keyFactors.some((factor) => factor.includes('2-й дом')
 assert.ok(moneyTopic?.interpretation.includes('Управитель'));
 assert.ok(moneyTopic?.interpretation.includes('диспозитор'));
 assert.ok(moneyTopic?.interpretation.includes('Функция управителя'));
+assert.ok(moneyTopic?.interpretation.includes('международные контакты'));
+assert.ok(moneyTopic?.interpretation.includes('источники дохода'));
 assert.ok(moneyTopic?.developmentPoints.length);
 assert.ok(moneyTopic?.directions.some((direction) => direction.includes('управление') || direction.includes('эксперт')));
 assert.ok(moneyTopic?.directions.some((direction) => direction.startsWith('Солнце:')));
