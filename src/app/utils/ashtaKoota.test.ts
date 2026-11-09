@@ -36,7 +36,6 @@ assert.throws(
   /диапазоне/,
 );
 
-console.log('ashtaKoota.test.ts: all assertions passed');
 
 const directionalA = calculateAshtaKoota(
   { name: 'A', moonLongitude: 3 * 30 },
@@ -114,3 +113,5 @@ const yoniUnfriendly = calculateAshtaKoota(
   { name: 'Rat', moonLongitude: 120 },
 );
 assert.equal(yoniUnfriendly.kutas.find(item => item.id === 'yoni')?.score, 1);
+
+console.log('ashtaKoota.test.ts: all assertions passed');
