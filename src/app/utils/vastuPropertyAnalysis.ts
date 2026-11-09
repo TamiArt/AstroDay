@@ -57,7 +57,14 @@ export interface PropertyConditionFinding {
   recommendation: string;
 }
 
-export interface VastuSiteFinding {\n  id: string;\n  level: 'note' | 'review';\n  title: string;\n  explanation: string;\n}\n\nexport interface PropertyInvestmentAnalysis {
+export interface VastuSiteFinding {
+  id: string;
+  level: 'note' | 'review';
+  title: string;
+  explanation: string;
+}
+
+export interface PropertyInvestmentAnalysis {
   totalAcquisitionCost: number;
   effectiveAnnualRent: number;
   annualOperatingCosts: number;
