@@ -409,10 +409,17 @@ const DAYS_IN_TROPICAL_YEAR = 365.2425;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const NAKSHATRA_SIZE = 360 / 27;
 
+export interface PratyantardashaPeriod {
+  planet: string;
+  startDate: Date;
+  endDate: Date;
+}
+
 export interface AntardashaPeriod {
   planet: string;
   startDate: Date;
   endDate: Date;
+  pratyantardasha: PratyantardashaPeriod[];
 }
 
 export interface DashaPeriod {
@@ -421,6 +428,58 @@ export interface DashaPeriod {
   endDate: Date;
   isActive: boolean;
   antardasha?: AntardashaPeriod[];
+}
+
+function buildAntardashas(
+  mahadashaPlanetIndex: number,
+  theoreticalMahadashaStart: Date,
+  mahadashaEnd: Date,
+  birthDate: Date,
+): AntardashaPeriod[] {
+  const fullMahadashaDays = (mahadashaEnd.getTime() - theoreticalMahadashaStart.getTime()) / DAY_MS;
+  let elapsedMahadashaYears = 0;
+  const periods: AntardashaPeriod[] = [];
+
+  for (let index = 0; index < 9; index += 1) {
+    const antarPlanet = DASHA_ORDER[(mahadashaPlanetIndex + index) % 9];
+    const antarStart = addFractionalDays(theoreticalMahadashaStart, fullMahadashaDays * elapsedMahadashaYears / 120);
+    elapsedMahadashaYears += DASHA_PERIODS[antarPlanet];
+    const antarEnd = index === 8
+      ? mahadashaEnd
+      : addFractionalDays(theoreticalMahadashaStart, fullMahadashaDays * elapsedMahadashaYears / 120);
+
+    if (antarEnd <= birthDate) continue;
+    const clippedAntarStart = antarStart < birthDate ? new Date(birthDate) : antarStart;
+    const fullAntarDays = (antarEnd.getTime() - antarStart.getTime()) / DAY_MS;
+    let elapsedAntarYears = 0;
+    const pratyantardasha: PratyantardashaPeriod[] = [];
+
+    for (let subIndex = 0; subIndex < 9; subIndex += 1) {
+      const subPlanet = DASHA_ORDER[(mahadashaPlanetIndex + index + subIndex) % 9];
+      const subStart = addFractionalDays(antarStart, fullAntarDays * elapsedAntarYears / 120);
+      elapsedAntarYears += DASHA_PERIODS[subPlanet];
+      const subEnd = subIndex === 8
+        ? antarEnd
+        : addFractionalDays(antarStart, fullAntarDays * elapsedAntarYears / 120);
+
+      if (subEnd > birthDate) {
+        pratyantardasha.push({
+          planet: subPlanet,
+          startDate: subStart < birthDate ? new Date(birthDate) : subStart,
+          endDate: subEnd,
+        });
+      }
+    }
+
+    periods.push({
+      planet: antarPlanet,
+      startDate: clippedAntarStart,
+      endDate: antarEnd,
+      pratyantardasha,
+    });
+  }
+
+  return periods;
 }
 
 export function calculateDasha(
@@ -445,59 +504,42 @@ export function calculateDasha(
     throw new Error('Сидерическая долгота Луны должна находиться в диапазоне от 0° до 360°');
   }
 
-  const dashaLordIndex = moonNakshatra % 9;
-  const startingLord = DASHA_ORDER[dashaLordIndex];
+  const startingLordIndex = moonNakshatra % 9;
+  const startingLord = DASHA_ORDER[startingLordIndex];
   const startingBalanceRatio = getDashaBalanceRatio(moonSiderealLon);
 
-  let currentPlanetIndex = dashaLordIndex;
-  let dashaStartDate = new Date(birthDate);
+  let currentPlanetIndex = startingLordIndex;
+  let visiblePeriodStart = new Date(birthDate);
   let isStartingDasha = true;
 
-  while (dashaStartDate <= currentDate) {
+  while (visiblePeriodStart <= currentDate) {
     const planet = DASHA_ORDER[currentPlanetIndex];
-    const periodYears = DASHA_PERIODS[planet] * (isStartingDasha ? startingBalanceRatio : 1);
-    const dashaEndDate = addFractionalYears(dashaStartDate, periodYears);
+    const fullPeriodYears = DASHA_PERIODS[planet];
+    const theoreticalStart = isStartingDasha
+      ? addFractionalYears(birthDate, -fullPeriodYears * (1 - startingBalanceRatio))
+      : new Date(visiblePeriodStart);
+    const dashaEndDate = addFractionalYears(theoreticalStart, fullPeriodYears);
 
-    if (currentDate >= dashaStartDate && currentDate < dashaEndDate) {
-      const antardashas: DashaPeriod['antardasha'] = [];
-      let antardashaStart = new Date(dashaStartDate);
-      const totalDashaDays = (dashaEndDate.getTime() - dashaStartDate.getTime()) / DAY_MS;
-
-      for (let i = 0; i < 9; i++) {
-        const antarPlanetIndex = (currentPlanetIndex + i) % 9;
-        const antarPlanet = DASHA_ORDER[antarPlanetIndex];
-        const antarPeriodRatio = DASHA_PERIODS[antarPlanet] / 120;
-        const antarDays = totalDashaDays * antarPeriodRatio;
-        const antarEnd = addFractionalDays(antardashaStart, antarDays);
-
-        antardashas.push({
-          planet: antarPlanet,
-          startDate: new Date(antardashaStart),
-          endDate: new Date(antarEnd)
-        });
-
-        antardashaStart = new Date(antarEnd);
-      }
-
+    if (currentDate >= visiblePeriodStart && currentDate < dashaEndDate) {
       return {
         planet,
-        startDate: dashaStartDate,
+        startDate: new Date(visiblePeriodStart),
         endDate: dashaEndDate,
         isActive: true,
-        antardasha: antardashas
+        antardasha: buildAntardashas(currentPlanetIndex, theoreticalStart, dashaEndDate, birthDate),
       };
     }
 
-    dashaStartDate = new Date(dashaEndDate);
+    visiblePeriodStart = new Date(dashaEndDate);
     currentPlanetIndex = (currentPlanetIndex + 1) % 9;
     isStartingDasha = false;
   }
 
   return {
     planet: startingLord,
-    startDate: birthDate,
+    startDate: new Date(birthDate),
     endDate: addFractionalYears(birthDate, DASHA_PERIODS[startingLord] * startingBalanceRatio),
-    isActive: false
+    isActive: false,
   };
 }
 
@@ -517,6 +559,16 @@ function addFractionalYears(date: Date, years: number): Date {
 
 function addFractionalDays(date: Date, days: number): Date {
   return new Date(date.getTime() + days * DAY_MS);
+}
+
+export function getCurrentPratyantardasha(
+  antardasha: AntardashaPeriod | null | undefined,
+  currentDate: Date = new Date(),
+): PratyantardashaPeriod | null {
+  if (!antardasha) return null;
+  return antardasha.pratyantardasha.find((period) =>
+    currentDate >= period.startDate && currentDate < period.endDate,
+  ) ?? null;
 }
 
 export function getCurrentAntardasha(dasha: DashaPeriod, currentDate: Date = new Date()): AntardashaPeriod | null {
