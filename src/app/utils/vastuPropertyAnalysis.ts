@@ -125,7 +125,7 @@ export function createEmptyVastuPropertyAssessment(): VastuPropertyAssessment {
     entrancePosition: 50, plotShape: 'unknown', plotSlope: 'unknown', roadSides: [], waterSides: [],
     rooms, condition, currency: 'USD', purchasePrice: 0, closingCosts: 0, renovationCost: 0,
     monthlyRent: 0, vacancyRatePercent: 5, monthlyOperatingCosts: 0, annualPropertyTax: 0,
-    monthlyMortgagePayment: 0, notes: '',
+    annualInsurance: 0, annualCapitalReserve: 0, monthlyMortgagePayment: 0, notes: '',
   };
 }
 
