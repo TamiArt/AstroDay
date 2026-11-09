@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   audit:
@@ -81,6 +81,18 @@ jobs:
             fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n'));
           }
           NODE
+      - name: Commit compatible dependency updates
+        if: success()
+        run: |
+          if git diff --quiet -- package.json package-lock.json; then
+            echo "No dependency changes to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "fix(deps): update vulnerable transitive packages"
+          git push origin HEAD:${GITHUB_REF_NAME}
       - name: Upload raw audit reports
         if: always()
         uses: actions/upload-artifact@v4
