@@ -195,6 +195,14 @@ export function VastuPropertyAssessment() {
               : 'Положение входа пока не определено. Без него нельзя вычислить даже условный сегмент (пада).'}
             <p className="text-xs opacity-65 mt-1">Номер сегмента — геометрическая позиция, не оценка благоприятности. Интерпретация 32 пад зависит от конкретной традиции и точной ориентации.</p>
           </div>
+          <div className="grid gap-2 md:grid-cols-2">
+            {analysis.siteFindings.map((finding) => (
+              <div key={finding.id} className="rounded-xl border border-border p-3">
+                <p className="text-sm font-semibold">{finding.level === 'review' ? 'Уточнить: ' : ''}{finding.title}</p>
+                <p className="text-sm opacity-75 mt-1">{finding.explanation}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </GlassCard>
 
