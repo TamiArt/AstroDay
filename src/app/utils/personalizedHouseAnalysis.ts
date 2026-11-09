@@ -28,6 +28,8 @@ export interface LifeTopicInsight {
   id: 'talents' | 'money' | 'career' | 'children' | 'relationships' | 'home_family' | 'wellbeing' | 'inner_growth';
   title: string;
   houses: number[];
+  primaryHouses: number[];
+  supportingHouses: number[];
   interpretation: string;
   directions: string[];
   actions: string[];
@@ -97,6 +99,7 @@ const TOPIC_CONFIG: Array<{
   id: LifeTopicInsight['id'];
   title: string;
   houses: number[];
+  primaryHouses: number[];
   directions: Record<string, string>;
   actions: string[];
 }> = [
@@ -104,6 +107,7 @@ const TOPIC_CONFIG: Array<{
     id: 'talents',
     title: 'Таланты, обучение и творчество',
     houses: [1, 3, 5, 9, 10],
+    primaryHouses: [3, 5, 9],
     directions: {
       Mercury: 'аналитика, IT, тестирование, программирование, работа с данными и обучение',
       Venus: 'музыка, рисунок, визуальный дизайн, эстетика и творческие ремёсла',
@@ -121,6 +125,7 @@ const TOPIC_CONFIG: Array<{
     id: 'money',
     title: 'Деньги и источники дохода',
     houses: [2, 5, 9, 10, 11],
+    primaryHouses: [2, 11],
     directions: {
       Mercury: 'интеллектуальные услуги, IT, аналитика, тестирование, документация и работа с данными',
       Venus: 'дизайн, визуальные продукты, красота, искусство и сервис',
@@ -138,6 +143,7 @@ const TOPIC_CONFIG: Array<{
     id: 'career',
     title: 'Профессия и карьера',
     houses: [2, 6, 10, 11],
+    primaryHouses: [6, 10],
     directions: {
       Mercury: 'QA, аналитика, разработка, системный анализ и коммуникация между командами',
       Saturn: 'процессы, надёжность, тестирование, управление качеством и сложные долгие проекты',
@@ -155,6 +161,7 @@ const TOPIC_CONFIG: Array<{
     id: 'children',
     title: 'Дети и родительство',
     houses: [2, 5, 9, 11],
+    primaryHouses: [5],
     directions: {
       Jupiter: 'традиционно рассматривается как один из сигнификаторов детей, заботы, наставничества и передачи знаний',
       Moon: 'символически связан с заботой, эмоциональной включённостью и повседневным уходом',
@@ -172,6 +179,7 @@ const TOPIC_CONFIG: Array<{
     id: 'home_family',
     title: 'Дом, семья и личная опора',
     houses: [2, 4, 12],
+    primaryHouses: [4],
     directions: {
       Moon: 'эмоциональная атмосфера дома, забота, семейные ритмы и чувство безопасности',
       Venus: 'создание комфортной среды, эстетика пространства и согласование бытовых потребностей',
@@ -189,6 +197,7 @@ const TOPIC_CONFIG: Array<{
     id: 'wellbeing',
     title: 'Повседневный ритм, нагрузка и восстановление',
     houses: [1, 6, 8, 12],
+    primaryHouses: [1, 6],
     directions: {
       Moon: 'режим отдыха, эмоциональная регуляция и внимательность к повседневным потребностям',
       Mars: 'физическая активность, управление нагрузкой и конструктивное расходование энергии',
@@ -206,6 +215,7 @@ const TOPIC_CONFIG: Array<{
     id: 'inner_growth',
     title: 'Мировоззрение, смысл и внутреннее развитие',
     houses: [9, 12, 5],
+    primaryHouses: [9],
     directions: {
       Jupiter: 'философия, обучение, наставничество и формирование системы ценностей',
       Ketu: 'созерцание, исследование, углублённая специализация и пересмотр привязанностей',
@@ -223,6 +233,7 @@ const TOPIC_CONFIG: Array<{
     id: 'relationships',
     title: 'Отношения и партнёрство',
     houses: [2, 5, 7, 8, 12],
+    primaryHouses: [7],
     actions: ['Обсуждайте ожидания, личные границы и распределение ответственности до возникновения конфликта.', 'Регулярно сверяйте общие цели и способы поддержки друг друга.'],
     directions: {
       Venus: 'близость, гармония, эстетика и способы проявления привязанности',
@@ -550,7 +561,7 @@ export function analyzeLifeTopics(chart: NatalChart, currentDate: Date = new Dat
     const attentionPoints = [...new Set(houseReadings.flatMap((item) => item.attention))];
     const sharedLords = new Map<string, number[]>();
     for (const houseNumber of topic.houses) {
-      const house = chart.houses.find((item) => item.house === houseNumber);
+      const house = chart.houses?.find((item) => item.house === houseNumber);
       if (house) sharedLords.set(house.lord, [...(sharedLords.get(house.lord) ?? []), houseNumber]);
     }
     const repeatedLordLinks = [...sharedLords.entries()]
@@ -586,6 +597,8 @@ export function analyzeLifeTopics(chart: NatalChart, currentDate: Date = new Dat
       id: topic.id,
       title: topic.title,
       houses: topic.houses,
+      primaryHouses: topic.primaryHouses,
+      supportingHouses: topic.houses.filter((house) => !topic.primaryHouses.includes(house)),
       interpretation,
       directions,
       actions: topic.actions,
