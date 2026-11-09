@@ -21,7 +21,7 @@ Vite покажет локальный адрес, обычно `http://localhos
 npm run verify
 ```
 
-`verify` последовательно выполняет строгую TypeScript-проверку (`noUnusedLocals` и `noUnusedParameters`), полный набор unit-тестов и production build. Workflow GitHub Actions запускает проверку для рабочих веток и pull request; фактический результат следует смотреть в Actions для конкретного commit.
+`verify` последовательно выполняет строгую TypeScript-проверку (`noUnusedLocals` и `noUnusedParameters`), полный набор unit-тестов и production build. Workflow GitHub Actions запускается при push в `main`, `feat/**`, `fix/**`, `chore/**`, `refactor/**` и при pull request в `main`. Ветки `docs/**` в текущем фильтре не перечислены; документационные ветки не запускают этот workflow автоматически.
 
 ## Команды
 
