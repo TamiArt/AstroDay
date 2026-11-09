@@ -10,12 +10,12 @@ import {
 } from './astrology';
 
 // Independent Swiss Ephemeris sidereal (Lahiri) geocentric table:
- // 1990-03-15 00:00 UT, Sun 0°25′05″ Aries and Moon 10°04′ Pisces.
+ // 1990-03-15 00:00 UT, Sun 0°25′05″ Pisces and Moon 10°04′ Pisces.
  // Minute-rounded source values are compared with conservative angular tolerances.
 const referenceMoment = new Date('1990-03-15T00:00:00.000Z');
 const referenceSun = calculatePlanetPosition('Sun', referenceMoment);
 const referenceMoon = calculatePlanetPosition('Moon', referenceMoment);
-const sunReferenceLongitude = 25 / 60 + 5 / 3600;
+const sunReferenceLongitude = 330 + 25 / 60 + 5 / 3600;
 const moonReferenceLongitude = 330 + 10 + 4 / 60;
 const angularDifference = (left: number, right: number) => Math.abs(((left - right + 540) % 360) - 180);
 assert.ok(
