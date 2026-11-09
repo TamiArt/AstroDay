@@ -1,5 +1,5 @@
 import { AlertCircle, CheckCircle, Clock, Target, Zap } from 'lucide-react';
-import { calculateDasha, getCurrentAntardasha, NatalChart as NatalChartType } from '../../utils/astrology';
+import { calculateDasha, getCurrentAntardasha, getCurrentPratyantardasha, NatalChart as NatalChartType } from '../../utils/astrology';
 import { DASHA_SYSTEM_EXPLANATION, PLANET_DASHA_DESCRIPTIONS } from '../../utils/dashaDescriptions';
 import { GlassCard } from '../common/GlassCard';
 import { TermTooltip } from '../common/TermTooltip';
@@ -16,6 +16,8 @@ export function NatalDashaTab({ natalChart }: NatalDashaTabProps) {
   const moonNakshatra = Math.floor(natalChart.planets.Moon.siderealLon / (360 / 27));
   const currentDasha = calculateDasha(natalChart.date, moonNakshatra, new Date(), natalChart.planets.Moon.siderealLon);
   const currentAntar = getCurrentAntardasha(currentDasha);
+  const currentPratyantar = getCurrentPratyantardasha(currentAntar);
+  const pratyantarDesc = currentPratyantar ? PLANET_DASHA_DESCRIPTIONS[currentPratyantar.planet] : null;
   const dashaDesc = PLANET_DASHA_DESCRIPTIONS[currentDasha.planet];
   const antarDesc = currentAntar ? PLANET_DASHA_DESCRIPTIONS[currentAntar.planet] : null;
   const startDate = new Date(currentDasha.startDate);
@@ -65,6 +67,13 @@ export function NatalDashaTab({ natalChart }: NatalDashaTabProps) {
                   <h5 className="text-xl font-bold text-pink-900">{antarDesc.planet}</h5>
                 </div>
               )}
+              {currentPratyantar && pratyantarDesc && (
+                <div className="pt-3 mt-3 border-t border-purple-200">
+                  <p className="text-sm text-gray-600 mb-1">Пратьянтардаша (под-подпериод)</p>
+                  <h5 className="text-lg font-bold text-indigo-900">{pratyantarDesc.planet}</h5>
+                  <p className="text-xs text-gray-600 mt-1">{formatDate(currentPratyantar.startDate)} — {formatDate(currentPratyantar.endDate)}</p>
+                </div>
+              )}
 
               <div className="pt-3 mt-3 border-t border-purple-200 text-sm space-y-1">
                 <p className="text-gray-700">
@@ -73,6 +82,11 @@ export function NatalDashaTab({ natalChart }: NatalDashaTabProps) {
                 {currentAntar && (
                   <p className="text-gray-700">
                     <strong>Антардаша:</strong> {formatDate(currentAntar.startDate)} - {formatDate(currentAntar.endDate)}
+                  </p>
+                )}
+                {currentPratyantar && (
+                  <p className="text-gray-700">
+                    <strong>Пратьянтардаша:</strong> {formatDate(currentPratyantar.startDate)} - {formatDate(currentPratyantar.endDate)}
                   </p>
                 )}
               </div>
@@ -170,6 +184,29 @@ export function NatalDashaTab({ natalChart }: NatalDashaTabProps) {
                 <p className="text-sm text-gray-700 leading-relaxed">{dashaDesc.weeklyChallenge}</p>
               </div>
             )}
+          </div>
+        </GlassCard>
+      )}
+
+      {currentAntar && (
+        <GlassCard>
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">Пратьянтардаши текущей Антардаши</h3>
+          <p className="text-sm text-gray-600 mb-4">Каждый под-подпериод рассчитывается как доля полного периода Антардаши, а не как доля только оставшегося времени после рождения.</p>
+          <div className="space-y-2">
+            {currentAntar.pratyantardasha.map((period) => {
+              const description = PLANET_DASHA_DESCRIPTIONS[period.planet];
+              const active = currentPratyantar?.planet === period.planet &&
+                currentPratyantar.startDate.getTime() === period.startDate.getTime();
+              return (
+                <div key={period.planet} className={`flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3 ${active ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200 bg-white'}`}>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{description?.planet ?? period.planet}{active ? ' · сейчас' : ''}</p>
+                    <p className="text-xs text-gray-600">{formatDate(period.startDate)} — {formatDate(period.endDate)}</p>
+                  </div>
+                  <span className="text-xs text-gray-500">{Math.max(1, Math.round((period.endDate.getTime() - period.startDate.getTime()) / 86400000))} дн.</span>
+                </div>
+              );
+            })}
           </div>
         </GlassCard>
       )}
