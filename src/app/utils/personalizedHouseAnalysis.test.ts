@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { analyzeLifeTopics, analyzePersonalizedHouses, getVargaEvidence } from './personalizedHouseAnalysis';
+import { describePlanetInHouse } from './natalHouseInterpretation';
 import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition, getGrahaDrishti, getPlanetToPlanetAspects } from './natalStrengthAnalysis';
 import { getSunHouseFocus } from './natalAnalysisGuidance';
 import { getAscendantLordFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus } from './natalPersonalFocus';
@@ -188,6 +189,20 @@ assert.equal(fifth?.lordHouse, 5);
 assert.ok(fifth?.evidence.some((item) => item.includes('накшатра')));
 assert.ok(fifth?.practicalActions.some((item) => item.includes('творческое')));
 assert.ok(fifth?.interpretation.includes('собственный знак'));
+assert.equal(fifth?.occupantInterpretations.length, 1);
+assert.ok(fifth?.occupantInterpretations[0].includes('Солнце в 5-м доме'));
+assert.ok(fifth?.occupantInterpretations[0].includes('авторское творчество'));
+assert.ok(fifth?.occupantInterpretations[0].includes('Лев'));
+assert.ok(fifth?.planetaryConnections.some((item) => item.includes('Сатурн') && item.includes('аспектирует Солнце')));
+const sixth = houses.find((item) => item.house === 6);
+assert.ok(sixth?.occupantInterpretations.some((item) =>
+  item.includes('Меркурий в 6-м доме') && item.includes('анализ процессов') && item.includes('Дева'),
+));
+for (const planetName of Object.keys(chart.planets)) {
+  for (let houseNumber = 1; houseNumber <= 12; houseNumber += 1) {
+    assert.ok(describePlanetInHouse(chart, planetName, houseNumber), `missing interpretation: ${planetName} in house ${houseNumber}`);
+  }
+}
 assert.equal(fifth?.occupantInterpretations.length, 1);
 assert.ok(fifth?.occupantInterpretations[0].includes('Солнце в 5-м доме'));
 assert.ok(fifth?.occupantInterpretations[0].includes('авторское творчество'));
