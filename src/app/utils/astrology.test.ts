@@ -6,6 +6,7 @@ import {
   calculatePlanetPosition,
   getCurrentAntardasha,
   getNakshatra,
+  getNakshatraPada,
   getSign,
 } from './astrology';
 
@@ -78,6 +79,11 @@ const nakshatraWidth = 360 / 27;
 assert.equal(getNakshatra(nakshatraWidth - 1e-10), 0, 'longitude immediately before a nakshatra boundary stays in the previous nakshatra');
 assert.equal(getNakshatra(nakshatraWidth), 1, 'exact nakshatra boundary starts the next nakshatra');
 assert.equal(getNakshatra(360), 0, '360° normalizes to the first nakshatra');
+const padaWidth = 360 / 108;
+assert.equal(getNakshatraPada(0), 1);
+assert.equal(getNakshatraPada(padaWidth - 1e-10), 1);
+assert.equal(getNakshatraPada(padaWidth), 2, 'exact pada boundary starts the next pada');
+assert.equal(getNakshatraPada(4 * padaWidth), 1, 'nakshatra boundary resets pada to one');
 assert.equal(getSign(360), 0, '360° normalizes to Aries');
 assert.equal(getSign(-0.001), 11, 'negative longitudes normalize across 0°');
 assert.throws(() => getNakshatra(Number.NaN), /конечным числом/);
