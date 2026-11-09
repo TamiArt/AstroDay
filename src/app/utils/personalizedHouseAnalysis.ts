@@ -334,7 +334,15 @@ function getTopicPlanetNames(chart: NatalChart, houses: number[]): string[] {
       if (getPlanetHouseForChart(chart, name) === houseNumber) names.add(name);
     }
   }
-  for (const aspect of getGrahaDrishti(chart).filter((item) => houses.includes(item.targetHouse))) {
+  const relatedHouses = new Set(houses);
+  for (const houseNumber of houses) {
+    const houseLord = chart.houses?.find((item) => item.house === houseNumber)?.lord;
+    if (houseLord) {
+      const lordHouse = getPlanetHouseForChart(chart, houseLord);
+      if (lordHouse) relatedHouses.add(lordHouse);
+    }
+  }
+  for (const aspect of getGrahaDrishti(chart).filter((item) => relatedHouses.has(item.targetHouse))) {
     const sourceKey = Object.keys(PLANET_RU).find((name) => PLANET_RU[name] === aspect.source);
     if (sourceKey) names.add(sourceKey);
   }
