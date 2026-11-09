@@ -68,7 +68,7 @@ const drikPlanetReferences = {
 for (const planetName of Object.keys(drikPlanetReferences) as Array<keyof typeof drikPlanetReferences>) {
   const expectedLongitude = drikPlanetReferences[planetName];
   const actualLongitude = drikReferenceChart.planets[planetName].siderealLon;
-  const tolerance = planetName === 'Pluto' ? 0.2 : 0.1;
+  const tolerance = 0.1;
   assert.ok(
     angularDifference(actualLongitude, expectedLongitude) < tolerance,
     `Drik Panchang ${planetName} reference: expected ${expectedLongitude}° (±${tolerance}°), got ${actualLongitude}°`,
@@ -82,9 +82,10 @@ const drikOuterPlanetReferences = {
 for (const planetName of Object.keys(drikOuterPlanetReferences) as Array<keyof typeof drikOuterPlanetReferences>) {
   const expectedLongitude = drikOuterPlanetReferences[planetName];
   const actualLongitude = calculatePlanetPosition(planetName, new Date('1990-06-15T07:19:25.000Z')).siderealLon;
+  const tolerance = planetName === 'Pluto' ? 0.2 : 0.1;
   assert.ok(
-    angularDifference(actualLongitude, expectedLongitude) < 0.1,
-    `Drik Panchang ${planetName} reference: expected ${expectedLongitude}°, got ${actualLongitude}°`,
+    angularDifference(actualLongitude, expectedLongitude) < tolerance,
+    `Drik Panchang ${planetName} reference: expected ${expectedLongitude}° (±${tolerance}°), got ${actualLongitude}°`,
   );
 }
 
