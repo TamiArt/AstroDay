@@ -123,7 +123,7 @@ export function calculateAshtaKoota(personA: CompatibilityPerson, personB: Compa
   const aLord = SIGN_LORDS[aSign];
   const bLord = SIGN_LORDS[bSign];
 
-  // Varna: directional traditional rule, with A treated as the first (bride) chart and B as the second (groom) chart.
+  // Varna, Vashya and Gana use the explicitly selected bride/groom role for person A.
   const varnaRank = [1,2,3,0,1,2,3,0,1,2,3,0]; // fire=Kshatriya, earth=Vaishya, air=Shudra, water=Brahmin
   const varnaRoleA = options.varnaRoleA ?? 'bride';
   const brideRank = varnaRoleA === 'bride' ? varnaRank[aSign] : varnaRank[bSign];
@@ -219,7 +219,7 @@ export function calculateAshtaKoota(personA: CompatibilityPerson, personB: Compa
   ];
   return {
     totalScore, maxScore:36, percentage:Math.round(totalScore / 36 * 100),
-    classification: totalScore >= 30 ? 'excellent' : totalScore >= 24 ? 'good' : totalScore >= 18 ? 'moderate' : 'low',
+    classification: totalScore >= 33 ? 'excellent' : totalScore >= 25 ? 'good' : totalScore >= 18 ? 'moderate' : 'low',
     kutas,
     personA: { name:personA.name, sign:SIGNS[aSign], nakshatra:NAKSHATRAS[aNak].name, pada:aPada, nakshatraIndex:aNak },
     personB: { name:personB.name, sign:SIGNS[bSign], nakshatra:NAKSHATRAS[bNak].name, pada:bPada, nakshatraIndex:bNak },
