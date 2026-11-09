@@ -238,7 +238,7 @@ export function getImportantDates(startDate: Date, days: number = 30, context: P
     }
 
     // Amavasya (New Moon)
-  if (panchang.tithi.index === 29) {
+    if (panchang.tithi.index === 29) {
       dates.push({
         date: new Date(currentDate),
         type: 'Amavasya',
