@@ -277,6 +277,7 @@ assert.ok(firstHouseLord?.repeatedRulership?.includes('управляет так
 assert.ok(firstHouseLord?.dispositorChain.some((step) => step.planetKey === 'Mars' && step.depth === 0));
 assert.equal(firstHouseLord?.chainCycleDetected, true);
 assert.ok(firstHouseLord?.attentionFactors.some((item) => item.includes('цикл')));
+assert.ok(firstHouseLord?.overallSynthesis.includes('Смешанная картина'));
 assert.ok(firstHouseLord?.incomingAspects.some((item) => item.source === 'Юпитер'));
 assert.ok(firstHouseLord?.outgoingAspects.some((item) => item.targetHouse === 7));
 assert.ok(firstHouseLord?.evidence.some((item) => item.includes('Цепочка, шаг 0')));
