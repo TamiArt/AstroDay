@@ -80,7 +80,8 @@ export function calculateDivisionalChart(
 }
 
 export function calculateAdditionalVargas(planetLongitude: number): AdditionalVargas {
-  const degreeInSign = ((planetLongitude % 30) + 30) % 30;
+  const longitudeRemainder = planetLongitude % 30;
+  const degreeInSign = longitudeRemainder < 0 ? longitudeRemainder + 30 : longitudeRemainder;
 
   return {
     D12: Math.floor(degreeInSign / (30 / 12)) + 1,
