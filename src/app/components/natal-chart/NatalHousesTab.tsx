@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
-  AlertCircle, CheckCircle, ChevronDown, ChevronUp, Home, Lightbulb,
+  Activity, AlertCircle, CheckCircle, ChevronDown, ChevronUp, Compass, Home, Lightbulb,
   Sparkles, Target, Wallet, BriefcaseBusiness, Baby, Palette, HeartHandshake,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -24,6 +24,9 @@ const TOPIC_ICONS: Record<LifeTopicInsight['id'], LucideIcon> = {
   career: BriefcaseBusiness,
   children: Baby,
   relationships: HeartHandshake,
+  home_family: Home,
+  wellbeing: Activity,
+  inner_growth: Compass,
 };
 
 function EvidenceList({ items }: { items: string[] }) {
