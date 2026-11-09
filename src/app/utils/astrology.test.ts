@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {
+  calculateAscendant,
   calculateDasha,
   calculateNatalChart,
   calculatePlanetPosition,
@@ -24,6 +25,19 @@ assert.ok(
 assert.ok(
   angularDifference(referenceMoon.siderealLon, moonReferenceLongitude) < 0.1,
   `Swiss Ephemeris Moon reference: expected ${moonReferenceLongitude}°, got ${referenceMoon.siderealLon}°`,
+);
+
+// Independent chart-casting reference from Drik Panchang:
+ // New Delhi, 1990-06-15 12:49:25 IST (07:19:25 UTC), Lahiri Lagna 6°48′13″ Virgo.
+const ascendantReference = calculateAscendant(
+  new Date('1990-06-15T07:19:25.000Z'),
+  28.6139,
+  77.2090,
+);
+const ascendantReferenceLongitude = 150 + 6 + 48 / 60 + 13 / 3600;
+assert.ok(
+  angularDifference(ascendantReference.siderealLon, ascendantReferenceLongitude) < 0.2,
+  `Independent New Delhi ascendant reference: expected ${ascendantReferenceLongitude}°, got ${ascendantReference.siderealLon}°`,
 );
 
 const birthMoment = new Date('1990-06-15T08:30:00.000Z');
