@@ -510,6 +510,14 @@ function getTopicHouseNarrative(chart: NatalChart, topicId: LifeTopicInsight['id
   if (condition?.dignity === 'exalted' || condition?.dignity === 'own') {
     support.push(lordName + ' — управитель ' + houseNumber + '-го дома — находится в положении ' + condition.label + '. В традиционной трактовке это поддерживает более устойчивое проявление функций управителя.');
   }
+  const jupiterHouseAspects = houseAspects.filter((item) => item.startsWith('Юпитер '));
+  if (jupiterHouseAspects.length) {
+    support.push('Дом получает граха-дришти Юпитера: ' + jupiterHouseAspects.join(' ') + ' В традиционной трактовке это рассматривается как поддерживающий фактор, но не отменяет остальные показатели.');
+  }
+  const jupiterLordAspects = lordAspects.filter((item) => item.startsWith('Юпитер '));
+  if (jupiterLordAspects.length) {
+    support.push('Положение управителя получает граха-дришти Юпитера: ' + jupiterLordAspects.join(' ') + ' Это дополнительный поддерживающий фактор в символической трактовке.');
+  }
   if (dispositorName && dispositorName !== house.lord && dispositor && (dispositorCondition?.dignity === 'exalted' || dispositorCondition?.dignity === 'own')) {
     support.push('Диспозитор ' + (PLANET_RU[dispositorName] ?? dispositorName) + ' также находится в ' + (dispositorCondition.label) + ', что добавляет ещё одно поддерживающее звено.');
   }
