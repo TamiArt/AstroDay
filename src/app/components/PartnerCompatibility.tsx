@@ -40,6 +40,7 @@ const STATUS: Record<string, string> = {
 export function PartnerCompatibility({ natalChart }: PartnerCompatibilityProps) {
   const [profile, setProfile] = useState<PartnerBirthProfile>(() => loadPartnerProfile() ?? EMPTY_PROFILE);
   const [result, setResult] = useState<AshtaKootaResult | null>(null);
+  const [varnaRoleA, setVarnaRoleA] = useState<'bride' | 'groom'>('bride');
   const [error, setError] = useState<string | null>(null);
 
   const update = <K extends keyof PartnerBirthProfile>(key: K, value: PartnerBirthProfile[K]) => {
@@ -64,6 +65,7 @@ export function PartnerCompatibility({ natalChart }: PartnerCompatibilityProps) 
       const calculated = calculateAshtaKoota(
         { name: 'Вы', moonLongitude: natalChart.planets.Moon.siderealLon },
         { name: profile.name.trim(), moonLongitude: moon.siderealLon },
+        { varnaRoleA },
       );
       savePartnerProfile(profile);
       setResult(calculated);
@@ -107,6 +109,12 @@ export function PartnerCompatibility({ natalChart }: PartnerCompatibilityProps) 
           </label>
           <label className="text-sm">Долгота
             <input required type="number" step="any" value={profile.longitude} onChange={event => update('longitude', Number(event.target.value))} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2" />
+          </label>
+          <label className="text-sm md:col-span-2">Роль пользователя для направленного правила Варна
+            <select value={varnaRoleA} onChange={event => setVarnaRoleA(event.target.value as 'bride' | 'groom')} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2">
+              <option value="bride">Пользователь — невеста, партнёр — жених</option>
+              <option value="groom">Пользователь — жених, партнёр — невеста</option>
+            </select>
           </label>
           <label className="text-sm md:col-span-2">Часовой пояс IANA (например, Europe/Moscow или Asia/Tbilisi)
             <input required value={profile.timezone} onChange={event => update('timezone', event.target.value)} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2" />
