@@ -597,7 +597,7 @@ export function analyzeLifeTopics(chart: NatalChart, currentDate: Date = new Dat
       ? 'Планетные сигнификаторы и управители указывают на направления для практического исследования: ' + directions.join('; ') + '.'
       : 'В этой карте не найдено достаточно прямых планетных указаний, чтобы уверенно перечислять конкретные направления.';
     const interpretation = [
-      'Сфера рассматривается через дома ' + topic.houses.join(', ') + '. Важно не только значение самих домов, но и то, куда попадают их управители.',
+      'Основные дома сферы: ' + topic.primaryHouses.join(', ') + '; дополнительные дома-связи: ' + topic.houses.filter((house) => !topic.primaryHouses.includes(house)).join(', ') + '. Основные дома задают предмет разбора, дополнительные показывают связанные области жизни. Важно также, куда попадают управители этих домов.',
       ...houseInterpretations,
       directionText,
       repeatedLordLinks.length ? 'Повторяющаяся связь внутри сферы: ' + repeatedLordLinks.join(' ') : '',
