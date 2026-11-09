@@ -37,9 +37,14 @@ jobs:
         id: fix
         continue-on-error: true
         run: npm audit fix
+      - name: Update Vite within the existing major version
+        if: always()
+        run: npm install --save-dev --save-exact vite@6.4.6
       - name: Reinstall updated lockfile
-        if: steps.fix.outcome == 'success'
+        if: always()
         run: npm ci
+      - name: Run full project verification
+        run: npm run verify
       - name: Explain production and vulnerable dependency paths
         if: always()
         run: |
@@ -84,5 +89,6 @@ jobs:
           path: |
             npm-audit-*.json
             package-lock.json
+            package.json
           if-no-files-found: warn
           retention-days: 7
