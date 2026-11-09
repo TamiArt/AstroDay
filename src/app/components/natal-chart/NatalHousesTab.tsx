@@ -384,6 +384,10 @@ export function NatalHousesTab({ natalChart }: NatalHousesTabProps) {
 
                   <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
                     <h5 className="mb-2 text-sm font-semibold text-blue-900">Как планеты связаны между собой</h5>
+                    <p className="mb-3 text-xs leading-relaxed text-blue-800">
+                      Показаны соединения по общему знаку и классические граха-дришти Парашари на основе целых знаков/домов.
+                      Это не аспектная сетка с точными градусными орбисами и не полный набор техник всех астрологических школ.
+                    </p>
                     {personal.planetaryConnections.length > 0 ? (
                       <ul className="space-y-2">
                         {personal.planetaryConnections.map((item) => (
