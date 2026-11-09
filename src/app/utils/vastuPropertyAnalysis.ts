@@ -81,6 +81,7 @@ export interface VastuPropertyAnalysis {
   traditionalAlignmentScore: number | null;
   assessedSectors: number;
   findings: VastuFinding[];
+  siteFindings: VastuSiteFinding[];
   entrancePada: number | null;
   conditionFindings: PropertyConditionFinding[];
   highPriorityCount: number;
@@ -224,6 +225,7 @@ export function analyzeVastuProperty(data: VastuPropertyAssessment): VastuProper
     traditionalAlignmentScore: assessedSectors ? Math.round(aligned / assessedSectors * 100) : null,
     assessedSectors,
     findings,
+    siteFindings,
     entrancePada: calculateEntrancePada(data.entrancePosition),
     conditionFindings,
     highPriorityCount,
