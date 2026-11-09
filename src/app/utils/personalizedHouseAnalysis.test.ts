@@ -225,6 +225,9 @@ assert.ok(topics.find((topic) => topic.id === 'money')?.timingNote.includes('С�
 assert.ok(topics.find((topic) => topic.id === 'career')?.timingNote.includes('Сатурн'));
 assert.ok(topics.find((topic) => topic.id === 'children')?.timingNote.includes('Связь Антардаши'));
 
+assert.ok(getVargaEvidence(chart, 2).some((item) => item.includes('D2')));
 assert.ok(getVargaEvidence(chart, 7).some((item) => item.includes('D7')));
+assert.ok(getVargaEvidence(chart, 9).some((item) => item.includes('D9')));
 assert.ok(getVargaEvidence(chart, 10).some((item) => item.includes('D10')));
+assert.ok(getVargaEvidence(chart, 24).some((item) => item.includes('D24')));
 console.log('personalized house analysis tests passed');
