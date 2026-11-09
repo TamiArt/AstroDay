@@ -457,6 +457,7 @@ function getTopicHouseNarrative(chart: NatalChart, topicId: LifeTopicInsight['id
   const dispositorName = chart.houses?.find((item) => item.sign === lord.sign)?.lord;
   const dispositor = dispositorName ? chart.planets[dispositorName as keyof NatalChart['planets']] : undefined;
   const dispositorHouse = dispositorName ? getPlanetHouseForChart(chart, dispositorName) : null;
+  const dispositorCondition = dispositorName ? evaluatePlanetCondition(chart, dispositorName) : null;
   const lordRoleText = PLANET_THEMES[house.lord]
     ? 'Функция управителя в этой сфере: ' + PLANET_THEMES[house.lord] + '.'
     : '';
@@ -509,9 +510,8 @@ function getTopicHouseNarrative(chart: NatalChart, topicId: LifeTopicInsight['id
   if (condition?.dignity === 'exalted' || condition?.dignity === 'own') {
     support.push(lordName + ' — управитель ' + houseNumber + '-го дома — находится в положении ' + condition.label + '. В традиционной трактовке это поддерживает более устойчивое проявление функций управителя.');
   }
-  if (dispositorName && dispositor && (evaluatePlanetCondition(chart, dispositorName)?.dignity === 'exalted' || evaluatePlanetCondition(chart, dispositorName)?.dignity === 'own')) {
-    const dispositorCondition = evaluatePlanetCondition(chart, dispositorName);
-    support.push('Диспозитор ' + (PLANET_RU[dispositorName] ?? dispositorName) + ' также находится в ' + (dispositorCondition?.label ?? 'поддерживающем положении') + ', что добавляет ещё одно поддерживающее звено.');
+  if (dispositorName && dispositorName !== house.lord && dispositor && (dispositorCondition?.dignity === 'exalted' || dispositorCondition?.dignity === 'own')) {
+    support.push('Диспозитор ' + (PLANET_RU[dispositorName] ?? dispositorName) + ' также находится в ' + (dispositorCondition.label) + ', что добавляет ещё одно поддерживающее звено.');
   }
   if (condition?.dignity === 'debilitated') {
     attention.push(lordName + ' находится в знаке падения. В традиционной трактовке это указывает на необходимость внимательнее оценивать диспозитора, аспекты и реальные обстоятельства; само по себе положение не означает неудачу.');
