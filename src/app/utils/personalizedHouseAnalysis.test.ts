@@ -406,5 +406,28 @@ const medicalDisclaimer = validateInterpretationQuality({
 });
 assert.equal(medicalDisclaimer.publishable, true);
 
+const unbalancedSynthesis = validateInterpretationQuality({
+  id: 'unbalanced-synthesis',
+  title: 'Противоречивый синтез',
+  narrative: 'В сфере есть несколько разнонаправленных факторов.',
+  evidence: ['Управитель в собственном знаке.', 'На тематический дом направлен аспект Сатурна.'],
+  supportingFactors: ['Управитель в собственном знаке.'],
+  attentionPoints: ['На тематический дом направлен аспект Сатурна.'],
+  synthesis: 'В целом положение выглядит благоприятным.',
+});
+assert.ok(unbalancedSynthesis.issues.some((item) => item.code === 'unbalanced-synthesis'));
+
+const balancedSynthesis = validateInterpretationQuality({
+  id: 'balanced-synthesis',
+  title: 'Смешанный синтез',
+  narrative: 'В сфере есть несколько разнонаправленных факторов.',
+  evidence: ['Управитель в собственном знаке.', 'На тематический дом направлен аспект Сатурна.'],
+  supportingFactors: ['Управитель в собственном знаке.'],
+  attentionPoints: ['На тематический дом направлен аспект Сатурна.'],
+  synthesis: 'Смешанная картина: присутствуют поддерживающие факторы и одновременно факторы, требующие внимания.',
+});
+assert.ok(!balancedSynthesis.issues.some((item) => item.code === 'unbalanced-synthesis'));
+
+
 
 console.log('personalized house analysis tests passed');
