@@ -35,6 +35,8 @@ export interface VastuPropertyAssessment {
   vacancyRatePercent: number;
   monthlyOperatingCosts: number;
   annualPropertyTax: number;
+  annualInsurance: number;
+  annualCapitalReserve: number;
   monthlyMortgagePayment: number;
   notes: string;
 }
@@ -134,12 +136,12 @@ export function calculateEntrancePada(positionPercent: number): number | null {
 
 export function calculatePropertyInvestment(data: Pick<VastuPropertyAssessment,
   'purchasePrice' | 'closingCosts' | 'renovationCost' | 'monthlyRent' | 'vacancyRatePercent'
-  | 'monthlyOperatingCosts' | 'annualPropertyTax' | 'monthlyMortgagePayment'
+  | 'monthlyOperatingCosts' | 'annualPropertyTax' | 'annualInsurance' | 'annualCapitalReserve' | 'monthlyMortgagePayment'
 >): PropertyInvestmentAnalysis {
   const totalAcquisitionCost = Math.max(0, data.purchasePrice) + Math.max(0, data.closingCosts) + Math.max(0, data.renovationCost);
   const occupancy = 1 - Math.min(100, Math.max(0, data.vacancyRatePercent)) / 100;
   const effectiveAnnualRent = Math.max(0, data.monthlyRent) * 12 * occupancy;
-  const annualOperatingCosts = Math.max(0, data.monthlyOperatingCosts) * 12 + Math.max(0, data.annualPropertyTax);
+  const annualOperatingCosts = Math.max(0, data.monthlyOperatingCosts) * 12 + Math.max(0, data.annualPropertyTax) + Math.max(0, data.annualInsurance) + Math.max(0, data.annualCapitalReserve);
   const annualNetOperatingIncome = effectiveAnnualRent - annualOperatingCosts;
   const monthlyCashFlowBeforeFinancing = annualNetOperatingIncome / 12;
   const monthlyCashFlowAfterFinancing = monthlyCashFlowBeforeFinancing - Math.max(0, data.monthlyMortgagePayment);
@@ -150,7 +152,7 @@ export function calculatePropertyInvestment(data: Pick<VastuPropertyAssessment,
     netYieldPercent: totalAcquisitionCost > 0 && isComplete ? annualNetOperatingIncome / totalAcquisitionCost * 100 : null,
     monthlyCashFlowBeforeFinancing, monthlyCashFlowAfterFinancing,
     breakEvenOccupancyPercent: data.monthlyRent > 0
-      ? Math.min(100, annualOperatingCosts / (data.monthlyRent * 12) * 100)
+      ? annualOperatingCosts / (data.monthlyRent * 12) * 100
       : null,
     isComplete,
   };
