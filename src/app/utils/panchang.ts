@@ -99,6 +99,37 @@ export interface PanchangContext {
   timezone?: string;
 }
 
+export interface PanchangAngularIndices {
+  tithiIndex: number;
+  nakshatraIndex: number;
+  yogaIndex: number;
+  karanaIndex: number;
+}
+
+/** Pure angular rules, separated so exact segment boundaries can be regression-tested. */
+export function getPanchangAngularIndices(sunLongitude: number, moonLongitude: number): PanchangAngularIndices {
+  if (!Number.isFinite(sunLongitude) || !Number.isFinite(moonLongitude)) {
+    throw new Error('Долготы Солнца и Луны должны быть конечными числами');
+  }
+  const sun = ((sunLongitude % 360) + 360) % 360;
+  const moon = ((moonLongitude % 360) + 360) % 360;
+  const tithiAngle = ((moon - sun) % 360 + 360) % 360;
+  const yogaAngle = (moon + sun) % 360;
+  const halfTithiIndex = Math.floor(tithiAngle / 6) % 60;
+  const karanaIndex = halfTithiIndex === 0 ? 10
+    : halfTithiIndex === 57 ? 7
+      : halfTithiIndex === 58 ? 8
+        : halfTithiIndex === 59 ? 9
+          : (halfTithiIndex - 1) % 7;
+
+  return {
+    tithiIndex: Math.floor(tithiAngle / (360 / 30)),
+    nakshatraIndex: Math.floor(moon / (360 / 27)),
+    yogaIndex: Math.floor(yogaAngle / (360 / 27)),
+    karanaIndex,
+  };
+}
+
 export function calculatePanchang(date: Date, context: PanchangContext = {}): PanchangData {
   // [ИСПРАВЛЕНО] Добавлена специальная обработка для Солнца и Луны
   // Солнце требует SunPosition(), Луна - EclipticGeoMoon()
@@ -116,25 +147,8 @@ export function calculatePanchang(date: Date, context: PanchangContext = {}): Pa
     const moonLon = tropicalToSidereal(moonPos.lon, date);
 
     // Tithi calculation
-    const tithiAngle = ((moonLon - sunLon) % 360 + 360) % 360;
-    const tithiIndex = Math.floor(tithiAngle / (360 / 30));
-
-    // Use exact astronomical divisions; rounded decimal constants drift at boundaries.
-    const nakshatraIndex = Math.floor(moonLon / (360 / 27));
-
-    // Yoga is based on the sidereal sum of the Sun and Moon longitudes.
-    const yogaAngle = (moonLon + sunLon) % 360;
-    const yogaIndex = Math.floor(yogaAngle / (360 / 27));
-
-    // Karana. The first seven are repeating chara karanas; the final four
-    // fixed karanas occur near the end/start of the lunar month.
-    const halfTithiIndex = Math.floor(tithiAngle / 6) % 60;
-    let karanaIndex: number;
-    if (halfTithiIndex === 0) karanaIndex = 10; // Kimstughna
-    else if (halfTithiIndex === 57) karanaIndex = 7; // Shakuni
-    else if (halfTithiIndex === 58) karanaIndex = 8; // Chatushpada
-    else if (halfTithiIndex === 59) karanaIndex = 9; // Naga
-    else karanaIndex = (halfTithiIndex - 1) % 7;
+    const { tithiIndex, nakshatraIndex, yogaIndex, karanaIndex } =
+      getPanchangAngularIndices(sunLon, moonLon);
 
     // Vara (day of week) in the target timezone.
     const dayOfWeek = getWeekdayIndex(date, context.timezone);
