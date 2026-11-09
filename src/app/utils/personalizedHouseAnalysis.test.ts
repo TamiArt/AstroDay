@@ -272,6 +272,8 @@ assert.ok(debilitatedTalentTopic?.attentionPoints.some((item) => item.includes('
 assert.ok(debilitatedTalentTopic?.supportingFactors.length);
 assert.ok(debilitatedTalentTopic?.synthesis.includes('Смешанная картина'));
 assert.ok(topics.find((topic) => topic.id === 'money')?.timingNote.includes('Связь Махадаши с этой сферой'));
+assert.ok(topics.every((topic) => topic.timingNote.includes('Связь Пратьянтардаши')));
+assert.ok(topics.every((topic) => topic.timingNote.includes('Пратьянтардаша')));
 assert.ok(topics.find((topic) => topic.id === 'career')?.timingNote.includes('Сатурн'));
 assert.ok(topics.find((topic) => topic.id === 'children')?.timingNote.includes('Связь Антардаши'));
 
