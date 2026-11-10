@@ -129,7 +129,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
       >
         <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border-l-4 border-purple-600">
           <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-            Главный вектор личности
+            Общая символика знака Лагны
             <TermTooltip term="ascendant" />
           </h4>
           <p className="text-sm text-gray-800 leading-relaxed mb-3">{ascDesc.whatItIs}</p>
@@ -142,7 +142,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
         </div>
 
         <div className="p-4 bg-white rounded-lg border border-purple-200">
-          <h4 className="text-sm font-semibold text-purple-700 uppercase mb-2">Как это проявляется</h4>
+          <h4 className="text-sm font-semibold text-purple-700 uppercase mb-2">Типичные проявления знака (общая символика)</h4>
           <p className="text-sm text-gray-700 leading-relaxed">{ascDesc.howManifests}</p>
         </div>
 
@@ -150,14 +150,14 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
           <div className="p-4 bg-green-50 rounded-lg border border-green-200">
             <h4 className="text-sm font-semibold text-green-700 uppercase mb-3 flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
-              Сильные стороны
+              Типичные сильные стороны знака
             </h4>
             <BulletList items={ascDesc.strengths} tone="green" />
           </div>
           <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
             <h4 className="text-sm font-semibold text-orange-700 uppercase mb-3 flex items-center gap-2">
               <AlertCircle className="w-4 h-4" />
-              Зоны роста
+              Типичные зоны роста знака
             </h4>
             <BulletList items={ascDesc.challenges} tone="orange" />
           </div>
@@ -166,7 +166,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
         <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-600">
           <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
             <Target className="w-5 h-5 text-blue-600" />
-            Практика для раскрытия Лагны
+            Общие практики для самонаблюдения
           </h4>
           <BulletList items={ascDesc.practicalAdvice} tone="blue" />
         </div>
@@ -174,7 +174,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
         <div className="p-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg border-2 border-dashed border-pink-400">
           <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
             <Zap className="w-5 h-5 text-pink-600" />
-            Мягкий фокус на сегодня
+            Общая идея для самонаблюдения
           </h4>
           <p className="text-sm text-gray-700 leading-relaxed">{ascDesc.dailyChallenge}</p>
         </div>
@@ -205,7 +205,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
         <div className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border-l-4 border-yellow-600">
           <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
             <CheckCircle className="w-5 h-5 text-yellow-600" />
-            Практические шаги
+            Возможные действия по теме дома
           </h4>
           <BulletList items={sunDesc.practicalSteps} tone="yellow" />
         </div>
