@@ -1,4 +1,5 @@
 import type { NatalChart } from './astrology';
+import { buildNatalChartFacts } from './natalChartFacts';
 import {
   evaluatePlanetCondition,
   getGrahaDrishti,
