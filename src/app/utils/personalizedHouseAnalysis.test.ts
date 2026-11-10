@@ -9,6 +9,7 @@ import { analyzeHouseLords } from './natalHouseLordAnalysis';
 import { auditNatalChartInterpretations, validateInterpretationQuality } from './natalInterpretationQuality';
 import { buildNatalChartFacts, getNatalFactLinks, getNatalHouseFacts, getNatalPlanetFacts, NATAL_PLANET_KEYS } from './natalChartFacts';
 import { analyzeAllNatalHouses } from './natalHousePersonalizedAnalysis';
+import { analyzeAllNatalPlanets } from './natalPlanetPersonalizedAnalysis';
 import type { NatalChart, PlanetPosition } from './astrology';
 
 function position(name: string, longitude: number, signName: string, nakshatraName: string) {
@@ -563,3 +564,56 @@ assert.equal(secondHouseWithUnknownLordPlacement.lord, 'Venus');
 assert.equal(secondHouseWithUnknownLordPlacement.lordHouse, null);
 assert.equal(secondHouseWithUnknownLordPlacement.synthesis, 'incomplete');
 assert.ok(secondHouseWithUnknownLordPlacement.interpretation.includes('дом не определён'));
+
+
+// Stage 21: every graha has an evidence-backed, chart-specific analysis.
+const allPlanetAnalyses = analyzeAllNatalPlanets(natalFacts);
+assert.equal(allPlanetAnalyses.length, 9);
+assert.deepEqual(allPlanetAnalyses.map((item) => item.planet), [...NATAL_PLANET_KEYS]);
+const sunAnalysis = allPlanetAnalyses.find((item) => item.planet === 'Sun');
+assert.equal(sunAnalysis?.sign, 'Лев');
+assert.equal(sunAnalysis?.house, 5);
+assert.equal(sunAnalysis?.dignity?.dignity, 'own');
+assert.deepEqual(sunAnalysis?.ruledHouses, [5]);
+assert.equal(sunAnalysis?.dispositor, 'Sun');
+assert.equal(sunAnalysis?.dispositorChainEnd, 'self-dispositor');
+assert.ok(sunAnalysis?.evidence.some((item) => item.includes('экзальтация') || item.includes('собственный знак')));
+const moonAnalysis = allPlanetAnalyses.find((item) => item.planet === 'Moon');
+assert.equal(moonAnalysis?.dispositor, 'Mercury');
+assert.equal(moonAnalysis?.dispositorHouse, 6);
+assert.ok(moonAnalysis?.dispositorChain.some((step) => step.planet === 'Mercury'));
+const marsAnalysis = allPlanetAnalyses.find((item) => item.planet === 'Mars');
+assert.ok(marsAnalysis?.aspectsToPlanets.includes('Jupiter'));
+assert.ok(marsAnalysis?.aspectsToHouses.includes(7));
+const jupiterAnalysis = allPlanetAnalyses.find((item) => item.planet === 'Jupiter');
+assert.ok(jupiterAnalysis?.receivesAspectsFrom.includes('Mars'));
+const venusAnalysis = allPlanetAnalyses.find((item) => item.planet === 'Venus');
+assert.equal(venusAnalysis?.dispositorChainEnd, 'cycle');
+assert.ok(venusAnalysis?.evidence.some((item) => item.includes('цикл диспозиторов')));
+const rahuAnalysis = allPlanetAnalyses.find((item) => item.planet === 'Rahu');
+assert.equal(rahuAnalysis?.dignity?.dignity, 'not_applicable');
+assert.ok(rahuAnalysis?.limitations.some((item) => item.includes('Раху/Кету')));
+
+// Same planet in a different sign/house must produce a different interpretation and chain.
+const changedSunAnalysis = analyzeAllNatalPlanets(buildNatalChartFacts(alteredSunChart)).find((item) => item.planet === 'Sun');
+assert.equal(changedSunAnalysis?.sign, 'Весы');
+assert.equal(changedSunAnalysis?.house, 7);
+assert.notEqual(changedSunAnalysis?.interpretation, sunAnalysis?.interpretation);
+assert.equal(changedSunAnalysis?.dispositor, 'Venus');
+
+// A conjunction is explicit, while missing source planets never get fabricated.
+const sunMercuryConjunctionChart = {
+  ...chart,
+  planets: { ...chart.planets, Mercury: position('Mercury', 135, 'Leo', 'Purva Phalguni') },
+} as NatalChart;
+const conjunctionSun = analyzeAllNatalPlanets(buildNatalChartFacts(sunMercuryConjunctionChart)).find((item) => item.planet === 'Sun');
+assert.ok(conjunctionSun?.conjunctions.includes('Mercury'));
+assert.ok(conjunctionSun?.evidence.some((item) => item.includes('Соединение по знаку')));
+const missingKetuChart = {
+  ...chart,
+  planets: { ...chart.planets, Ketu: undefined },
+} as unknown as NatalChart;
+const missingKetuAnalysis = analyzeAllNatalPlanets(buildNatalChartFacts(missingKetuChart)).find((item) => item.planet === 'Ketu');
+assert.equal(missingKetuAnalysis?.available, false);
+assert.equal(missingKetuAnalysis?.synthesis, 'incomplete');
+assert.equal(missingKetuAnalysis?.sign, null);
