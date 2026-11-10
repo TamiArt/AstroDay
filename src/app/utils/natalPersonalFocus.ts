@@ -392,3 +392,40 @@ export function getCoreLifeAreaBridges(chart: NatalChart): CoreLifeAreaBridge[] 
       explanation: 'Одна и та же связь ключевых показателей имеет отдельные подтверждения в нескольких сферах. Это помогает увидеть пересечение тем, но не означает, что одна сфера автоматически вызывает события в другой.',
     }));
 }
+
+
+/**
+ * Chart-grounded Ascendant reading. Generic sign descriptions are deliberately
+ * kept separate from facts that can be verified in the supplied chart.
+ */
+export function getAscendantChartFocus(chart: NatalChart): string {
+  const ascendant = chart.ascendant;
+  const firstHouse = chart.houses?.find((house) => house.house === 1);
+  if (!firstHouse) return 'Данные первого дома отсутствуют: знак Лагны и её управителя нельзя надёжно связать с домами карты.';
+  const sign = SIGN_NAMES[firstHouse.sign] ?? firstHouse.signName;
+  const degree = Number.isFinite(ascendant?.degree) ? `, долгота в знаке ${ascendant.degree.toFixed(2)}°` : '';
+  const nakshatra = ascendant?.nakshatraName ? `; накшатра ${ascendant.nakshatraName}, пада ${ascendant.pada}` : '';
+  return `Факты вашей карты: Лагна находится в знаке ${sign}${degree}${nakshatra}. Управитель этого знака — ${PLANET_RU[firstHouse.lord] ?? firstHouse.lord}. ${getAscendantLordFocus(chart)}`;
+}
+
+/** Returns only chart-derived facts for a planet; no sign-only generic text is injected. */
+export function getPlanetChartFocus(chart: NatalChart, planetKey: string): string {
+  const planet = chart.planets[planetKey as keyof NatalChart['planets']];
+  if (!planet) return `Положение планеты ${PLANET_RU[planetKey] ?? planetKey} отсутствует в данных карты.`;
+  const house = getPlanetHouse(chart, planetKey);
+  const sign = SIGN_NAMES[planet.sign] ?? planet.signName;
+  const ruledHouses = chart.houses?.filter((item) => item.lord === planetKey).map((item) => item.house) ?? [];
+  const placement = house
+    ? `${planetKey === 'Sun' ? 'Солнце' : planetKey === 'Moon' ? 'Луна' : (PLANET_RU[planetKey] ?? planetKey)} находится в ${sign}, ${house}-м доме.`
+    : `${PLANET_RU[planetKey] ?? planetKey} находится в знаке ${sign}; дом по имеющимся данным не определён.`;
+  const rulership = ruledHouses.length
+    ? ` Управляет домами ${ruledHouses.join(', ')}; поэтому темы этих домов связываются с положением планеты.`
+    : ' Управляемые дома по текущим данным не определены.';
+  const nakshatra = planet.nakshatraName
+    ? ` Накшатра: ${planet.nakshatraName}, пада ${planet.pada}.`
+    : '';
+  const dignity = conditionText(chart, planetKey);
+  const dispositor = dispositorText(chart, planetKey);
+  const aspects = house ? aspectText(chart, house) : ' Аспекты на дом не перечислены, поскольку положение в доме не определено.';
+  return placement + rulership + nakshatra + ' ' + dignity + dispositor + ' ' + aspects;
+}
