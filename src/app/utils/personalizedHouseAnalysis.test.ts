@@ -3,7 +3,8 @@ import { analyzeLifeTopics, analyzePersonalizedHouses, getVargaEvidence } from '
 import { describePlanetInHouse } from './natalHouseInterpretation';
 import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition, getGrahaDrishti, getPlanetToPlanetAspects } from './natalStrengthAnalysis';
 import { getSunHouseFocus } from './natalAnalysisGuidance';
-import { getAscendantLordFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus } from './natalPersonalFocus';
+import { getMoonDescription, getSunDescription } from './natalChartDescriptions';
+import { getAscendantChartFocus, getAscendantLordFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus, getPlanetChartFocus } from './natalPersonalFocus';
 import { analyzeHouseLords } from './natalHouseLordAnalysis';
 import { auditNatalChartInterpretations, validateInterpretationQuality } from './natalInterpretationQuality';
 import type { NatalChart, PlanetPosition } from './astrology';
@@ -56,6 +57,31 @@ const virgoAscendantFirstHouse = analyzePersonalizedHouses(leoTwelfthChart).find
 assert.equal(virgoAscendantFirstHouse?.sign, 'Дева');
 assert.equal(virgoAscendantFirstHouse?.lord, 'Меркурий');
 assert.ok(virgoAscendantFirstHouse?.interpretation.includes('аналитика'));
+
+// User-visible analysis must derive its claims from this chart, not a default house.
+const ascendantFacts = getAscendantChartFocus(chart);
+assert.ok(ascendantFacts.includes('Лагна находится в знаке Овен'));
+assert.ok(ascendantFacts.includes('управитель — Марс'));
+const changedAscendantFacts = getAscendantChartFocus(leoTwelfthChart);
+assert.ok(changedAscendantFacts.includes('Лагна находится в знаке Дева'));
+assert.notEqual(changedAscendantFacts, ascendantFacts);
+
+const sunFacts = getPlanetChartFocus(chart, 'Sun');
+assert.ok(sunFacts.includes('Солнце находится в Лев, 5-м доме'));
+assert.ok(sunFacts.includes('Управляет домами 5'));
+const alteredSunChart = {
+  ...chart,
+  planets: { ...chart.planets, Sun: position('Sun', 190, 'Libra', 'Swati') },
+} as NatalChart;
+assert.notEqual(getPlanetChartFocus(alteredSunChart, 'Sun'), sunFacts);
+assert.ok(getPlanetChartFocus(chartWithoutMercury, 'Sun').includes('диспозитор знака — Меркурий, но его положение в карте не найдено.'));
+const missingSunHouseChart = { ...chart, houses: chart.houses?.filter((item) => item.house !== 5) } as NatalChart;
+assert.ok(getPlanetChartFocus(missingSunHouseChart, 'Sun').includes('дом по имеющимся данным не определён'));
+assert.ok(getSunHouseFocus(missingSunHouseChart, null).includes('дом не определён'));
+assert.ok(getSunDescription('Лев', null).inHouse.includes('не определён'));
+assert.equal(getSunDescription('Лев', null).practicalSteps.length, 0);
+assert.ok(getMoonDescription('Близнецы', null).inHouse.includes('не определён'));
+assert.ok(getMoonDescription('Близнецы', null).comfort.includes('не определён'));
 
 const lagnaFocus = getAscendantLordFocus(chart);
 assert.ok(lagnaFocus.includes('управитель — Марс'));
