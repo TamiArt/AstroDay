@@ -1,4 +1,5 @@
 import type { NatalChart } from './astrology';
+import { buildNatalChartFacts, getNatalPlanetFacts, type NatalPlanetKey } from './natalChartFacts';
 import { describeHouseDrishti, evaluatePlanetCondition, getPlanetHouse, getPlanetToPlanetAspects } from './natalStrengthAnalysis';
 
 const SIGN_NAMES = ['Овен', 'Телец', 'Близнецы', 'Рак', 'Лев', 'Дева', 'Весы', 'Скорпион', 'Стрелец', 'Козерог', 'Водолей', 'Рыбы'];
@@ -400,33 +401,45 @@ export function getCoreLifeAreaBridges(chart: NatalChart): CoreLifeAreaBridge[] 
  * kept separate from facts that can be verified in the supplied chart.
  */
 export function getAscendantChartFocus(chart: NatalChart): string {
-  const ascendant = chart.ascendant;
-  const firstHouse = chart.houses?.find((house) => house.house === 1);
+  const facts = buildNatalChartFacts(chart);
+  const firstHouse = facts.houses.find((house) => house.number === 1);
   if (!firstHouse) return 'Данные первого дома отсутствуют: знак Лагны и её управителя нельзя надёжно связать с домами карты.';
-  const sign = SIGN_NAMES[firstHouse.sign] ?? firstHouse.signName;
-  const degree = Number.isFinite(ascendant?.degree) ? `, долгота в знаке ${ascendant.degree.toFixed(2)}°` : '';
-  const nakshatra = ascendant?.nakshatraName ? `; накшатра ${ascendant.nakshatraName}, пада ${ascendant.pada}` : '';
-  return `Факты вашей карты: Лагна находится в знаке ${sign}${degree}${nakshatra}. Управитель этого знака — ${PLANET_RU[firstHouse.lord] ?? firstHouse.lord}. ${getAscendantLordFocus(chart)}`;
+  const degree = facts.chart.ascendantDegree === null ? '' : `, долгота в знаке ${facts.chart.ascendantDegree.toFixed(2)}°`;
+  const nakshatra = facts.chart.ascendantNakshatra ? `; накшатра ${facts.chart.ascendantNakshatra}, пада ${facts.chart.ascendantPada ?? 'не определена'}` : '';
+  return `Факты вашей карты: Лагна находится в знаке ${firstHouse.sign}${degree}${nakshatra}. Управитель этого знака — ${PLANET_RU[firstHouse.lord ?? ''] ?? firstHouse.lord ?? 'не определён'}. ${getAscendantLordFocus(chart)}`;
 }
 
 /** Returns only chart-derived facts for a planet; no sign-only generic text is injected. */
 export function getPlanetChartFocus(chart: NatalChart, planetKey: string): string {
-  const planet = chart.planets[planetKey as keyof NatalChart['planets']];
+  if (!Object.prototype.hasOwnProperty.call(chart.planets, planetKey)) {
+    return `Положение планеты ${PLANET_RU[planetKey] ?? planetKey} отсутствует в данных карты.`;
+  }
+  const facts = buildNatalChartFacts(chart);
+  const planet = getNatalPlanetFacts(facts, planetKey as NatalPlanetKey);
   if (!planet) return `Положение планеты ${PLANET_RU[planetKey] ?? planetKey} отсутствует в данных карты.`;
-  const house = getPlanetHouse(chart, planetKey);
-  const sign = SIGN_NAMES[planet.sign] ?? planet.signName;
-  const ruledHouses = chart.houses?.filter((item) => item.lord === planetKey).map((item) => item.house) ?? [];
-  const placement = house
-    ? `${planetKey === 'Sun' ? 'Солнце' : planetKey === 'Moon' ? 'Луна' : (PLANET_RU[planetKey] ?? planetKey)} находится в ${sign}, ${house}-м доме.`
-    : `${PLANET_RU[planetKey] ?? planetKey} находится в знаке ${sign}; дом по имеющимся данным не определён.`;
-  const rulership = ruledHouses.length
-    ? ` Управляет домами ${ruledHouses.join(', ')}; поэтому темы этих домов связываются с положением планеты.`
+  const placement = planet.house
+    ? `${planet.name} находится в ${planet.sign}, ${planet.house}-м доме (долгота ${planet.longitude.toFixed(2)}°).`
+    : `${planet.name} находится в знаке ${planet.sign}; дом по имеющимся данным не определён.`;
+  const rulership = planet.ruledHouses.length
+    ? ` Управляет домами ${planet.ruledHouses.join(', ')}.`
     : ' Управляемые дома по текущим данным не определены.';
-  const nakshatra = planet.nakshatraName
-    ? ` Накшатра: ${planet.nakshatraName}, пада ${planet.pada}.`
+  const nakshatra = planet.nakshatra
+    ? ` Накшатра: ${planet.nakshatra}, пада ${planet.pada}.`
     : '';
-  const dignity = conditionText(chart, planetKey);
-  const dispositor = dispositorText(chart, planetKey);
-  const aspects = house ? aspectText(chart, house) : ' Аспекты на дом не перечислены, поскольку положение в доме не определено.';
-  return placement + rulership + nakshatra + ' ' + dignity + dispositor + ' ' + aspects;
+  const dignity = planet.dignity
+    ? ` Достоинство: ${planet.dignity.label}. ${planet.dignity.explanation}`
+    : ' Достоинство не определено по доступным данным.';
+  const dispositor = planet.dispositor
+    ? ` Диспозитор знака — ${PLANET_RU[planet.dispositor]}; ${planet.dispositorHouse ? `расположен в ${planet.dispositorHouse}-м доме` : 'его дом не определён'}.`
+    : ' Диспозитор знака не определён по доступным данным.';
+  const conjunctions = planet.conjunctions.length
+    ? ` Соединение по знаку с: ${planet.conjunctions.map((key) => PLANET_RU[key]).join(', ')}; точный орбис не рассчитывается.`
+    : ' Другие планеты в том же знаке не обнаружены.';
+  const aspects = planet.aspectsToHouses.length
+    ? ` Аспектирует дома: ${planet.aspectsToHouses.join(', ')} по используемой схеме граха-дришти.`
+    : ' Исходящие аспекты на дома по используемой схеме не найдены.';
+  const receives = planet.receivesAspectsFrom.length
+    ? ` На положение планеты приходят аспекты: ${planet.receivesAspectsFrom.map((key) => PLANET_RU[key]).join(', ')}.`
+    : ' Входящие межпланетные аспекты по используемой схеме не найдены.';
+  return placement + rulership + nakshatra + dignity + dispositor + conjunctions + aspects + receives;
 }
