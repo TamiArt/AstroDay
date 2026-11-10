@@ -609,6 +609,8 @@ const sunMercuryConjunctionChart = {
 const conjunctionSun = analyzeAllNatalPlanets(buildNatalChartFacts(sunMercuryConjunctionChart)).find((item) => item.planet === 'Sun');
 assert.ok(conjunctionSun?.conjunctions.includes('Mercury'));
 assert.ok(conjunctionSun?.evidence.some((item) => item.includes('Соединение по знаку')));
+assert.ok(!conjunctionSun?.aspectsToPlanets.includes('Mercury'));
+assert.ok(!conjunctionSun?.outgoingAspectDetails.some((aspect) => aspect.planet === 'Mercury'));
 const missingKetuChart = {
   ...chart,
   planets: { ...chart.planets, Ketu: undefined },
