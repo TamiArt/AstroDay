@@ -290,7 +290,7 @@ export function buildNatalChartFacts(chart: NatalChart): NatalChartFacts {
     );
   }
 
-  for ((const [key, facts]) of Object.entries(planetFacts) as Array<[NatalPlanetKey, NatalPlanetFacts | null]>) {
+  for (const [key, facts]) of Object.entries(planetFacts) as Array<[NatalPlanetKey, NatalPlanetFacts | null]>) {
     if (facts && facts.dataAvailability.house === 'missing') warnings.push(`Дом планеты ${PLANET_NAMES[key]} не определён по доступным данным.`);
     if (facts && facts.dataAvailability.dispositor === 'missing') warnings.push(`Диспозитор планеты ${PLANET_NAMES[key]} не определён по доступным данным.`);
   }
