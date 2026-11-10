@@ -153,7 +153,7 @@
 
 **Ограничение:** справочные тексты знаков остаются общей символикой. Unit-тесты проверяют связь данных с текстом и вариацию между контрольными картами, но не доказывают научную истинность трактовок и не заменяют browser E2E.
 
-**Статус:** исправление реализовано; полный verify/CI ожидает проверки на текущем commit. Подробный аудит: [docs/CHART_INTERPRETATION_AUDIT.md](docs/CHART_INTERPRETATION_AUDIT.md).
+**Статус:** исправлено и проверено полным `npm run verify`: [run 42835667893](https://github.com/TamiArt/AstroDay/actions/runs/42835667893) на commit `5f31abba1ab11b8a9818d1d705a0613b93411998`. Подробный аудит: [docs/CHART_INTERPRETATION_AUDIT.md](docs/CHART_INTERPRETATION_AUDIT.md).
 
 ## Подтверждённые защитные меры и ограничения
 
