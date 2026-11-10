@@ -1,6 +1,6 @@
-import { calculateDasha, getCurrentAntardasha, getCurrentPratyantardasha, getPlanetHouse as resolvePlanetHouse, type NatalChart } from './astrology';
+import { calculateDasha, getCurrentAntardasha, getCurrentPratyantardasha, type NatalChart } from './astrology';
 import { calculateDivisionalChart } from './divisionalCharts';
-import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition, getGrahaDrishti } from './natalStrengthAnalysis';
+import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition, getGrahaDrishti, getPlanetHouse } from './natalStrengthAnalysis';
 import { describeHousePlanetConnections, describeHouseSignStyle, describePlanetInHouse } from './natalHouseInterpretation';
 import { buildNatalChartFacts } from './natalChartFacts';
 
@@ -256,7 +256,7 @@ const TOPIC_CONFIG: Array<{
 function getPlanetHouseForChart(chart: NatalChart, planetName: string): number | null {
   const planet = chart.planets[planetName as keyof NatalChart['planets']];
   if (!planet || !chart.houses) return null;
-  return resolvePlanetHouse(planet.sign, chart.houses);
+  return getPlanetHouse(chart, planetName);
 }
 
 function toEvidence(name: string, chart: NatalChart): PlanetEvidence {
@@ -264,14 +264,14 @@ function toEvidence(name: string, chart: NatalChart): PlanetEvidence {
   return {
     name: PLANET_RU[name] ?? name,
     sign: SIGN_RU[planet.signName] ?? planet.signName,
-    house: getPlanetHouseForChart(chart, name) ?? 0,
+    house: getPlanetHouseForChart(chart, name),
     nakshatra: planet.nakshatraName,
     pada: planet.pada,
   };
 }
 
 function formatPlanetEvidence(item: PlanetEvidence): string {
-  return `${item.name} в ${item.sign}, ${item.house}-м доме; накшатра ${item.nakshatra}, пада ${item.pada}`;
+  return `${item.name} в ${item.sign}, ${item.house ? `${item.house}-м доме` : 'дом не определён'}; накшатра ${item.nakshatra}, пада ${item.pada}`;
 }
 
 function getLordHouseMeaning(house: number): string {
