@@ -330,7 +330,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                     <h4 className="font-semibold text-gray-900">{house.house}-й дом — {house.theme}</h4>
                     <p className="text-xs text-gray-500 mt-1">
                       {house.available
-                        ? `Знак: ${house.sign}; управитель: ${house.lordName ?? 'не определён'}; положение: ${house.lordHouse ? `${house.lordHouse}-й дом` : 'не определено'}`
+                        ? `Знак: ${house.sign}; управитель: ${house.lordName ?? 'не определён'}${house.lordSign ? ` в ${house.lordSign}` : ''}; положение: ${house.lordHouse ? `${house.lordHouse}-й дом` : 'не определено'}${house.lordDignity ? `; достоинство: ${house.lordDignity}` : ''}`
                         : 'Исходные данные дома отсутствуют'}
                     </p>
                   </div>
@@ -352,7 +352,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                   <div className="rounded-lg bg-indigo-50 p-3">
                     <h5 className="text-xs font-semibold uppercase tracking-wide text-indigo-800 mb-1">Цепочка диспозиторов</h5>
                     <p className="text-sm text-indigo-900">
-                      {house.dispositorChain.map((item) => `${item.planet} — ${item.sign}${item.house === null ? '' : `, ${item.house}-й дом`}`).join(' → ')}
+                      {house.dispositorChain.map((item) => `${item.planet} — ${item.sign}${item.house === null ? '' : `, ${item.house}-й дом`}${item.dignity ? `, ${item.dignity}` : ''}${item.aspectedBy.length ? `, аспекты от: ${item.aspectedBy.join(', ')}` : ''}`).join(' → ')}
                     </p>
                   </div>
                 ) : null}
