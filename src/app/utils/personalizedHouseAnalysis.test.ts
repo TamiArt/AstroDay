@@ -8,6 +8,7 @@ import { getAscendantChartFocus, getAscendantLordFocus, getCoreChartSynthesis, g
 import { analyzeHouseLords } from './natalHouseLordAnalysis';
 import { auditNatalChartInterpretations, validateInterpretationQuality } from './natalInterpretationQuality';
 import { buildNatalChartFacts, getNatalFactLinks, getNatalHouseFacts, getNatalPlanetFacts, NATAL_PLANET_KEYS } from './natalChartFacts';
+import { analyzeAllNatalHouses } from './natalHousePersonalizedAnalysis';
 import type { NatalChart, PlanetPosition } from './astrology';
 
 function position(name: string, longitude: number, signName: string, nakshatraName: string) {
@@ -508,3 +509,45 @@ assert.ok(!balancedSynthesis.issues.some((item) => item.code === 'unbalanced-syn
 
 
 console.log('personalized house analysis tests passed');
+
+
+// Stage 20: all twelve houses are returned and each analysis is derived from canonical facts.
+const allHouseAnalyses = analyzeAllNatalHouses(natalFacts);
+assert.equal(allHouseAnalyses.length, 12);
+assert.deepEqual(allHouseAnalyses.map((item) => item.house), Array.from({ length: 12 }, (_, index) => index + 1));
+const fifthHouseAnalysis = allHouseAnalyses[4];
+assert.equal(fifthHouseAnalysis.sign, 'Лев');
+assert.equal(fifthHouseAnalysis.lord, 'Sun');
+assert.equal(fifthHouseAnalysis.lordHouse, 5);
+assert.ok(fifthHouseAnalysis.occupants.includes('Sun'));
+assert.ok(fifthHouseAnalysis.dispositorChain.some((item) => item.planet === 'Sun'));
+assert.ok(fifthHouseAnalysis.evidence.some((item) => item.includes('управитель')));
+assert.ok(fifthHouseAnalysis.interpretation.includes('Солнце'));
+assert.ok(allHouseAnalyses.every((item) => item.evidence.length > 0));
+
+// A materially different chart changes house-specific evidence, rather than reusing generic prose.
+const alteredHouseAnalyses = analyzeAllNatalHouses(buildNatalChartFacts(leoTwelfthChart));
+assert.notEqual(alteredHouseAnalyses[0].sign, allHouseAnalyses[0].sign);
+assert.notEqual(alteredHouseAnalyses[0].lord, allHouseAnalyses[0].lord);
+assert.notEqual(alteredHouseAnalyses[0].interpretation, allHouseAnalyses[0].interpretation);
+
+// Missing house and lord data remain explicitly incomplete and do not invent a first-house placement.
+const chartMissingHouseOne = {
+  ...chart,
+  houses: chart.houses?.filter((item) => item.house !== 1),
+} as NatalChart;
+const missingHouseAnalysis = analyzeAllNatalHouses(buildNatalChartFacts(chartMissingHouseOne))[0];
+assert.equal(missingHouseAnalysis.available, false);
+assert.equal(missingHouseAnalysis.sign, null);
+assert.equal(missingHouseAnalysis.synthesis, 'incomplete');
+assert.ok(missingHouseAnalysis.limitations.some((item) => item.includes('отсутствуют')));
+
+const chartMissingMars = {
+  ...chart,
+  planets: { ...chart.planets, Mars: undefined },
+} as unknown as NatalChart;
+const missingLordAnalysis = analyzeAllNatalHouses(buildNatalChartFacts(chartMissingMars))[0];
+assert.equal(missingLordAnalysis.lord, 'Mars');
+assert.equal(missingLordAnalysis.lordHouse, null);
+assert.equal(missingLordAnalysis.synthesis, 'incomplete');
+assert.ok(missingLordAnalysis.interpretation.includes('не определены'));
