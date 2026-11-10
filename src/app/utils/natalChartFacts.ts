@@ -121,10 +121,6 @@ function isPlanetKey(value: string | null | undefined): value is NatalPlanetKey 
   return Boolean(value && (NATAL_PLANET_KEYS as readonly string[]).includes(value));
 }
 
-function planetLabel(key: string | null): string {
-  return key && isPlanetKey(key) ? PLANET_NAMES[key] : 'неизвестный управитель';
-}
-
 function addLink(
   links: NatalFactLink[],
   relation: NatalFactRelation,
