@@ -7,7 +7,7 @@ import { buildNatalChartFacts } from './natalChartFacts';
 export interface PlanetEvidence {
   name: string;
   sign: string;
-  house: number;
+  house: number | null;
   nakshatra: string;
   pada: number;
 }
