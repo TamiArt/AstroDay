@@ -7,6 +7,7 @@ import { getMoonDescription, getSunDescription } from './natalChartDescriptions'
 import { getAscendantChartFocus, getAscendantLordFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus, getPlanetChartFocus } from './natalPersonalFocus';
 import { analyzeHouseLords } from './natalHouseLordAnalysis';
 import { auditNatalChartInterpretations, validateInterpretationQuality } from './natalInterpretationQuality';
+import { buildNatalChartFacts, getNatalFactLinks, getNatalHouseFacts, getNatalPlanetFacts, NATAL_PLANET_KEYS } from './natalChartFacts';
 import type { NatalChart, PlanetPosition } from './astrology';
 
 function position(name: string, longitude: number, signName: string, nakshatraName: string) {
@@ -57,6 +58,49 @@ const virgoAscendantFirstHouse = analyzePersonalizedHouses(leoTwelfthChart).find
 assert.equal(virgoAscendantFirstHouse?.sign, 'Дева');
 assert.equal(virgoAscendantFirstHouse?.lord, 'Меркурий');
 assert.ok(virgoAscendantFirstHouse?.interpretation.includes('аналитика'));
+
+// Canonical natal facts: one deterministic source for placements and chart relationships.
+const natalFacts = buildNatalChartFacts(chart);
+assert.equal(natalFacts.schemaVersion, 1);
+assert.equal(natalFacts.methodology.houseSystem, 'Whole Sign');
+assert.equal(natalFacts.methodology.ayanamsha, 'Lahiri');
+assert.equal(natalFacts.houses.length, 12);
+assert.deepEqual(Object.keys(natalFacts.planets).sort(), [...NATAL_PLANET_KEYS].sort());
+assert.equal(natalFacts.dataQuality.completePlanetCount, 9);
+const canonicalSun = getNatalPlanetFacts(natalFacts, 'Sun');
+assert.equal(canonicalSun?.sign, 'Лев');
+assert.equal(canonicalSun?.house, 5);
+assert.deepEqual(canonicalSun?.ruledHouses, [5]);
+assert.equal(canonicalSun?.dispositor, 'Sun');
+assert.deepEqual(canonicalSun?.conjunctions, []);
+const canonicalMoon = getNatalPlanetFacts(natalFacts, 'Moon');
+assert.equal(canonicalMoon?.house, 3);
+assert.equal(canonicalMoon?.dispositor, 'Mercury');
+assert.equal(canonicalMoon?.dispositorHouse, 6);
+const canonicalFifthHouse = getNatalHouseFacts(natalFacts, 5);
+assert.equal(canonicalFifthHouse?.lord, 'Sun');
+assert.equal(canonicalFifthHouse?.lordHouse, 5);
+assert.ok(canonicalFifthHouse?.occupants.includes('Sun'));
+assert.ok(natalFacts.links.some((link) => link.relation === 'rules-house' && link.sourceId === 'planet:Sun' && link.targetId === 'house:5'));
+assert.ok(natalFacts.links.some((link) => link.relation === 'dispositor-of' && link.sourceId === 'planet:Mercury' && link.targetId === 'planet:Moon'));
+assert.ok(natalFacts.links.some((link) => link.relation === 'shares-ruler-with' && link.sourceId === 'house:3' && link.targetId === 'house:6'));
+assert.ok(getNatalFactLinks(natalFacts, 'aspects-house').some((link) => link.sourceId === 'planet:Mars' && link.targetId === 'house:7'));
+assert.ok(natalFacts.aspects.planet.some((aspect) => aspect.sourceKey === 'Mars' && aspect.targetKey === 'Jupiter' && aspect.kind === 'graha-drishti'));
+assert.ok(natalFacts.dataQuality.unsupportedFactors.some((item) => item.includes('Ретроградность')));
+assert.ok(natalFacts.dataQuality.unsupportedFactors.some((item) => item.includes('Сожжение')));
+
+// Missing source data must stay missing; the graph must never invent a first-house placement.
+const chartWithoutFifthHouse = { ...chart, houses: chart.houses?.filter((house) => house.house !== 5) } as NatalChart;
+const incompleteFacts = buildNatalChartFacts(chartWithoutFifthHouse);
+assert.equal(getNatalPlanetFacts(incompleteFacts, 'Sun')?.house, null);
+assert.equal(getNatalPlanetFacts(incompleteFacts, 'Sun')?.dispositor, null);
+assert.ok(incompleteFacts.dataQuality.missingHouseNumbers.includes(5));
+assert.equal(getNatalHouseFacts(incompleteFacts, 5), null);
+const chartWithoutVenus = { ...chart, planets: { ...chart.planets, Venus: undefined } } as unknown as NatalChart;
+const missingPlanetFacts = buildNatalChartFacts(chartWithoutVenus);
+assert.equal(missingPlanetFacts.planets.Venus, null);
+assert.equal(missingPlanetFacts.dataQuality.completePlanetCount, 8);
+assert.ok(missingPlanetFacts.dataQuality.missingPlanetKeys.includes('Venus'));
 
 // User-visible analysis must derive its claims from this chart, not a default house.
 const ascendantFacts = getAscendantChartFocus(chart);
