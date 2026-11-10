@@ -209,7 +209,7 @@ export function auditNatalChartInterpretations(
       title: `Дом ${insight.house}`,
       narrative: insight.interpretation,
       evidence: insight.evidence,
-      houses: [insight.house, insight.lordHouse ?? insight.house, ...insight.occupants.map((item) => item.house)],
+      houses: [insight.house, insight.lordHouse ?? insight.house, ...insight.occupants.flatMap((item) => item.house === null ? [] : [item.house])],
     });
   }
 
