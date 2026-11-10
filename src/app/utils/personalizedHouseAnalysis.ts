@@ -296,10 +296,10 @@ export function analyzePersonalizedHouses(chart: NatalChart): PersonalizedHouseI
     const planetaryConnections = describeHousePlanetConnections(
       chart,
       occupants.map((item) => Object.keys(PLANET_RU).find((key) => PLANET_RU[key] === item.name) ?? item.name),
-      house.lord,
+      lordKey,
     );
-    const lordCondition = evaluatePlanetCondition(chart, house.lord);
-    const houseAspects = describeHouseDrishti(chart, house.house);
+    const lordCondition = evaluatePlanetCondition(chart, lordKey);
+    const houseAspects = (houseFacts?.aspectedBy ?? []).map((source) => `${PLANET_RU[source] ?? source} аспектирует ${house.house}-й дом по используемой схеме граха-дришти.`);
     const lordHouseAspects = lordHouse ? describeHouseDrishti(chart, lordHouse) : [];
     const sign = houseFacts?.sign ?? (SIGN_RU[house.signName] ?? house.signName);
     const houseSignStyle = describeHouseSignStyle(house.signName, house.house);
