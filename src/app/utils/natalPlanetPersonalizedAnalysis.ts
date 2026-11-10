@@ -89,7 +89,7 @@ function getDispositorChain(
 
   while (current && steps.length < NATAL_PLANET_KEYS.length) {
     if (visited.has(current)) return { steps, end: 'cycle' };
-    const item = facts.planets[current];
+    const item: NatalPlanetFacts | undefined = facts.planets[current];
     if (!item) return { steps, end: 'missing-planet' };
     visited.add(current);
     steps.push({
