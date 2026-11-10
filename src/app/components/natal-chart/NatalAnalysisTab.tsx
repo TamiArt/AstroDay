@@ -20,7 +20,7 @@ import type { NatalChart as NatalChartType } from '../../utils/astrology';
 import { analyzePersonalizedHouses } from '../../utils/personalizedHouseAnalysis';
 import { getPlanetHouse } from '../../utils/natalStrengthAnalysis';
 import { getSunHouseFocus } from '../../utils/natalAnalysisGuidance';
-import { formatCoreLifeAreaEvidence, getAscendantChartFocus, getAscendantLordFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus, getPlanetChartFocus } from '../../utils/natalPersonalFocus';
+import { formatCoreLifeAreaEvidence, getAscendantChartFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus, getPlanetChartFocus } from '../../utils/natalPersonalFocus';
 import { getAscendantDescription, getMoonDescription, getSunDescription } from '../../utils/natalChartDescriptions';
 import { GlassCard } from '../common/GlassCard';
 import { TermTooltip } from '../common/TermTooltip';
@@ -105,7 +105,6 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
   const moonHouse = getPlanetHouse(natalChart, 'Moon');
   const personalizedHouses = analyzePersonalizedHouses(natalChart);
   const sunFocus = getSunHouseFocus(natalChart, sunHouse);
-  const ascendantLordFocus = getAscendantLordFocus(natalChart);
   const ascendantChartFocus = getAscendantChartFocus(natalChart);
   const sunChartFocus = getPlanetChartFocus(natalChart, 'Sun');
   const moonChartFocus = getPlanetChartFocus(natalChart, 'Moon');
