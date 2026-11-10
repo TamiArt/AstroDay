@@ -1,0 +1,143 @@
+name: Dependency audit
+
+on:
+  push:
+    branches:
+      - main
+      - "feat/**"
+      - "fix/**"
+      - "chore/**"
+      - "refactor/**"
+      - "docs/**"
+    paths:
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/dependency-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    name: npm dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Apply compatible security updates
+        id: fix
+        continue-on-error: true
+        run: npm audit fix
+      - name: Resolve remaining direct Vite advisory when a compatible fix exists
+        if: always()
+        run: |
+          npm audit --json > .audit-pre-vite.json || true
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { execFileSync } from 'node:child_process';
+          const report = JSON.parse(fs.readFileSync('.audit-pre-vite.json', 'utf8'));
+          const manifest = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          const current = manifest.devDependencies?.vite ?? manifest.dependencies?.vite;
+          const currentMajor = Number(current?.match(/\\d+/)?.[0]);
+          const fix = report.vulnerabilities?.vite?.fixAvailable;
+          const targetMajor = Number(fix?.version?.split('.')[0]);
+          if (
+            fix &&
+            typeof fix === 'object' &&
+            typeof fix.version === 'string' &&
+            fix.isSemVerMajor === false &&
+            Number.isFinite(currentMajor) &&
+            targetMajor === currentMajor
+          ) {
+            execFileSync('npm', ['install', '--save-dev', '--save-exact', `vite@${fix.version}`], { stdio: 'inherit' });
+          } else {
+            console.log('No remaining Vite advisory with an explicit same-major fix; breaking upgrades are not automated');
+          }
+          NODE
+      - name: Reinstall updated lockfile
+        if: always()
+        run: npm ci
+      - name: Run full project verification
+        run: npm run verify
+      - name: Explain production and vulnerable dependency paths
+        if: always()
+        run: |
+          for package in dompurify vite postcss browserslist baseline-browser-mapping nanoid tar source-map-js @babel/core esbuild; do
+            npm explain "$package" || true
+          done
+      - name: Audit all dependencies
+        id: all
+        continue-on-error: true
+        run: npm audit --json > npm-audit-all.json
+      - name: Audit production dependencies
+        id: production
+        continue-on-error: true
+        run: npm audit --omit=dev --json > npm-audit-production.json
+      - name: Require zero known advisories before committing
+        if: always()
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          for (const file of ['npm-audit-all.json', 'npm-audit-production.json']) {
+            if (!fs.existsSync(file)) throw new Error(`Missing audit report: ${file}`);
+            const report = JSON.parse(fs.readFileSync(file, 'utf8'));
+            const total = report.metadata?.vulnerabilities?.total;
+            if (typeof total !== 'number' || total !== 0) {
+              throw new Error(`${file} reports ${total ?? 'unknown'} vulnerabilities`);
+            }
+          }
+          NODE
+      - name: Summarize audit
+        if: always()
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          for (const file of ['npm-audit-all.json', 'npm-audit-production.json']) {
+            if (!fs.existsSync(file)) continue;
+            const report = JSON.parse(fs.readFileSync(file, 'utf8'));
+            const counts = report.metadata?.vulnerabilities ?? {};
+            const lines = [
+              `## ${file}`,
+              '',
+              `Total: ${counts.total ?? 'unknown'}; critical: ${counts.critical ?? 0}; high: ${counts.high ?? 0}; moderate: ${counts.moderate ?? 0}; low: ${counts.low ?? 0}; info: ${counts.info ?? 0}`,
+              '',
+              ...Object.entries(report.vulnerabilities ?? {}).map(([name, item]) =>
+                `- ${name}: severity=${item.severity}; direct=${item.isDirect}; range=${item.range}; fixAvailable=${JSON.stringify(item.fixAvailable)}; via=${item.via.map(v => typeof v === 'string' ? v : v.name).join(', ')}`
+              ),
+              ''
+            ];
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n'));
+          }
+          NODE
+      - name: Commit compatible dependency updates
+        if: success()
+        run: |
+          if git diff --quiet -- package.json package-lock.json; then
+            echo "No dependency changes to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "fix(deps): update vulnerable transitive packages"
+          git push origin HEAD:${GITHUB_REF_NAME}
+      - name: Upload raw audit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-reports
+          path: |
+            npm-audit-*.json
+            package-lock.json
+            package.json
+          if-no-files-found: warn
+          retention-days: 7

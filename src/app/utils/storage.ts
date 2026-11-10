@@ -1,6 +1,7 @@
 import { clearForecastCache } from './indexedDB';
 import { isValidCoordinates, isValidIanaTimezone } from './locationValidation';
 import { unwrapProfilePayload, wrapProfilePayload } from './profileMigrations';
+import { createEmptyVastuPropertyAssessment, type VastuPropertyAssessment } from './vastuPropertyAnalysis';
 
 function legacyObfuscate(text: string, key: string): string {
   const utf8Bytes = new TextEncoder().encode(text);
@@ -137,6 +138,7 @@ const HOME_FLOORPLAN_KEY = 'astroday_home_floorplan';
 const HOME_PROGRESS_KEY = 'astroday_home_progress';
 const HOME_VASTU_CHECKLIST_KEY = 'astroday_vastu_checklist';
 const PARTNER_PROFILE_KEY = 'astroday_partner_profile';
+const VASTU_PROPERTY_KEY = 'astroday_vastu_property_assessment';
 
 export function saveUserProfile(profile: UserProfile): void {
   try {
@@ -241,6 +243,55 @@ function loadLegacyHomeValue<T>(key: string, fallback: T): T {
   }
 }
 
+export function saveVastuPropertyAssessment(data: VastuPropertyAssessment): void {
+  saveLegacyHomeValue(VASTU_PROPERTY_KEY, data);
+}
+
+export function loadVastuPropertyAssessment(): VastuPropertyAssessment {
+  const stored = loadLegacyHomeValue<unknown>(VASTU_PROPERTY_KEY, null);
+  if (!isRecord(stored) || stored.schemaVersion !== 1) return createEmptyVastuPropertyAssessment();
+  const fallback = createEmptyVastuPropertyAssessment();
+  const numeric = (key: keyof VastuPropertyAssessment, defaultValue: number) => {
+    const value = stored[key];
+    return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : defaultValue;
+  };
+  const validDirections = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'];
+  const rooms = isRecord(stored.rooms) ? stored.rooms : {};
+  const condition = isRecord(stored.condition) ? stored.condition : {};
+  const roomValues = ['prayer', 'kitchen', 'master-bedroom', 'bedroom', 'guest-bedroom', 'living', 'dining', 'study', 'office', 'bathroom', 'toilet', 'stairs', 'storage', 'laundry', 'water', 'balcony', 'open', 'other'];
+  const conditionValues = ['ok', 'attention', 'unknown'];
+  return {
+    ...fallback,
+    propertyName: typeof stored.propertyName === 'string' ? stored.propertyName.slice(0, 120) : '',
+    propertyType: ['apartment', 'house', 'land', 'office', 'retail', 'other'].includes(String(stored.propertyType)) ? stored.propertyType as VastuPropertyAssessment['propertyType'] : fallback.propertyType,
+    facingDirection: validDirections.includes(String(stored.facingDirection)) ? stored.facingDirection as VastuPropertyAssessment['facingDirection'] : '',
+    entranceWall: ['north', 'east', 'south', 'west'].includes(String(stored.entranceWall)) ? stored.entranceWall as VastuPropertyAssessment['entranceWall'] : '',
+    entrancePosition: Math.min(100, numeric('entrancePosition', 50)),
+    plotShape: ['square', 'rectangle', 'irregular', 'triangular', 'narrow', 'unknown'].includes(String(stored.plotShape)) ? stored.plotShape as VastuPropertyAssessment['plotShape'] : 'unknown',
+    plotSlope: [...validDirections, 'flat', 'unknown'].includes(String(stored.plotSlope)) ? stored.plotSlope as VastuPropertyAssessment['plotSlope'] : 'unknown',
+    roadSides: Array.isArray(stored.roadSides) ? stored.roadSides.filter((value): value is VastuPropertyAssessment['roadSides'][number] => validDirections.includes(String(value))) : [],
+    waterSides: Array.isArray(stored.waterSides) ? stored.waterSides.filter((value): value is VastuPropertyAssessment['waterSides'][number] => validDirections.includes(String(value))) : [],
+    rooms: Object.fromEntries(Object.entries(fallback.rooms).map(([sector, value]) => [sector, roomValues.includes(String(rooms[sector])) ? rooms[sector] : value])) as VastuPropertyAssessment['rooms'],
+    condition: Object.fromEntries(Object.entries(fallback.condition).map(([id, value]) => [id, conditionValues.includes(String(condition[id])) ? condition[id] : value])) as VastuPropertyAssessment['condition'],
+    currency: typeof stored.currency === 'string' && /^[A-Z]{3}$/.test(stored.currency) ? stored.currency : 'USD',
+    purchasePrice: numeric('purchasePrice', 0),
+    closingCosts: numeric('closingCosts', 0),
+    renovationCost: numeric('renovationCost', 0),
+    monthlyRent: numeric('monthlyRent', 0),
+    vacancyRatePercent: Math.min(100, numeric('vacancyRatePercent', 5)),
+    monthlyOperatingCosts: numeric('monthlyOperatingCosts', 0),
+    annualPropertyTax: numeric('annualPropertyTax', 0),
+    annualInsurance: numeric('annualInsurance', 0),
+    annualCapitalReserve: numeric('annualCapitalReserve', 0),
+    monthlyMortgagePayment: numeric('monthlyMortgagePayment', 0),
+    notes: typeof stored.notes === 'string' ? stored.notes.slice(0, 4000) : '',
+  };
+}
+
+export function deleteVastuPropertyAssessment(): void {
+  localStorage.removeItem(VASTU_PROPERTY_KEY);
+}
+
 export function savePartnerProfile(profile: PartnerBirthProfile): void {
   saveLegacyHomeValue(PARTNER_PROFILE_KEY, profile);
 }
@@ -269,6 +320,7 @@ export function deleteHomeData(): void {
   localStorage.removeItem(HOME_FLOORPLAN_KEY);
   localStorage.removeItem(HOME_PROGRESS_KEY);
   localStorage.removeItem(HOME_VASTU_CHECKLIST_KEY);
+  deleteVastuPropertyAssessment();
 }
 
 export async function deleteAllData(): Promise<void> {
@@ -292,6 +344,7 @@ export function exportData(): string {
     homeFloorPlan: loadHomeFloorPlan(),
     homeProgress: loadHomeProgress(),
     vastuChecklist: loadVastuChecklist(),
+    vastuPropertyAssessment: loadVastuPropertyAssessment(),
     partnerProfile: loadPartnerProfile(),
   }, null, 2);
 }

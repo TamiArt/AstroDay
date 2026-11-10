@@ -10,6 +10,7 @@ import { HomeProgressTracker } from './HomeProgressTracker';
 import { HomeARView } from './HomeARView';
 import { getHomePersonalizedRecommendations } from '../utils/homeRecommendations';
 import { VastuGuide } from './VastuGuide';
+import { VastuPropertyAssessment } from './VastuPropertyAssessment';
 import { getDataPrecision } from '../utils/personalRecommendations';
 
 interface HomeAssistantProps {
@@ -64,6 +65,7 @@ export function HomeAssistant({ profile, natalChart, currentChart: _currentChart
       </GlassCard>
 
       <VastuGuide />
+      <VastuPropertyAssessment />
 
       <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
         <div className="space-y-6">

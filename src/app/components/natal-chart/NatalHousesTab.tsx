@@ -10,6 +10,7 @@ import {
   analyzePersonalizedHouses,
   getVargaEvidence,
   type LifeTopicInsight,
+  type VargaEvidenceDivision,
 } from '../../utils/personalizedHouseAnalysis';
 import { HOUSES_DETAILED } from '../../utils/housesDescriptions';
 import { analyzeHouseLords, type HouseLordInsight } from '../../utils/natalHouseLordAnalysis';
@@ -42,20 +43,31 @@ function EvidenceList({ items }: { items: string[] }) {
 
 function TopicCard({ topic, natalChart }: { topic: LifeTopicInsight; natalChart: NatalChartType }) {
   const Icon = TOPIC_ICONS[topic.id];
-  const vargaDivision = topic.id === 'money'
-    ? 2
+  const vargaDivisions: VargaEvidenceDivision[] = topic.id === 'money'
+    ? [2]
     : topic.id === 'talents'
-      ? 24
+      ? [24]
       : topic.id === 'children'
-        ? 7
-        : topic.id === 'relationships' || topic.id === 'inner_growth'
-          ? 9
+        ? [7]
+        : topic.id === 'relationships'
+          ? [9]
           : topic.id === 'career'
-            ? 10
-            : null;
-  const vargaEvidence = vargaDivision
-    ? getVargaEvidence(natalChart, vargaDivision)
-    : [];
+            ? [10]
+            : topic.id === 'home_family'
+              ? [4, 12]
+              : topic.id === 'wellbeing'
+                ? [16]
+                : topic.id === 'inner_growth'
+                  ? [20]
+                  : [];
+  const vargaNames: Record<number, string> = {
+    2: 'D2 — Хора', 4: 'D4 — Чатуртхамша', 7: 'D7 — Саптамша',
+    9: 'D9 — Навамша', 10: 'D10 — Дашамша', 12: 'D12 — Двадашамша',
+    16: 'D16 — Шодашамша', 20: 'D20 — Вимшамша', 24: 'D24 — Сиддхамша',
+  };
+  const vargaEvidence = vargaDivisions.flatMap((division) =>
+    getVargaEvidence(natalChart, division).map((item) => `D${division}: ${item}`),
+  );
 
   return (
     <GlassCard>
@@ -135,7 +147,7 @@ function TopicCard({ topic, natalChart }: { topic: LifeTopicInsight; natalChart:
         {vargaEvidence.length > 0 && (
           <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4">
             <h4 className="mb-2 text-sm font-semibold text-indigo-900">
-              Дополнительная карта {vargaDivision === 2 ? 'D2 — Хора' : vargaDivision === 7 ? 'D7 — Саптамша' : vargaDivision === 9 ? 'D9 — Навамша' : vargaDivision === 10 ? 'D10 — Дашамша' : 'D24 — Сиддхамша'}
+              Дополнительные варги: {vargaDivisions.map((division) => vargaNames[division]).join(' · ')}
             </h4>
             <EvidenceList items={vargaEvidence} />
             <p className="mt-2 text-xs text-gray-600">

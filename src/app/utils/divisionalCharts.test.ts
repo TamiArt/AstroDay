@@ -71,6 +71,29 @@ assert.equal(mappedLongitude(360, 9), mappedLongitude(0, 9), '360° must normali
 assert.equal(mappedLongitude(5, 30), 300, 'D30 segment starts at 0° of Aquarius');
 assert.equal(mappedLongitude(10, 30), 240, 'D30 segment starts at 0° of Sagittarius');
 
+// Divisional houses follow Whole Sign boundaries, not degree distance from the exact Ascendant.
+const wholeSignBoundary = calculateDivisionalChart(
+  { Sun: 31 },
+  29,
+  1,
+  'D1',
+  'Rashi',
+  'test',
+);
+assert.equal(wholeSignBoundary.planets.Sun.house, 2,
+  'A planet at 1° Taurus is in the second whole-sign house when the Ascendant is at 29° Aries');
+const sameSignAfterAscendant = calculateDivisionalChart(
+  { Sun: 25 },
+  10,
+  1,
+  'D1',
+  'Rashi',
+  'test',
+);
+assert.equal(sameSignAfterAscendant.planets.Sun.house, 1,
+  'A planet in the Ascendant sign remains in the first whole-sign house even before the exact Ascendant degree');
+
+
 const specific = calculateDivisionalChart({ Sun: 10 }, 0, 4, 'D4', 'Chaturthamsha', 'test');
 assert.equal(specific.calculationRule, 'specific');
 const generic = calculateDivisionalChart({ Sun: 10 }, 0, 60, 'D60', 'Shashtiamsha', 'test');

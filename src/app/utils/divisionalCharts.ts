@@ -52,8 +52,9 @@ export function calculateDivisionalChart(
 
     // Определяем дом относительно Асцендента дробной карты
     const divisionalAsc = calculateDivisionalLongitude(ascendantLon, division);
-    const houseDeg = (divisionalLon - divisionalAsc + 360) % 360;
-    const house = Math.floor(houseDeg / 30) + 1;
+    const divisionalSign = Math.floor(divisionalLon / 30);
+    const divisionalAscSign = Math.floor(divisionalAsc / 30);
+    const house = ((divisionalSign - divisionalAscSign + 12) % 12) + 1;
 
     planets[planetName] = {
       longitude: divisionalLon,
@@ -228,7 +229,7 @@ export const DIVISIONAL_CHART_DEFINITIONS = [
   { division: 30, name: 'D30 — Тримшамша', sanskritName: 'Trimshamsha', area: 'Несчастья' },
   { division: 40, name: 'D40 — Кхаведамша', sanskritName: 'Khavedamsha', area: 'Благословения' },
   { division: 45, name: 'D45 — Акшаведамша', sanskritName: 'Akshavedamsha', area: 'Общее благополучие' },
-  { division: 60, name: 'D60 — Шаштьямша', sanskritName: 'Shashtiamsha', area: 'Карма прошлых жизней' }
+  { division: 60, name: 'D60 — общее деление (экспериментально)', sanskritName: 'Unverified generic division', area: 'Не интерпретировать как проверенную Шаштьямшу' }
 ];
 
 // Расчет всех дробных карт для натальной карты

@@ -1,4 +1,4 @@
-import { calculateDasha, getCurrentAntardasha, getPlanetHouse as resolvePlanetHouse, type NatalChart } from './astrology';
+import { calculateDasha, getCurrentAntardasha, getCurrentPratyantardasha, getPlanetHouse as resolvePlanetHouse, type NatalChart } from './astrology';
 import { calculateDivisionalChart } from './divisionalCharts';
 import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition, getGrahaDrishti } from './natalStrengthAnalysis';
 import { describeHousePlanetConnections, describeHouseSignStyle, describePlanetInHouse } from './natalHouseInterpretation';
@@ -574,11 +574,14 @@ export function analyzeLifeTopics(chart: NatalChart, currentDate: Date = new Dat
   const moonNakshatra = chart.planets.Moon.nakshatra;
   const dasha = calculateDasha(chart.date, moonNakshatra, currentDate, chart.planets.Moon.siderealLon);
   const antar = getCurrentAntardasha(dasha, currentDate);
+  const pratyantar = getCurrentPratyantardasha(antar, currentDate);
   const formatDate = (date: Date) => date.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
   const periodLabel = 'Махадаша ' + (PLANET_RU[dasha.planet] ?? dasha.planet) + ' действует с ' +
     formatDate(dasha.startDate) + ' по ' + formatDate(dasha.endDate) +
     (antar ? '; Антардаша ' + (PLANET_RU[antar.planet] ?? antar.planet) + ' — с ' +
-      formatDate(antar.startDate) + ' по ' + formatDate(antar.endDate) : '') + '.';
+      formatDate(antar.startDate) + ' по ' + formatDate(antar.endDate) : '') +
+    (pratyantar ? '; Пратьянтардаша ' + (PLANET_RU[pratyantar.planet] ?? pratyantar.planet) + ' — с ' +
+      formatDate(pratyantar.startDate) + ' по ' + formatDate(pratyantar.endDate) : '') + '.';
 
   return TOPIC_CONFIG.map((topic) => {
     const planets = getTopicPlanetNames(chart, topic.houses);
@@ -609,7 +612,8 @@ export function analyzeLifeTopics(chart: NatalChart, currentDate: Date = new Dat
           : 'Выбранные показатели не дают однозначного перевеса в сторону поддержки или напряжения. Сфера требует целостного прочтения, а не упрощённой оценки.';
     const mahaConnection = describePeriodConnection(chart, dasha.planet, topic.houses, planets);
     const antarConnection = antar ? describePeriodConnection(chart, antar.planet, topic.houses, planets) : 'Текущая Антардаша не определена в доступных данных.';
-    const periodMeaning = 'Связь Махадаши с этой сферой: ' + mahaConnection + ' Связь Антардаши: ' + antarConnection;
+    const pratyantarConnection = pratyantar ? describePeriodConnection(chart, pratyantar.planet, topic.houses, planets) : 'Текущая Пратьянтардаша не определена в доступных данных.';
+    const periodMeaning = 'Связь Махадаши с этой сферой: ' + mahaConnection + ' Связь Антардаши: ' + antarConnection + ' Связь Пратьянтардаши: ' + pratyantarConnection;
     const directionText = directions.length
       ? 'Планетные сигнификаторы и управители указывают на направления для практического исследования: ' + directions.join('; ') + '.'
       : 'В этой карте не найдено достаточно прямых планетных указаний, чтобы уверенно перечислять конкретные направления.';
@@ -645,14 +649,26 @@ export function analyzeLifeTopics(chart: NatalChart, currentDate: Date = new Dat
     };
   });
 }
-export function getVargaEvidence(chart: NatalChart, division: 2 | 7 | 9 | 10 | 24): string[] {
-  const definitions = {
+export type VargaEvidenceDivision = 2 | 4 | 7 | 9 | 10 | 12 | 16 | 20 | 24 | 27;
+
+export function getVargaEvidence(chart: NatalChart, division: VargaEvidenceDivision): string[] {
+  const definitions: Record<VargaEvidenceDivision, {
+    name: string;
+    sanskrit: string;
+    area: string;
+    relevant: string[];
+  }> = {
     2: { name: 'D2 — Хора', sanskrit: 'Hora', area: 'Ресурсы и материальная устойчивость', relevant: ['Sun', 'Jupiter', 'Venus'] },
-    7: { name: 'D7 — Саптамша', sanskrit: 'Saptamsha', area: 'Дети и продолжение рода', relevant: ['Jupiter', 'Moon', 'Venus'] },
+    4: { name: 'D4 — Чатуртхамша', sanskrit: 'Chaturthamsha', area: 'Дом, недвижимость и устойчивость места', relevant: ['Moon', 'Mars', 'Venus', 'Saturn'] },
+    7: { name: 'D7 — Саптамша', sanskrit: 'Saptamsha', area: 'Дети, творчество и передача опыта', relevant: ['Jupiter', 'Moon', 'Venus'] },
     9: { name: 'D9 — Навамша', sanskrit: 'Navamsha', area: 'Партнёрство, ценности и дхарма', relevant: ['Venus', 'Jupiter', 'Saturn', 'Moon'] },
     10: { name: 'D10 — Дашамша', sanskrit: 'Dashamsha', area: 'Профессия и реализация', relevant: ['Sun', 'Mercury', 'Saturn', 'Mars'] },
+    12: { name: 'D12 — Двадашамша', sanskrit: 'Dvadashamsha', area: 'Родители, происхождение и семейные темы', relevant: ['Sun', 'Moon', 'Saturn', 'Jupiter'] },
+    16: { name: 'D16 — Шодашамша', sanskrit: 'Shodashamsha', area: 'Комфорт, транспорт и условия повседневной жизни', relevant: ['Venus', 'Moon', 'Mars', 'Mercury'] },
+    20: { name: 'D20 — Вимшамша', sanskrit: 'Vimshamsha', area: 'Духовная практика и мировоззрение', relevant: ['Jupiter', 'Ketu', 'Sun', 'Moon'] },
     24: { name: 'D24 — Сиддхамша', sanskrit: 'Siddhamsha', area: 'Обучение и знания', relevant: ['Mercury', 'Jupiter', 'Sun'] },
-  } as const;
+    27: { name: 'D27 — Бхамша', sanskrit: 'Bhamsha', area: 'Традиционная оценка устойчивости и ресурсов', relevant: ['Mars', 'Saturn', 'Jupiter', 'Sun'] },
+  };
   const definition = definitions[division];
   const varga = calculateDivisionalChart(
     Object.fromEntries(Object.entries(chart.planets).map(([name, position]) => [name, position.siderealLon])),
@@ -663,8 +679,8 @@ export function getVargaEvidence(chart: NatalChart, division: 2 | 7 | 9 | 10 | 2
     definition.area,
   );
   const ascendantSign = SIGN_RU[varga.ascendant.signName] ?? varga.ascendant.signName;
-  const evidence = [
-    `Лагна D${division}: ${ascendantSign}; дробная карта рассчитана по отдельному правилу для этой варги.`,
+  return [
+    `Лагна D${division}: ${ascendantSign}; используется отдельное правило расчёта этой варги.`,
     ...definition.relevant
       .filter((name) => Boolean(varga.planets[name]) && Boolean(chart.planets[name as keyof NatalChart['planets']]))
       .map((name) => {
@@ -674,5 +690,4 @@ export function getVargaEvidence(chart: NatalChart, division: 2 | 7 | 9 | 10 | 2
         return `${PLANET_RU[name] ?? name} в D${division}: ${SIGN_RU[planet.signName] ?? planet.signName}, ${planet.house}-й дом; в D1 — ${SIGN_RU[natalPlanet.signName] ?? natalPlanet.signName}, ${natalHouse ? natalHouse + '-й дом' : 'дом не определён'}.`;
       }),
   ];
-  return evidence;
 }
