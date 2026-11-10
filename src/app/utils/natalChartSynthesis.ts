@@ -55,7 +55,7 @@ function unique<T>(values: T[]): T[] {
 export function synthesizeNatalChart(facts: NatalChartFacts): NatalChartSynthesis {
   const houses = analyzeAllNatalHouses(facts);
   const planets = analyzeAllNatalPlanets(facts);
-  const available = NATAL_PLANET_KEYS.filter((key) => facts.planets[key]);
+  const available = planets.filter((planet) => planet.available).map((planet) => planet.planet);
   const conclusions: NatalSynthesisEvidence[] = [];
   const bridges: NatalChartSynthesis['bridges'] = [];
   const planetNetworks: NatalChartSynthesis['planetNetworks'] = [];
@@ -194,11 +194,28 @@ export function synthesizeNatalChart(facts: NatalChartFacts): NatalChartSynthesi
     });
   }
 
+  const planetSupportive = planets.filter((planet) => planet.available && planet.synthesis === 'supportive').length;
+  const planetAttention = planets.filter((planet) => planet.available && planet.synthesis === 'challenging').length;
+  if (planetSupportive || planetAttention) {
+    const planetEvidence = planets.flatMap((planet) => [
+      ...planet.supportingFactors.map((item) => `${PLANET_NAMES[planet.planet]}: ${item}`),
+      ...planet.attentionFactors.map((item) => `${PLANET_NAMES[planet.planet]}: ${item}`),
+    ]);
+    conclusions.push({
+      id: 'planetary-balance', kind: 'balance', title: 'Общий баланс факторов планет',
+      statement: `В персональном анализе планет отмечено ${planetSupportive} планет с поддерживающими факторами и ${planetAttention} с факторами внимания. Эти признаки нужно читать вместе с домами, управлением и диспозиторами, а не как отдельный рейтинг карты.`,
+      evidence: planetEvidence.length ? planetEvidence : ['Учитывались только факторы, явно рассчитанные анализом девяти планет.'],
+      relatedHouses: unique(planets.map((planet) => planet.house).filter((value): value is number => value !== null)),
+      relatedPlanets: planets.filter((planet) => planet.supportingFactors.length || planet.attentionFactors.length).map((planet) => planet.planet),
+    });
+  }
+
   const supportive = houses.filter((house) => house.synthesis === 'supportive').length;
   const challenging = houses.filter((house) => house.synthesis === 'challenging').length;
   const mixed = houses.filter((house) => house.synthesis === 'mixed').length;
   const tensions: string[] = [];
   if (supportive && challenging) tensions.push(`Оценки домов неоднородны: ${supportive} домов имеют поддерживающий профиль, ${challenging} — профиль с факторами внимания. Это не противоречие расчёта, а различие показателей по жизненным темам.`);
+  if (planetSupportive && planetAttention) tensions.push(`Планетные факторы также неоднородны: ${planetSupportive} планет имеют поддерживающие признаки, ${planetAttention} — признаки, требующие внимания.`);
   if (mixed) tensions.push(`${mixed} домов содержат одновременно поддерживающие и требующие внимания факторы; их нельзя сводить к однозначно положительной или отрицательной оценке.`);
   if (facts.dataQuality.missingPlanetKeys.length || facts.dataQuality.missingHouseNumbers.length) {
     tensions.push('Часть исходных данных отсутствует; общие выводы следует считать предварительными и читать вместе с ограничениями.');
