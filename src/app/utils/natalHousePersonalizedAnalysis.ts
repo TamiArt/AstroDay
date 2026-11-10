@@ -124,7 +124,7 @@ function buildHouseAnalysis(
   const evidence: string[] = [
     `Дом ${houseNumber}: знак ${house.sign}; тема — ${theme}.`,
     lord ? `Управитель: ${PLANET_NAMES[lord]}.` : 'Управитель дома не определён.',
-    lordFacts?.house === null || !lordFacts
+    !lord || !lordFacts || lordFacts.house === null
       ? 'Дом управителя не определён по доступным данным.'
       : `${PLANET_NAMES[lord]} расположен в ${lordFacts.house}-м доме.`,
     lordFacts?.dignity ? `Достоинство управителя: ${lordFacts.dignity.label} (качественная оценка ${lordFacts.dignity.score}/100; это не Shadbala).` : 'Достоинство управителя не определено.',
