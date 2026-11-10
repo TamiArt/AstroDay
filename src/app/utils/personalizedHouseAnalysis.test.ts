@@ -617,3 +617,11 @@ const missingKetuAnalysis = analyzeAllNatalPlanets(buildNatalChartFacts(missingK
 assert.equal(missingKetuAnalysis?.available, false);
 assert.equal(missingKetuAnalysis?.synthesis, 'incomplete');
 assert.equal(missingKetuAnalysis?.sign, null);
+
+assert.ok(marsAnalysis?.outgoingAspectDetails.some((aspect) =>
+  aspect.planet === 'Jupiter' && aspect.offset === 7 && aspect.sourceHouse === 1 && aspect.targetHouse === 7,
+));
+assert.ok(jupiterAnalysis?.incomingAspectDetails.some((aspect) =>
+  aspect.planet === 'Mars' && aspect.offset === 7,
+));
+assert.ok(marsAnalysis?.houseAspectDetails.some((aspect) => aspect.house === 7));
