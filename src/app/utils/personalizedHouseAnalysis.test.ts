@@ -634,7 +634,7 @@ assert.ok(marsAnalysis?.houseAspectDetails.some((aspect) => aspect.house === 7))
 const wholeChart = synthesizeNatalChart(natalFacts);
 assert.equal(wholeChart.dataQuality.completeness, 100);
 assert.ok(wholeChart.headline.length > 0);
-assert.ok(wholeChart.dominantThemes.some((item) => item.house === 5));
+assert.ok(wholeChart.dominantThemes.some((item) => item.house === 11));
 assert.ok(wholeChart.bridges.some((item) => item.fromHouse === 3 && item.toHouse === 6 && item.lord === 'Mercury'));
 assert.ok(wholeChart.planetNetworks.some((item) => item.relation === 'aspect' && item.planets.includes('Mars') && item.planets.includes('Jupiter')));
 assert.ok(wholeChart.conclusions.every((item) => item.evidence.length > 0));
