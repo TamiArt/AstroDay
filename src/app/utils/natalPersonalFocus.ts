@@ -60,9 +60,10 @@ export function getAscendantLordFocus(chart: NatalChart): string {
   return 'Лагна в знаке ' + sign + '. Её управитель — ' + (PLANET_RU[lord] ?? lord) + ': ' + (PLANET_THEMES[lord] ?? 'качества планеты') + '. Он расположен в ' + (house ? house + '-м доме — ' + houseMeaning : 'доме, который не удалось определить') + nakshatra + '. Поэтому темы личности и самостоятельных решений символически связываются с ' + houseMeaning + '. ' + conditionText(chart, lord) + ' ' + aspectText(chart, house ?? 1);
 }
 
-export function getMoonHouseFocus(chart: NatalChart, house: number): string {
+export function getMoonHouseFocus(chart: NatalChart, house: number | null): string {
   const moon = chart.planets.Moon;
   if (!moon) return 'Положение Луны в карте не найдено.';
+  if (house === null) return 'Знак Луны известен, но дом не определён. Вывод о конкретной жизненной сфере и аспектах дома не строится.';
   const houseMeaning = HOUSE_THEMES[house] ?? 'сферу соответствующего дома';
   const sign = SIGN_NAMES[moon.sign] ?? moon.signName;
   const nakshatra = moon.nakshatraName ? ' Накшатра ' + moon.nakshatraName + ', пада ' + moon.pada + ', добавляет традиционный символический оттенок, но не является психологическим диагнозом.' : '';
