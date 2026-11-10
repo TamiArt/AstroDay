@@ -2,6 +2,7 @@ import { calculateDasha, getCurrentAntardasha, getCurrentPratyantardasha, getPla
 import { calculateDivisionalChart } from './divisionalCharts';
 import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition, getGrahaDrishti } from './natalStrengthAnalysis';
 import { describeHousePlanetConnections, describeHouseSignStyle, describePlanetInHouse } from './natalHouseInterpretation';
+import { buildNatalChartFacts } from './natalChartFacts';
 
 export interface PlanetEvidence {
   name: string;
@@ -279,12 +280,14 @@ function getLordHouseMeaning(house: number): string {
 
 export function analyzePersonalizedHouses(chart: NatalChart): PersonalizedHouseInsight[] {
   if (!chart.houses?.length) return [];
+  const chartFacts = buildNatalChartFacts(chart);
 
   return chart.houses.map((house) => {
-    const lord = chart.planets[house.lord as keyof NatalChart['planets']];
-    const lordHouse = lord ? getPlanetHouseForChart(chart, house.lord) : null;
-    const occupants = Object.keys(chart.planets)
-      .filter((name) => getPlanetHouseForChart(chart, name) === house.house)
+    const houseFacts = chartFacts.houses.find((item) => item.number === house.house);
+    const lordKey = houseFacts?.lord ?? house.lord;
+    const lord = chart.planets[lordKey as keyof NatalChart['planets']];
+    const lordHouse = houseFacts?.lordHouse ?? null;
+    const occupants = (houseFacts?.occupants ?? [])
       .map((name) => toEvidence(name, chart));
     const lordEvidence = lord ? toEvidence(house.lord, chart) : null;
     const occupantInterpretations = occupants
@@ -298,10 +301,10 @@ export function analyzePersonalizedHouses(chart: NatalChart): PersonalizedHouseI
     const lordCondition = evaluatePlanetCondition(chart, house.lord);
     const houseAspects = describeHouseDrishti(chart, house.house);
     const lordHouseAspects = lordHouse ? describeHouseDrishti(chart, lordHouse) : [];
-    const sign = SIGN_RU[house.signName] ?? house.signName;
+    const sign = houseFacts?.sign ?? (SIGN_RU[house.signName] ?? house.signName);
     const houseSignStyle = describeHouseSignStyle(house.signName, house.house);
     const interpretation = lordHouse
-      ? `В традиционной Джйотиш этот дом связан с темой: ${HOUSE_MEANING[house.house]}. В твоей карте он начинается в знаке ${sign}. ${houseSignStyle ?? ''} Управитель — ${PLANET_RU[house.lord] ?? house.lord}; он расположен в ${lordHouse}-м доме (${getLordHouseMeaning(lordHouse)}). Поэтому темы этих двух домов стоит рассматривать вместе: решения и опыт в сфере «${getLordHouseMeaning(lordHouse)}» символически связываются с темой этого дома.`
+      ? `В традиционной Джйотиш этот дом связан с темой: ${HOUSE_MEANING[house.house]}. В твоей карте он начинается в знаке ${sign}. ${houseSignStyle ?? ''} Управитель — ${PLANET_RU[lordKey] ?? lordKey}; он расположен в ${lordHouse}-м доме (${getLordHouseMeaning(lordHouse)}). Поэтому темы этих двух домов стоит рассматривать вместе: решения и опыт в сфере «${getLordHouseMeaning(lordHouse)}» символически связываются с темой этого дома.`
       : `Дом в знаке ${sign}; ${houseSignStyle ?? ''} Положение его управителя в доступных данных определить не удалось. Общая тема: ${HOUSE_MEANING[house.house]}.`;
 
     const evidence = [
@@ -316,14 +319,14 @@ export function analyzePersonalizedHouses(chart: NatalChart): PersonalizedHouseI
       occupants.length ? `Планеты в доме: ${occupants.map((item) => formatPlanetEvidence(item)).join('; ')}` : 'В доме нет планет; интерпретация опирается прежде всего на знак и управителя.',
     ];
 
-    const planetThemes = [house.lord, ...occupants.map((item) => Object.keys(PLANET_RU).find((key) => PLANET_RU[key] === item.name) ?? '')]
+    const planetThemes = [lordKey, ...occupants.map((item) => Object.keys(PLANET_RU).find((key) => PLANET_RU[key] === item.name) ?? '')]
       .filter(Boolean)
       .map((name) => `${PLANET_RU[name] ?? name}: ${PLANET_THEMES[name]}`);
 
     return {
       house: house.house,
       sign,
-      lord: PLANET_RU[house.lord] ?? house.lord,
+      lord: PLANET_RU[lordKey] ?? lordKey,
       lordHouse,
       lordSign: lord ? SIGN_RU[lord.signName] ?? lord.signName : null,
       lordNakshatra: lord?.nakshatraName ?? null,
