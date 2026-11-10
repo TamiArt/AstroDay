@@ -104,7 +104,7 @@ function buildHouseAnalysis(
       aspects: [], dispositorChain: [], connectedHouses: [], supportingFactors: [],
       attentionFactors: [], synthesis: 'incomplete',
       interpretation: `${houseNumber}-й дом относится к теме «${theme}», но исходные данные этого дома отсутствуют. Персональная трактовка не строится, чтобы не подменять неизвестные показатели предположениями.`,
-      evidence: [], limitations: ['Нет записи дома в исходной натальной карте.'],
+      evidence: [], limitations: ['Данные этого дома отсутствуют в исходной натальной карте; его знак, управитель, планеты и аспекты не могут быть достоверно определены.'],
     };
   }
 
