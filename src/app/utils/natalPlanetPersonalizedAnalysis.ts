@@ -185,8 +185,8 @@ function analyzePlanet(
     item.conjunctions.length
       ? `Соединения по общему знаку: ${item.conjunctions.map((planet) => PLANET_NAMES[planet]).join(', ')}.`
       : 'Других планет в том же знаке по правилу соединения проекта нет.',
-    item.aspectsToPlanets.length
-      ? `Аспектирует планеты: ${item.aspectsToPlanets.map((planet) => PLANET_NAMES[planet]).join(', ')}.`
+    outgoingGrahaAspects.length
+      ? `Аспектирует планеты: ${outgoingGrahaAspects.map((planet) => PLANET_NAMES[planet]).join(', ')}.`
       : 'Исходящие межпланетные аспекты по принятой схеме не обнаружены.',
     incomingGrahaAspects.length
       ? `Получает аспекты от: ${incomingGrahaAspects.map((planet) => PLANET_NAMES[planet]).join(', ')}.`
@@ -255,8 +255,8 @@ function analyzePlanet(
     ? `Соединение по знаку с ${item.conjunctions.map((planet) => PLANET_NAMES[planet]).join(', ')} связывает символические функции этих планет; без точного орбиса нельзя судить о тесноте соединения.`
     : 'Соединений с другими планетами по принятому правилу нет.';
   const aspectText = [
-    item.aspectsToPlanets.length ? `Исходящие аспекты направлены к ${item.aspectsToPlanets.map((planet) => PLANET_NAMES[planet]).join(', ')}` : '',
-    item.receivesAspectsFrom.length ? `входящие аспекты идут от ${item.receivesAspectsFrom.map((planet) => PLANET_NAMES[planet]).join(', ')}` : '',
+    outgoingGrahaAspects.length ? `исходящие граха-дришти направлены к ${outgoingGrahaAspects.map((planet) => PLANET_NAMES[planet]).join(', ')}` : '',
+    incomingGrahaAspects.length ? `входящие граха-дришти идут от ${incomingGrahaAspects.map((planet) => PLANET_NAMES[planet]).join(', ')}` : '',
     item.aspectsToHouses.length ? `также затрагиваются дома ${item.aspectsToHouses.join(', ')}` : '',
   ].filter(Boolean).join('; ');
   const dispositorText = item.dispositor
