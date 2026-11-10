@@ -74,7 +74,6 @@ const alteredSunChart = {
   planets: { ...chart.planets, Sun: position('Sun', 190, 'Libra', 'Swati') },
 } as NatalChart;
 assert.notEqual(getPlanetChartFocus(alteredSunChart, 'Sun'), sunFacts);
-assert.ok(getPlanetChartFocus(chartWithoutMercury, 'Sun').includes('диспозитор знака — Меркурий, но его положение в карте не найдено.'));
 const missingSunHouseChart = { ...chart, houses: chart.houses?.filter((item) => item.house !== 5) } as NatalChart;
 assert.ok(getPlanetChartFocus(missingSunHouseChart, 'Sun').includes('дом по имеющимся данным не определён'));
 assert.ok(getSunHouseFocus(missingSunHouseChart, null).includes('дом не определён'));
@@ -104,6 +103,7 @@ const chartWithoutMercury = {
   planets: Object.fromEntries(Object.entries(chart.planets).filter(([name]) => name !== 'Mercury')),
 } as unknown as NatalChart;
 assert.ok(getCoreChartSynthesis(chartWithoutMercury).includes('Диспозитор знака — Меркурий, но его положение в карте не найдено.'));
+assert.ok(getPlanetChartFocus(chartWithoutMercury, 'Sun').includes('диспозитор знака — Меркурий, но его положение в карте не найдено.'));
 
 const synthesis = getCoreChartSynthesis(chart);
 assert.ok(synthesis.includes('Базовый способ действовать'));
