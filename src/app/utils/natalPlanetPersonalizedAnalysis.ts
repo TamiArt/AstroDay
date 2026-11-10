@@ -162,6 +162,8 @@ function analyzePlanet(
       sourceHouse: aspect.sourceHouse,
       targetHouse: aspect.targetHouse,
     }));
+  const outgoingGrahaAspects = outgoingAspectDetails.map((aspect) => aspect.planet);
+  const incomingGrahaAspects = incomingAspectDetails.map((aspect) => aspect.planet);
   const houseAspectDetails: NatalHouseAspectEvidence[] = facts.aspects.house
     .filter((aspect) => aspect.source === item.name)
     .map((aspect) => ({ house: aspect.targetHouse, kind: aspect.kind, sourceHouse: aspect.sourceHouse }));
@@ -186,8 +188,8 @@ function analyzePlanet(
     item.aspectsToPlanets.length
       ? `Аспектирует планеты: ${item.aspectsToPlanets.map((planet) => PLANET_NAMES[planet]).join(', ')}.`
       : 'Исходящие межпланетные аспекты по принятой схеме не обнаружены.',
-    item.receivesAspectsFrom.length
-      ? `Получает аспекты от: ${item.receivesAspectsFrom.map((planet) => PLANET_NAMES[planet]).join(', ')}.`
+    incomingGrahaAspects.length
+      ? `Получает аспекты от: ${incomingGrahaAspects.map((planet) => PLANET_NAMES[planet]).join(', ')}.`
       : 'Входящие межпланетные аспекты по принятой схеме не обнаружены.',
     item.aspectsToHouses.length
       ? `Аспектирует дома: ${item.aspectsToHouses.join(', ')}.`
@@ -197,13 +199,13 @@ function analyzePlanet(
   if (dignity?.dignity === 'exalted' || dignity?.dignity === 'own') {
     supportingFactors.push(`${PLANET_NAMES[key]} находится в положении «${dignity.label}»; в традиционной трактовке это считается поддержкой качеств планеты.`);
   }
-  if (item.receivesAspectsFrom.includes('Jupiter')) {
+  if (incomingGrahaAspects.includes('Jupiter')) {
     supportingFactors.push('Планета получает аспект Юпитера; в символической трактовке он может добавлять тему знаний, наставничества или расширения.');
   }
   if (dignity?.dignity === 'debilitated') {
     attentionFactors.push(`${PLANET_NAMES[key]} находится в знаке падения; это фактор для дополнительного анализа, но не самостоятельный вывод о неудаче.`);
   }
-  const pressureAspects = item.receivesAspectsFrom.filter((planet) => planet === 'Mars' || planet === 'Saturn');
+  const pressureAspects = incomingGrahaAspects.filter((planet) => planet === 'Mars' || planet === 'Saturn');
   if (pressureAspects.length) {
     attentionFactors.push(`Планета получает аспект ${pressureAspects.map((planet) => PLANET_NAMES[planet]).join(' и ')}; в традиционной трактовке это может указывать на более интенсивный или дисциплинирующий контекст.`);
   }
@@ -283,8 +285,8 @@ function analyzePlanet(
     ruledHouses: item.ruledHouses,
     dignity,
     conjunctions: item.conjunctions,
-    aspectsToPlanets: item.aspectsToPlanets,
-    receivesAspectsFrom: item.receivesAspectsFrom,
+    aspectsToPlanets: outgoingGrahaAspects,
+    receivesAspectsFrom: incomingGrahaAspects,
     outgoingAspectDetails,
     incomingAspectDetails,
     aspectsToHouses: item.aspectsToHouses,
