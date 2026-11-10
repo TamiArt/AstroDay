@@ -19,6 +19,7 @@ import type { ReactNode } from 'react';
 import { SIGNS_RU } from '../../utils/astrology';
 import type { NatalChart as NatalChartType } from '../../utils/astrology';
 import { analyzePersonalizedHouses } from '../../utils/personalizedHouseAnalysis';
+import { analyzeAllNatalHouses } from '../../utils/natalHousePersonalizedAnalysis';
 import { getPlanetHouse } from '../../utils/natalStrengthAnalysis';
 import { getSunHouseFocus } from '../../utils/natalAnalysisGuidance';
 import { formatCoreLifeAreaEvidence, getAscendantChartFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus, getPlanetChartFocus } from '../../utils/natalPersonalFocus';
@@ -107,6 +108,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
   const personalizedHouses = analyzePersonalizedHouses(natalChart);
   const sunFocus = getSunHouseFocus(natalChart, sunHouse);
   const chartFacts = buildNatalChartFacts(natalChart);
+  const allHouseAnalyses = analyzeAllNatalHouses(chartFacts);
   const ascendantChartFocus = getAscendantChartFocus(natalChart, chartFacts);
   const sunChartFocus = getPlanetChartFocus(natalChart, 'Sun', chartFacts);
   const moonChartFocus = getPlanetChartFocus(natalChart, 'Moon', chartFacts);
@@ -306,6 +308,96 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
             </div>
           </div>
           <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{coreChartSynthesis}</p>
+        </div>
+      </GlassCard>
+
+      <GlassCard>
+        <div className="space-y-5">
+          <div className="flex items-center gap-3 pb-3 border-b border-gray-200">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600">
+              <HomeIcon className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Подробный персональный анализ всех 12 домов</h3>
+              <p className="text-sm text-gray-600">Знак, управитель, его положение и диспозиторная цепочка, планеты в доме, аспекты и связанные сферы</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            {allHouseAnalyses.map((house) => (
+              <section key={house.house} className="rounded-xl border border-gray-200 bg-white/80 p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h4 className="font-semibold text-gray-900">{house.house}-й дом — {house.theme}</h4>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {house.available
+                        ? `Знак: ${house.sign}; управитель: ${house.lordName ?? 'не определён'}; положение: ${house.lordHouse ? `${house.lordHouse}-й дом` : 'не определено'}`
+                        : 'Исходные данные дома отсутствуют'}
+                    </p>
+                  </div>
+                  <span className={`shrink-0 rounded-full px-2 py-1 text-xs font-medium ${
+                    house.synthesis === 'supportive' ? 'bg-green-100 text-green-700'
+                      : house.synthesis === 'challenging' ? 'bg-amber-100 text-amber-800'
+                        : house.synthesis === 'mixed' ? 'bg-blue-100 text-blue-700'
+                          : house.synthesis === 'incomplete' ? 'bg-gray-100 text-gray-600'
+                            : 'bg-slate-100 text-slate-700'
+                  }`}>
+                    {house.synthesis === 'supportive' ? 'Есть поддержка'
+                      : house.synthesis === 'challenging' ? 'Требует внимания'
+                        : house.synthesis === 'mixed' ? 'Смешанные факторы'
+                          : house.synthesis === 'incomplete' ? 'Недостаточно данных' : 'Нейтрально'}
+                  </span>
+                </div>
+                <p className="text-sm leading-relaxed text-gray-700">{house.interpretation}</p>
+                {house.dispositorChain.length ? (
+                  <div className="rounded-lg bg-indigo-50 p-3">
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-indigo-800 mb-1">Цепочка диспозиторов</h5>
+                    <p className="text-sm text-indigo-900">
+                      {house.dispositorChain.map((item) => `${item.planet} — ${item.sign}${item.house === null ? '' : `, ${item.house}-й дом`}`).join(' → ')}
+                    </p>
+                  </div>
+                ) : null}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Планеты в доме</h5>
+                    <p className="text-sm text-gray-700">{house.occupants.length ? house.occupants.join(', ') : 'Нет планет'}</p>
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Аспекты на дом</h5>
+                    <p className="text-sm text-gray-700">{house.aspects.length ? house.aspects.join(', ') : 'Не обнаружены по выбранной схеме'}</p>
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Управляемые дома</h5>
+                    <p className="text-sm text-gray-700">{house.ruledHouses.length ? house.ruledHouses.join(', ') : 'Не определены'}</p>
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Связанные дома</h5>
+                    <p className="text-sm text-gray-700">{house.connectedHouses.length ? house.connectedHouses.join(', ') : 'Нет отдельной связи по положению управителя'}</p>
+                  </div>
+                </div>
+                {house.supportingFactors.length ? (
+                  <div className="rounded-lg bg-green-50 p-3 space-y-1">
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-green-800">Поддерживающие показатели</h5>
+                    {house.supportingFactors.map((item) => <p key={item} className="text-sm text-green-900">{item}</p>)}
+                  </div>
+                ) : null}
+                {house.attentionFactors.length ? (
+                  <div className="rounded-lg bg-amber-50 p-3 space-y-1">
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-amber-800">Факторы, требующие внимания</h5>
+                    {house.attentionFactors.map((item) => <p key={item} className="text-sm text-amber-900">{item}</p>)}
+                  </div>
+                ) : null}
+                <details className="rounded-lg border border-gray-100 p-3">
+                  <summary className="cursor-pointer text-sm font-medium text-gray-700">Показать доказательства и ограничения</summary>
+                  <ul className="mt-2 space-y-1 list-disc pl-5">
+                    {house.evidence.map((item) => <li key={item} className="text-xs leading-relaxed text-gray-600">{item}</li>)}
+                  </ul>
+                  <ul className="mt-2 space-y-1 list-disc pl-5">
+                    {house.limitations.map((item) => <li key={item} className="text-xs leading-relaxed text-gray-500">{item}</li>)}
+                  </ul>
+                </details>
+              </section>
+            ))}
+          </div>
         </div>
       </GlassCard>
 
