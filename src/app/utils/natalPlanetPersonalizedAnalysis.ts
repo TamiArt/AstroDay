@@ -148,7 +148,7 @@ function analyzePlanet(
     .filter((aspect) => aspect.sourceKey === key && aspect.kind === 'graha-drishti' && aspect.offset !== null)
     .map((aspect) => ({
       planet: aspect.targetKey as NatalPlanetKey,
-      kind: 'graha-drishti',
+      kind: 'graha-drishti' as const,
       offset: aspect.offset as number,
       sourceHouse: aspect.sourceHouse,
       targetHouse: aspect.targetHouse,
@@ -178,7 +178,7 @@ function analyzePlanet(
     dignity
       ? `Оценка достоинства: «${dignity.label}»; категория: ${dignity.dignity}${dignity.score === null ? '' : `; условный индекс проекта ${dignity.score}/100`}.`
       : 'Оценка достоинства недоступна.',
-    dignity?.explanation ?? '',
+    dignity?.explanation ? `Пояснение достоинства: ${dignity.explanation}` : 'Отдельное пояснение достоинства недоступно.',
     item.ruledHouses.length
       ? `Управляет домами: ${item.ruledHouses.join(', ')}.`
       : 'В списке управителей домов эта планета не указана.',
