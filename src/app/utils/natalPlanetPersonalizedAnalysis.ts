@@ -34,6 +34,20 @@ export interface NatalPlanetDispositorStep {
   receivesAspectsFrom: NatalPlanetKey[];
 }
 
+export interface NatalPlanetAspectEvidence {
+  planet: NatalPlanetKey;
+  kind: 'graha-drishti';
+  offset: number;
+  sourceHouse: number;
+  targetHouse: number;
+}
+
+export interface NatalHouseAspectEvidence {
+  house: number;
+  kind: string;
+  sourceHouse: number;
+}
+
 export interface NatalPlanetPersonalizedAnalysis {
   planet: NatalPlanetKey;
   name: string;
@@ -49,7 +63,10 @@ export interface NatalPlanetPersonalizedAnalysis {
   conjunctions: NatalPlanetKey[];
   aspectsToPlanets: NatalPlanetKey[];
   receivesAspectsFrom: NatalPlanetKey[];
+  outgoingAspectDetails: NatalPlanetAspectEvidence[];
+  incomingAspectDetails: NatalPlanetAspectEvidence[];
   aspectsToHouses: number[];
+  houseAspectDetails: NatalHouseAspectEvidence[];
   dispositor: NatalPlanetKey | null;
   dispositorHouse: number | null;
   dispositorChain: NatalPlanetDispositorStep[];
@@ -115,7 +132,8 @@ function analyzePlanet(
       ...base, available: false, sign: null, degreeInSign: null, house: null,
       nakshatra: null, pada: null, ruledHouses: [], dignity: null,
       conjunctions: [], aspectsToPlanets: [], receivesAspectsFrom: [],
-      aspectsToHouses: [], dispositor: null, dispositorHouse: null,
+      outgoingAspectDetails: [], incomingAspectDetails: [], aspectsToHouses: [], houseAspectDetails: [],
+      dispositor: null, dispositorHouse: null,
       dispositorChain: [], dispositorChainEnd: 'missing-planet',
       supportingFactors: [], attentionFactors: [], synthesis: 'incomplete',
       interpretation: `${PLANET_NAMES[key]} отсутствует в исходных данных карты. Персональный анализ положения, достоинства, аспектов и диспозитора не строится.`,
@@ -126,6 +144,27 @@ function analyzePlanet(
 
   const chain = getDispositorChain(facts, key);
   const dignity = item.dignity;
+  const outgoingAspectDetails: NatalPlanetAspectEvidence[] = facts.aspects.planet
+    .filter((aspect) => aspect.sourceKey === key && aspect.kind === 'graha-drishti' && aspect.offset !== null)
+    .map((aspect) => ({
+      planet: aspect.targetKey as NatalPlanetKey,
+      kind: 'graha-drishti',
+      offset: aspect.offset as number,
+      sourceHouse: aspect.sourceHouse,
+      targetHouse: aspect.targetHouse,
+    }));
+  const incomingAspectDetails: NatalPlanetAspectEvidence[] = facts.aspects.planet
+    .filter((aspect) => aspect.targetKey === key && aspect.kind === 'graha-drishti' && aspect.offset !== null)
+    .map((aspect) => ({
+      planet: aspect.sourceKey as NatalPlanetKey,
+      kind: 'graha-drishti',
+      offset: aspect.offset as number,
+      sourceHouse: aspect.sourceHouse,
+      targetHouse: aspect.targetHouse,
+    }));
+  const houseAspectDetails: NatalHouseAspectEvidence[] = facts.aspects.house
+    .filter((aspect) => aspect.source === item.name)
+    .map((aspect) => ({ house: aspect.targetHouse, kind: aspect.kind, sourceHouse: aspect.sourceHouse }));
   const supportingFactors: string[] = [];
   const attentionFactors: string[] = [];
   const evidence = [
@@ -137,6 +176,7 @@ function analyzePlanet(
     dignity
       ? `Оценка достоинства: «${dignity.label}»; категория: ${dignity.dignity}${dignity.score === null ? '' : `; условный индекс проекта ${dignity.score}/100`}.`
       : 'Оценка достоинства недоступна.',
+    dignity?.explanation ?? '',
     item.ruledHouses.length
       ? `Управляет домами: ${item.ruledHouses.join(', ')}.`
       : 'В списке управителей домов эта планета не указана.',
@@ -167,6 +207,9 @@ function analyzePlanet(
   if (pressureAspects.length) {
     attentionFactors.push(`Планета получает аспект ${pressureAspects.map((planet) => PLANET_NAMES[planet]).join(' и ')}; в традиционной трактовке это может указывать на более интенсивный или дисциплинирующий контекст.`);
   }
+  if (outgoingAspectDetails.length) evidence.push(`Детали исходящих аспектов: ${outgoingAspectDetails.map((aspect) => `${PLANET_NAMES[key]} из ${aspect.sourceHouse}-го дома аспектирует ${PLANET_NAMES[aspect.planet]} в ${aspect.targetHouse}-м доме (${aspect.offset}-й аспект)`).join('; ')}.`);
+  if (incomingAspectDetails.length) evidence.push(`Детали входящих аспектов: ${incomingAspectDetails.map((aspect) => `${PLANET_NAMES[aspect.planet]} из ${aspect.sourceHouse}-го дома аспектирует ${PLANET_NAMES[key]} в ${aspect.targetHouse}-м доме (${aspect.offset}-й аспект)`).join('; ')}.`);
+  if (houseAspectDetails.length) evidence.push(`Детали аспектов на дома: ${houseAspectDetails.map((aspect) => `${aspect.house}-й дом (${aspect.kind})`).join(', ')}.`);
   if (item.conjunctions.length) {
     const conjunctions = item.conjunctions.map((planet) => PLANET_NAMES[planet]).join(', ');
     evidence.push(`Соединение по знаку: ${PLANET_NAMES[key]} вместе с ${conjunctions}; точный орбис не оценивался.`);
@@ -242,7 +285,10 @@ function analyzePlanet(
     conjunctions: item.conjunctions,
     aspectsToPlanets: item.aspectsToPlanets,
     receivesAspectsFrom: item.receivesAspectsFrom,
+    outgoingAspectDetails,
+    incomingAspectDetails,
     aspectsToHouses: item.aspectsToHouses,
+    houseAspectDetails,
     dispositor: item.dispositor,
     dispositorHouse: item.dispositorHouse,
     dispositorChain: chain.steps,
