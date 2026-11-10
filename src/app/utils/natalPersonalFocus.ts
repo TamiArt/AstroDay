@@ -57,7 +57,7 @@ export function getAscendantLordFocus(chart: NatalChart): string {
   const sign = SIGN_NAMES[firstHouse.sign] ?? firstHouse.signName;
   const houseMeaning = house ? HOUSE_THEMES[house] : 'сфера положения управителя';
   const nakshatra = placement.nakshatraName ? ', накшатра ' + placement.nakshatraName + ', пада ' + placement.pada : '';
-  return 'Лагна в знаке ' + sign + '. Её управитель — ' + (PLANET_RU[lord] ?? lord) + ': ' + (PLANET_THEMES[lord] ?? 'качества планеты') + '. Он расположен в ' + (house ? house + '-м доме — ' + houseMeaning : 'доме, который не удалось определить') + nakshatra + '. Поэтому темы личности и самостоятельных решений символически связываются с ' + houseMeaning + '. ' + conditionText(chart, lord) + ' ' + aspectText(chart, house ?? 1);
+  return 'Лагна в знаке ' + sign + '. Её управитель — ' + (PLANET_RU[lord] ?? lord) + ': ' + (PLANET_THEMES[lord] ?? 'качества планеты') + '. Он расположен в ' + (house ? house + '-м доме — ' + houseMeaning : 'доме, который не удалось определить') + nakshatra + '. Поэтому темы личности и самостоятельных решений символически связываются с ' + houseMeaning + '. ' + conditionText(chart, lord) + ' ' + (house ? aspectText(chart, house) : 'Аспекты на дом управителя не перечислены, поскольку его положение не определено.');
 }
 
 export function getMoonHouseFocus(chart: NatalChart, house: number | null): string {
