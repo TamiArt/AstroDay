@@ -123,7 +123,7 @@ function buildHouseAnalysis(
   const attentionFactors: string[] = [];
   const evidence: string[] = [
     `Дом ${houseNumber}: знак ${house.sign}; тема — ${theme}.`,
-    lord ? `Управитель: ${PLANET_NAMES[lord]}.` : 'Управитель дома не определён.',
+    lord ? `Для этого дома управитель — ${PLANET_NAMES[lord]}.` : 'Управитель дома не определён.',
     !lord || !lordFacts || lordFacts.house === null
       ? 'Дом управителя не определён по доступным данным.'
       : `${PLANET_NAMES[lord]} расположен в ${lordFacts.house}-м доме.`,
