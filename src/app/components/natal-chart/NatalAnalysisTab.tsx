@@ -466,6 +466,14 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                     <p className="text-sm text-gray-700">{planet.aspectsToHouses.length ? planet.aspectsToHouses.join(', ') : 'Не обнаружены'}</p>
                   </div>
                 </div>
+                {planet.outgoingAspectDetails.length || planet.incomingAspectDetails.length || planet.houseAspectDetails.length ? (
+                  <div className="rounded-lg bg-sky-50 p-3 space-y-1">
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-sky-800">Геометрия аспектов</h5>
+                    {planet.outgoingAspectDetails.map((aspect) => <p key={`out-${aspect.planet}`} className="text-xs text-sky-900">Из {aspect.sourceHouse}-го дома к {aspect.planet} в {aspect.targetHouse}-м доме: {aspect.offset}-й Parashari аспект.</p>)}
+                    {planet.incomingAspectDetails.map((aspect) => <p key={`in-${aspect.planet}`} className="text-xs text-sky-900">От {aspect.planet} из {aspect.sourceHouse}-го дома к этой планете в {aspect.targetHouse}-м доме: {aspect.offset}-й Parashari аспект.</p>)}
+                    {planet.houseAspectDetails.map((aspect) => <p key={`house-${aspect.house}`} className="text-xs text-sky-900">Аспект на {aspect.house}-й дом: {aspect.kind}.</p>)}
+                  </div>
+                ) : null}
                 {planet.dispositorChain.length ? (
                   <div className="rounded-lg bg-violet-50 p-3 space-y-1">
                     <h5 className="text-xs font-semibold uppercase tracking-wide text-violet-800">Цепочка диспозиторов</h5>
