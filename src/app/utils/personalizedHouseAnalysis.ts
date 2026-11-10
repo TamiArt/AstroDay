@@ -289,7 +289,7 @@ export function analyzePersonalizedHouses(chart: NatalChart): PersonalizedHouseI
     const lordHouse = houseFacts?.lordHouse ?? null;
     const occupants = (houseFacts?.occupants ?? [])
       .map((name) => toEvidence(name, chart));
-    const lordEvidence = lord ? toEvidence(house.lord, chart) : null;
+    const lordEvidence = lord ? toEvidence(lordKey, chart) : null;
     const occupantInterpretations = occupants
       .map((item) => describePlanetInHouse(chart, Object.keys(PLANET_RU).find((key) => PLANET_RU[key] === item.name) ?? item.name, house.house))
       .filter((item): item is string => Boolean(item));
@@ -310,7 +310,7 @@ export function analyzePersonalizedHouses(chart: NatalChart): PersonalizedHouseI
     const evidence = [
       `Знак дома: ${sign}`,
       ...(houseSignStyle ? [`Стиль знака дома: ${houseSignStyle}`] : []),
-      `Управитель: ${PLANET_RU[house.lord] ?? house.lord}${lordEvidence ? ` — ${formatPlanetEvidence(lordEvidence)}` : ''}`,
+      `Управитель: ${PLANET_RU[lordKey] ?? lordKey}${lordEvidence ? ` — ${formatPlanetEvidence(lordEvidence)}` : ''}`,
       lordCondition ? `Достоинство управителя: ${lordCondition.label}; качественная шкала ${lordCondition.score}/100. Это не Shadbala.` : 'Достоинство управителя: нет данных.',
       ...occupantInterpretations.map((item) => `Планета в доме: ${item}`),
       ...planetaryConnections.map((item) => `Связь планет: ${item}`),
