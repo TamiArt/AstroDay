@@ -20,6 +20,7 @@ import { SIGNS_RU } from '../../utils/astrology';
 import type { NatalChart as NatalChartType } from '../../utils/astrology';
 import { analyzePersonalizedHouses } from '../../utils/personalizedHouseAnalysis';
 import { analyzeAllNatalHouses } from '../../utils/natalHousePersonalizedAnalysis';
+import { analyzeAllNatalPlanets } from '../../utils/natalPlanetPersonalizedAnalysis';
 import { getPlanetHouse } from '../../utils/natalStrengthAnalysis';
 import { getSunHouseFocus } from '../../utils/natalAnalysisGuidance';
 import { formatCoreLifeAreaEvidence, getAscendantChartFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus, getPlanetChartFocus } from '../../utils/natalPersonalFocus';
@@ -109,6 +110,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
   const sunFocus = getSunHouseFocus(natalChart, sunHouse);
   const chartFacts = buildNatalChartFacts(natalChart);
   const allHouseAnalyses = analyzeAllNatalHouses(chartFacts);
+  const allPlanetAnalyses = analyzeAllNatalPlanets(chartFacts);
   const ascendantChartFocus = getAscendantChartFocus(natalChart, chartFacts);
   const sunChartFocus = getPlanetChartFocus(natalChart, 'Sun', chartFacts);
   const moonChartFocus = getPlanetChartFocus(natalChart, 'Moon', chartFacts);
@@ -393,6 +395,110 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                   </ul>
                   <ul className="mt-2 space-y-1 list-disc pl-5">
                     {house.limitations.map((item) => <li key={item} className="text-xs leading-relaxed text-gray-500">{item}</li>)}
+                  </ul>
+                </details>
+              </section>
+            ))}
+          </div>
+        </div>
+      </GlassCard>
+
+      <GlassCard>
+        <div className="space-y-5">
+          <div className="flex items-center gap-3 pb-3 border-b border-gray-200">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-fuchsia-600 to-violet-600">
+              <Star className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Полный персональный анализ 9 планет</h3>
+              <p className="text-sm text-gray-600">Положение, достоинство, управление домами, соединения, аспекты и цепочки диспозиторов</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            {allPlanetAnalyses.map((planet) => (
+              <section key={planet.planet} className="rounded-xl border border-gray-200 bg-white/80 p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h4 className="font-semibold text-gray-900">{planet.name}</h4>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {planet.available
+                        ? `${planet.sign}, ${planet.degreeInSign?.toFixed(2)}°; ${planet.house ? `${planet.house}-й дом` : 'дом не определён'}; ${planet.nakshatra ?? 'накшатра не определена'}${planet.pada ? `, пада ${planet.pada}` : ''}`
+                        : 'Позиция отсутствует в исходных данных'}
+                    </p>
+                  </div>
+                  <span className={`shrink-0 rounded-full px-2 py-1 text-xs font-medium ${
+                    planet.synthesis === 'supportive' ? 'bg-green-100 text-green-700'
+                      : planet.synthesis === 'challenging' ? 'bg-amber-100 text-amber-800'
+                        : planet.synthesis === 'mixed' ? 'bg-blue-100 text-blue-700'
+                          : planet.synthesis === 'incomplete' ? 'bg-gray-100 text-gray-600'
+                            : 'bg-slate-100 text-slate-700'
+                  }`}>
+                    {planet.synthesis === 'supportive' ? 'Есть поддержка'
+                      : planet.synthesis === 'challenging' ? 'Требует внимания'
+                        : planet.synthesis === 'mixed' ? 'Смешанные факторы'
+                          : planet.synthesis === 'incomplete' ? 'Недостаточно данных' : 'Нейтрально'}
+                  </span>
+                </div>
+                <p className="text-sm leading-relaxed text-gray-700">{planet.interpretation}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Управляемые дома</h5>
+                    <p className="text-sm text-gray-700">{planet.ruledHouses.length ? planet.ruledHouses.join(', ') : 'Не определены'}</p>
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Достоинство</h5>
+                    <p className="text-sm text-gray-700">{planet.dignity?.label ?? 'Не определено'}</p>
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Соединения по знаку</h5>
+                    <p className="text-sm text-gray-700">{planet.conjunctions.length ? planet.conjunctions.join(', ') : 'Не обнаружены'}</p>
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Исходящие аспекты</h5>
+                    <p className="text-sm text-gray-700">{planet.aspectsToPlanets.length ? planet.aspectsToPlanets.join(', ') : 'Не обнаружены'}</p>
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Входящие аспекты</h5>
+                    <p className="text-sm text-gray-700">{planet.receivesAspectsFrom.length ? planet.receivesAspectsFrom.join(', ') : 'Не обнаружены'}</p>
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Аспекты на дома</h5>
+                    <p className="text-sm text-gray-700">{planet.aspectsToHouses.length ? planet.aspectsToHouses.join(', ') : 'Не обнаружены'}</p>
+                  </div>
+                </div>
+                {planet.dispositorChain.length ? (
+                  <div className="rounded-lg bg-violet-50 p-3 space-y-1">
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-violet-800">Цепочка диспозиторов</h5>
+                    <p className="text-sm text-violet-900">
+                      {planet.dispositorChain.map((step) => `${step.planet} — ${step.sign}${step.house === null ? '' : `, ${step.house}-й дом`}${step.dignity ? `, ${step.dignity}` : ''}`).join(' → ')}
+                    </p>
+                    <p className="text-xs text-violet-800">
+                      {planet.dispositorChainEnd === 'self-dispositor' ? 'Завершение: собственный диспозитор'
+                        : planet.dispositorChainEnd === 'cycle' ? 'Завершение: цикл диспозиторов'
+                          : planet.dispositorChainEnd === 'limit' ? 'Достигнут предел глубины цепочки'
+                            : 'Цепочка неполная: данных следующего звена нет'}
+                    </p>
+                  </div>
+                ) : null}
+                {planet.supportingFactors.length ? (
+                  <div className="rounded-lg bg-green-50 p-3 space-y-1">
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-green-800">Поддерживающие показатели</h5>
+                    {planet.supportingFactors.map((item) => <p key={item} className="text-sm text-green-900">{item}</p>)}
+                  </div>
+                ) : null}
+                {planet.attentionFactors.length ? (
+                  <div className="rounded-lg bg-amber-50 p-3 space-y-1">
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-amber-800">Факторы, требующие внимания</h5>
+                    {planet.attentionFactors.map((item) => <p key={item} className="text-sm text-amber-900">{item}</p>)}
+                  </div>
+                ) : null}
+                <details className="rounded-lg border border-gray-100 p-3">
+                  <summary className="cursor-pointer text-sm font-medium text-gray-700">Показать доказательства и ограничения</summary>
+                  <ul className="mt-2 space-y-1 list-disc pl-5">
+                    {planet.evidence.map((item) => <li key={item} className="text-xs leading-relaxed text-gray-600">{item}</li>)}
+                  </ul>
+                  <ul className="mt-2 space-y-1 list-disc pl-5">
+                    {planet.limitations.map((item) => <li key={item} className="text-xs leading-relaxed text-gray-500">{item}</li>)}
                   </ul>
                 </details>
               </section>
