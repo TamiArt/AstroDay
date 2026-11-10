@@ -164,7 +164,7 @@ function buildHouseAnalysis(
     attentionFactors.push(`Управитель дома получает аспект ${lordPressure.map((key) => PLANET_NAMES[key]).join(' и ')}; важно учитывать эту дополнительную нагрузку в трактовке.`);
   }
 
-  const synthesis = !lord || !lordFacts || !house.dataAvailability.lordPlacement
+  const synthesis = house.dataAvailability.lord !== 'available' || !lord || !lordFacts || house.dataAvailability.lordPlacement === 'missing'
     ? 'incomplete'
     : supportingFactors.length && attentionFactors.length
       ? 'mixed'
