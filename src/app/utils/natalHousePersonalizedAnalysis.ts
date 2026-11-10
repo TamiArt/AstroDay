@@ -50,7 +50,7 @@ export interface NatalHousePersonalizedAnalysis {
   ruledHouses: number[];
   occupants: NatalPlanetKey[];
   aspects: NatalPlanetKey[];
-  dispositorChain: Array<{ planet: NatalPlanetKey; sign: string; house: number | null }>;
+  dispositorChain: Array<{ planet: NatalPlanetKey; sign: string; house: number | null; dignity: string | null; aspectedBy: NatalPlanetKey[] }>;
   connectedHouses: number[];
   supportingFactors: string[];
   attentionFactors: string[];
@@ -76,7 +76,7 @@ function getDispositorChain(
     visited.add(current);
     const planet = facts.planets[current];
     if (!planet) break;
-    chain.push({ planet: current, sign: planet.sign, house: planet.house });
+    chain.push({ planet: current, sign: planet.sign, house: planet.house, dignity: planet.dignity?.label ?? null, aspectedBy: planet.receivesAspectsFrom });
     current = planet.dispositor;
   }
 
@@ -113,7 +113,7 @@ function buildHouseAnalysis(
   const dignity = lordFacts?.dignity?.label ?? null;
   const chain = getDispositorChain(facts, lord);
   const chainText = chain.map((item) =>
-    `${PLANET_NAMES[item.planet]} в ${item.sign}${item.house === null ? '' : `, ${item.house}-м доме`}`,
+    `${PLANET_NAMES[item.planet]} в ${item.sign}${item.house === null ? '' : `, ${item.house}-м доме`}${item.dignity ? `, достоинство: ${item.dignity}` : ''}${item.aspectedBy.length ? `, аспекты от: ${item.aspectedBy.map((key) => PLANET_NAMES[key]).join(', ')}` : ''}`,
   );
   const ruledHouses = lordFacts?.ruledHouses ?? house.ruledBySamePlanet;
   const connectedHouses = getHouseRelations(facts, houseNumber);
@@ -140,6 +140,7 @@ function buildHouseAnalysis(
     evidence.push(`${PLANET_NAMES[lord!]} управляет домами: ${lordFacts.ruledHouses.join(', ')}.`);
   }
   if (chain.length) evidence.push(`Цепочка диспозиторов: ${chainText.join(' → ')}.`);
+  if (lordFacts?.receivesAspectsFrom.length) evidence.push(`Аспекты на управителя: ${lordFacts.receivesAspectsFrom.map((key) => PLANET_NAMES[key]).join(', ')}.`);
   if (connectedHouses.length) evidence.push(`Дом управителя связывает эту сферу с домом/домами: ${connectedHouses.join(', ')}.`);
 
   if (lordFacts?.dignity?.dignity === 'exalted' || lordFacts?.dignity?.dignity === 'own') {
