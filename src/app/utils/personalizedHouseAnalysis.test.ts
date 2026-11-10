@@ -551,3 +551,15 @@ assert.equal(missingLordAnalysis.lord, 'Mars');
 assert.equal(missingLordAnalysis.lordHouse, null);
 assert.equal(missingLordAnalysis.synthesis, 'incomplete');
 assert.ok(missingLordAnalysis.interpretation.includes('не определены'));
+
+
+const chartWithoutLordPlacementHouse = {
+  ...chart,
+  houses: chart.houses?.filter((item) => item.house !== 9),
+} as NatalChart;
+const secondHouseWithUnknownLordPlacement = analyzeAllNatalHouses(buildNatalChartFacts(chartWithoutLordPlacementHouse))[1];
+assert.equal(secondHouseWithUnknownLordPlacement.available, true);
+assert.equal(secondHouseWithUnknownLordPlacement.lord, 'Venus');
+assert.equal(secondHouseWithUnknownLordPlacement.lordHouse, null);
+assert.equal(secondHouseWithUnknownLordPlacement.synthesis, 'incomplete');
+assert.ok(secondHouseWithUnknownLordPlacement.interpretation.includes('дом не определён'));
