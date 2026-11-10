@@ -10,6 +10,7 @@ import { auditNatalChartInterpretations, validateInterpretationQuality } from '.
 import { buildNatalChartFacts, getNatalFactLinks, getNatalHouseFacts, getNatalPlanetFacts, NATAL_PLANET_KEYS } from './natalChartFacts';
 import { analyzeAllNatalHouses } from './natalHousePersonalizedAnalysis';
 import { analyzeAllNatalPlanets } from './natalPlanetPersonalizedAnalysis';
+import { synthesizeNatalChart } from './natalChartSynthesis';
 import type { NatalChart, PlanetPosition } from './astrology';
 
 function position(name: string, longitude: number, signName: string, nakshatraName: string) {
@@ -627,3 +628,29 @@ assert.ok(jupiterAnalysis?.incomingAspectDetails.some((aspect) =>
   aspect.planet === 'Mars' && aspect.offset === 7,
 ));
 assert.ok(marsAnalysis?.houseAspectDetails.some((aspect) => aspect.house === 7));
+
+
+// Whole-chart synthesis: chart-wide conclusions must be traceable to canonical facts.
+const wholeChart = synthesizeNatalChart(natalFacts);
+assert.equal(wholeChart.dataQuality.completeness, 100);
+assert.ok(wholeChart.headline.length > 0);
+assert.ok(wholeChart.dominantThemes.some((item) => item.house === 5));
+assert.ok(wholeChart.bridges.some((item) => item.fromHouse === 3 && item.toHouse === 6 && item.lord === 'Mercury'));
+assert.ok(wholeChart.planetNetworks.some((item) => item.relation === 'aspect' && item.planets.includes('Mars') && item.planets.includes('Jupiter')));
+assert.ok(wholeChart.conclusions.every((item) => item.evidence.length > 0));
+assert.ok(wholeChart.conclusions.every((item) => item.relatedHouses.every((house) => house >= 1 && house <= 12)));
+assert.ok(wholeChart.methodology.some((item) => item.includes('эвристика')));
+
+const shiftedSunChart = {
+  ...chart,
+  planets: { ...chart.planets, Sun: position('Sun', 30, 'Taurus', 'Krittika') },
+} as NatalChart;
+const shiftedSynthesis = synthesizeNatalChart(buildNatalChartFacts(shiftedSunChart));
+assert.notDeepEqual(shiftedSynthesis.dominantThemes, wholeChart.dominantThemes);
+assert.ok(shiftedSynthesis.conclusions.some((item) => item.evidence.some((line) => line.includes('Телец'))));
+
+const incompleteSynthesis = synthesizeNatalChart(incompleteFacts);
+assert.ok(incompleteSynthesis.dataQuality.completeness < 100);
+assert.ok(incompleteSynthesis.dataQuality.missingHouses.includes(5));
+assert.ok(incompleteSynthesis.tensions.some((item) => item.includes('отсутствует')));
+assert.ok(incompleteSynthesis.dataQuality.caveats.length > 0);
