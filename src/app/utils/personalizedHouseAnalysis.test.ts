@@ -103,7 +103,7 @@ const chartWithoutMercury = {
   planets: Object.fromEntries(Object.entries(chart.planets).filter(([name]) => name !== 'Mercury')),
 } as unknown as NatalChart;
 assert.ok(getCoreChartSynthesis(chartWithoutMercury).includes('Диспозитор знака — Меркурий, но его положение в карте не найдено.'));
-assert.ok(getPlanetChartFocus(chartWithoutMercury, 'Moon').includes('диспозитор знака — Меркурий, но его положение в карте не найдено.'));
+assert.ok(getPlanetChartFocus(chartWithoutMercury, 'Moon').includes('Диспозитор знака — Меркурий, но его положение в карте не найдено.'));
 
 const synthesis = getCoreChartSynthesis(chart);
 assert.ok(synthesis.includes('Базовый способ действовать'));
