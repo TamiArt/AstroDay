@@ -20,7 +20,7 @@ import type { NatalChart as NatalChartType } from '../../utils/astrology';
 import { analyzePersonalizedHouses } from '../../utils/personalizedHouseAnalysis';
 import { getPlanetHouse } from '../../utils/natalStrengthAnalysis';
 import { getSunHouseFocus } from '../../utils/natalAnalysisGuidance';
-import { formatCoreLifeAreaEvidence, getAscendantLordFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus } from '../../utils/natalPersonalFocus';
+import { formatCoreLifeAreaEvidence, getAscendantChartFocus, getAscendantLordFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus, getPlanetChartFocus } from '../../utils/natalPersonalFocus';
 import { getAscendantDescription, getMoonDescription, getSunDescription } from '../../utils/natalChartDescriptions';
 import { GlassCard } from '../common/GlassCard';
 import { TermTooltip } from '../common/TermTooltip';
@@ -101,11 +101,14 @@ function InsightCard({ icon: Icon, title, subtitle, accent, children }: InsightC
 }
 
 export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
-  const sunHouse = (getPlanetHouse(natalChart, 'Sun') ?? 1);
-  const moonHouse = (getPlanetHouse(natalChart, 'Moon') ?? 1);
+  const sunHouse = getPlanetHouse(natalChart, 'Sun');
+  const moonHouse = getPlanetHouse(natalChart, 'Moon');
   const personalizedHouses = analyzePersonalizedHouses(natalChart);
   const sunFocus = getSunHouseFocus(natalChart, sunHouse);
   const ascendantLordFocus = getAscendantLordFocus(natalChart);
+  const ascendantChartFocus = getAscendantChartFocus(natalChart);
+  const sunChartFocus = getPlanetChartFocus(natalChart, 'Sun');
+  const moonChartFocus = getPlanetChartFocus(natalChart, 'Moon');
   const moonHouseFocus = getMoonHouseFocus(natalChart, moonHouse);
   const coreChartSynthesis = getCoreChartSynthesis(natalChart);
   const coreLifeAreaInteractions = getCoreInteractionsByLifeArea(natalChart);
@@ -135,7 +138,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
 
         <div className="p-4 bg-white rounded-lg border border-purple-200">
           <h4 className="text-sm font-semibold text-purple-700 uppercase mb-2">Управитель Лагны — куда направлена энергия личности</h4>
-          <p className="text-sm text-gray-700 leading-relaxed">{ascendantLordFocus}</p>
+          <p className="text-sm text-gray-700 leading-relaxed">{ascendantChartFocus}</p>
         </div>
 
         <div className="p-4 bg-white rounded-lg border border-purple-200">
@@ -180,11 +183,11 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
       <InsightCard
         icon={Sun}
         title={sunDesc.title}
-        subtitle={`Солнце в ${sunSignRu}, ${sunHouse}-й дом`}
+        subtitle={`Солнце в ${sunSignRu}, ${sunHouse ? `${sunHouse}-й дом` : 'дом не определён'}`}
         accent="border-yellow-200"
       >
         <div className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border-l-4 border-yellow-600">
-          <h4 className="font-semibold text-gray-900 mb-2">Жизненная цель</h4>
+          <h4 className="font-semibold text-gray-900 mb-2">Общая символика Солнца</h4>
           <p className="text-sm text-gray-800 leading-relaxed mb-3">{sunDesc.essence}</p>
           <p className="text-sm text-gray-700 leading-relaxed">{sunDesc.lifePurpose}</p>
         </div>
@@ -196,6 +199,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
           <div className="p-4 bg-white rounded-lg border border-orange-200">
             <h4 className="text-sm font-semibold text-orange-700 uppercase mb-2">Где светить</h4>
             <p className="text-sm text-gray-700 leading-relaxed">{sunFocus}</p>
+            <p className="text-xs text-gray-700 leading-relaxed mt-3 border-t border-orange-100 pt-3">Фактические показатели вашей карты: {sunChartFocus}</p>
           </div>
         </div>
         <div className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border-l-4 border-yellow-600">
@@ -210,16 +214,17 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
       <InsightCard
         icon={Moon}
         title={moonDesc.title}
-        subtitle={`Луна в ${moonSignRu}, ${moonHouse}-й дом`}
+        subtitle={`Луна в ${moonSignRu}, ${moonHouse ? `${moonHouse}-й дом` : 'дом не определён'}`}
         accent="border-blue-200"
       >
         <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-600">
-          <h4 className="font-semibold text-gray-900 mb-2">Эмоциональная природа</h4>
+          <h4 className="font-semibold text-gray-900 mb-2">Общая символика Луны</h4>
           <p className="text-sm text-gray-800 leading-relaxed">{moonDesc.essence}</p>
         </div>
         <div className="p-4 bg-white rounded-lg border border-blue-200">
           <h4 className="text-sm font-semibold text-blue-700 uppercase mb-2">Конкретная жизненная сфера Луны</h4>
           <p className="text-sm text-gray-700 leading-relaxed">{moonHouseFocus}</p>
+          <p className="text-xs text-gray-700 leading-relaxed mt-3 border-t border-blue-100 pt-3">Фактические показатели вашей карты: {moonChartFocus}</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-4 bg-white rounded-lg border border-blue-200">
