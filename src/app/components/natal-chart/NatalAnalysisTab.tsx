@@ -21,6 +21,7 @@ import type { NatalChart as NatalChartType } from '../../utils/astrology';
 import { analyzePersonalizedHouses } from '../../utils/personalizedHouseAnalysis';
 import { analyzeAllNatalHouses } from '../../utils/natalHousePersonalizedAnalysis';
 import { analyzeAllNatalPlanets } from '../../utils/natalPlanetPersonalizedAnalysis';
+import { synthesizeNatalChart } from '../../utils/natalChartSynthesis';
 import { getPlanetHouse } from '../../utils/natalStrengthAnalysis';
 import { getSunHouseFocus } from '../../utils/natalAnalysisGuidance';
 import { formatCoreLifeAreaEvidence, getAscendantChartFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus, getPlanetChartFocus } from '../../utils/natalPersonalFocus';
@@ -111,6 +112,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
   const chartFacts = buildNatalChartFacts(natalChart);
   const allHouseAnalyses = analyzeAllNatalHouses(chartFacts);
   const allPlanetAnalyses = analyzeAllNatalPlanets(chartFacts);
+  const wholeChartSynthesis = synthesizeNatalChart(chartFacts);
   const ascendantChartFocus = getAscendantChartFocus(natalChart, chartFacts);
   const sunChartFocus = getPlanetChartFocus(natalChart, 'Sun', chartFacts);
   const moonChartFocus = getPlanetChartFocus(natalChart, 'Moon', chartFacts);
@@ -126,6 +128,69 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
 
   return (
     <div className="space-y-6">
+      <GlassCard>
+        <section className="space-y-4">
+          <div className="flex items-center justify-between gap-3 border-b border-gray-200 pb-3">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Целостный синтез натальной карты</h3>
+              <p className="text-sm text-gray-600">Связи между домами, планетами и повторяющимися показателями</p>
+            </div>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">Полнота данных: {wholeChartSynthesis.dataQuality.completeness}%</span>
+          </div>
+          <div className="rounded-xl border border-indigo-100 bg-indigo-50/70 p-4 space-y-2">
+            <h4 className="font-semibold text-indigo-950">{wholeChartSynthesis.headline}</h4>
+            <p className="text-sm leading-relaxed text-indigo-900">{wholeChartSynthesis.overview}</p>
+          </div>
+          {wholeChartSynthesis.dominantThemes.length ? (
+            <div>
+              <h4 className="text-sm font-semibold text-gray-800 mb-2">Повторяющиеся тематические акценты</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {wholeChartSynthesis.dominantThemes.map((theme) => (
+                  <div key={theme.house} className="rounded-lg border border-gray-200 p-3">
+                    <p className="text-sm font-semibold text-gray-900">{theme.house}-й дом — {theme.theme}</p>
+                    <p className="text-xs text-gray-600 mt-1">Условный вес: {theme.score}</p>
+                    <ul className="mt-2 list-disc pl-4 space-y-1">{theme.evidence.slice(0, 4).map((item) => <li key={item} className="text-xs text-gray-600">{item}</li>)}</ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {wholeChartSynthesis.conclusions.length ? (
+            <div>
+              <h4 className="text-sm font-semibold text-gray-800 mb-2">Связанные выводы</h4>
+              <div className="space-y-2">
+                {wholeChartSynthesis.conclusions.map((item) => (
+                  <details key={item.id} className="rounded-lg border border-gray-200 p-3">
+                    <summary className="cursor-pointer text-sm font-medium text-gray-800">{item.title}</summary>
+                    <p className="mt-2 text-sm leading-relaxed text-gray-700">{item.statement}</p>
+                    <p className="mt-2 text-xs text-gray-500">Дома: {item.relatedHouses.length ? item.relatedHouses.join(', ') : 'не определены'}; планеты: {item.relatedPlanets.length ? item.relatedPlanets.join(', ') : 'не определены'}.</p>
+                    <ul className="mt-2 list-disc pl-4 space-y-1">{item.evidence.map((evidence) => <li key={evidence} className="text-xs text-gray-600">{evidence}</li>)}</ul>
+                  </details>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {wholeChartSynthesis.dispositorPatterns.length ? (
+            <div className="rounded-lg bg-violet-50 p-3">
+              <h4 className="text-sm font-semibold text-violet-900">Повторяющиеся диспозиторы</h4>
+              {wholeChartSynthesis.dispositorPatterns.map((item) => <p key={item.planet} className="text-sm text-violet-900 mt-1">{item.evidence}</p>)}
+            </div>
+          ) : null}
+          {wholeChartSynthesis.tensions.length ? (
+            <div className="rounded-lg bg-amber-50 p-3 space-y-1">
+              <h4 className="text-sm font-semibold text-amber-900">Неоднородность и ограничения выводов</h4>
+              {wholeChartSynthesis.tensions.map((item) => <p key={item} className="text-sm text-amber-900">{item}</p>)}
+            </div>
+          ) : null}
+          <details className="rounded-lg border border-gray-200 p-3">
+            <summary className="cursor-pointer text-sm font-medium text-gray-700">Методика и качество исходных данных</summary>
+            <ul className="mt-2 list-disc pl-4 space-y-1">
+              {wholeChartSynthesis.methodology.map((item) => <li key={item} className="text-xs text-gray-600">{item}</li>)}
+              {wholeChartSynthesis.dataQuality.caveats.map((item) => <li key={item} className="text-xs text-gray-500">{item}</li>)}
+            </ul>
+          </details>
+        </section>
+      </GlassCard>
       <InsightCard
         icon={Star}
         title={ascDesc.title}
