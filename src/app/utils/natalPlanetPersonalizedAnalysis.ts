@@ -1,3 +1,4 @@
+import type { PlanetCondition } from './natalStrengthAnalysis';
 import {
   NATAL_PLANET_KEYS,
   type NatalChartFacts,
@@ -29,7 +30,7 @@ export interface NatalPlanetDispositorStep {
   sign: string;
   house: number | null;
   dignity: string | null;
-  dignityKind: NatalPlanetFacts['dignity'] extends infer T ? T extends { dignity: infer D } ? D : never : never;
+  dignityKind: PlanetCondition['dignity'] | null;
   receivesAspectsFrom: NatalPlanetKey[];
 }
 
