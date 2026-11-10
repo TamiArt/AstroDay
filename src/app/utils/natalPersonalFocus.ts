@@ -400,8 +400,7 @@ export function getCoreLifeAreaBridges(chart: NatalChart): CoreLifeAreaBridge[] 
  * Chart-grounded Ascendant reading. Generic sign descriptions are deliberately
  * kept separate from facts that can be verified in the supplied chart.
  */
-export function getAscendantChartFocus(chart: NatalChart): string {
-  const facts = buildNatalChartFacts(chart);
+export function getAscendantChartFocus(chart: NatalChart, facts: ReturnType<typeof buildNatalChartFacts> = buildNatalChartFacts(chart)): string {
   const firstHouse = facts.houses.find((house) => house.number === 1);
   if (!firstHouse) return 'Данные первого дома отсутствуют: знак Лагны и её управителя нельзя надёжно связать с домами карты.';
   const degree = facts.chart.ascendantDegree === null ? '' : `, долгота в знаке ${facts.chart.ascendantDegree.toFixed(2)}°`;
@@ -410,11 +409,10 @@ export function getAscendantChartFocus(chart: NatalChart): string {
 }
 
 /** Returns only chart-derived facts for a planet; no sign-only generic text is injected. */
-export function getPlanetChartFocus(chart: NatalChart, planetKey: string): string {
+export function getPlanetChartFocus(chart: NatalChart, planetKey: string, facts: ReturnType<typeof buildNatalChartFacts> = buildNatalChartFacts(chart)): string {
   if (!Object.prototype.hasOwnProperty.call(chart.planets, planetKey)) {
     return `Положение планеты ${PLANET_RU[planetKey] ?? planetKey} отсутствует в данных карты.`;
   }
-  const facts = buildNatalChartFacts(chart);
   const planet = getNatalPlanetFacts(facts, planetKey as NatalPlanetKey);
   if (!planet) return `Положение планеты ${PLANET_RU[planetKey] ?? planetKey} отсутствует в данных карты.`;
   const placement = planet.house
