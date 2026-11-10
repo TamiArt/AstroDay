@@ -1,3 +1,4 @@
+import { buildNatalChartFacts } from '../../utils/natalChartFacts';
 import {
   AlertCircle,
   Briefcase,
@@ -105,9 +106,10 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
   const moonHouse = getPlanetHouse(natalChart, 'Moon');
   const personalizedHouses = analyzePersonalizedHouses(natalChart);
   const sunFocus = getSunHouseFocus(natalChart, sunHouse);
-  const ascendantChartFocus = getAscendantChartFocus(natalChart);
-  const sunChartFocus = getPlanetChartFocus(natalChart, 'Sun');
-  const moonChartFocus = getPlanetChartFocus(natalChart, 'Moon');
+  const chartFacts = buildNatalChartFacts(natalChart);
+  const ascendantChartFocus = getAscendantChartFocus(natalChart, chartFacts);
+  const sunChartFocus = getPlanetChartFocus(natalChart, 'Sun', chartFacts);
+  const moonChartFocus = getPlanetChartFocus(natalChart, 'Moon', chartFacts);
   const moonHouseFocus = getMoonHouseFocus(natalChart, moonHouse);
   const coreChartSynthesis = getCoreChartSynthesis(natalChart);
   const coreLifeAreaInteractions = getCoreInteractionsByLifeArea(natalChart);
