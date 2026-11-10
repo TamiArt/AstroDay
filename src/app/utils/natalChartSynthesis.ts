@@ -134,8 +134,9 @@ export function synthesizeNatalChart(facts: NatalChartFacts): NatalChartSynthesi
       house, theme: HOUSE_THEMES[house], score: item.score,
       evidence: unique(item.evidence),
     }))
+    .filter((item) => item.score >= 3)
     .sort((a, b) => b.score - a.score || a.house - b.house)
-    .slice(0, 5);
+    .slice(0, 8);
 
   for (const [index, theme] of dominantThemes.entries()) {
     if (theme.score < 3) continue;
