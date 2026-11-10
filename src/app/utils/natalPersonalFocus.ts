@@ -428,7 +428,9 @@ export function getPlanetChartFocus(chart: NatalChart, planetKey: string, facts:
     ? ` Достоинство: ${planet.dignity.label}. ${planet.dignity.explanation}`
     : ' Достоинство не определено по доступным данным.';
   const dispositor = planet.dispositor
-    ? ` Диспозитор знака — ${PLANET_RU[planet.dispositor]}; ${planet.dispositorHouse ? `расположен в ${planet.dispositorHouse}-м доме` : 'его дом не определён'}.`
+    ? facts.planets[planet.dispositor]
+      ? ` Диспозитор знака — ${PLANET_RU[planet.dispositor]}; ${planet.dispositorHouse ? `расположен в ${planet.dispositorHouse}-м доме` : 'его дом не определён'}.`
+      : ` Диспозитор знака — ${PLANET_RU[planet.dispositor]}, но его положение в карте не найдено.`
     : ' Диспозитор знака не определён по доступным данным.';
   const conjunctions = planet.conjunctions.length
     ? ` Соединение по знаку с: ${planet.conjunctions.map((key) => PLANET_RU[key]).join(', ')}; точный орбис не рассчитывается.`
