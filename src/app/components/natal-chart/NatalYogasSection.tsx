@@ -64,7 +64,25 @@ export function NatalYogasSection({ natalChart }: { natalChart: NatalChart }) {
                     {finding.evidence.map((item) => <li key={item} className="text-sm text-gray-700">{item}</li>)}
                   </ul>
                   <p className="text-xs text-gray-500">Планеты: {finding.participants.join(', ')}. Дома: {finding.houses.length ? finding.houses.join(', ') : 'не определены'}.</p>
+                  {finding.assessment.supportingFactors.length > 0 && (
+                    <div className="rounded-lg bg-emerald-50 p-2">
+                      <p className="text-xs font-semibold text-emerald-900">Поддерживающие факторы</p>
+                      {finding.assessment.supportingFactors.map((item) => <p key={item} className="text-xs leading-relaxed text-emerald-800">{item}</p>)}
+                    </div>
+                  )}
+                  {finding.assessment.weakeningFactors.length > 0 && (
+                    <div className="rounded-lg bg-amber-50 p-2">
+                      <p className="text-xs font-semibold text-amber-900">Факторы ослабления</p>
+                      {finding.assessment.weakeningFactors.map((item) => <p key={item} className="text-xs leading-relaxed text-amber-800">{item}</p>)}
+                    </div>
+                  )}
                   {finding.caveats.map((item) => <p key={item} className="text-xs leading-relaxed text-amber-800">{item}</p>)}
+                  <details className="rounded-lg border border-gray-200 bg-white/70 p-2">
+                    <summary className="cursor-pointer text-xs font-semibold text-gray-700">Что не проверено для этой комбинации</summary>
+                    <ul className="mt-1 list-disc space-y-1 pl-4">
+                      {finding.assessment.unassessedFactors.map((item) => <li key={item} className="text-xs leading-relaxed text-gray-600">{item}</li>)}
+                    </ul>
+                  </details>
                 </div>
               </details>
             ))}
