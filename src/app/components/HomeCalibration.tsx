@@ -53,11 +53,18 @@ export function HomeCalibration() {
       } else {
         setNorthOffset(delta);
         setMessage(`Сохраняем смещение ${formatAngle(delta)}.`);
-        saveHomeCalibration({
-          northOffset: delta,
-          calibratedAt: new Date().toISOString(),
-          source: 'sun',
-        });
+        try {
+          saveHomeCalibration({
+            northOffset: delta,
+            calibratedAt: new Date().toISOString(),
+            source: 'sun',
+          });
+          setMessage(`Сохранено смещение ${formatAngle(delta)}.`);
+        } catch (storageError) {
+          setWarning(storageError instanceof Error ? storageError.message : 'Не удалось сохранить калибровку.');
+          setMessage('Калибровка рассчитана, но не сохранена. Повторите сохранение вручную.');
+          setUseManual(true);
+        }
       }
     }
   }, []);
@@ -128,8 +135,13 @@ export function HomeCalibration() {
       source: 'manual',
       warning: warning || undefined,
     };
-    saveHomeCalibration(saved);
-    setMessage(`Сохранено смещение ${formatAngle(northOffset)} вручную.`);
+    try {
+      saveHomeCalibration(saved);
+      setWarning(null);
+      setMessage(`Сохранено смещение ${formatAngle(northOffset)} вручную.`);
+    } catch (storageError) {
+      setWarning(storageError instanceof Error ? storageError.message : 'Не удалось сохранить калибровку.');
+    }
   };
 
   return (
