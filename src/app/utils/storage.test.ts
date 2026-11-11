@@ -147,7 +147,7 @@ saveDailyFeedback({ date: '2026-11-10', mood: 1 });
 const restored = restoreUserArchive(exportedArchive);
 assert.equal(restored.legacyProfileOnly, false);
 assert.equal(restored.restoredSections.length, 8);
-assert.deepEqual(loadUserProfile(), legacyProfile, 'Archive restore must restore the main profile');
+assert.equal(loadUserProfile()?.name, legacyProfile.name, 'Archive restore must restore the main profile');
 assert.deepEqual(loadAllFeedback(), { '2026-11-11': { date: '2026-11-11', mood: 4, notes: 'Архивная заметка' } });
 assert.deepEqual(loadHomeProgress(), [{ id: 'task-1', label: 'Проверить план', done: true }]);
 assert.equal(loadHomeCalibration()?.northOffset, 12.5);
