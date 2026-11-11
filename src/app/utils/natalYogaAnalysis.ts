@@ -162,6 +162,23 @@ function assessFinding(finding: NatalYogaFinding, facts: NatalChartFacts): Natal
     if (dignity === 'exalted') supportingFactors.push(`${PLANET_NAMES[key]} в экзальтации (${planet.sign}); это поддерживающий фактор достоинства, но не самостоятельная гарантия результата.`);
     if (dignity === 'own') supportingFactors.push(`${PLANET_NAMES[key]} в собственном знаке (${planet.sign}); это поддерживающий фактор достоинства.`);
     if (dignity === 'debilitated') weakeningFactors.push(`${PLANET_NAMES[key]} в падении (${planet.sign}); это фактор ослабления, который требует отдельной проверки отмены падения и общей силы.`);
+    if (planet.dispositor) {
+      const dispositor = facts.planets[planet.dispositor];
+      const dispositorDignity = dispositor?.dignity?.dignity;
+      if (dispositor && (dispositorDignity === 'exalted' || dispositorDignity === 'own')) {
+        supportingFactors.push(`Диспозитор ${PLANET_NAMES[key]} — ${PLANET_NAMES[planet.dispositor]} (${dispositor.sign}) находится в ${dispositorDignity === 'exalted' ? 'экзальтации' : 'собственном знаке'}; это дополнительная поддержка цепочки диспозиции.`);
+      } else if (dispositor && dispositorDignity === 'debilitated') {
+        weakeningFactors.push(`Диспозитор ${PLANET_NAMES[key]} — ${PLANET_NAMES[planet.dispositor]} находится в падении; это может ослаблять реализацию качеств планеты.`);
+      }
+    }
+    if (finding.category === 'vipareeta') {
+      const mixedHouses = planet.ruledHouses.filter((house) => !DUSTHANA_HOUSES.includes(house));
+      if (mixedHouses.length) {
+        weakeningFactors.push(`${PLANET_NAMES[key]} дополнительно управляет домами ${mixedHouses.join(', ')} вне дустхан 6/8/12; смешанное владение осложняет строгую квалификацию Випарита-раджа-йоги.`);
+      } else {
+        supportingFactors.push(`${PLANET_NAMES[key]} не управляет другими домами вне группы 6/8/12 по доступной таблице домов; критерий смешанного владения не выявлен.`);
+      }
+    }
   }
   return {
     ...finding,
@@ -222,7 +239,7 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
         description: 'Солнце и Меркурий находятся в одном знаке; традиционно сочетание связывают с интеллектом, обучением и выражением мыслей.',
         formalRule: 'Солнце и Меркурий занимают один сидерический знак.',
         participants: ['Sun', 'Mercury'], houses: [sun.house ?? 0, mercury.house ?? 0].filter(Boolean),
-        evidence: [`Солнце и Меркурий находятся в знаке ${sun.sign}.`, `Положение по домам: Солнце — ${sun.house ?? 'дом не определён'}, Меркурий — ${mercury.house ?? 'дом не определён'}.`],
+        evidence: [`Солнце и Меркурий находятся в знаке ${sun.sign}.`, `Положение по домам: Солнце — ${sun.house ?? 'дом не определён'}, Меркурий — ${mercury.house ?? 'дом не определён'}.`, `Угловое расстояние между Солнцем и Меркурием — ${Math.min(Math.abs(sun.longitude - mercury.longitude), 360 - Math.abs(sun.longitude - mercury.longitude)).toFixed(2)}°; это фактическая дистанция, а не заключение о сожжении.`],
         caveats: ['Соединение определяется только по знаку: точный орбис, сожжение Меркурия и ретроградность не оцениваются.'],
       })
       : null;
