@@ -172,12 +172,14 @@ export function buildConclusionUnifiedAdvice(
     conclusion.relatedHouses.some((house) => item.includes(`${house}-го дома`))
     || conclusion.relatedPlanets.some((planet) => item.includes(planet)),
   );
-  const house = conclusion.relatedHouses[0] ?? 10;
+  const house = conclusion.relatedHouses[0];
   return buildUnifiedAdvice({
     connection: conclusion.evidence.join(' '),
     combinedMeaning: conclusion.statement,
     tensions: relevantTensions,
-    practicalStep: HOUSE_ACTIONS[house],
+    practicalStep: house
+      ? HOUSE_ACTIONS[house]
+      : 'Выберите один конкретный факт из приведённых оснований, проверьте его в реальной ситуации и зафиксируйте наблюдаемый результат.',
   });
 }
 
@@ -186,7 +188,6 @@ export function buildSynthesisUnifiedAdvice(synthesis: NatalChartSynthesis): Uni
   const bridges = synthesis.bridges.slice(0, 3).map((item) => item.evidence);
   const networks = synthesis.planetNetworks.slice(0, 3).map((item) => item.evidence);
   const related = [...bridges, ...networks];
-  const adviceHouse = strongestTheme?.house ?? 10;
   const evidenceText = [
     strongestTheme ? `Повторяющийся акцент отмечен в ${strongestTheme.house}-м доме: ${strongestTheme.theme}.` : '',
     ...related,
@@ -197,7 +198,9 @@ export function buildSynthesisUnifiedAdvice(synthesis: NatalChartSynthesis): Uni
       : 'Достаточно подтверждённых межпланетных и междомовых связей для выделения ведущего акцента пока нет.',
     combinedMeaning: synthesis.overview,
     tensions: synthesis.tensions,
-    practicalStep: HOUSE_ACTIONS[adviceHouse],
+    practicalStep: strongestTheme
+      ? HOUSE_ACTIONS[strongestTheme.house]
+      : 'Сначала уточните недостающие исходные данные карты; затем выберите один подтверждённый вывод и проверьте его небольшим практическим действием.',
     limitation: synthesis.dataQuality.caveats.join(' '),
   });
 }
