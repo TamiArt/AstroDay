@@ -135,6 +135,10 @@ saveUserProfile(legacyProfile);
 saveDailyFeedback({ date: '2026-11-11', mood: 4, notes: 'Архивная заметка' });
 saveHomeCalibration({ northOffset: 12.5, calibratedAt: '2026-11-11T10:00:00.000Z', source: 'manual' });
 saveHomeProgress([{ id: 'task-1', label: 'Проверить план', done: true }]);
+saveVastuChecklist(checklist);
+saveHomeFloorPlan(floorPlan);
+saveVastuPropertyAssessment(propertyAssessment);
+savePartnerProfile(partner);
 const exportedArchive = exportData();
 const exported = JSON.parse(exportedArchive) as { format: string; schemaVersion: number; data: Record<string, unknown> };
 assert.equal(exported.format, 'astroday-user-archive');
@@ -144,10 +148,6 @@ assert.deepEqual(exported.data.feedback, { '2026-11-11': { date: '2026-11-11', m
 
 deleteHomeData();
 deletePartnerProfile();
-saveVastuChecklist(checklist);
-saveHomeFloorPlan(floorPlan);
-saveVastuPropertyAssessment(propertyAssessment);
-savePartnerProfile(partner);
 saveDailyFeedback({ date: '2026-11-10', mood: 1 });
 const restored = restoreUserArchive(exportedArchive);
 assert.equal(restored.legacyProfileOnly, false);
