@@ -668,7 +668,7 @@ for (const advice of [...unifiedHouseAdvice, ...unifiedPlanetAdvice, unifiedSynt
   assert.ok(['complete', 'partial', 'unavailable'].includes(advice.dataStatus));
 }
 assert.ok(unifiedHouseAdvice[6].connection.includes('Дом 7:'));
-assert.ok(unifiedHouseAdvice[6].evidence.some((item) => item.includes('7-го дома')));
+assert.ok(unifiedHouseAdvice[6].evidence.some((item) => item.toLocaleLowerCase('ru-RU').includes('управитель')));
 assert.ok(unifiedPlanetAdvice.find((item) => item.connection.includes('аспекты'))?.connection.length);
 assert.ok(unifiedSynthesisAdvice.connection.length > 0);
 const unlinkedConclusionAdvice = buildConclusionUnifiedAdvice(
