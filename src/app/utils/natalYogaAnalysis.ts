@@ -21,6 +21,7 @@ export interface NatalYogaRuleCheck {
   name: string;
   status: YogaCheckStatus;
   findingId: string | null;
+  findingIds: string[];
   reason: string;
   missingFacts: string[];
 }
@@ -94,24 +95,29 @@ function check(
   missingFacts: string[],
   finding: NatalYogaFinding | null,
   notFoundReason: string,
-): { check: NatalYogaRuleCheck; finding: NatalYogaFinding | null } {
-  if (missingFacts.length) {
+  additionalFindings: NatalYogaFinding[] = [],
+): { check: NatalYogaRuleCheck; finding: NatalYogaFinding | null; additionalFindings: NatalYogaFinding[] } {
+  const allFindings = [finding, ...additionalFindings].filter((item): item is NatalYogaFinding => Boolean(item));
+  if (allFindings.length) {
     return {
-      finding: null,
+      finding: allFindings[0], additionalFindings: allFindings.slice(1),
       check: {
-        id, name, status: 'incomplete', findingId: null,
-        reason: 'Правило нельзя проверить полностью: отсутствуют необходимые исходные данные.',
+        id, name, status: 'detected', findingId: allFindings[0].id,
+        findingIds: allFindings.map((item) => item.id),
+        reason: missingFacts.length
+          ? 'Найдена как минимум одна комбинация; дополнительные сочетания нельзя проверить полностью из-за недостающих данных.'
+          : 'Все обязательные условия формального правила выполнены.',
         missingFacts: unique(missingFacts),
       },
     };
   }
-  if (finding) {
+  if (missingFacts.length) {
     return {
-      finding,
+      finding: null, additionalFindings: [],
       check: {
-        id, name, status: 'detected', findingId: finding.id,
-        reason: 'Все обязательные условия формального правила выполнены.',
-        missingFacts: [],
+        id, name, status: 'incomplete', findingId: null, findingIds: [],
+        reason: 'Правило нельзя проверить полностью: отсутствуют необходимые исходные данные.',
+        missingFacts: unique(missingFacts),
       },
     };
   }
@@ -137,9 +143,10 @@ function createFinding(input: NatalYogaFinding): NatalYogaFinding {
 export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
   const findings: NatalYogaFinding[] = [];
   const checks: NatalYogaRuleCheck[] = [];
-  const addCheck = (result: { check: NatalYogaRuleCheck; finding: NatalYogaFinding | null }) => {
+  const addCheck = (result: { check: NatalYogaRuleCheck; finding: NatalYogaFinding | null; additionalFindings?: NatalYogaFinding[] }) => {
     checks.push(result.check);
     if (result.finding) findings.push(result.finding);
+    if (result.additionalFindings?.length) findings.push(...result.additionalFindings);
   };
   const missingCorePlanets = CLASSICAL_PLANETS.filter((key) => !isPresent(facts, key));
   const missingHouses = Array.from({ length: 12 }, (_, index) => index + 1)
@@ -224,7 +231,7 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
         description: `${rule.quality}; планета расположена в кендре от Асцендента. Это одна из пяти комбинаций Панча-Махапуруша.`,
         formalRule: `${PLANET_NAMES[rule.planet]} находится в собственном знаке или знаке экзальтации и в доме 1/4/7/10 от Лагны.`,
         participants: [rule.planet], houses: [planet.house],
-        evidence: [`${PLANET_NAMES[rule.planet]} находится в знаке ${planet.sign} (${planet.signIndex === 0 || planet.signIndex === 7 || planet.signIndex === 9 ? 'проверка знака по таблице правила' : 'проверка знака по таблице правила'}).`, `Планета расположена в ${planet.house}-м доме от Асцендента; это кендра (1/4/7/10).`],
+        evidence: [`${PLANET_NAMES[rule.planet]} находится в знаке ${planet.sign}; этот знак входит в список собственного достоинства/экзальтации для данного правила.`, `Планета расположена в ${planet.house}-м доме от Асцендента; это кендра (1/4/7/10).`],
         caveats: ['Учитывается только базовый критерий знака и кендры; ретроградность, сожжение, точные градусы и дополнительные традиционные условия не проверяются.'],
       })
       : null;
@@ -235,9 +242,9 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
   {
     const missing = [...missingHouses.filter((house) => [...KENDRA_HOUSES, ...TRIKONA_HOUSES].includes(house)).map((house) => `${house}-й дом`)];
     if (!hasAscendant) missing.push('знак Асцендента');
-    let finding: NatalYogaFinding | null = null;
+    const found: NatalYogaFinding[] = [];
     if (!missing.length) {
-      outer: for (const kendra of [4, 7, 10]) {
+      for (const kendra of [4, 7, 10]) {
         const kendraLord = lordOfHouse(facts, kendra);
         if (!kendraLord || !isPresent(facts, kendraLord)) continue;
         for (const trikona of [5, 9]) {
@@ -245,20 +252,19 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
           if (!trikonaLord || trikonaLord === kendraLord || !isPresent(facts, trikonaLord)) continue;
           const evidence = relationEvidence(facts, kendraLord, trikonaLord);
           if (!evidence.length) continue;
-          finding = createFinding({
-            id: `raja-${kendraLord.toLowerCase()}-${trikonaLord.toLowerCase()}`,
+          found.push(createFinding({
+            id: `raja-${kendra}-${trikona}-${kendraLord.toLowerCase()}-${trikonaLord.toLowerCase()}`,
             name: 'Раджа-йога', sanskritName: 'Raja Yoga', category: 'raja',
             description: 'Управитель кендры связан с управителем триконы; в классической трактовке это сочетание связывают с возможностями реализации и ответственности.',
             formalRule: 'Управитель одного из домов 4/7/10 связан соединением по знаку, Parashari graha drishti или обменом знаками с управителем 5-го или 9-го дома.',
             participants: [kendraLord, trikonaLord], houses: [kendra, trikona],
             evidence: [`Управитель ${kendra}-го дома — ${PLANET_NAMES[kendraLord]}; управитель ${trikona}-го дома — ${PLANET_NAMES[trikonaLord]}.`, ...evidence],
             caveats: ['Проверяется базовая связь управителей; достоинство, сила, функциональная благотворность и дополнительные условия конкретной школы не оцениваются.'],
-          });
-          break outer;
+          }));
         }
       }
     }
-    addCheck(check('raja-yoga', 'Раджа-йога', missing, finding, 'Не найдена связь управителя кендры (4/7/10) с управителем триконы (5/9) по принятым типам отношений.'));
+    addCheck(check('raja-yoga', 'Раджа-йога', missing, found[0] ?? null, 'Не найдена связь управителя кендры (4/7/10) с управителем триконы (5/9) по принятым типам отношений.', found.slice(1)));
   }
 
   // Dhana yoga: lords of 2/11 connected to lords of 5/9/1.
@@ -266,9 +272,9 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
     const housesToCheck = [1, 2, 5, 9, 11];
     const missing = missingHouses.filter((house) => housesToCheck.includes(house)).map((house) => `${house}-й дом`);
     if (!hasAscendant) missing.push('знак Асцендента');
-    let finding: NatalYogaFinding | null = null;
+    const found: NatalYogaFinding[] = [];
     if (!missing.length) {
-      outer: for (const wealthHouse of [2, 11]) {
+      for (const wealthHouse of [2, 11]) {
         const wealthLord = lordOfHouse(facts, wealthHouse);
         if (!wealthLord || !isPresent(facts, wealthLord)) continue;
         for (const supportHouse of [1, 5, 9]) {
@@ -276,28 +282,27 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
           if (!supportLord || supportLord === wealthLord || !isPresent(facts, supportLord)) continue;
           const evidence = relationEvidence(facts, wealthLord, supportLord);
           if (!evidence.length) continue;
-          finding = createFinding({
-            id: `dhana-${wealthLord.toLowerCase()}-${supportLord.toLowerCase()}`,
+          found.push(createFinding({
+            id: `dhana-${wealthHouse}-${supportHouse}-${wealthLord.toLowerCase()}-${supportLord.toLowerCase()}`,
             name: 'Дхана-йога', sanskritName: 'Dhana Yoga', category: 'wealth',
             description: 'Управитель 2-го или 11-го дома связан с управителем 1-го, 5-го или 9-го дома; традиционно комбинация относится к теме ресурсов и доходов.',
             formalRule: 'Управитель 2/11 дома связан соединением по знаку, Parashari graha drishti или обменом знаками с управителем 1/5/9 дома.',
             participants: [wealthLord, supportLord], houses: [wealthHouse, supportHouse],
             evidence: [`Управитель ${wealthHouse}-го дома — ${PLANET_NAMES[wealthLord]}; управитель ${supportHouse}-го дома — ${PLANET_NAMES[supportLord]}.`, ...evidence],
             caveats: ['Дхана-йога не является прогнозом богатства или суммы дохода; финансовый результат зависит от множества факторов вне карты.'],
-          });
-          break outer;
+          }));
         }
       }
     }
-    addCheck(check('dhana-yoga', 'Дхана-йога', missing, finding, 'Не найдена связь управителей 2/11 домов с управителями 1/5/9 домов по принятым типам отношений.'));
+    addCheck(check('dhana-yoga', 'Дхана-йога', missing, found[0] ?? null, 'Не найдена связь управителей 2/11 домов с управителями 1/5/9 домов по принятым типам отношений.', found.slice(1)));
   }
 
   // Parivartana: two classical planets occupy each other's signs.
   {
     const missing = CLASSICAL_PLANETS.filter((key) => !isPresent(facts, key)).map((key) => PLANET_NAMES[key]);
-    let finding: NatalYogaFinding | null = null;
+    const found: NatalYogaFinding[] = [];
     if (!missing.length) {
-      outer: for (let i = 0; i < CLASSICAL_PLANETS.length; i += 1) {
+      for (let i = 0; i < CLASSICAL_PLANETS.length; i += 1) {
         for (let j = i + 1; j < CLASSICAL_PLANETS.length; j += 1) {
           const a = CLASSICAL_PLANETS[i];
           const b = CLASSICAL_PLANETS[j];
@@ -307,7 +312,7 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
           if (!exchange) continue;
           const aHouse = facts.planets[a]!.house;
           const bHouse = facts.planets[b]!.house;
-          finding = createFinding({
+          found.push(createFinding({
             id: `parivartana-${a.toLowerCase()}-${b.toLowerCase()}`,
             name: 'Паривартана-йога', sanskritName: 'Parivartana Yoga', category: 'exchange',
             description: 'Два управителя находятся в знаках друг друга, формируя обмен знаками.',
@@ -315,24 +320,23 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
             participants: [a, b], houses: [aHouse ?? 0, bHouse ?? 0].filter(Boolean),
             evidence: evidence.filter((item) => item.includes('Обмен знаками')),
             caveats: ['Классификация обмена на маха-, кахала- и дана-паривартану требует дополнительной оценки управляемых домов; здесь фиксируется только сам обмен.'],
-          });
-          break outer;
+          }));
         }
       }
     }
-    addCheck(check('parivartana', 'Паривартана-йога', missing, finding, 'Обмен знаками между двумя классическими планетами не обнаружен.'));
+    addCheck(check('parivartana', 'Паривартана-йога', missing, found[0] ?? null, 'Обмен знаками между двумя классическими планетами не обнаружен.', found.slice(1)));
   }
 
   // Vipareeta Raja Yoga: a 6th/8th/12th lord placed in any dusthana.
   {
     const missing = missingHouses.filter((house) => DUSTHANA_HOUSES.includes(house)).map((house) => `${house}-й дом`);
-    let finding: NatalYogaFinding | null = null;
+    const found: NatalYogaFinding[] = [];
     if (!missing.length) {
       for (const sourceHouse of DUSTHANA_HOUSES) {
         const lord = lordOfHouse(facts, sourceHouse);
         const planet = lord ? facts.planets[lord] : null;
         if (!lord || !planet?.house || !DUSTHANA_HOUSES.includes(planet.house)) continue;
-        finding = createFinding({
+        found.push(createFinding({
           id: `vipareeta-${sourceHouse}-lord`,
           name: 'Випарита-раджа-йога', sanskritName: 'Vipareeta Raja Yoga', category: 'vipareeta',
           description: `Управитель ${sourceHouse}-го дома расположен в другом доме дустханы (6/8/12); это базовый критерий одной из разновидностей Випарита-раджа-йоги.`,
@@ -340,11 +344,10 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
           participants: [lord], houses: [sourceHouse, planet.house],
           evidence: [`Управитель ${sourceHouse}-го дома — ${PLANET_NAMES[lord]}.`, `${PLANET_NAMES[lord]} расположен в ${planet.house}-м доме; оба дома входят в группу дустхан 6/8/12.`],
           caveats: ['Это упрощённая базовая проверка; строгая классификация Harsha/Sarala/Vimala и условия отсутствия смешения с другими управителями требуют отдельной школы правил.'],
-        });
-        break;
+        }));
       }
     }
-    addCheck(check('vipareeta-raja', 'Випарита-раджа-йога', missing, finding, 'Управители домов 6/8/12 не обнаружены в домах 6/8/12.'));
+    addCheck(check('vipareeta-raja', 'Випарита-раджа-йога', missing, found[0] ?? null, 'Управители домов 6/8/12 не обнаружены в домах 6/8/12.', found.slice(1)));
   }
 
   const missingPlanets = NATAL_PLANET_KEYS.filter((key) => !facts.planets[key]);
