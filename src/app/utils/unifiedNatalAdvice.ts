@@ -72,6 +72,37 @@ export function buildNarrativeUnifiedAdvice(input: {
   return buildUnifiedAdvice(input);
 }
 
+export function buildLifeAreaUnifiedAdvice(title: string, connections: string[]): UnifiedAdvice {
+  const normalizedTitle = title.toLocaleLowerCase('ru-RU');
+  const practicalStep = normalizedTitle.includes('карьер') || normalizedTitle.includes('професс')
+    ? 'Сформулируйте одну профессиональную цель, подтвердите её навыками и завершённым примером работы.'
+    : normalizedTitle.includes('отнош')
+      ? 'Обсудите ожидания, границы и распределение ответственности; договорённости фиксируйте конкретно.'
+      : normalizedTitle.includes('деньг') || normalizedTitle.includes('финанс')
+        ? 'Сверьте доходы, расходы и риски с фактическими данными; не принимайте финансовых решений только по символической трактовке.'
+        : normalizedTitle.includes('обуч') || normalizedTitle.includes('творч') || normalizedTitle.includes('талант')
+          ? 'Выберите небольшой учебный или творческий проект и доведите его до результата, который можно оценить.'
+          : 'Выберите один наблюдаемый аспект этой сферы и проверьте его небольшим действием в ближайшие две недели.';
+  return buildUnifiedAdvice({
+    connection: connections.join(' '),
+    combinedMeaning: `Связи показателей рассматриваются совместно в теме «${title}»; они описывают символические акценты, а не гарантируют события.`,
+    practicalStep,
+  });
+}
+
+export function buildLifeAreaBridgeUnifiedAdvice(input: {
+  connection: string;
+  areas: string[];
+  explanation: string;
+  evidence: string[];
+}): UnifiedAdvice {
+  return buildUnifiedAdvice({
+    connection: [input.connection, `Подтверждённые сферы: ${input.areas.join(', ')}.`, ...input.evidence].join(' '),
+    combinedMeaning: input.explanation,
+    practicalStep: 'Выберите одну общую задачу, затрагивающую эти сферы, согласуйте приоритеты и проверьте результат на небольшом практическом шаге.',
+  });
+}
+
 export function buildHouseUnifiedAdvice(house: NatalHousePersonalizedAnalysis): UnifiedAdvice {
   if (!house.available) {
     return buildUnifiedAdvice({
