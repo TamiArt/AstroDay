@@ -543,7 +543,8 @@ function validateHomeFloorPlan(value: unknown): HomeFloorPlanData | null {
     && typeof room.id === 'string' && typeof room.name === 'string'
     && ['x', 'y', 'width', 'height'].every((key) => typeof room[key] === 'number' && Number.isFinite(room[key]))
     && typeof room.baguaZone === 'string' && typeof room.vastuZone === 'string');
-  const validMarkers = (value.markers ?? []).every((marker) => isRecord(marker)
+  const markers = Array.isArray(value.markers) ? value.markers : [];
+  const validMarkers = markers.every((marker) => isRecord(marker)
     && typeof marker.id === 'string' && typeof marker.label === 'string'
     && typeof marker.x === 'number' && Number.isFinite(marker.x)
     && typeof marker.y === 'number' && Number.isFinite(marker.y)
