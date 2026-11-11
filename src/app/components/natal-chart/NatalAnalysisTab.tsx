@@ -22,6 +22,7 @@ import { analyzePersonalizedHouses } from '../../utils/personalizedHouseAnalysis
 import { analyzeAllNatalHouses } from '../../utils/natalHousePersonalizedAnalysis';
 import { analyzeAllNatalPlanets } from '../../utils/natalPlanetPersonalizedAnalysis';
 import { synthesizeNatalChart } from '../../utils/natalChartSynthesis';
+import { buildConclusionUnifiedAdvice, buildHouseUnifiedAdvice, buildPlanetUnifiedAdvice, buildSynthesisUnifiedAdvice } from '../../utils/unifiedNatalAdvice';
 import { getPlanetHouse } from '../../utils/natalStrengthAnalysis';
 import { getSunHouseFocus } from '../../utils/natalAnalysisGuidance';
 import { formatCoreLifeAreaEvidence, getAscendantChartFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus, getPlanetChartFocus } from '../../utils/natalPersonalFocus';
@@ -104,6 +105,18 @@ function InsightCard({ icon: Icon, title, subtitle, accent, children }: InsightC
   );
 }
 
+function UnifiedAdviceBlock({ advice }: { advice: ReturnType<typeof buildHouseUnifiedAdvice> }) {
+  return (
+    <div className="rounded-lg border border-indigo-100 bg-indigo-50/60 p-3 space-y-2">
+      <p className="text-sm leading-relaxed text-gray-800">{advice.connection}</p>
+      <p className="text-sm leading-relaxed text-gray-800">{advice.combinedMeaning}</p>
+      <p className="text-sm leading-relaxed text-gray-700">{advice.tension}</p>
+      <p className="text-sm leading-relaxed text-indigo-900"><strong>Практический шаг:</strong> {advice.practicalStep}</p>
+      <p className="text-xs leading-relaxed text-gray-500">{advice.limitation}</p>
+    </div>
+  );
+}
+
 export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
   const sunHouse = getPlanetHouse(natalChart, 'Sun');
   const moonHouse = getPlanetHouse(natalChart, 'Moon');
@@ -140,6 +153,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
           <div className="rounded-xl border border-indigo-100 bg-indigo-50/70 p-4 space-y-2">
             <h4 className="font-semibold text-indigo-950">{wholeChartSynthesis.headline}</h4>
             <p className="text-sm leading-relaxed text-indigo-900">{wholeChartSynthesis.overview}</p>
+          <UnifiedAdviceBlock advice={buildSynthesisUnifiedAdvice(wholeChartSynthesis)} />
           </div>
           {wholeChartSynthesis.dominantThemes.length ? (
             <div>
@@ -162,7 +176,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                 {wholeChartSynthesis.conclusions.map((item) => (
                   <details key={item.id} className="rounded-lg border border-gray-200 p-3">
                     <summary className="cursor-pointer text-sm font-medium text-gray-800">{item.title}</summary>
-                    <p className="mt-2 text-sm leading-relaxed text-gray-700">{item.statement}</p>
+                    <UnifiedAdviceBlock advice={buildConclusionUnifiedAdvice(item, wholeChartSynthesis.tensions)} />
                     <p className="mt-2 text-xs text-gray-500">Дома: {item.relatedHouses.length ? item.relatedHouses.join(', ') : 'не определены'}; планеты: {item.relatedPlanets.length ? item.relatedPlanets.join(', ') : 'не определены'}.</p>
                     <ul className="mt-2 list-disc pl-4 space-y-1">{item.evidence.map((evidence) => <li key={evidence} className="text-xs text-gray-600">{evidence}</li>)}</ul>
                   </details>
@@ -414,7 +428,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                           : house.synthesis === 'incomplete' ? 'Недостаточно данных' : 'Нейтрально'}
                   </span>
                 </div>
-                <p className="text-sm leading-relaxed text-gray-700">{house.interpretation}</p>
+                <UnifiedAdviceBlock advice={buildHouseUnifiedAdvice(house)} />
                 {house.dispositorChain.length ? (
                   <div className="rounded-lg bg-indigo-50 p-3">
                     <h5 className="text-xs font-semibold uppercase tracking-wide text-indigo-800 mb-1">Цепочка диспозиторов</h5>
@@ -504,7 +518,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                           : planet.synthesis === 'incomplete' ? 'Недостаточно данных' : 'Нейтрально'}
                   </span>
                 </div>
-                <p className="text-sm leading-relaxed text-gray-700">{planet.interpretation}</p>
+                <UnifiedAdviceBlock advice={buildPlanetUnifiedAdvice(planet)} />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Управляемые дома</h5>
