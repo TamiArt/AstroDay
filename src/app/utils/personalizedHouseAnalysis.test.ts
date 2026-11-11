@@ -667,7 +667,8 @@ for (const advice of [...unifiedHouseAdvice, ...unifiedPlanetAdvice, unifiedSynt
   assert.ok(Array.isArray(advice.evidence));
   assert.ok(['complete', 'partial', 'unavailable'].includes(advice.dataStatus));
 }
-assert.ok(unifiedHouseAdvice[6].connection.includes('7-го дома'));
+assert.ok(unifiedHouseAdvice[6].connection.includes('Дом 7:'));
+assert.ok(unifiedHouseAdvice[6].evidence.some((item) => item.includes('7-го дома')));
 assert.ok(unifiedPlanetAdvice.find((item) => item.connection.includes('аспекты'))?.connection.length);
 assert.ok(unifiedSynthesisAdvice.connection.length > 0);
 const unlinkedConclusionAdvice = buildConclusionUnifiedAdvice(
@@ -694,7 +695,7 @@ const unifiedBridgeAdvice = buildLifeAreaBridgeUnifiedAdvice({
   explanation: 'Профессиональная сфера связана с системным обучением.',
   evidence: ['Меркурий расположен в 10-м доме.', 'Сатурн управляет 9-м домом.'],
 });
-assert.ok(unifiedCareerAdvice.connection.includes('Меркурий'));
+assert.ok(unifiedCareerAdvice.evidence.some((item) => item.includes('Меркурий')));
 assert.ok(unifiedCareerAdvice.practicalStep.includes('профессиональную задачу'));
 assert.ok(unifiedCareerAdvice.successCriteria.includes('законченный кейс'));
 assert.ok(unifiedBridgeAdvice.connection.includes('Обучение'));
