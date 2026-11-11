@@ -87,6 +87,18 @@ cancerAscendantChart.houses = cancerAscendantChart.houses.map((house, index) => 
 const yogaKaraka = analyzeNatalYogas(buildNatalChartFacts(cancerAscendantChart));
 assert.ok(yogaKaraka.findings.some((item) => item.id === 'raja-karaka-10-5-mars'), 'A planet ruling a kendra and trikona must be identified as a yoga-karaka');
 
+const piscesAscendantChart = chartWith({
+  Sun: 4, Moon: 3, Mars: 0, Mercury: 2, Jupiter: 8,
+  Venus: 1, Saturn: 9, Rahu: 10, Ketu: 4,
+});
+piscesAscendantChart.ascendant = position('Ascendant', 11);
+piscesAscendantChart.houses = piscesAscendantChart.houses.map((house, index) => {
+  const sign = (11 + index) % 12;
+  return { ...house, sign, signName: signNames[sign], lord: signLords[sign] };
+});
+const sharedDhanaLord = analyzeNatalYogas(buildNatalChartFacts(piscesAscendantChart));
+assert.ok(sharedDhanaLord.findings.some((item) => item.id === 'dhana-karaka-2-9-mars'), 'A single planet ruling a wealth house and a trikona must be recognized as a Dhana yoga link');
+
 const noYogaChart = chartWith({
   Sun: 0, Moon: 2, Mars: 4, Mercury: 6, Jupiter: 8,
   Venus: 10, Saturn: 1, Rahu: 3, Ketu: 9,
