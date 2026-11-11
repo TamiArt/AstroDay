@@ -27,6 +27,7 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
   const [showGrid, setShowGrid] = useState(true);
   const [markerMode, setMarkerMode] = useState<VastuMarkerType | null>(null);
   const [notice, setNotice] = useState('');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const bearing = planData.northBearingDegrees ?? 0;
   const markers = planData.markers ?? [];
 
@@ -38,13 +39,15 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
   }, [planData, draft, northOffset, showGrid, selectedRoomId]);
 
   const savePlan = (next: HomeFloorPlanData): boolean => {
+    setPlanData(next);
+    setHasUnsavedChanges(true);
     try {
       saveHomeFloorPlan(next);
-      setPlanData(next);
+      setHasUnsavedChanges(false);
       setNotice('Изменения плана сохранены.');
       return true;
     } catch (storageError) {
-      setNotice(storageError instanceof Error ? storageError.message : 'Не удалось сохранить план. Изменения остаются только на экране.');
+      setNotice(storageError instanceof Error ? storageError.message : 'Не удалось сохранить план. Изменения остаются на экране.');
       return false;
     }
   };
@@ -164,10 +167,9 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
     if (markerMode) {
       const option = MARKERS.find((item) => item.type === markerMode);
       const marker = { id: 'marker-' + Date.now(), type: markerMode, x: x / canvas.width, y: y / canvas.height, label: option?.label ?? 'Метка' };
-      if (savePlan({ ...planData, markers: [...markers, marker] })) {
-        setMarkerMode(null);
-        setNotice('Добавлена отметка: ' + marker.label);
-      }
+      const saved = savePlan({ ...planData, markers: [...markers, marker] });
+      setMarkerMode(null);
+      if (saved) setNotice('Добавлена отметка: ' + marker.label);
       return;
     }
     setStartPoint({ x, y });
@@ -233,7 +235,7 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
       ...planData,
       rooms: [...planData.rooms, newRoom],
     };
-    if (!savePlan(next)) return;
+    savePlan(next);
     setSelectedRoomId(newRoom.id);
     onRoomSelect(newRoom);
     setDrawing(false);
@@ -291,7 +293,9 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
         <div className="rounded-2xl border border-border p-4 space-y-3">
           <h3 className="font-semibold">Точки притока, оттока и препятствия</h3><p className="text-xs opacity-70">Выберите тип отметки, затем нажмите место на плане. Зелёный — входы/окна, синий — вода/санузлы, красный — препятствия, фиолетовый — кухня/рабочее место.</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">{MARKERS.map((item) => <button key={item.type} type="button" aria-pressed={markerMode===item.type} onClick={()=>setMarkerMode(markerMode===item.type?null:item.type)} className={'rounded-xl border p-2 text-xs text-left '+(markerMode===item.type?'border-primary bg-primary/10':'border-border bg-secondary')}>{item.label}</button>)}</div>
-          {markerMode && <p className="text-sm text-primary font-semibold">Нажмите на план, чтобы поставить метку «{MARKERS.find((item)=>item.type===markerMode)?.label}».</p>}{notice && <p role="status" className="text-xs opacity-70">{notice}</p>}
+          {markerMode && <p className="text-sm text-primary font-semibold">Нажмите на план, чтобы поставить метку «{MARKERS.find((item)=>item.type===markerMode)?.label}».</p>}
+          {notice && <p role={hasUnsavedChanges ? 'alert' : 'status'} className="text-xs opacity-70">{notice}</p>}
+          {hasUnsavedChanges && <button type="button" onClick={() => savePlan(planData)} className="rounded-xl border border-primary px-3 py-2 text-sm text-primary">Повторить сохранение плана</button>}
           {markerAnalysis.map((item)=><div key={item.id} className="flex justify-between gap-2 text-sm bg-secondary rounded-lg p-2"><span>{item.option?.label}: <strong>{SECTORS[item.zone]}</strong></span><button type="button" className="underline text-xs" onClick={()=>savePlan({...planData,markers:markers.filter((marker)=>marker.id!==item.id)})}>Удалить</button></div>)}
         </div>
         <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 space-y-3">
