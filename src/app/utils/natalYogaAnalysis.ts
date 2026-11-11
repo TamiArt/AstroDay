@@ -48,7 +48,6 @@ const SIGN_LORDS: NatalPlanetKey[] = [
   'Venus', 'Mars', 'Jupiter', 'Saturn', 'Saturn', 'Jupiter',
 ];
 const KENDRA_HOUSES = [1, 4, 7, 10];
-const TRIKONA_HOUSES = [1, 5, 9];
 const DUSTHANA_HOUSES = [6, 8, 12];
 const CLASSICAL_PLANETS: NatalPlanetKey[] = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
 
