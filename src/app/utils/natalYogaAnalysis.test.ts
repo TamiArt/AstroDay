@@ -59,6 +59,11 @@ assert.ok(lunarAnalysis.findings.some((item) => item.id === 'chandra-mangala'));
 assert.ok(lunarAnalysis.findings.some((item) => item.id === 'budha-aditya'));
 assert.ok(lunarAnalysis.findings.some((item) => item.id === 'mahapurusha-jupiter'));
 
+const signOnlyLunarFacts = buildNatalChartFacts({ ...lunarChart, houses: [] } as unknown as NatalChart);
+const signOnlyLunarAnalysis = analyzeNatalYogas(signOnlyLunarFacts);
+assert.equal(signOnlyLunarAnalysis.checks.find((item) => item.id === 'gaja-kesari')?.status, 'detected', 'Gaja-Kesari is determined by sign distance from the Moon');
+assert.equal(signOnlyLunarAnalysis.checks.find((item) => item.id === 'chandra-mangala')?.status, 'incomplete', 'Without same-sign conjunction, missing houses prevent aspect verification');
+
 const missingJupiterChart = {
   ...lunarChart,
   planets: { ...lunarChart.planets, Jupiter: undefined },
