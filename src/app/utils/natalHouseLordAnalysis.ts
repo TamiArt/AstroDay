@@ -1,4 +1,5 @@
 import type { NatalChart } from './astrology';
+import { buildNatalChartFacts } from './natalChartFacts';
 import {
   evaluatePlanetCondition,
   getGrahaDrishti,
@@ -138,6 +139,7 @@ function describeAspect(aspect: HouseDrishti): string {
  */
 export function analyzeHouseLords(chart: NatalChart): HouseLordInsight[] {
   if (!chart.houses?.length) return [];
+  const chartFacts = buildNatalChartFacts(chart);
   const aspects = getGrahaDrishti(chart);
   const sortedHouses = [...chart.houses].sort((a, b) => a.house - b.house);
   const rulershipCounts = new Map<string, number[]>();
@@ -146,20 +148,18 @@ export function analyzeHouseLords(chart: NatalChart): HouseLordInsight[] {
   }
 
   return sortedHouses.map((house) => {
-    const lordKey = house.lord;
+    const houseFacts = chartFacts.houses.find((item) => item.number === house.house);
+    const lordKey = houseFacts?.lord ?? house.lord;
+    const planetFacts = chartFacts.planets[lordKey as keyof typeof chartFacts.planets];
     const lordPosition = chart.planets[lordKey as keyof NatalChart['planets']];
-    const lordHouse = lordPosition ? getPlanetHouse(chart, lordKey) : null;
-    const lordCondition = lordPosition ? evaluatePlanetCondition(chart, lordKey) : null;
-    const ruledHouses = rulershipCounts.get(lordKey) ?? [];
+    const lordHouse = planetFacts?.house ?? null;
+    const lordCondition = planetFacts?.dignity ?? (lordPosition ? evaluatePlanetCondition(chart, lordKey) : null);
+    const ruledHouses = planetFacts?.ruledHouses ?? rulershipCounts.get(lordKey) ?? [];
     const incomingAspects = lordHouse
       ? aspects.filter((item) => item.targetHouse === lordHouse)
       : [];
     const outgoingAspects = aspects.filter((item) => item.source === planetLabel(lordKey));
-    const conjunctions = lordPosition
-      ? Object.keys(chart.planets)
-        .filter((name) => name !== lordKey && chart.planets[name as keyof NatalChart['planets']].sign === lordPosition.sign)
-        .map(planetLabel)
-      : [];
+    const conjunctions = planetFacts?.conjunctions.map(planetLabel) ?? [];
     const chain = lordPosition
       ? buildDispositorChain(chart, lordKey)
       : { steps: [], cycleDetected: false, missingPlanet: lordKey };

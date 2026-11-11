@@ -31,7 +31,9 @@ const SUN_SIGN_STYLE: Record<string, string> = {
   Pisces: 'Рыбы добавляют воображение, визуальные и музыкальные направления, эмпатию, помощь другим и работу в гибкой или закулисной среде.',
 };
 
-export function getSunHouseFocus(chart: NatalChart, house: number): string {
+export function getSunHouseFocus(chart: NatalChart, house: number | null): string {
+  if (!chart.planets.Sun) return 'Положение Солнца отсутствует в карте: персональный вывод построить нельзя.';
+  if (house === null) return 'Знак Солнца известен, но его дом не определён. Направления по дому и аспекты на дом не подставляются.';
   const sun = chart.planets.Sun;
   const condition = evaluatePlanetCondition(chart, 'Sun');
   const aspects = describeHouseDrishti(chart, house);

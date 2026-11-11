@@ -3,9 +3,14 @@ import { analyzeLifeTopics, analyzePersonalizedHouses, getVargaEvidence } from '
 import { describePlanetInHouse } from './natalHouseInterpretation';
 import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition, getGrahaDrishti, getPlanetToPlanetAspects } from './natalStrengthAnalysis';
 import { getSunHouseFocus } from './natalAnalysisGuidance';
-import { getAscendantLordFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus } from './natalPersonalFocus';
+import { getMoonDescription, getSunDescription } from './natalChartDescriptions';
+import { getAscendantChartFocus, getAscendantLordFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus, getPlanetChartFocus } from './natalPersonalFocus';
 import { analyzeHouseLords } from './natalHouseLordAnalysis';
 import { auditNatalChartInterpretations, validateInterpretationQuality } from './natalInterpretationQuality';
+import { buildNatalChartFacts, getNatalFactLinks, getNatalHouseFacts, getNatalPlanetFacts, NATAL_PLANET_KEYS } from './natalChartFacts';
+import { analyzeAllNatalHouses } from './natalHousePersonalizedAnalysis';
+import { analyzeAllNatalPlanets } from './natalPlanetPersonalizedAnalysis';
+import { synthesizeNatalChart } from './natalChartSynthesis';
 import type { NatalChart, PlanetPosition } from './astrology';
 
 function position(name: string, longitude: number, signName: string, nakshatraName: string) {
@@ -57,6 +62,73 @@ assert.equal(virgoAscendantFirstHouse?.sign, 'Дева');
 assert.equal(virgoAscendantFirstHouse?.lord, 'Меркурий');
 assert.ok(virgoAscendantFirstHouse?.interpretation.includes('аналитика'));
 
+// Canonical natal facts: one deterministic source for placements and chart relationships.
+const natalFacts = buildNatalChartFacts(chart);
+assert.equal(natalFacts.schemaVersion, 1);
+assert.equal(natalFacts.methodology.houseSystem, 'Whole Sign');
+assert.equal(natalFacts.methodology.ayanamsha, 'Lahiri');
+assert.equal(natalFacts.houses.length, 12);
+assert.deepEqual(Object.keys(natalFacts.planets).sort(), [...NATAL_PLANET_KEYS].sort());
+assert.equal(natalFacts.dataQuality.completePlanetCount, 9);
+const canonicalSun = getNatalPlanetFacts(natalFacts, 'Sun');
+assert.equal(canonicalSun?.sign, 'Лев');
+assert.equal(canonicalSun?.house, 5);
+assert.deepEqual(canonicalSun?.ruledHouses, [5]);
+assert.equal(canonicalSun?.dispositor, 'Sun');
+assert.deepEqual(canonicalSun?.conjunctions, []);
+const canonicalMoon = getNatalPlanetFacts(natalFacts, 'Moon');
+assert.equal(canonicalMoon?.house, 3);
+assert.equal(canonicalMoon?.dispositor, 'Mercury');
+assert.equal(canonicalMoon?.dispositorHouse, 6);
+const canonicalFifthHouse = getNatalHouseFacts(natalFacts, 5);
+assert.equal(canonicalFifthHouse?.lord, 'Sun');
+assert.equal(canonicalFifthHouse?.lordHouse, 5);
+assert.ok(canonicalFifthHouse?.occupants.includes('Sun'));
+assert.ok(natalFacts.links.some((link) => link.relation === 'rules-house' && link.sourceId === 'planet:Sun' && link.targetId === 'house:5'));
+assert.ok(natalFacts.links.some((link) => link.relation === 'dispositor-of' && link.sourceId === 'planet:Mercury' && link.targetId === 'planet:Moon'));
+assert.ok(natalFacts.links.some((link) => link.relation === 'shares-ruler-with' && link.sourceId === 'house:3' && link.targetId === 'house:6'));
+assert.ok(getNatalFactLinks(natalFacts, 'aspects-house').some((link) => link.sourceId === 'planet:Mars' && link.targetId === 'house:7'));
+assert.ok(natalFacts.aspects.planet.some((aspect) => aspect.sourceKey === 'Mars' && aspect.targetKey === 'Jupiter' && aspect.kind === 'graha-drishti'));
+assert.ok(natalFacts.dataQuality.unsupportedFactors.some((item) => item.includes('Ретроградность')));
+assert.ok(natalFacts.dataQuality.unsupportedFactors.some((item) => item.includes('Сожжение')));
+
+// Missing source data must stay missing; the graph must never invent a first-house placement.
+const chartWithoutFifthHouse = { ...chart, houses: chart.houses?.filter((house) => house.house !== 5) } as NatalChart;
+const incompleteFacts = buildNatalChartFacts(chartWithoutFifthHouse);
+assert.equal(getNatalPlanetFacts(incompleteFacts, 'Sun')?.house, null);
+assert.equal(getNatalPlanetFacts(incompleteFacts, 'Sun')?.dispositor, null);
+assert.ok(incompleteFacts.dataQuality.missingHouseNumbers.includes(5));
+assert.equal(getNatalHouseFacts(incompleteFacts, 5), null);
+const chartWithoutVenus = { ...chart, planets: { ...chart.planets, Venus: undefined } } as unknown as NatalChart;
+const missingPlanetFacts = buildNatalChartFacts(chartWithoutVenus);
+assert.equal(missingPlanetFacts.planets.Venus, null);
+assert.equal(missingPlanetFacts.dataQuality.completePlanetCount, 8);
+assert.ok(missingPlanetFacts.dataQuality.missingPlanetKeys.includes('Venus'));
+
+// User-visible analysis must derive its claims from this chart, not a default house.
+const ascendantFacts = getAscendantChartFocus(chart);
+assert.ok(ascendantFacts.includes('Лагна находится в знаке Овен'));
+assert.ok(ascendantFacts.includes('управитель — Марс'));
+const changedAscendantFacts = getAscendantChartFocus(leoTwelfthChart);
+assert.ok(changedAscendantFacts.includes('Лагна находится в знаке Дева'));
+assert.notEqual(changedAscendantFacts, ascendantFacts);
+
+const sunFacts = getPlanetChartFocus(chart, 'Sun');
+assert.ok(sunFacts.includes('Солнце находится в Лев, 5-м доме'));
+assert.ok(sunFacts.includes('Управляет домами 5'));
+const alteredSunChart = {
+  ...chart,
+  planets: { ...chart.planets, Sun: position('Sun', 190, 'Libra', 'Swati') },
+} as NatalChart;
+assert.notEqual(getPlanetChartFocus(alteredSunChart, 'Sun'), sunFacts);
+const missingSunHouseChart = { ...chart, houses: chart.houses?.filter((item) => item.house !== 5) } as NatalChart;
+assert.ok(getPlanetChartFocus(missingSunHouseChart, 'Sun').includes('дом по имеющимся данным не определён'));
+assert.ok(getSunHouseFocus(missingSunHouseChart, null).includes('дом не определён'));
+assert.ok(getSunDescription('Лев', null).inHouse.includes('не определён'));
+assert.equal(getSunDescription('Лев', null).practicalSteps.length, 0);
+assert.ok(getMoonDescription('Близнецы', null).inHouse.includes('не определён'));
+assert.ok(getMoonDescription('Близнецы', null).comfort.includes('не определён'));
+
 const lagnaFocus = getAscendantLordFocus(chart);
 assert.ok(lagnaFocus.includes('управитель — Марс'));
 assert.ok(lagnaFocus.includes('1-м доме'));
@@ -78,6 +150,7 @@ const chartWithoutMercury = {
   planets: Object.fromEntries(Object.entries(chart.planets).filter(([name]) => name !== 'Mercury')),
 } as unknown as NatalChart;
 assert.ok(getCoreChartSynthesis(chartWithoutMercury).includes('Диспозитор знака — Меркурий, но его положение в карте не найдено.'));
+assert.ok(getPlanetChartFocus(chartWithoutMercury, 'Moon').includes('Диспозитор знака — Меркурий, но его положение в карте не найдено.'));
 
 const synthesis = getCoreChartSynthesis(chart);
 assert.ok(synthesis.includes('Базовый способ действовать'));
@@ -438,3 +511,148 @@ assert.ok(!balancedSynthesis.issues.some((item) => item.code === 'unbalanced-syn
 
 
 console.log('personalized house analysis tests passed');
+
+
+// Stage 20: all twelve houses are returned and each analysis is derived from canonical facts.
+const allHouseAnalyses = analyzeAllNatalHouses(natalFacts);
+assert.equal(allHouseAnalyses.length, 12);
+assert.deepEqual(allHouseAnalyses.map((item) => item.house), Array.from({ length: 12 }, (_, index) => index + 1));
+const fifthHouseAnalysis = allHouseAnalyses[4];
+assert.equal(fifthHouseAnalysis.sign, 'Лев');
+assert.equal(fifthHouseAnalysis.lord, 'Sun');
+assert.equal(fifthHouseAnalysis.lordHouse, 5);
+assert.ok(fifthHouseAnalysis.occupants.includes('Sun'));
+assert.ok(fifthHouseAnalysis.dispositorChain.some((item) => item.planet === 'Sun'));
+assert.ok(fifthHouseAnalysis.evidence.some((item) => item.includes('управитель')));
+assert.ok(fifthHouseAnalysis.interpretation.includes('Солнце'));
+assert.ok(allHouseAnalyses.every((item) => item.evidence.length > 0));
+
+// A materially different chart changes house-specific evidence, rather than reusing generic prose.
+const alteredHouseAnalyses = analyzeAllNatalHouses(buildNatalChartFacts(leoTwelfthChart));
+assert.notEqual(alteredHouseAnalyses[0].sign, allHouseAnalyses[0].sign);
+assert.notEqual(alteredHouseAnalyses[0].lord, allHouseAnalyses[0].lord);
+assert.notEqual(alteredHouseAnalyses[0].interpretation, allHouseAnalyses[0].interpretation);
+
+// Missing house and lord data remain explicitly incomplete and do not invent a first-house placement.
+const chartMissingHouseOne = {
+  ...chart,
+  houses: chart.houses?.filter((item) => item.house !== 1),
+} as NatalChart;
+const missingHouseAnalysis = analyzeAllNatalHouses(buildNatalChartFacts(chartMissingHouseOne))[0];
+assert.equal(missingHouseAnalysis.available, false);
+assert.equal(missingHouseAnalysis.sign, null);
+assert.equal(missingHouseAnalysis.synthesis, 'incomplete');
+assert.ok(missingHouseAnalysis.limitations.some((item) => item.includes('отсутствуют')));
+
+const chartMissingMars = {
+  ...chart,
+  planets: { ...chart.planets, Mars: undefined },
+} as unknown as NatalChart;
+const missingLordAnalysis = analyzeAllNatalHouses(buildNatalChartFacts(chartMissingMars))[0];
+assert.equal(missingLordAnalysis.lord, 'Mars');
+assert.equal(missingLordAnalysis.lordHouse, null);
+assert.equal(missingLordAnalysis.synthesis, 'incomplete');
+assert.ok(missingLordAnalysis.interpretation.includes('не определены'));
+
+
+const chartWithoutLordPlacementHouse = {
+  ...chart,
+  houses: chart.houses?.filter((item) => item.house !== 9),
+} as NatalChart;
+const secondHouseWithUnknownLordPlacement = analyzeAllNatalHouses(buildNatalChartFacts(chartWithoutLordPlacementHouse))[1];
+assert.equal(secondHouseWithUnknownLordPlacement.available, true);
+assert.equal(secondHouseWithUnknownLordPlacement.lord, 'Venus');
+assert.equal(secondHouseWithUnknownLordPlacement.lordHouse, null);
+assert.equal(secondHouseWithUnknownLordPlacement.synthesis, 'incomplete');
+assert.ok(secondHouseWithUnknownLordPlacement.interpretation.includes('дом не определён'));
+
+
+// Stage 21: every graha has an evidence-backed, chart-specific analysis.
+const allPlanetAnalyses = analyzeAllNatalPlanets(natalFacts);
+assert.equal(allPlanetAnalyses.length, 9);
+assert.deepEqual(allPlanetAnalyses.map((item) => item.planet), [...NATAL_PLANET_KEYS]);
+const sunAnalysis = allPlanetAnalyses.find((item) => item.planet === 'Sun');
+assert.equal(sunAnalysis?.sign, 'Лев');
+assert.equal(sunAnalysis?.house, 5);
+assert.equal(sunAnalysis?.dignity?.dignity, 'own');
+assert.deepEqual(sunAnalysis?.ruledHouses, [5]);
+assert.equal(sunAnalysis?.dispositor, 'Sun');
+assert.equal(sunAnalysis?.dispositorChainEnd, 'self-dispositor');
+assert.ok(sunAnalysis?.evidence.some((item) => item.includes('экзальтация') || item.includes('собственный знак')));
+const moonAnalysis = allPlanetAnalyses.find((item) => item.planet === 'Moon');
+assert.equal(moonAnalysis?.dispositor, 'Mercury');
+assert.equal(moonAnalysis?.dispositorHouse, 6);
+assert.ok(moonAnalysis?.dispositorChain.some((step) => step.planet === 'Mercury'));
+const marsAnalysis = allPlanetAnalyses.find((item) => item.planet === 'Mars');
+assert.ok(marsAnalysis?.aspectsToPlanets.includes('Jupiter'));
+assert.ok(marsAnalysis?.aspectsToHouses.includes(7));
+const jupiterAnalysis = allPlanetAnalyses.find((item) => item.planet === 'Jupiter');
+assert.ok(jupiterAnalysis?.receivesAspectsFrom.includes('Mars'));
+const venusAnalysis = allPlanetAnalyses.find((item) => item.planet === 'Venus');
+assert.equal(venusAnalysis?.dispositorChainEnd, 'cycle');
+assert.ok(venusAnalysis?.evidence.some((item) => item.includes('цикл диспозиторов')));
+const rahuAnalysis = allPlanetAnalyses.find((item) => item.planet === 'Rahu');
+assert.equal(rahuAnalysis?.dignity?.dignity, 'not_applicable');
+assert.ok(rahuAnalysis?.limitations.some((item) => item.includes('Раху/Кету')));
+
+// Same planet in a different sign/house must produce a different interpretation and chain.
+const changedSunAnalysis = analyzeAllNatalPlanets(buildNatalChartFacts(alteredSunChart)).find((item) => item.planet === 'Sun');
+assert.equal(changedSunAnalysis?.sign, 'Весы');
+assert.equal(changedSunAnalysis?.house, 7);
+assert.notEqual(changedSunAnalysis?.interpretation, sunAnalysis?.interpretation);
+assert.equal(changedSunAnalysis?.dispositor, 'Venus');
+
+// A conjunction is explicit, while missing source planets never get fabricated.
+const sunMercuryConjunctionChart = {
+  ...chart,
+  planets: { ...chart.planets, Mercury: position('Mercury', 135, 'Leo', 'Purva Phalguni') },
+} as NatalChart;
+const conjunctionSun = analyzeAllNatalPlanets(buildNatalChartFacts(sunMercuryConjunctionChart)).find((item) => item.planet === 'Sun');
+assert.ok(conjunctionSun?.conjunctions.includes('Mercury'));
+assert.ok(conjunctionSun?.evidence.some((item) => item.includes('Соединение по знаку')));
+assert.ok(!conjunctionSun?.aspectsToPlanets.includes('Mercury'));
+assert.ok(!conjunctionSun?.outgoingAspectDetails.some((aspect) => aspect.planet === 'Mercury'));
+const missingKetuChart = {
+  ...chart,
+  planets: { ...chart.planets, Ketu: undefined },
+} as unknown as NatalChart;
+const missingKetuAnalysis = analyzeAllNatalPlanets(buildNatalChartFacts(missingKetuChart)).find((item) => item.planet === 'Ketu');
+assert.equal(missingKetuAnalysis?.available, false);
+assert.equal(missingKetuAnalysis?.synthesis, 'incomplete');
+assert.equal(missingKetuAnalysis?.sign, null);
+
+assert.ok(marsAnalysis?.outgoingAspectDetails.some((aspect) =>
+  aspect.planet === 'Jupiter' && aspect.offset === 7 && aspect.sourceHouse === 1 && aspect.targetHouse === 7,
+));
+assert.ok(jupiterAnalysis?.incomingAspectDetails.some((aspect) =>
+  aspect.planet === 'Mars' && aspect.offset === 7,
+));
+assert.ok(marsAnalysis?.houseAspectDetails.some((aspect) => aspect.house === 7));
+
+
+// Whole-chart synthesis: chart-wide conclusions must be traceable to canonical facts.
+const wholeChart = synthesizeNatalChart(natalFacts);
+assert.equal(wholeChart.dataQuality.completeness, 100);
+assert.ok(wholeChart.headline.length > 0);
+assert.ok(wholeChart.dominantThemes.some((item) => item.house === 11));
+assert.ok(wholeChart.bridges.some((item) => item.fromHouse === 3 && item.toHouse === 6 && item.lord === 'Mercury'));
+assert.ok(wholeChart.planetNetworks.some((item) => item.relation === 'aspect' && item.planets.includes('Mars') && item.planets.includes('Jupiter')));
+assert.ok(wholeChart.conclusions.every((item) => item.evidence.length > 0));
+assert.ok(wholeChart.conclusions.every((item) => item.relatedHouses.every((house) => house >= 1 && house <= 12)));
+assert.ok(wholeChart.methodology.some((item) => item.includes('эвристика')));
+
+const shiftedSunChart = {
+  ...chart,
+  planets: { ...chart.planets, Sun: position('Sun', 30, 'Taurus', 'Krittika') },
+} as NatalChart;
+const shiftedFacts = buildNatalChartFacts(shiftedSunChart);
+assert.equal(shiftedFacts.planets.Sun?.sign, 'Телец');
+const shiftedSynthesis = synthesizeNatalChart(shiftedFacts);
+assert.notDeepEqual(shiftedSynthesis.dominantThemes, wholeChart.dominantThemes);
+assert.ok(shiftedSynthesis.conclusions.some((item) => item.evidence.some((line) => line.includes('Телец'))));
+
+const incompleteSynthesis = synthesizeNatalChart(incompleteFacts);
+assert.ok(incompleteSynthesis.dataQuality.completeness < 100);
+assert.ok(incompleteSynthesis.dataQuality.missingHouses.includes(5));
+assert.ok(incompleteSynthesis.tensions.some((item) => item.includes('отсутствует')));
+assert.ok(incompleteSynthesis.dataQuality.caveats.length > 0);

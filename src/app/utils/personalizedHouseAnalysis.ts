@@ -1,12 +1,13 @@
-import { calculateDasha, getCurrentAntardasha, getCurrentPratyantardasha, getPlanetHouse as resolvePlanetHouse, type NatalChart } from './astrology';
+import { calculateDasha, getCurrentAntardasha, getCurrentPratyantardasha, type NatalChart } from './astrology';
 import { calculateDivisionalChart } from './divisionalCharts';
-import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition, getGrahaDrishti } from './natalStrengthAnalysis';
+import { describeHouseDrishti, describePeriodConnection, evaluatePlanetCondition, getGrahaDrishti, getPlanetHouse } from './natalStrengthAnalysis';
 import { describeHousePlanetConnections, describeHouseSignStyle, describePlanetInHouse } from './natalHouseInterpretation';
+import { buildNatalChartFacts } from './natalChartFacts';
 
 export interface PlanetEvidence {
   name: string;
   sign: string;
-  house: number;
+  house: number | null;
   nakshatra: string;
   pada: number;
 }
@@ -255,7 +256,7 @@ const TOPIC_CONFIG: Array<{
 function getPlanetHouseForChart(chart: NatalChart, planetName: string): number | null {
   const planet = chart.planets[planetName as keyof NatalChart['planets']];
   if (!planet || !chart.houses) return null;
-  return resolvePlanetHouse(planet.sign, chart.houses);
+  return getPlanetHouse(chart, planetName);
 }
 
 function toEvidence(name: string, chart: NatalChart): PlanetEvidence {
@@ -263,14 +264,14 @@ function toEvidence(name: string, chart: NatalChart): PlanetEvidence {
   return {
     name: PLANET_RU[name] ?? name,
     sign: SIGN_RU[planet.signName] ?? planet.signName,
-    house: getPlanetHouseForChart(chart, name) ?? 0,
+    house: getPlanetHouseForChart(chart, name),
     nakshatra: planet.nakshatraName,
     pada: planet.pada,
   };
 }
 
 function formatPlanetEvidence(item: PlanetEvidence): string {
-  return `${item.name} в ${item.sign}, ${item.house}-м доме; накшатра ${item.nakshatra}, пада ${item.pada}`;
+  return `${item.name} в ${item.sign}, ${item.house ? `${item.house}-м доме` : 'дом не определён'}; накшатра ${item.nakshatra}, пада ${item.pada}`;
 }
 
 function getLordHouseMeaning(house: number): string {
@@ -279,35 +280,37 @@ function getLordHouseMeaning(house: number): string {
 
 export function analyzePersonalizedHouses(chart: NatalChart): PersonalizedHouseInsight[] {
   if (!chart.houses?.length) return [];
+  const chartFacts = buildNatalChartFacts(chart);
 
   return chart.houses.map((house) => {
-    const lord = chart.planets[house.lord as keyof NatalChart['planets']];
-    const lordHouse = lord ? getPlanetHouseForChart(chart, house.lord) : null;
-    const occupants = Object.keys(chart.planets)
-      .filter((name) => getPlanetHouseForChart(chart, name) === house.house)
+    const houseFacts = chartFacts.houses.find((item) => item.number === house.house);
+    const lordKey = houseFacts?.lord ?? house.lord;
+    const lord = chart.planets[lordKey as keyof NatalChart['planets']];
+    const lordHouse = houseFacts?.lordHouse ?? null;
+    const occupants = (houseFacts?.occupants ?? [])
       .map((name) => toEvidence(name, chart));
-    const lordEvidence = lord ? toEvidence(house.lord, chart) : null;
+    const lordEvidence = lord ? toEvidence(lordKey, chart) : null;
     const occupantInterpretations = occupants
       .map((item) => describePlanetInHouse(chart, Object.keys(PLANET_RU).find((key) => PLANET_RU[key] === item.name) ?? item.name, house.house))
       .filter((item): item is string => Boolean(item));
     const planetaryConnections = describeHousePlanetConnections(
       chart,
       occupants.map((item) => Object.keys(PLANET_RU).find((key) => PLANET_RU[key] === item.name) ?? item.name),
-      house.lord,
+      lordKey,
     );
-    const lordCondition = evaluatePlanetCondition(chart, house.lord);
-    const houseAspects = describeHouseDrishti(chart, house.house);
+    const lordCondition = evaluatePlanetCondition(chart, lordKey);
+    const houseAspects = (houseFacts?.aspectedBy ?? []).map((source) => `${PLANET_RU[source] ?? source} аспектирует ${house.house}-й дом по используемой схеме граха-дришти.`);
     const lordHouseAspects = lordHouse ? describeHouseDrishti(chart, lordHouse) : [];
-    const sign = SIGN_RU[house.signName] ?? house.signName;
+    const sign = houseFacts?.sign ?? (SIGN_RU[house.signName] ?? house.signName);
     const houseSignStyle = describeHouseSignStyle(house.signName, house.house);
     const interpretation = lordHouse
-      ? `В традиционной Джйотиш этот дом связан с темой: ${HOUSE_MEANING[house.house]}. В твоей карте он начинается в знаке ${sign}. ${houseSignStyle ?? ''} Управитель — ${PLANET_RU[house.lord] ?? house.lord}; он расположен в ${lordHouse}-м доме (${getLordHouseMeaning(lordHouse)}). Поэтому темы этих двух домов стоит рассматривать вместе: решения и опыт в сфере «${getLordHouseMeaning(lordHouse)}» символически связываются с темой этого дома.`
+      ? `В традиционной Джйотиш этот дом связан с темой: ${HOUSE_MEANING[house.house]}. В твоей карте он начинается в знаке ${sign}. ${houseSignStyle ?? ''} Управитель — ${PLANET_RU[lordKey] ?? lordKey}; он расположен в ${lordHouse}-м доме (${getLordHouseMeaning(lordHouse)}). Поэтому темы этих двух домов стоит рассматривать вместе: решения и опыт в сфере «${getLordHouseMeaning(lordHouse)}» символически связываются с темой этого дома.`
       : `Дом в знаке ${sign}; ${houseSignStyle ?? ''} Положение его управителя в доступных данных определить не удалось. Общая тема: ${HOUSE_MEANING[house.house]}.`;
 
     const evidence = [
       `Знак дома: ${sign}`,
       ...(houseSignStyle ? [`Стиль знака дома: ${houseSignStyle}`] : []),
-      `Управитель: ${PLANET_RU[house.lord] ?? house.lord}${lordEvidence ? ` — ${formatPlanetEvidence(lordEvidence)}` : ''}`,
+      `Управитель: ${PLANET_RU[lordKey] ?? lordKey}${lordEvidence ? ` — ${formatPlanetEvidence(lordEvidence)}` : ''}`,
       lordCondition ? `Достоинство управителя: ${lordCondition.label}; качественная шкала ${lordCondition.score}/100. Это не Shadbala.` : 'Достоинство управителя: нет данных.',
       ...occupantInterpretations.map((item) => `Планета в доме: ${item}`),
       ...planetaryConnections.map((item) => `Связь планет: ${item}`),
@@ -316,14 +319,14 @@ export function analyzePersonalizedHouses(chart: NatalChart): PersonalizedHouseI
       occupants.length ? `Планеты в доме: ${occupants.map((item) => formatPlanetEvidence(item)).join('; ')}` : 'В доме нет планет; интерпретация опирается прежде всего на знак и управителя.',
     ];
 
-    const planetThemes = [house.lord, ...occupants.map((item) => Object.keys(PLANET_RU).find((key) => PLANET_RU[key] === item.name) ?? '')]
+    const planetThemes = [lordKey, ...occupants.map((item) => Object.keys(PLANET_RU).find((key) => PLANET_RU[key] === item.name) ?? '')]
       .filter(Boolean)
       .map((name) => `${PLANET_RU[name] ?? name}: ${PLANET_THEMES[name]}`);
 
     return {
       house: house.house,
       sign,
-      lord: PLANET_RU[house.lord] ?? house.lord,
+      lord: PLANET_RU[lordKey] ?? lordKey,
       lordHouse,
       lordSign: lord ? SIGN_RU[lord.signName] ?? lord.signName : null,
       lordNakshatra: lord?.nakshatraName ?? null,

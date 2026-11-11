@@ -347,7 +347,7 @@ export function getAscendantDescription(signName: string): {
   };
 }
 
-export function getSunDescription(signName: string, house: number): {
+export function getSunDescription(signName: string, house: number | null): {
   title: string;
   essence: string;
   inSign: string;
@@ -386,20 +386,22 @@ export function getSunDescription(signName: string, house: number): {
     12: ['Начните медитировать хотя бы 5 минут в день', 'Пожертвуйте деньги или вещи нуждающимся', 'Проведите день в тишине и уединении']
   };
 
-  const weeklyChallenge = `На этой неделе посвятите хотя бы час в день ${house}-му дому. Это ваша зона силы и предназначения.`;
+  const weeklyChallenge = house === null
+    ? 'Дом Солнца не определён: сначала проверьте время рождения и расчёт домов, не назначая жизненную сферу по умолчанию.'
+    : `На этой неделе посвятите хотя бы час в день ${house}-му дому. Это символическая тема для наблюдения, а не предписание.`;
 
   return {
     title: `Солнце в ${signName}`,
     essence: 'Солнце — это ваше истинное "Я", ваша душа, эго и жизненная сила. Это то, кем вы являетесь в глубине души.',
     inSign: `Солнце в ${signName} показывает, КАК вы проявляете себя в мире, какие качества являются для вас естественными.`,
-    inHouse: `Солнце в ${house}-м доме показывает, ГДЕ (в какой сфере жизни) вы должны проявить себя больше всего.`,
-    lifePurpose: houseMeanings[house] || 'Ваша жизненная цель определяется положением Солнца в карте.',
-    practicalSteps: practicalStepsByHouse[house] || [],
+    inHouse: house === null ? 'Дом Солнца не определён по доступным данным карты.' : `В традиционной символике Солнце в ${house}-м доме связывает волю и самореализацию с темами этого дома.`,
+    lifePurpose: house === null ? 'Сфера самореализации по дому Солнца пока не определена.' : (houseMeanings[house] || 'Сфера самореализации определяется совокупностью показателей карты.'),
+    practicalSteps: house === null ? [] : (practicalStepsByHouse[house] || []),
     weeklyChallenge
   };
 }
 
-export function getMoonDescription(signName: string, house: number): {
+export function getMoonDescription(signName: string, house: number | null): {
   title: string;
   essence: string;
   emotionalNeeds: string;
@@ -425,7 +427,7 @@ export function getMoonDescription(signName: string, house: number): {
     title: `Луна в ${signName}`,
     essence: 'Луна — это ваш внутренний мир, эмоции, подсознание и потребности. Это то, что вам нужно для счастья.',
     emotionalNeeds: `Луна в ${signName} показывает, КАКИЕ эмоциональные потребности у вас есть и как вы реагируете на жизнь.`,
-    inHouse: `Луна в ${house}-м доме показывает, ГДЕ вы ищете эмоциональный комфорт и безопасность.`,
-    comfort: houseComfort[house] || 'Ваш эмоциональный комфорт зависит от положения Луны.'
+    inHouse: house === null ? 'Дом Луны не определён по доступным данным карты.' : `В традиционной символике Луна в ${house}-м доме связывает эмоциональные потребности с темами этого дома.`,
+    comfort: house === null ? 'Дом Луны не определён; не следует приписывать эмоциональному комфорту конкретную сферу без этого показателя.' : (houseComfort[house] || 'Ваш эмоциональный комфорт зависит от совокупности показателей Луны.')
   };
 }
