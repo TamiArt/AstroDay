@@ -609,8 +609,10 @@ function validateVastuPropertyAssessment(value: unknown): VastuPropertyAssessmen
     'purchasePrice', 'closingCosts', 'renovationCost', 'monthlyRent', 'vacancyRatePercent',
     'monthlyOperatingCosts', 'annualPropertyTax', 'annualInsurance', 'annualCapitalReserve', 'monthlyMortgagePayment',
   ];
-  if (!numericFields.every((key) => typeof value[key] === 'number' && Number.isFinite(value[key]) && (value[key] as number) >= 0)
-    || (value.vacancyRatePercent as number) > 100) return null;
+  if (!numericFields.every((key) => {
+    const numericValue = value[key];
+    return typeof numericValue === 'number' && Number.isFinite(numericValue) && numericValue >= 0;
+  }) || (value.vacancyRatePercent as number) > 100) return null;
 
   return value as unknown as VastuPropertyAssessment;
 }
