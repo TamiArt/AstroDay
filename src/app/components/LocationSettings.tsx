@@ -99,9 +99,14 @@ export function LocationSettings({ profile, onUpdate }: LocationSettingsProps) {
           },
         };
 
-        saveUserProfile(updatedProfile);
-        onUpdate(updatedProfile);
-        setIsDetecting(false);
+        try {
+          saveUserProfile(updatedProfile);
+          onUpdate(updatedProfile);
+        } catch (storageError) {
+          setError(storageError instanceof Error ? storageError.message : 'Не удалось сохранить местоположение.');
+        } finally {
+          setIsDetecting(false);
+        }
       },
       (geolocationError) => {
         let errorMessage = 'Не удалось определить местоположение.';
@@ -186,10 +191,14 @@ export function LocationSettings({ profile, onUpdate }: LocationSettingsProps) {
       },
     };
 
-    saveUserProfile(updatedProfile);
-    onUpdate(updatedProfile);
-    setIsManual(false);
-    clearDraft();
+    try {
+      saveUserProfile(updatedProfile);
+      onUpdate(updatedProfile);
+      setIsManual(false);
+      clearDraft();
+    } catch (storageError) {
+      setError(storageError instanceof Error ? storageError.message : 'Не удалось сохранить местоположение.');
+    }
   };
 
   const handleReset = () => {
@@ -198,8 +207,12 @@ export function LocationSettings({ profile, onUpdate }: LocationSettingsProps) {
       currentLocation: undefined,
     };
 
-    saveUserProfile(updatedProfile);
-    onUpdate(updatedProfile);
+    try {
+      saveUserProfile(updatedProfile);
+      onUpdate(updatedProfile);
+    } catch (storageError) {
+      setError(storageError instanceof Error ? storageError.message : 'Не удалось сбросить местоположение.');
+    }
   };
 
   return (
