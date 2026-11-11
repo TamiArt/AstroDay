@@ -546,7 +546,9 @@ function validateHomeCalibration(value: unknown): HomeCalibrationData | null {
 
 function validateHomeFloorPlan(value: unknown): HomeFloorPlanData | null {
   if (value === null) return null;
-  if (!isRecord(value) || typeof value.imageDataUrl !== 'string' || !Array.isArray(value.rooms)
+  if (!isRecord(value) || typeof value.imageDataUrl !== 'string'
+    || (value.imageDataUrl !== '' && !/^data:image\/[a-z0-9.+-]+;base64,/i.test(value.imageDataUrl))
+    || !Array.isArray(value.rooms)
     || typeof value.northOffset !== 'number' || !Number.isFinite(value.northOffset)
     || (value.northBearingDegrees !== undefined && (typeof value.northBearingDegrees !== 'number' || !Number.isFinite(value.northBearingDegrees)))
     || (value.markers !== undefined && !Array.isArray(value.markers))) return null;
