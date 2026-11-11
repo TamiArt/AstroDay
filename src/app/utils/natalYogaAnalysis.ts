@@ -158,7 +158,7 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
     const jupiter = facts.planets.Jupiter;
     const missing = [!moon ? 'Луна' : '', !jupiter ? 'Юпитер' : '', !moon?.house ? 'дом Луны' : '', !jupiter?.house ? 'дом Юпитера' : ''].filter(Boolean);
     const relativeHouse = moon && jupiter ? houseFromSignDistance(moon.signIndex, jupiter.signIndex) : null;
-    const detected = relativeHouse !== null && KENDRA_HOUSES.includes(relativeHouse);
+    const detected = missing.length === 0 && relativeHouse !== null && KENDRA_HOUSES.includes(relativeHouse);
     const finding = detected && moon && jupiter
       ? createFinding({
         id: 'gaja-kesari', name: 'Гаджа-Кесари-йога', sanskritName: 'Gaja Kesari Yoga', category: 'lunar',
