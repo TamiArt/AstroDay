@@ -80,7 +80,7 @@ const cancerAscendantChart = chartWith({
   Venus: 1, Saturn: 9, Rahu: 10, Ketu: 4,
 });
 cancerAscendantChart.ascendant = position('Ascendant', 3);
-cancerAscendantChart.houses = cancerAscendantChart.houses.map((house, index) => {
+cancerAscendantChart.houses = (cancerAscendantChart.houses ?? []).map((house, index) => {
   const sign = (3 + index) % 12;
   return { ...house, sign, signName: signNames[sign], lord: signLords[sign] };
 });
@@ -92,7 +92,7 @@ const piscesAscendantChart = chartWith({
   Venus: 1, Saturn: 9, Rahu: 10, Ketu: 4,
 });
 piscesAscendantChart.ascendant = position('Ascendant', 11);
-piscesAscendantChart.houses = piscesAscendantChart.houses.map((house, index) => {
+piscesAscendantChart.houses = (piscesAscendantChart.houses ?? []).map((house, index) => {
   const sign = (11 + index) % 12;
   return { ...house, sign, signName: signNames[sign], lord: signLords[sign] };
 });
