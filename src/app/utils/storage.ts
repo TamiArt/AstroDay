@@ -350,7 +350,7 @@ export interface UserArchive {
 }
 
 export interface ArchiveRestoreResult {
-  profile: UserProfile | null;
+  profile: UserProfile;
   restoredSections: string[];
   legacyProfileOnly: boolean;
 }
@@ -369,8 +369,9 @@ export function exportData(): string {
   };
 
   const storedProfile = read<unknown>(STORAGE_KEY, true, null);
-  const profile = storedProfile === null ? null : validateUserProfile(storedProfile);
-  if (storedProfile !== null && !profile) throw new Error('Профиль в хранилище повреждён. Архив не создан, чтобы не скрыть потерю данных.');
+  if (storedProfile === null) throw new Error('В браузере нет основного профиля. Архив не создан.');
+  const profile = validateUserProfile(storedProfile);
+  if (!profile) throw new Error('Профиль в хранилище повреждён. Архив не создан, чтобы не скрыть потерю данных.');
 
   const feedback = validateFeedbackMap(read<unknown>(FEEDBACK_KEY, false, {}));
   if (!feedback) throw new Error('Данные обратной связи повреждены. Архив не создан.');
