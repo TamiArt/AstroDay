@@ -1,4 +1,5 @@
 import { buildNatalChartFacts } from '../../utils/natalChartFacts';
+import { NatalYogasSection } from './NatalYogasSection';
 import {
   AlertCircle,
   Briefcase,
@@ -205,6 +206,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
           </details>
         </section>
       </GlassCard>
+      <NatalYogasSection natalChart={natalChart} />
       <InsightCard
         icon={Star}
         title={ascDesc.title}
