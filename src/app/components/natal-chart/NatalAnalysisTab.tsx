@@ -113,6 +113,9 @@ function UnifiedAdviceBlock({ advice }: { advice: ReturnType<typeof buildHouseUn
       <p className="text-sm leading-relaxed text-gray-800">{advice.combinedMeaning}</p>
       <p className="text-sm leading-relaxed text-gray-700">{advice.tension}</p>
       <p className="text-sm leading-relaxed text-indigo-900"><strong>Практический шаг:</strong> {advice.practicalStep}</p>
+      <p className="text-xs leading-relaxed text-indigo-800"><strong>Проверяемый результат:</strong> {advice.successCriteria}</p>
+      <p className="text-xs text-gray-600">Полнота основания: {advice.dataStatus === 'complete' ? 'достаточно для этого вывода' : advice.dataStatus === 'partial' ? 'часть показателей не подтверждена' : 'персональный вывод недоступен'}</p>
+      {advice.evidence.length ? <details className="text-xs text-gray-600"><summary className="cursor-pointer font-medium">Основания вывода ({advice.evidence.length})</summary><ul className="mt-1 list-disc pl-4 space-y-1">{advice.evidence.map((item) => <li key={item}>{item}</li>)}</ul></details> : null}
       <p className="text-xs leading-relaxed text-gray-500">{advice.limitation}</p>
     </div>
   );
@@ -224,11 +227,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
 
         <div className="p-4 bg-white rounded-lg border border-purple-200">
           <h4 className="text-sm font-semibold text-purple-700 uppercase mb-2">Управитель Лагны — куда направлена энергия личности</h4>
-          <UnifiedAdviceBlock advice={buildNarrativeUnifiedAdvice({
-            connection: ascendantChartFocus,
-            combinedMeaning: ascDesc.meaning,
-            practicalStep: ascDesc.practicalAdvice.join(' '),
-          })} />
+          <UnifiedAdviceBlock advice={buildHouseUnifiedAdvice(allHouseAnalyses[0])} />
         </div>
 
         <div className="p-4 bg-white rounded-lg border border-purple-200">
@@ -290,11 +289,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
             <h4 className="text-sm font-semibold text-orange-700 uppercase mb-2">Где светить</h4>
             <p className="text-sm text-gray-700 leading-relaxed">{sunFocus}</p>
             <div className="mt-3 border-t border-orange-100 pt-3">
-              <UnifiedAdviceBlock advice={buildNarrativeUnifiedAdvice({
-                connection: sunChartFocus,
-                combinedMeaning: sunDesc.essence,
-                practicalStep: sunDesc.practicalSteps.join(' '),
-              })} />
+              <UnifiedAdviceBlock advice={buildPlanetUnifiedAdvice(allPlanetAnalyses.find((item) => item.planet === 'Sun')!)} />
             </div>
           </div>
         </div>
@@ -321,11 +316,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
           <h4 className="text-sm font-semibold text-blue-700 uppercase mb-2">Конкретная жизненная сфера Луны</h4>
           <p className="text-sm text-gray-700 leading-relaxed">{moonHouseFocus}</p>
           <div className="mt-3 border-t border-blue-100 pt-3">
-            <UnifiedAdviceBlock advice={buildNarrativeUnifiedAdvice({
-              connection: moonChartFocus,
-              combinedMeaning: moonDesc.essence,
-              practicalStep: moonDesc.comfort,
-            })} />
+            <UnifiedAdviceBlock advice={buildPlanetUnifiedAdvice(allPlanetAnalyses.find((item) => item.planet === 'Moon')!)} />
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -410,7 +401,12 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
           <UnifiedAdviceBlock advice={buildNarrativeUnifiedAdvice({
             connection: [ascendantChartFocus, sunChartFocus, moonChartFocus].join(' '),
             combinedMeaning: coreChartSynthesis,
-            practicalStep: 'Сопоставьте цели, эмоциональные потребности и повседневные действия; выберите один небольшой шаг, который учитывает все три аспекта.',
+            practicalStep: 'Сопоставьте цель, потребность и способ действия; выберите одно изменение на ближайшие семь дней.',
+            successCriteria: 'Через семь дней зафиксированы выполненные действия и наблюдаемое изменение; отдельно отмечено, какой из трёх факторов учтён.',
+            evidence: [ascendantChartFocus, sunChartFocus, moonChartFocus],
+            tensions: wholeChartSynthesis.tensions,
+            dataStatus: wholeChartSynthesis.dataQuality.completeness === 100 ? 'complete' : 'partial',
+            limitation: wholeChartSynthesis.dataQuality.caveats.join(' '),
           })} />
         </div>
       </GlassCard>
