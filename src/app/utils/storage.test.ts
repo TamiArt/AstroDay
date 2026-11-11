@@ -194,6 +194,12 @@ assert.throws(() => restoreUserArchive(JSON.stringify({
   exportedAt: '2026-11-11T00:00:00.000Z',
   data: { ...exported.data, homeFloorPlan: { ...floorPlan, imageDataUrl: 'https://example.com/remote-image.png' } },
 })), /Текущие данные не изменены/, 'Archive restore must not accept remote floor-plan image URLs');
+assert.throws(() => restoreUserArchive(JSON.stringify({
+  format: 'astroday-user-archive',
+  schemaVersion: 1,
+  exportedAt: '2026-11-11T00:00:00.000Z',
+  data: { ...exported.data, vastuPropertyAssessment: { ...propertyAssessment, purchasePrice: -1 } },
+})), /Текущие данные не изменены/, 'Archive restore must reject invalid property assessment values');
 
 writesBeforeFailure = 0;
 failureName = 'QuotaExceededError';
