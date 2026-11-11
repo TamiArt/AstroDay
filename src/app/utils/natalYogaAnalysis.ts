@@ -295,7 +295,7 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
           const trikonaLord = lordOfHouse(facts, trikona);
           if (!trikonaLord || !isPresent(facts, trikonaLord)) continue;
           if (trikonaLord === kendraLord) {
-            if (kendra === 1 || trikona === 1) continue;
+            if (kendra === 1 && trikona === 1) continue;
             found.push(createFinding({
               id: `raja-karaka-${kendra}-${trikona}-${kendraLord.toLowerCase()}`,
               name: 'Раджа-йога (йога-карака)', sanskritName: 'Raja Yoga Karaka', category: 'raja',
@@ -341,7 +341,19 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
         if (!wealthLord || !isPresent(facts, wealthLord)) continue;
         for (const supportHouse of [1, 5, 9]) {
           const supportLord = lordOfHouse(facts, supportHouse);
-          if (!supportLord || supportLord === wealthLord || !isPresent(facts, supportLord)) continue;
+          if (!supportLord || !isPresent(facts, supportLord)) continue;
+          if (supportLord === wealthLord) {
+            found.push(createFinding({
+              id: `dhana-karaka-${wealthHouse}-${supportHouse}-${wealthLord.toLowerCase()}`,
+              name: 'Дхана-йога (общий управитель)', sanskritName: 'Dhana Yoga', category: 'wealth',
+              description: `${PLANET_NAMES[wealthLord]} одновременно управляет домом ресурсов ${wealthHouse} и поддерживающим домом ${supportHouse}; связь заложена в самом управлении.`,
+              formalRule: 'Одна планета одновременно управляет 2-м или 11-м домом и 1-м, 5-м или 9-м домом.',
+              participants: [wealthLord], houses: [wealthHouse, supportHouse],
+              evidence: [`${PLANET_NAMES[wealthLord]} — управитель ${wealthHouse}-го дома и ${supportHouse}-го дома.`],
+              caveats: ['Общее управление является базовой связью домов; достоинство, сила, поражения и остальные финансовые показатели оцениваются отдельно.'],
+            }));
+            continue;
+          }
           const evidence = relationEvidence(facts, wealthLord, supportLord);
           if (!evidence.length) continue;
           found.push(createFinding({
