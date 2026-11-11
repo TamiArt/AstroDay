@@ -708,7 +708,7 @@ assert.ok(unavailableHouseUnified.successCriteria.includes('После пере�
 
 
 const duplicateNarrative = buildNarrativeUnifiedAdvice({
-  connection: '  Факт карты  \\n  и его связь ',
+  connection: '  Факт карты  \n  и его связь ',
   combinedMeaning: 'Совместная трактовка.',
   practicalStep: 'Проверьте один вывод.',
   successCriteria: 'Есть запись результата.',
