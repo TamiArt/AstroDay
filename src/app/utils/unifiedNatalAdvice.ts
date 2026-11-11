@@ -61,7 +61,7 @@ const PLANET_NAMES: Record<string, string> = {
 const DEFAULT_LIMITATION = 'Вывод относится к символической астрологической модели и не является научно подтверждённым прогнозом или гарантией события.';
 
 function normalize(value: string): string {
-  return value.trim().replace(/\\s+/g, ' ');
+  return value.trim().replace(/\s+/g, ' ');
 }
 
 function unique(values: string[]): string[] {
