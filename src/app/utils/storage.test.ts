@@ -165,6 +165,10 @@ assert.deepEqual(loadVastuChecklist(), checklist, 'Archive restore must restore 
 assert.equal(loadVastuPropertyAssessment().propertyName, propertyAssessment.propertyName);
 assert.deepEqual(loadPartnerProfile(), partner, 'Archive restore must restore partner profile');
 
+const legacyFullArchive = restoreUserArchive(JSON.stringify(exported.data));
+assert.equal(legacyFullArchive.legacyProfileOnly, false, 'Previous unversioned full JSON exports must remain restorable');
+assert.deepEqual(loadPartnerProfile(), partner);
+
 const stateBeforeFailedRestore = JSON.parse(exportData()).data;
 writesBeforeFailure = 2;
 assert.throws(() => restoreUserArchive(exportedArchive), /Предыдущие данные восстановлены/);
