@@ -38,7 +38,8 @@ const exchangeChart = chartWith({
 const exchangeFacts = buildNatalChartFacts(exchangeChart);
 const exchangeAnalysis = analyzeNatalYogas(exchangeFacts);
 
-assert.ok(exchangeAnalysis.findings.some((item) => item.id === 'raja-moon-sun' || item.id.startsWith('raja-4-5-')));
+assert.ok(exchangeAnalysis.findings.some((item) => item.id.startsWith('raja-4-5-')));
+assert.ok((exchangeAnalysis.checks.find((item) => item.id === 'raja-yoga')?.findingIds.length ?? 0) >= 2, 'All distinct Raja yoga links must be returned');
 assert.ok(exchangeAnalysis.findings.some((item) => item.category === 'wealth'));
 assert.ok(exchangeAnalysis.findings.some((item) => item.id === 'parivartana-moon-jupiter'));
 assert.ok(exchangeAnalysis.findings.some((item) => item.id === 'vipareeta-6-lord'));
