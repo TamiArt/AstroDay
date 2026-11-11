@@ -48,7 +48,7 @@ assert.equal(new Set(exchangeAnalysis.findings.map((item) => item.id)).size, exc
 assert.ok(exchangeAnalysis.checks.every((item) => Array.isArray(item.findingIds)));
 
 const lunarChart = chartWith({
-  Sun: 4, Moon: 0, Mars: 6, Mercury: 5, Jupiter: 3,
+  Sun: 4, Moon: 0, Mars: 6, Mercury: 4, Jupiter: 3,
   Venus: 1, Saturn: 10, Rahu: 3, Ketu: 9,
 });
 const lunarAnalysis = analyzeNatalYogas(buildNatalChartFacts(lunarChart));
