@@ -27,7 +27,7 @@ export interface NatalSynthesisEvidence {
   evidence: string[];
   relatedHouses: number[];
   relatedPlanets: NatalPlanetKey[];
-  kind: 'chart-anchor' | 'concentration' | 'house-bridge' | 'planet-network' | 'dispositor-pattern' | 'balance';
+  kind: 'chart-anchor' | 'planet-positions' | 'concentration' | 'house-bridge' | 'planet-network' | 'dispositor-pattern' | 'balance';
 }
 
 export interface NatalChartSynthesis {
@@ -126,6 +126,24 @@ export function synthesizeNatalChart(facts: NatalChartFacts): NatalChartSynthesi
         : `Асцендент в ${facts.chart.ascendantSign} определён, но положение его управителя нельзя подтвердить полностью.`,
       evidence, relatedHouses: lordFacts?.house ? [1, lordFacts.house] : [1],
       relatedPlanets: [ascendantLord],
+    });
+  }
+
+  const planetPositionEvidence = available.flatMap((key) => {
+    const planet = facts.planets[key];
+    if (!planet) return [];
+    const houseText = planet.house === null ? 'дом не определён' : `в ${planet.house}-м доме`;
+    return [`${PLANET_NAMES[key]} находится в знаке ${planet.sign}, ${houseText}.`];
+  });
+  if (planetPositionEvidence.length) {
+    conclusions.push({
+      id: 'planet-positions', kind: 'planet-positions',
+      title: 'Положения планет по знакам и домам',
+      statement: 'Эти положения служат исходными данными для последующей интерпретации аспектов, управления и тематических связей.',
+      evidence: planetPositionEvidence,
+      relatedHouses: unique(available.map((key) => facts.planets[key]?.house ?? null)
+        .filter((value): value is number => value !== null)),
+      relatedPlanets: available,
     });
   }
 
