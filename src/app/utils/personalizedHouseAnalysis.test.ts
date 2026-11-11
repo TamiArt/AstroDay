@@ -571,6 +571,7 @@ assert.ok(secondHouseWithUnknownLordPlacement.interpretation.includes('дом н
 const allPlanetAnalyses = analyzeAllNatalPlanets(natalFacts);
 assert.equal(allPlanetAnalyses.length, 9);
 assert.deepEqual(allPlanetAnalyses.map((item) => item.planet), [...NATAL_PLANET_KEYS]);
+assert.ok(allPlanetAnalyses.every((item) => item.evidence.length > 0));
 const sunAnalysis = allPlanetAnalyses.find((item) => item.planet === 'Sun');
 assert.equal(sunAnalysis?.sign, 'Лев');
 assert.equal(sunAnalysis?.house, 5);
@@ -638,6 +639,10 @@ assert.ok(wholeChart.dominantThemes.some((item) => item.house === 11));
 assert.ok(wholeChart.bridges.some((item) => item.fromHouse === 3 && item.toHouse === 6 && item.lord === 'Mercury'));
 assert.ok(wholeChart.planetNetworks.some((item) => item.relation === 'aspect' && item.planets.includes('Mars') && item.planets.includes('Jupiter')));
 assert.ok(wholeChart.conclusions.every((item) => item.evidence.length > 0));
+assert.equal(new Set(wholeChart.conclusions.map((item) => item.id)).size, wholeChart.conclusions.length);
+assert.ok(wholeChart.conclusions.every((item) =>
+  item.relatedPlanets.every((planet) => NATAL_PLANET_KEYS.includes(planet)),
+));
 assert.ok(wholeChart.conclusions.every((item) => item.relatedHouses.every((house) => house >= 1 && house <= 12)));
 assert.ok(wholeChart.methodology.some((item) => item.includes('эвристика')));
 
