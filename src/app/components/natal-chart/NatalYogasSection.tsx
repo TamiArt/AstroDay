@@ -10,6 +10,7 @@ const CATEGORY_LABELS = {
   wealth: 'Дхана-йоги',
   mahapurusha: 'Панча-Махапуруша',
   lunar: 'Лунные комбинации',
+  planetary: 'Планетные комбинации',
   exchange: 'Обмен знаками',
   vipareeta: 'Випарита-йоги',
 } as const;
