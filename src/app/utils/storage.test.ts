@@ -51,6 +51,7 @@ assert.throws(
 
 const storageValues = new Map<string, string>();
 let writesBeforeFailure: number | null = null;
+let failureName = 'QuotaExceededError';
 Object.defineProperty(globalThis, 'localStorage', {
   configurable: true,
   value: {
@@ -59,7 +60,7 @@ Object.defineProperty(globalThis, 'localStorage', {
       if (writesBeforeFailure !== null) {
         if (writesBeforeFailure === 0) {
           writesBeforeFailure = null;
-          throw new DOMException('Storage quota exceeded', 'QuotaExceededError');
+          throw new DOMException('Storage write blocked', failureName);
         }
         writesBeforeFailure -= 1;
       }
@@ -143,6 +144,10 @@ assert.deepEqual(exported.data.feedback, { '2026-11-11': { date: '2026-11-11', m
 
 deleteHomeData();
 deletePartnerProfile();
+saveVastuChecklist(checklist);
+saveHomeFloorPlan(floorPlan);
+saveVastuPropertyAssessment(propertyAssessment);
+savePartnerProfile(partner);
 saveDailyFeedback({ date: '2026-11-10', mood: 1 });
 const restored = restoreUserArchive(exportedArchive);
 assert.equal(restored.legacyProfileOnly, false);
@@ -151,6 +156,9 @@ assert.equal(loadUserProfile()?.name, legacyProfile.name, 'Archive restore must 
 assert.deepEqual(loadAllFeedback(), { '2026-11-11': { date: '2026-11-11', mood: 4, notes: 'Архивная заметка' } });
 assert.deepEqual(loadHomeProgress(), [{ id: 'task-1', label: 'Проверить план', done: true }]);
 assert.equal(loadHomeCalibration()?.northOffset, 12.5);
+assert.deepEqual(loadHomeFloorPlan(), floorPlan, 'Archive restore must restore floor plan and markers');
+assert.deepEqual(loadVastuChecklist(), checklist, 'Archive restore must restore the Vastu checklist');
+assert.equal(loadVastuPropertyAssessment().propertyName, propertyAssessment.propertyName);
 assert.deepEqual(loadPartnerProfile(), partner, 'Archive restore must restore partner profile');
 
 const stateBeforeFailedRestore = JSON.parse(exportData()).data;
@@ -174,6 +182,10 @@ assert.throws(() => restoreUserArchive(JSON.stringify({
 assert.deepEqual(JSON.parse(exportData()).data, stateBeforeInvalidImport, 'Invalid archive validation must happen before writes');
 
 writesBeforeFailure = 0;
+failureName = 'QuotaExceededError';
 assert.throws(() => saveUserProfile(legacyProfile), /Не удалось сохранить профиль/);
+writesBeforeFailure = 0;
+failureName = 'SecurityError';
+assert.throws(() => saveUserProfile(legacyProfile), /настройки приватности браузера/);
 
 console.log('storage and archive tests passed');
