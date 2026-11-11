@@ -656,3 +656,35 @@ assert.ok(incompleteSynthesis.dataQuality.completeness < 100);
 assert.ok(incompleteSynthesis.dataQuality.missingHouses.includes(5));
 assert.ok(incompleteSynthesis.tensions.some((item) => item.includes('отсутствует')));
 assert.ok(incompleteSynthesis.dataQuality.caveats.length > 0);
+
+// A chart with all nine planets but no usable Ascendant must not report full completeness.
+const chartWithoutAscendant = { ...chart, ascendant: undefined } as unknown as NatalChart;
+const noAscendantSynthesis = synthesizeNatalChart(buildNatalChartFacts(chartWithoutAscendant));
+assert.ok(noAscendantSynthesis.dataQuality.completeness < 100);
+assert.ok(noAscendantSynthesis.dataQuality.caveats.some((item) => item.includes('Асцендент')));
+
+// A present planet whose sign has no corresponding house remains incomplete in the planet analysis.
+const chartWithUnplacedSun = {
+  ...chart,
+  planets: { ...chart.planets, Sun: position('Sun', 360, 'Aries', 'Ashwini') },
+} as NatalChart;
+const unplacedSunFacts = buildNatalChartFacts(chartWithUnplacedSun);
+const unplacedSunAnalysis = analyzeAllNatalPlanets(unplacedSunFacts).find((item) => item.planet === 'Sun');
+assert.equal(unplacedSunAnalysis?.available, true);
+assert.equal(unplacedSunAnalysis?.house, null);
+assert.equal(unplacedSunAnalysis?.synthesis, 'incomplete');
+const unplacedSunSynthesis = synthesizeNatalChart(unplacedSunFacts);
+assert.ok(unplacedSunSynthesis.dataQuality.completeness < 100);
+
+// A house whose lord has no placement is incomplete and the omission is surfaced in caveats.
+const noMarsChart = {
+  ...chart,
+  planets: { ...chart.planets, Mars: undefined },
+} as unknown as NatalChart;
+const noMarsFacts = buildNatalChartFacts(noMarsChart);
+const firstHouseWithoutLordPlacement = analyzeAllNatalHouses(noMarsFacts)[0];
+assert.equal(firstHouseWithoutLordPlacement.synthesis, 'incomplete');
+assert.ok(noMarsFacts.dataQuality.warnings.some((item) => item.includes('управителя 1-го дома')));
+const noMarsSynthesis = synthesizeNatalChart(noMarsFacts);
+assert.ok(noMarsSynthesis.dataQuality.completeness < 100);
+assert.ok(noMarsSynthesis.dataQuality.caveats.some((item) => item.includes('управителя 1-го дома')));
