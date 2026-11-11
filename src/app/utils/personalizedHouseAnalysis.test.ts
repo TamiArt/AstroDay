@@ -11,7 +11,7 @@ import { buildNatalChartFacts, getNatalFactLinks, getNatalHouseFacts, getNatalPl
 import { analyzeAllNatalHouses } from './natalHousePersonalizedAnalysis';
 import { analyzeAllNatalPlanets } from './natalPlanetPersonalizedAnalysis';
 import { synthesizeNatalChart } from './natalChartSynthesis';
-import { buildConclusionUnifiedAdvice, buildHouseUnifiedAdvice, buildPlanetUnifiedAdvice, buildSynthesisUnifiedAdvice } from './unifiedNatalAdvice';
+import { buildConclusionUnifiedAdvice, buildHouseUnifiedAdvice, buildNarrativeUnifiedAdvice, buildPlanetUnifiedAdvice, buildSynthesisUnifiedAdvice } from './unifiedNatalAdvice';
 import type { NatalChart, PlanetPosition } from './astrology';
 
 function position(name: string, longitude: number, signName: string, nakshatraName: string) {
@@ -663,6 +663,15 @@ for (const advice of [...unifiedHouseAdvice, ...unifiedPlanetAdvice, unifiedSynt
 assert.ok(unifiedHouseAdvice[6].connection.includes('7-го дома'));
 assert.ok(unifiedPlanetAdvice.find((item) => item.connection.includes('аспекты'))?.connection.length);
 assert.ok(unifiedSynthesisAdvice.connection.length > 0);
+const unifiedAscendantAdvice = buildNarrativeUnifiedAdvice({
+  connection: 'Управитель Асцендента расположен в 10-м доме и получает аспект Сатурна.',
+  combinedMeaning: 'Личная стратегия связана с профессиональной реализацией.',
+  tensions: ['Аспект Сатурна добавляет необходимость учитывать сроки и обязательства.'],
+  practicalStep: 'Разбейте профессиональную цель на этапы.',
+});
+assert.ok(unifiedAscendantAdvice.connection.includes('10-м доме'));
+assert.ok(unifiedAscendantAdvice.tension.includes('Сатурна'));
+assert.ok(unifiedAscendantAdvice.practicalStep.includes('этапы'));
 
 // Missing source data must be stated explicitly instead of being replaced with generic chart claims.
 const missingPlanetUnified = buildPlanetUnifiedAdvice(missingKetuAnalysis!);
