@@ -167,12 +167,6 @@ export function buildHouseUnifiedAdvice(house: NatalHousePersonalizedAnalysis): 
   const placement = house.lordName
     ? `Управитель ${house.house}-го дома — ${house.lordName}${house.lordHouse === null ? ', его положение по дому не определено' : `; он находится в ${house.lordHouse}-м доме`}.`
     : `Управитель ${house.house}-го дома не определён.`;
-  const links = [
-    house.occupants.length ? `В доме находятся: ${house.occupants.join(', ')}.` : 'Планет в доме нет по используемой модели.',
-    house.aspects.length ? `На дом направлены аспекты ${house.aspects.join(', ')}.` : 'Прямые аспекты на дом по принятой схеме не выявлены.',
-    house.connectedHouses.length ? `Положение управителя связывает тему с домами ${house.connectedHouses.join(', ')}.` : '',
-    house.ruledHouses.length > 1 ? `Тот же управитель отвечает также за дома ${house.ruledHouses.filter((item) => item !== house.house).join(', ')}.` : '',
-  ].filter(Boolean);
   const tension = unique([
     ...house.attentionFactors,
     ...(house.synthesis === 'mixed' ? ['В этой конфигурации одновременно присутствуют поддерживающие и требующие внимания факторы.'] : []),
@@ -206,16 +200,6 @@ export function buildPlanetUnifiedAdvice(planet: NatalPlanetPersonalizedAnalysis
       dataStatus: 'unavailable',
     });
   }
-  const connections = [
-    `${planet.name} находится в знаке ${planet.sign}.`,
-    planet.house === null ? 'Дом расположения не определён.' : `Планета находится в ${planet.house}-м доме.`,
-    planet.ruledHouses.length ? `Она управляет домами ${planet.ruledHouses.join(', ')}.` : '',
-    planet.conjunctions.length ? `Соединена по знаку с ${planet.conjunctions.map((key) => PLANET_NAMES[key]).join(', ')}.` : '',
-    planet.aspectsToPlanets.length ? `Её аспекты направлены к ${planet.aspectsToPlanets.map((key) => PLANET_NAMES[key]).join(', ')}.` : '',
-    planet.receivesAspectsFrom.length ? `Она получает аспекты от ${planet.receivesAspectsFrom.map((key) => PLANET_NAMES[key]).join(', ')}.` : '',
-    planet.aspectsToHouses.length ? `Также затрагиваются дома ${planet.aspectsToHouses.join(', ')}.` : '',
-    planet.dispositor ? `Диспозитор — ${PLANET_NAMES[planet.dispositor]}${planet.dispositorHouse === null ? ', его дом не определён' : `, расположенный в ${planet.dispositorHouse}-м доме`}.` : 'Диспозитор не определён.',
-  ].filter(Boolean);
   const action = PLANET_ACTIONS[planet.planet] ?? fallbackStep(evidence);
   const tension = unique([
     ...planet.attentionFactors,
