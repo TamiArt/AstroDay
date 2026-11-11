@@ -127,6 +127,7 @@ function check(
   }
   return {
     finding: null,
+    additionalFindings: [],
     check: {
       id, name, status: 'not-detected', findingId: null, findingIds: [],
       reason: notFoundReason,
