@@ -11,6 +11,7 @@ import { buildNatalChartFacts, getNatalFactLinks, getNatalHouseFacts, getNatalPl
 import { analyzeAllNatalHouses } from './natalHousePersonalizedAnalysis';
 import { analyzeAllNatalPlanets } from './natalPlanetPersonalizedAnalysis';
 import { synthesizeNatalChart } from './natalChartSynthesis';
+import { buildConclusionUnifiedAdvice, buildHouseUnifiedAdvice, buildPlanetUnifiedAdvice, buildSynthesisUnifiedAdvice } from './unifiedNatalAdvice';
 import type { NatalChart, PlanetPosition } from './astrology';
 
 function position(name: string, longitude: number, signName: string, nakshatraName: string) {
@@ -645,6 +646,30 @@ assert.ok(wholeChart.conclusions.every((item) =>
 ));
 assert.ok(wholeChart.conclusions.every((item) => item.relatedHouses.every((house) => house >= 1 && house <= 12)));
 assert.ok(wholeChart.methodology.some((item) => item.includes('эвристика')));
+
+const unifiedHouseAdvice = analyzeAllNatalHouses(natalFacts).map(buildHouseUnifiedAdvice);
+const unifiedPlanetAdvice = allPlanetAnalyses.map(buildPlanetUnifiedAdvice);
+const unifiedSynthesisAdvice = buildSynthesisUnifiedAdvice(wholeChart);
+const unifiedConclusionAdvice = wholeChart.conclusions.map((item) =>
+  buildConclusionUnifiedAdvice(item, wholeChart.tensions),
+);
+for (const advice of [...unifiedHouseAdvice, ...unifiedPlanetAdvice, unifiedSynthesisAdvice, ...unifiedConclusionAdvice]) {
+  assert.ok(advice.connection.length > 0);
+  assert.ok(advice.combinedMeaning.length > 0);
+  assert.ok(advice.tension.length > 0);
+  assert.ok(advice.practicalStep.length > 0);
+  assert.ok(advice.limitation.length > 0);
+}
+assert.ok(unifiedHouseAdvice[6].connection.includes('7-го дома'));
+assert.ok(unifiedPlanetAdvice.find((item) => item.connection.includes('аспекты'))?.connection.length);
+assert.ok(unifiedSynthesisAdvice.connection.length > 0);
+
+// Missing source data must be stated explicitly instead of being replaced with generic chart claims.
+const missingPlanetUnified = buildPlanetUnifiedAdvice(missingKetuAnalysis!);
+assert.ok(missingPlanetUnified.connection.includes('отсутствует'));
+const unavailableHouseUnified = buildHouseUnifiedAdvice(analyzeAllNatalHouses(incompleteFacts).find((item) => item.house === 5)!);
+assert.ok(unavailableHouseUnified.combinedMeaning.includes('не формируется'));
+
 
 const shiftedSunChart = {
   ...chart,
