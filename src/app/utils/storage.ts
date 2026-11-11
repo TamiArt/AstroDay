@@ -332,7 +332,7 @@ export async function deleteAllData(): Promise<void> {
 }
 
 export interface UserArchiveData {
-  profile: UserProfile | null;
+  profile: UserProfile;
   feedback: Record<string, DailyFeedback>;
   homeCalibration: HomeCalibrationData | null;
   homeFloorPlan: HomeFloorPlanData | null;
@@ -569,7 +569,7 @@ function validatePartnerProfile(value: unknown): PartnerBirthProfile | null {
 }
 
 function validateArchiveData(value: Record<string, unknown>): UserArchiveData | null {
-  const profile = value.profile === null ? null : validateUserProfile(value.profile);
+  const profile = validateUserProfile(value.profile);
   const feedback = validateFeedbackMap(value.feedback);
   const homeCalibration = validateHomeCalibration(value.homeCalibration);
   const homeFloorPlan = validateHomeFloorPlan(value.homeFloorPlan);
@@ -579,7 +579,7 @@ function validateArchiveData(value: Record<string, unknown>): UserArchiveData | 
   const vastuPropertyAssessment = isRecord(assessment) && assessment.schemaVersion === 1
     ? assessment as unknown as VastuPropertyAssessment : null;
   const partnerProfile = value.partnerProfile === null ? null : validatePartnerProfile(value.partnerProfile);
-  if ((value.profile !== null && !profile) || !feedback
+  if (!profile || !feedback
     || (value.homeCalibration !== null && !homeCalibration)
     || (value.homeFloorPlan !== null && !homeFloorPlan)
     || !homeProgress || !vastuChecklist || !vastuPropertyAssessment
