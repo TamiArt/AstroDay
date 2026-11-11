@@ -46,8 +46,13 @@ export default function App() {
   };
 
   const handleReset = async () => {
-    await deleteAllData();
-    setProfile(null);
+    try {
+      await deleteAllData();
+      setProfile(null);
+    } catch (storageError) {
+      const message = storageError instanceof Error ? storageError.message : 'Не удалось удалить все данные.';
+      alert(message);
+    }
   };
 
   if (loading) {
