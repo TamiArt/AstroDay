@@ -151,7 +151,7 @@ export function buildLifeAreaBridgeUnifiedAdvice(input: {
 }
 
 export function buildHouseUnifiedAdvice(house: NatalHousePersonalizedAnalysis): UnifiedAdvice {
-  const evidence = unique(house.evidence);
+  const evidence = unique([...house.evidence, ...house.supportingFactors]);
   if (!house.available) {
     return buildUnifiedAdvice({
       connection: `Данные ${house.house}-го дома отсутствуют; знак, управитель, аспекты и связи не подтверждены.`,
@@ -193,7 +193,7 @@ export function buildHouseUnifiedAdvice(house: NatalHousePersonalizedAnalysis): 
 }
 
 export function buildPlanetUnifiedAdvice(planet: NatalPlanetPersonalizedAnalysis): UnifiedAdvice {
-  const evidence = unique(planet.evidence);
+  const evidence = unique([...planet.evidence, ...planet.supportingFactors]);
   if (!planet.available || !planet.sign) {
     return buildUnifiedAdvice({
       connection: `${planet.name} отсутствует в исходных данных карты.`,
