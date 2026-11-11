@@ -284,7 +284,7 @@ export function loadVastuPropertyAssessment(): VastuPropertyAssessment {
 }
 
 export function deleteVastuPropertyAssessment(): void {
-  localStorage.removeItem(VASTU_PROPERTY_KEY);
+  removeStorageValue(VASTU_PROPERTY_KEY, 'оценку недвижимости');
 }
 
 export function savePartnerProfile(profile: PartnerBirthProfile): void {
@@ -307,28 +307,23 @@ export function loadPartnerProfile(): PartnerBirthProfile | null {
 }
 
 export function deletePartnerProfile(): void {
-  localStorage.removeItem(PARTNER_PROFILE_KEY);
+  removeStorageValue(PARTNER_PROFILE_KEY, 'профиль партнёра');
 }
 
 export function deleteHomeData(): void {
-  localStorage.removeItem(HOME_CALIBRATION_KEY);
-  localStorage.removeItem(HOME_FLOORPLAN_KEY);
-  localStorage.removeItem(HOME_PROGRESS_KEY);
-  localStorage.removeItem(HOME_VASTU_CHECKLIST_KEY);
+  removeStorageValue(HOME_CALIBRATION_KEY, 'калибровку дома');
+  removeStorageValue(HOME_FLOORPLAN_KEY, 'план помещения');
+  removeStorageValue(HOME_PROGRESS_KEY, 'прогресс дома');
+  removeStorageValue(HOME_VASTU_CHECKLIST_KEY, 'чек-лист Васту');
   deleteVastuPropertyAssessment();
 }
 
 export async function deleteAllData(): Promise<void> {
-  localStorage.removeItem(STORAGE_KEY);
-  localStorage.removeItem(FEEDBACK_KEY);
+  removeStorageValue(STORAGE_KEY, 'профиль');
+  removeStorageValue(FEEDBACK_KEY, 'обратную связь');
   deleteHomeData();
   deletePartnerProfile();
-
-  try {
-    await clearForecastCache();
-  } catch (error) {
-    console.error('Error clearing forecast cache:', error);
-  }
+  await clearForecastCache();
 }
 
 export interface UserArchiveData {
@@ -468,6 +463,14 @@ function writeStorageValue(key: string, value: string, label: string): void {
       ? 'В браузере недостаточно места. Освободите место или скачайте архив и удалите ненужные данные.'
       : 'Проверьте настройки приватности браузера и разрешение на локальное хранение.';
     throw new Error(`Не удалось сохранить ${label}. ${reason} Исходные введённые данные не следует закрывать до повторной попытки.`);
+  }
+}
+
+function removeStorageValue(key: string, label: string): void {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    throw new Error(`Не удалось удалить ${label}. Проверьте разрешение браузера на изменение локальных данных.`);
   }
 }
 
