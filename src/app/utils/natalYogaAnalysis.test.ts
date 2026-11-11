@@ -43,6 +43,7 @@ assert.ok((exchangeAnalysis.checks.find((item) => item.id === 'raja-yoga')?.find
 assert.ok(exchangeAnalysis.findings.some((item) => item.category === 'wealth'));
 assert.ok(exchangeAnalysis.findings.some((item) => item.id === 'parivartana-moon-jupiter'));
 assert.ok(exchangeAnalysis.findings.some((item) => item.id === 'vipareeta-6-lord'));
+assert.ok(exchangeAnalysis.findings.find((item) => item.id === 'vipareeta-6-lord')?.assessment.weakeningFactors.some((item) => item.includes('смешанное владение')), 'Mixed ownership of a Vipareeta lord must be surfaced as a weakening/qualification factor');
 assert.ok(exchangeAnalysis.findings.some((item) => item.id === 'mahapurusha-mars'));
 assert.ok(exchangeAnalysis.findings.every((item) => item.formalRule.length > 0 && item.evidence.length > 0));
 assert.ok(exchangeAnalysis.findings.every((item) => item.assessment && Array.isArray(item.assessment.supportingFactors) && Array.isArray(item.assessment.weakeningFactors) && item.assessment.unassessedFactors.length > 0));
@@ -57,6 +58,7 @@ const lunarAnalysis = analyzeNatalYogas(buildNatalChartFacts(lunarChart));
 assert.ok(lunarAnalysis.findings.some((item) => item.id === 'gaja-kesari'));
 assert.ok(lunarAnalysis.findings.some((item) => item.id === 'chandra-mangala'));
 assert.ok(lunarAnalysis.findings.some((item) => item.id === 'budha-aditya'));
+assert.ok(lunarAnalysis.findings.find((item) => item.id === 'budha-aditya')?.evidence.some((item) => item.includes('Угловое расстояние')), 'Budha-Aditya evidence must expose the actual Sun–Mercury separation');
 assert.ok(lunarAnalysis.findings.some((item) => item.id === 'mahapurusha-jupiter'));
 
 const signOnlyLunarFacts = buildNatalChartFacts({ ...lunarChart, houses: [] } as unknown as NatalChart);
