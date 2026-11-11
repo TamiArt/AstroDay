@@ -3,7 +3,16 @@ import { PROFILE_SCHEMA_VERSION, unwrapProfilePayload, wrapProfilePayload } from
 import {
   deleteHomeData,
   deletePartnerProfile,
+  exportData,
   importUserProfile,
+  restoreUserArchive,
+  loadAllFeedback,
+  loadUserProfile,
+  saveDailyFeedback,
+  saveUserProfile,
+  saveHomeCalibration,
+  saveHomeProgress,
+  loadHomeProgress,
   loadVastuChecklist,
   loadHomeFloorPlan,
   saveHomeFloorPlan,
@@ -41,11 +50,21 @@ assert.throws(
 );
 
 const storageValues = new Map<string, string>();
+let writesBeforeFailure: number | null = null;
 Object.defineProperty(globalThis, 'localStorage', {
   configurable: true,
   value: {
     getItem: (key: string) => storageValues.get(key) ?? null,
-    setItem: (key: string, value: string) => storageValues.set(key, value),
+    setItem: (key: string, value: string) => {
+      if (writesBeforeFailure !== null) {
+        if (writesBeforeFailure === 0) {
+          writesBeforeFailure = null;
+          throw new DOMException('Storage quota exceeded', 'QuotaExceededError');
+        }
+        writesBeforeFailure -= 1;
+      }
+      storageValues.set(key, value);
+    },
     removeItem: (key: string) => storageValues.delete(key),
   },
 });
@@ -111,4 +130,50 @@ assert.deepEqual(loadPartnerProfile(), partner, 'Deleting home data must preserv
 deletePartnerProfile();
 assert.equal(loadPartnerProfile(), null, 'Partner profile can be deleted separately');
 
-console.log('storage migration tests passed');
+saveUserProfile(legacyProfile);
+saveDailyFeedback({ date: '2026-11-11', mood: 4, notes: 'Архивная заметка' });
+saveHomeCalibration({ northOffset: 12.5, calibratedAt: '2026-11-11T10:00:00.000Z', source: 'manual' });
+saveHomeProgress([{ id: 'task-1', label: 'Проверить план', done: true }]);
+const exportedArchive = exportData();
+const exported = JSON.parse(exportedArchive) as { format: string; schemaVersion: number; data: Record<string, unknown> };
+assert.equal(exported.format, 'astroday-user-archive');
+assert.equal(exported.schemaVersion, 1);
+assert.ok(exported.data.profile);
+assert.deepEqual(exported.data.feedback, { '2026-11-11': { date: '2026-11-11', mood: 4, notes: 'Архивная заметка' } });
+
+deleteHomeData();
+deletePartnerProfile();
+saveDailyFeedback({ date: '2026-11-10', mood: 1 });
+const restored = restoreUserArchive(exportedArchive);
+assert.equal(restored.legacyProfileOnly, false);
+assert.equal(restored.restoredSections.length, 8);
+assert.deepEqual(loadUserProfile(), legacyProfile, 'Archive restore must restore the main profile');
+assert.deepEqual(loadAllFeedback(), { '2026-11-11': { date: '2026-11-11', mood: 4, notes: 'Архивная заметка' } });
+assert.deepEqual(loadHomeProgress(), [{ id: 'task-1', label: 'Проверить план', done: true }]);
+assert.equal(loadHomeCalibration()?.northOffset, 12.5);
+assert.deepEqual(loadPartnerProfile(), partner, 'Archive restore must restore partner profile');
+
+const stateBeforeFailedRestore = JSON.parse(exportData()).data;
+writesBeforeFailure = 2;
+assert.throws(() => restoreUserArchive(exportedArchive), /Предыдущие данные восстановлены/);
+assert.deepEqual(JSON.parse(exportData()).data, stateBeforeFailedRestore, 'A failed restore must roll back all previous storage values');
+
+const legacyProfileJson = JSON.stringify({ ...legacyProfile, name: 'Legacy profile' });
+const legacyRestore = restoreUserArchive(legacyProfileJson);
+assert.equal(legacyRestore.legacyProfileOnly, true);
+assert.equal(loadUserProfile()?.name, 'Legacy profile');
+assert.equal(loadHomeCalibration()?.northOffset, 12.5, 'Legacy profile import must not erase unrelated data');
+
+const stateBeforeInvalidImport = JSON.parse(exportData()).data;
+assert.throws(() => restoreUserArchive(JSON.stringify({
+  format: 'astroday-user-archive',
+  schemaVersion: 1,
+  exportedAt: '2026-11-11T00:00:00.000Z',
+  data: { profile: legacyProfile, feedback: 'broken' },
+})), /Текущие данные не изменены/);
+assert.deepEqual(JSON.parse(exportData()).data, stateBeforeInvalidImport, 'Invalid archive validation must happen before writes');
+
+writesBeforeFailure = 0;
+assert.throws(() => saveUserProfile(legacyProfile), /Не удалось сохранить профиль/);
+
+console.log('storage and archive tests passed');
