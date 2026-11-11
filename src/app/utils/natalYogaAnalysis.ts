@@ -124,7 +124,7 @@ function check(
   return {
     finding: null,
     check: {
-      id, name, status: 'not-detected', findingId: null,
+      id, name, status: 'not-detected', findingId: null, findingIds: [],
       reason: notFoundReason,
       missingFacts: [],
     },
