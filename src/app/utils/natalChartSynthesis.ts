@@ -213,8 +213,8 @@ export function synthesizeNatalChart(facts: NatalChartFacts): NatalChartSynthesi
     });
   }
 
-  const planetSupportive = planets.filter((planet) => planet.available && planet.synthesis === 'supportive').length;
-  const planetAttention = planets.filter((planet) => planet.available && planet.synthesis === 'challenging').length;
+  const planetSupportive = planets.filter((planet) => planet.available && planet.supportingFactors.length > 0).length;
+  const planetAttention = planets.filter((planet) => planet.available && planet.attentionFactors.length > 0).length;
   if (planetSupportive || planetAttention) {
     const planetEvidence = planets.flatMap((planet) => [
       ...planet.supportingFactors.map((item) => `${PLANET_NAMES[planet.planet]}: ${item}`),
