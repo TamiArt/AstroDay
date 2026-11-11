@@ -13,6 +13,7 @@ const DEFAULT_TASKS: HomeProgressItem[] = [
 
 export function HomeProgressTracker() {
   const [tasks, setTasks] = useState<HomeProgressItem[]>([]);
+  const [storageError, setStorageError] = useState('');
 
   useEffect(() => {
     const loaded = loadHomeProgress();
@@ -21,8 +22,13 @@ export function HomeProgressTracker() {
 
   const toggleTask = (id: string) => {
     const next = tasks.map((task) => task.id === id ? { ...task, done: !task.done } : task);
-    setTasks(next);
-    saveHomeProgress(next);
+    try {
+      saveHomeProgress(next);
+      setTasks(next);
+      setStorageError('');
+    } catch (error) {
+      setStorageError(error instanceof Error ? error.message : 'Не удалось сохранить прогресс.');
+    }
   };
 
   const completed = tasks.filter((task) => task.done).length;
@@ -35,6 +41,7 @@ export function HomeProgressTracker() {
           <p className="opacity-70">Отмечайте задачи, чтобы видеть, как продвигается гармонизация.</p>
         </div>
 
+        {storageError && <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{storageError}</p>}
         <div className="space-y-3">
           {tasks.map((task) => (
             <button
