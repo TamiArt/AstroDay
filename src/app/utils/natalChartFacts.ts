@@ -227,6 +227,8 @@ export function buildNatalChartFacts(chart: NatalChart): NatalChartFacts {
   for (const house of houseRows) {
     const lord = isPlanetKey(house.lord) ? house.lord : null;
     const lordHouse = lord ? getPlanetHouse(chart, lord) : null;
+    if (!lord) warnings.push(`Управитель ${house.house}-го дома не определён в исходных данных.`);
+    else if (lordHouse === null) warnings.push(`Положение управителя ${house.house}-го дома (${PLANET_NAMES[lord]}) не определено.`);
     const occupants = NATAL_PLANET_KEYS.filter((key) =>
       Boolean(chart.planets[key]) && chart.planets[key].sign === house.sign,
     );
