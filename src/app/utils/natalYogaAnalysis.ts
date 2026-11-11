@@ -193,7 +193,7 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
   {
     const moon = facts.planets.Moon;
     const jupiter = facts.planets.Jupiter;
-    const missing = [!moon ? 'Луна' : '', !jupiter ? 'Юпитер' : '', !moon?.house ? 'дом Луны' : '', !jupiter?.house ? 'дом Юпитера' : ''].filter(Boolean);
+    const missing = [!moon ? 'Луна' : '', !jupiter ? 'Юпитер' : ''].filter(Boolean);
     const relativeHouse = moon && jupiter ? houseFromSignDistance(moon.signIndex, jupiter.signIndex) : null;
     const detected = missing.length === 0 && relativeHouse !== null && KENDRA_HOUSES.includes(relativeHouse);
     const finding = detected && moon && jupiter
@@ -201,8 +201,8 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
         id: 'gaja-kesari', name: 'Гаджа-Кесари-йога', sanskritName: 'Gaja Kesari Yoga', category: 'lunar',
         description: 'Юпитер расположен в кендре от Луны; в классической трактовке это связывают с поддержкой мудрости, обучения и социального авторитета.',
         formalRule: 'Юпитер находится в 1-м, 4-м, 7-м или 10-м знаке/доме относительно Луны.',
-        participants: ['Moon', 'Jupiter'], houses: [moon.house!, jupiter.house!],
-        evidence: [`Луна находится в ${moon.house}-м доме (${moon.sign}); Юпитер — в ${jupiter.house}-м доме (${jupiter.sign}).`, `От Луны до Юпитера — ${relativeHouse}-й дом; это кендра (1/4/7/10).`],
+        participants: ['Moon', 'Jupiter'], houses: [moon.house ?? 0, jupiter.house ?? 0].filter(Boolean),
+        evidence: [`Луна находится в ${moon.sign}${moon.house ? `, ${moon.house}-м доме` : ''}; Юпитер — в ${jupiter.sign}${jupiter.house ? `, ${jupiter.house}-м доме` : ''}.`, `От Луны до Юпитера — ${relativeHouse}-й знак; это кендра (1/4/7/10).`],
         caveats: ['Правило фиксирует базовое положение; сила йоги, достоинство Юпитера, поражения и дополнительные исключения оцениваются отдельно.'],
       })
       : null;
@@ -234,6 +234,7 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
     const mars = facts.planets.Mars;
     const missing = [!moon ? 'Луна' : '', !mars ? 'Марс' : ''].filter(Boolean);
     const links = moon && mars ? relationEvidence(facts, 'Moon', 'Mars') : [];
+    if (moon && mars && moon.signIndex !== mars.signIndex && (!moon.house || !mars.house)) missing.push('дома Луны и Марса для проверки взаимного аспекта');
     const detected = Boolean(moon && mars && (moon.signIndex === mars.signIndex || links.some((item) => item.includes('аспектирует'))));
     const finding = detected && moon && mars
       ? createFinding({
