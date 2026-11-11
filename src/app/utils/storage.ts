@@ -540,6 +540,7 @@ function validateFeedbackMap(value: unknown): Record<string, DailyFeedback> | nu
 function validateHomeCalibration(value: unknown): HomeCalibrationData | null {
   if (value === null) return null;
   if (!isRecord(value) || typeof value.northOffset !== 'number' || !Number.isFinite(value.northOffset)
+    || value.northOffset < -180 || value.northOffset > 180
     || typeof value.calibratedAt !== 'string' || (value.source !== 'sun' && value.source !== 'manual')
     || (value.warning !== undefined && typeof value.warning !== 'string')) return null;
   return value as unknown as HomeCalibrationData;
@@ -551,7 +552,8 @@ function validateHomeFloorPlan(value: unknown): HomeFloorPlanData | null {
     || (value.imageDataUrl !== '' && !/^data:image\/[a-z0-9.+-]+;base64,/i.test(value.imageDataUrl))
     || !Array.isArray(value.rooms)
     || typeof value.northOffset !== 'number' || !Number.isFinite(value.northOffset)
-    || (value.northBearingDegrees !== undefined && (typeof value.northBearingDegrees !== 'number' || !Number.isFinite(value.northBearingDegrees)))
+    || value.northOffset < -180 || value.northOffset > 180
+    || (value.northBearingDegrees !== undefined && (typeof value.northBearingDegrees !== 'number' || !Number.isFinite(value.northBearingDegrees) || value.northBearingDegrees < 0 || value.northBearingDegrees >= 360))
     || (value.markers !== undefined && !Array.isArray(value.markers))) return null;
   const validRooms = value.rooms.every((room) => isRecord(room)
     && typeof room.id === 'string' && typeof room.name === 'string'
@@ -560,8 +562,8 @@ function validateHomeFloorPlan(value: unknown): HomeFloorPlanData | null {
   const markers = Array.isArray(value.markers) ? value.markers : [];
   const validMarkers = markers.every((marker) => isRecord(marker)
     && typeof marker.id === 'string' && typeof marker.label === 'string'
-    && typeof marker.x === 'number' && Number.isFinite(marker.x)
-    && typeof marker.y === 'number' && Number.isFinite(marker.y)
+    && typeof marker.x === 'number' && Number.isFinite(marker.x) && marker.x >= 0 && marker.x <= 1
+    && typeof marker.y === 'number' && Number.isFinite(marker.y) && marker.y >= 0 && marker.y <= 1
     && ['entrance', 'window', 'obstruction', 'water', 'clutter', 'kitchen', 'bathroom', 'workspace'].includes(String(marker.type)));
   return validRooms && validMarkers ? value as unknown as HomeFloorPlanData : null;
 }
@@ -590,19 +592,23 @@ function validateVastuPropertyAssessment(value: unknown): VastuPropertyAssessmen
     || typeof value.entrancePosition !== 'number' || !Number.isFinite(value.entrancePosition) || value.entrancePosition < 0 || value.entrancePosition > 100
     || !['square', 'rectangle', 'irregular', 'triangular', 'narrow', 'unknown'].includes(String(value.plotShape))
     || !['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest', 'flat', 'unknown'].includes(String(value.plotSlope))
-    || !Array.isArray(value.roadSides) || !Array.isArray(value.waterSides)
     || !/^[A-Z]{3}$/.test(String(value.currency))
     || typeof value.notes !== 'string' || value.notes.length > 4000) return null;
 
+  const roadSides = value.roadSides;
+  const waterSides = value.waterSides;
+  if (!Array.isArray(roadSides) || !Array.isArray(waterSides)) return null;
   const directions = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'];
-  if (![...value.roadSides, ...value.waterSides].every((direction) => directions.includes(String(direction)))) return null;
+  if (![...roadSides, ...waterSides].every((direction) => directions.includes(String(direction)))) return null;
 
   const fallback = createEmptyVastuPropertyAssessment();
-  if (!isRecord(value.rooms) || !Object.keys(fallback.rooms).every((sector) =>
-    ['', 'prayer', 'kitchen', 'master-bedroom', 'bedroom', 'guest-bedroom', 'living', 'dining', 'study', 'office', 'bathroom', 'toilet', 'stairs', 'storage', 'laundry', 'water', 'balcony', 'open', 'other'].includes(String(value.rooms[sector])),
+  const rooms = value.rooms;
+  if (!isRecord(rooms) || !Object.keys(fallback.rooms).every((sector) =>
+    ['', 'prayer', 'kitchen', 'master-bedroom', 'bedroom', 'guest-bedroom', 'living', 'dining', 'study', 'office', 'bathroom', 'toilet', 'stairs', 'storage', 'laundry', 'water', 'balcony', 'open', 'other'].includes(String(rooms[sector])),
   )) return null;
-  if (!isRecord(value.condition) || !Object.keys(fallback.condition).every((id) =>
-    ['ok', 'attention', 'unknown'].includes(String(value.condition[id])),
+  const condition = value.condition;
+  if (!isRecord(condition) || !Object.keys(fallback.condition).every((id) =>
+    ['ok', 'attention', 'unknown'].includes(String(condition[id])),
   )) return null;
 
   const numericFields: Array<keyof VastuPropertyAssessment> = [
