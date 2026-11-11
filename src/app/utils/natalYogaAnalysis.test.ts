@@ -45,6 +45,7 @@ assert.ok(exchangeAnalysis.findings.some((item) => item.id === 'parivartana-moon
 assert.ok(exchangeAnalysis.findings.some((item) => item.id === 'vipareeta-6-lord'));
 assert.ok(exchangeAnalysis.findings.some((item) => item.id === 'mahapurusha-mars'));
 assert.ok(exchangeAnalysis.findings.every((item) => item.formalRule.length > 0 && item.evidence.length > 0));
+assert.ok(exchangeAnalysis.findings.every((item) => item.assessment && Array.isArray(item.assessment.supportingFactors) && Array.isArray(item.assessment.weakeningFactors) && item.assessment.unassessedFactors.length > 0));
 assert.equal(new Set(exchangeAnalysis.findings.map((item) => item.id)).size, exchangeAnalysis.findings.length);
 assert.ok(exchangeAnalysis.checks.every((item) => Array.isArray(item.findingIds)));
 
@@ -66,6 +67,20 @@ const incomplete = analyzeNatalYogas(buildNatalChartFacts(missingJupiterChart));
 assert.equal(incomplete.checks.find((item) => item.id === 'gaja-kesari')?.status, 'incomplete');
 assert.equal(incomplete.checks.find((item) => item.id === 'mahapurusha-jupiter')?.status, 'incomplete');
 assert.ok(incomplete.dataQuality.missingPlanets.includes('Jupiter'));
+assert.ok(incomplete.checks.find((item) => item.id === 'raja-yoga')?.missingFacts.some((item) => item.includes('Юпитер')), 'Missing house-lord placement must not be silently treated as a negative result');
+assert.ok(incomplete.checks.find((item) => item.id === 'dhana-yoga')?.missingFacts.some((item) => item.includes('Юпитер')));
+
+const cancerAscendantChart = chartWith({
+  Sun: 4, Moon: 3, Mars: 0, Mercury: 2, Jupiter: 8,
+  Venus: 1, Saturn: 9, Rahu: 10, Ketu: 4,
+});
+cancerAscendantChart.ascendant = position('Ascendant', 3);
+cancerAscendantChart.houses = cancerAscendantChart.houses.map((house, index) => {
+  const sign = (3 + index) % 12;
+  return { ...house, sign, signName: signNames[sign], lord: signLords[sign] };
+});
+const yogaKaraka = analyzeNatalYogas(buildNatalChartFacts(cancerAscendantChart));
+assert.ok(yogaKaraka.findings.some((item) => item.id === 'raja-karaka-10-5-mars'), 'A planet ruling a kendra and trikona must be identified as a yoga-karaka');
 
 const noYogaChart = chartWith({
   Sun: 0, Moon: 2, Mars: 4, Mercury: 6, Jupiter: 8,
