@@ -394,7 +394,8 @@ export function exportData(): string {
   if (!vastuChecklist) throw new Error('Чек-лист Васту повреждён. Архив не создан.');
 
   const rawAssessment = read<unknown>(VASTU_PROPERTY_KEY, true, createEmptyVastuPropertyAssessment());
-  if (!isRecord(rawAssessment) || rawAssessment.schemaVersion !== 1) throw new Error('Оценка недвижимости повреждена. Архив не создан.');
+  const validatedAssessment = validateVastuPropertyAssessment(rawAssessment);
+  if (!validatedAssessment) throw new Error('Оценка недвижимости повреждена. Архив не создан.');
 
   const rawPartner = read<unknown>(PARTNER_PROFILE_KEY, true, null);
   const partnerProfile = rawPartner === null ? null : validatePartnerProfile(rawPartner);
@@ -411,7 +412,7 @@ export function exportData(): string {
       homeFloorPlan,
       homeProgress,
       vastuChecklist,
-      vastuPropertyAssessment: rawAssessment as VastuPropertyAssessment,
+      vastuPropertyAssessment: validatedAssessment,
       partnerProfile,
     },
   };
@@ -580,6 +581,40 @@ function validateVastuChecklist(value: unknown): VastuChecklistItem[] | null {
     ? value as VastuChecklistItem[] : null;
 }
 
+function validateVastuPropertyAssessment(value: unknown): VastuPropertyAssessment | null {
+  if (!isRecord(value) || value.schemaVersion !== 1
+    || typeof value.propertyName !== 'string' || value.propertyName.length > 120
+    || !['apartment', 'house', 'land', 'office', 'retail', 'other'].includes(String(value.propertyType))
+    || !['', 'north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'].includes(String(value.facingDirection))
+    || !['', 'north', 'east', 'south', 'west'].includes(String(value.entranceWall))
+    || typeof value.entrancePosition !== 'number' || !Number.isFinite(value.entrancePosition) || value.entrancePosition < 0 || value.entrancePosition > 100
+    || !['square', 'rectangle', 'irregular', 'triangular', 'narrow', 'unknown'].includes(String(value.plotShape))
+    || !['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest', 'flat', 'unknown'].includes(String(value.plotSlope))
+    || !Array.isArray(value.roadSides) || !Array.isArray(value.waterSides)
+    || !/^[A-Z]{3}$/.test(String(value.currency))
+    || typeof value.notes !== 'string' || value.notes.length > 4000) return null;
+
+  const directions = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'];
+  if (![...value.roadSides, ...value.waterSides].every((direction) => directions.includes(String(direction)))) return null;
+
+  const fallback = createEmptyVastuPropertyAssessment();
+  if (!isRecord(value.rooms) || !Object.keys(fallback.rooms).every((sector) =>
+    ['', 'prayer', 'kitchen', 'master-bedroom', 'bedroom', 'guest-bedroom', 'living', 'dining', 'study', 'office', 'bathroom', 'toilet', 'stairs', 'storage', 'laundry', 'water', 'balcony', 'open', 'other'].includes(String(value.rooms[sector])),
+  )) return null;
+  if (!isRecord(value.condition) || !Object.keys(fallback.condition).every((id) =>
+    ['ok', 'attention', 'unknown'].includes(String(value.condition[id])),
+  )) return null;
+
+  const numericFields: Array<keyof VastuPropertyAssessment> = [
+    'purchasePrice', 'closingCosts', 'renovationCost', 'monthlyRent', 'vacancyRatePercent',
+    'monthlyOperatingCosts', 'annualPropertyTax', 'annualInsurance', 'annualCapitalReserve', 'monthlyMortgagePayment',
+  ];
+  if (!numericFields.every((key) => typeof value[key] === 'number' && Number.isFinite(value[key]) && (value[key] as number) >= 0)
+    || (value.vacancyRatePercent as number) > 100) return null;
+
+  return value as unknown as VastuPropertyAssessment;
+}
+
 function validatePartnerProfile(value: unknown): PartnerBirthProfile | null {
   if (!isRecord(value)) return null;
   const name = readString(value, 'name');
@@ -601,9 +636,7 @@ function validateArchiveData(value: Record<string, unknown>): UserArchiveData | 
   const homeFloorPlan = validateHomeFloorPlan(value.homeFloorPlan);
   const homeProgress = validateHomeProgress(value.homeProgress);
   const vastuChecklist = validateVastuChecklist(value.vastuChecklist);
-  const assessment = value.vastuPropertyAssessment;
-  const vastuPropertyAssessment = isRecord(assessment) && assessment.schemaVersion === 1
-    ? assessment as unknown as VastuPropertyAssessment : null;
+  const vastuPropertyAssessment = validateVastuPropertyAssessment(value.vastuPropertyAssessment);
   const partnerProfile = value.partnerProfile === null ? null : validatePartnerProfile(value.partnerProfile);
   if (!profile || !feedback
     || (value.homeCalibration !== null && !homeCalibration)
