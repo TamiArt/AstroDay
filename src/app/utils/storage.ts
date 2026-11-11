@@ -311,19 +311,27 @@ export function deletePartnerProfile(): void {
 }
 
 export function deleteHomeData(): void {
-  removeStorageValue(HOME_CALIBRATION_KEY, 'калибровку дома');
-  removeStorageValue(HOME_FLOORPLAN_KEY, 'план помещения');
-  removeStorageValue(HOME_PROGRESS_KEY, 'прогресс дома');
-  removeStorageValue(HOME_VASTU_CHECKLIST_KEY, 'чек-лист Васту');
-  deleteVastuPropertyAssessment();
+  applyStorageEntries([
+    [HOME_CALIBRATION_KEY, null],
+    [HOME_FLOORPLAN_KEY, null],
+    [HOME_PROGRESS_KEY, null],
+    [HOME_VASTU_CHECKLIST_KEY, null],
+    [VASTU_PROPERTY_KEY, null],
+  ]);
 }
 
 export async function deleteAllData(): Promise<void> {
-  removeStorageValue(STORAGE_KEY, 'профиль');
-  removeStorageValue(FEEDBACK_KEY, 'обратную связь');
-  deleteHomeData();
-  deletePartnerProfile();
   await clearForecastCache();
+  applyStorageEntries([
+    [STORAGE_KEY, null],
+    [FEEDBACK_KEY, null],
+    [HOME_CALIBRATION_KEY, null],
+    [HOME_FLOORPLAN_KEY, null],
+    [HOME_PROGRESS_KEY, null],
+    [HOME_VASTU_CHECKLIST_KEY, null],
+    [VASTU_PROPERTY_KEY, null],
+    [PARTNER_PROFILE_KEY, null],
+  ]);
 }
 
 export interface UserArchiveData {
