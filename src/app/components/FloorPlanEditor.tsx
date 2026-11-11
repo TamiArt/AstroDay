@@ -37,9 +37,16 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
     return () => window.clearTimeout(timeout);
   }, [planData, draft, northOffset, showGrid, selectedRoomId]);
 
-  const savePlan = (next: HomeFloorPlanData) => {
-    saveHomeFloorPlan(next);
-    setPlanData(next);
+  const savePlan = (next: HomeFloorPlanData): boolean => {
+    try {
+      saveHomeFloorPlan(next);
+      setPlanData(next);
+      setNotice('Изменения плана сохранены.');
+      return true;
+    } catch (storageError) {
+      setNotice(storageError instanceof Error ? storageError.message : 'Не удалось сохранить план. Изменения остаются только на экране.');
+      return false;
+    }
   };
 
   const drawPlan = () => {
@@ -157,7 +164,11 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
     if (markerMode) {
       const option = MARKERS.find((item) => item.type === markerMode);
       const marker = { id: 'marker-' + Date.now(), type: markerMode, x: x / canvas.width, y: y / canvas.height, label: option?.label ?? 'Метка' };
-      savePlan({ ...planData, markers: [...markers, marker] }); setMarkerMode(null); setNotice('Добавлена отметка: ' + marker.label); return;
+      if (savePlan({ ...planData, markers: [...markers, marker] })) {
+        setMarkerMode(null);
+        setNotice('Добавлена отметка: ' + marker.label);
+      }
+      return;
     }
     setStartPoint({ x, y });
     setDrawing(true);
@@ -222,7 +233,7 @@ export function FloorPlanEditor({ onRoomSelect }: FloorPlanEditorProps) {
       ...planData,
       rooms: [...planData.rooms, newRoom],
     };
-    savePlan(next);
+    if (!savePlan(next)) return;
     setSelectedRoomId(newRoom.id);
     onRoomSelect(newRoom);
     setDrawing(false);
