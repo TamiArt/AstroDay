@@ -239,14 +239,14 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
 
   // Raja yoga: a kendra lord and a trikona lord are associated.
   {
-    const missing = [...missingHouses.filter((house) => [...KENDRA_HOUSES, ...TRIKONA_HOUSES].includes(house)).map((house) => `${house}-й дом`)];
+    const missing = [...missingHouses.filter((house) => [1, 4, 5, 7, 9, 10].includes(house)).map((house) => `${house}-й дом`)];
     if (!hasAscendant) missing.push('знак Асцендента');
     const found: NatalYogaFinding[] = [];
     {
       for (const kendra of [4, 7, 10]) {
         const kendraLord = lordOfHouse(facts, kendra);
         if (!kendraLord || !isPresent(facts, kendraLord)) continue;
-        for (const trikona of [5, 9]) {
+        for (const trikona of [1, 5, 9]) {
           const trikonaLord = lordOfHouse(facts, trikona);
           if (!trikonaLord || trikonaLord === kendraLord || !isPresent(facts, trikonaLord)) continue;
           const evidence = relationEvidence(facts, kendraLord, trikonaLord);
@@ -255,7 +255,7 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
             id: `raja-${kendra}-${trikona}-${kendraLord.toLowerCase()}-${trikonaLord.toLowerCase()}`,
             name: 'Раджа-йога', sanskritName: 'Raja Yoga', category: 'raja',
             description: 'Управитель кендры связан с управителем триконы; в классической трактовке это сочетание связывают с возможностями реализации и ответственности.',
-            formalRule: 'Управитель одного из домов 4/7/10 связан соединением по знаку, Parashari graha drishti или обменом знаками с управителем 5-го или 9-го дома.',
+            formalRule: 'Управитель одного из домов 4/7/10 связан соединением по знаку, Parashari graha drishti или обменом знаками с управителем 1-го, 5-го или 9-го дома.',
             participants: [kendraLord, trikonaLord], houses: [kendra, trikona],
             evidence: [`Управитель ${kendra}-го дома — ${PLANET_NAMES[kendraLord]}; управитель ${trikona}-го дома — ${PLANET_NAMES[trikonaLord]}.`, ...evidence],
             caveats: ['Проверяется базовая связь управителей; достоинство, сила, функциональная благотворность и дополнительные условия конкретной школы не оцениваются.'],
@@ -263,7 +263,7 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
         }
       }
     }
-    addCheck(check('raja-yoga', 'Раджа-йога', missing, found[0] ?? null, 'Не найдена связь управителя кендры (4/7/10) с управителем триконы (5/9) по принятым типам отношений.', found.slice(1)));
+    addCheck(check('raja-yoga', 'Раджа-йога', missing, found[0] ?? null, 'Не найдена связь управителя кендры (4/7/10) с управителем триконы (1/5/9) по принятым типам отношений.', found.slice(1)));
   }
 
   // Dhana yoga: lords of 2/11 connected to lords of 5/9/1.
