@@ -663,6 +663,12 @@ for (const advice of [...unifiedHouseAdvice, ...unifiedPlanetAdvice, unifiedSynt
 assert.ok(unifiedHouseAdvice[6].connection.includes('7-го дома'));
 assert.ok(unifiedPlanetAdvice.find((item) => item.connection.includes('аспекты'))?.connection.length);
 assert.ok(unifiedSynthesisAdvice.connection.length > 0);
+const unlinkedConclusionAdvice = buildConclusionUnifiedAdvice(
+  { ...wholeChart.conclusions[0], relatedHouses: [] },
+  wholeChart.tensions,
+);
+assert.ok(unlinkedConclusionAdvice.practicalStep.includes('проверяемый результат'));
+assert.ok(!unlinkedConclusionAdvice.practicalStep.includes('профессиональную цель'));
 const unifiedAscendantAdvice = buildNarrativeUnifiedAdvice({
   connection: 'Управитель Асцендента расположен в 10-м доме и получает аспект Сатурна.',
   combinedMeaning: 'Личная стратегия связана с профессиональной реализацией.',
