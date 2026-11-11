@@ -119,7 +119,7 @@ export function buildLifeAreaUnifiedAdvice(title: string, connections: string[])
         : /обуч|творч|талант/i.test(normalizedTitle) ? HOUSE_ACTIONS[5]
           : fallback;
   return buildUnifiedAdvice({
-    connection: evidence.join(' ') || `Для сферы «${normalizedTitle}» пока нет подтверждённых связей.`,
+    connection: evidence.length ? `Сфера «${normalizedTitle}»: подтверждено оснований — ${evidence.length}.` : `Для сферы «${normalizedTitle}» пока нет подтверждённых связей.`,
     evidence,
     combinedMeaning: evidence.length
       ? `В теме «${normalizedTitle}» совместно рассматриваются только перечисленные связи; они задают символический контекст, но не предопределяют события.`
@@ -140,7 +140,7 @@ export function buildLifeAreaBridgeUnifiedAdvice(input: {
   const evidence = unique([input.connection, ...input.evidence, ...input.areas.map((area) => `Подтверждённая сфера: ${area}.`)]);
   const fallback = fallbackStep(evidence);
   return buildUnifiedAdvice({
-    connection: evidence.join(' '),
+    connection: `Межсферная связь: ${unique(input.areas).join(', ') || 'сферы не определены'}; отдельных оснований — ${input.evidence.length}.`,
     evidence,
     combinedMeaning: input.explanation,
     practicalStep: fallback.step,
@@ -151,7 +151,7 @@ export function buildLifeAreaBridgeUnifiedAdvice(input: {
 }
 
 export function buildHouseUnifiedAdvice(house: NatalHousePersonalizedAnalysis): UnifiedAdvice {
-  const evidence = unique([...house.evidence, ...house.supportingFactors]);
+  const evidence = unique([...house.evidence, ...house.supportingFactors, ...house.attentionFactors]);
   if (!house.available) {
     return buildUnifiedAdvice({
       connection: `Данные ${house.house}-го дома отсутствуют; знак, управитель, аспекты и связи не подтверждены.`,
@@ -181,7 +181,7 @@ export function buildHouseUnifiedAdvice(house: NatalHousePersonalizedAnalysis): 
   const action = HOUSE_ACTIONS[house.house] ?? fallbackStep(evidence);
   const dataStatus = house.synthesis === 'incomplete' || !house.lordName || house.lordHouse === null ? 'partial' : 'complete';
   return buildUnifiedAdvice({
-    connection: [placement, ...links].join(' '),
+    connection: `Дом ${house.house}: ${house.sign ?? 'знак не определён'}; ${placement} Планет в доме — ${house.occupants.length}, входящих аспектов — ${house.aspects.length}, связанных домов — ${house.connectedHouses.length}.`,
     evidence,
     combinedMeaning: `Тема «${house.theme}» рассматривается через знак дома, его управителя и доступные связи. ${house.supportingFactors.length ? 'Есть конкретные поддерживающие признаки; они не гарантируют результат.' : 'Поддерживающий перевес по выбранным критериям не установлен.'}`,
     tensions: tension,
@@ -193,7 +193,7 @@ export function buildHouseUnifiedAdvice(house: NatalHousePersonalizedAnalysis): 
 }
 
 export function buildPlanetUnifiedAdvice(planet: NatalPlanetPersonalizedAnalysis): UnifiedAdvice {
-  const evidence = unique([...planet.evidence, ...planet.supportingFactors]);
+  const evidence = unique([...planet.evidence, ...planet.supportingFactors, ...planet.attentionFactors]);
   if (!planet.available || !planet.sign) {
     return buildUnifiedAdvice({
       connection: `${planet.name} отсутствует в исходных данных карты.`,
@@ -224,7 +224,7 @@ export function buildPlanetUnifiedAdvice(planet: NatalPlanetPersonalizedAnalysis
   ]);
   const dataStatus = planet.synthesis === 'incomplete' || planet.house === null || !planet.dispositor ? 'partial' : 'complete';
   return buildUnifiedAdvice({
-    connection: connections.join(' '),
+    connection: `${planet.name} в знаке ${planet.sign}; дом — ${planet.house ?? 'не определён'}; управляемые дома — ${planet.ruledHouses.length}; соединения — ${planet.conjunctions.length}; межпланетные аспекты — ${planet.aspectsToPlanets.length + planet.receivesAspectsFrom.length}.`,
     evidence,
     combinedMeaning: `${planet.name} рассматривается через функцию «${planet.function}», знак, дом, управление и доступные связи как единая конфигурация.`,
     tensions: tension,
@@ -250,7 +250,7 @@ export function buildConclusionUnifiedAdvice(
   const evidence = unique(conclusion.evidence);
   const action = relatedHouses.length ? HOUSE_ACTIONS[relatedHouses[0]] : fallbackStep(evidence);
   return buildUnifiedAdvice({
-    connection: evidence.join(' '),
+    connection: `Вывод «${conclusion.title}» связан с домами ${relatedHouses.length ? relatedHouses.join(', ') : 'без определённого дома'} и планетами ${conclusion.relatedPlanets.length ? conclusion.relatedPlanets.map((key) => PLANET_NAMES[key]).join(', ') : 'без отдельной планетной привязки'}.`,
     evidence,
     combinedMeaning: conclusion.statement,
     tensions: relevantTensions,
@@ -275,7 +275,7 @@ export function buildSynthesisUnifiedAdvice(synthesis: NatalChartSynthesis): Uni
     || synthesis.dataQuality.missingHouses.length > 0
     || synthesis.dataQuality.missingPlanets.length > 0;
   return buildUnifiedAdvice({
-    connection: evidence.join(' ') || 'Достаточно подтверждённых межпланетных и междомовых связей для выделения ведущего акцента пока нет.',
+    connection: evidence.length ? `Синтез опирается на ${evidence.length} уникальных подтверждённых оснований${strongestTheme ? `; ведущий акцент — ${strongestTheme.house}-й дом` : ''}.` : 'Достаточно подтверждённых межпланетных и междомовых связей для выделения ведущего акцента пока нет.',
     evidence,
     combinedMeaning: synthesis.overview,
     tensions: synthesis.tensions,
