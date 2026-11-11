@@ -428,15 +428,24 @@ export function restoreUserArchive(json: string): ArchiveRestoreResult {
     throw new Error('Файл не является корректным JSON-архивом AstroDay.');
   }
 
+  let archiveData: UserArchiveData | null = null;
   if (isRecord(parsed) && parsed.format === ARCHIVE_FORMAT) {
     if (parsed.schemaVersion !== ARCHIVE_SCHEMA_VERSION) {
       throw new Error('Версия архива не поддерживается. Обновите AstroDay перед восстановлением.');
     }
     if (!isRecord(parsed.data)) throw new Error('В архиве отсутствует раздел пользовательских данных.');
-    const data = validateArchiveData(parsed.data);
-    if (!data) throw new Error('Архив содержит повреждённые или несовместимые данные. Текущие данные не изменены.');
+    archiveData = validateArchiveData(parsed.data);
+    if (!archiveData) throw new Error('Архив содержит повреждённые или несовместимые данные. Текущие данные не изменены.');
+  } else if (isRecord(parsed) && 'profile' in parsed && 'feedback' in parsed) {
+    // Legacy v0 exportData() payload: all sections existed, but there was no archive envelope/version.
+    archiveData = validateArchiveData(parsed);
+    if (!archiveData) throw new Error('Старый архив содержит повреждённые или несовместимые данные. Текущие данные не изменены.');
+  }
+
+  if (archiveData) {
+    const data = archiveData;
     const entries: Array<[string, string | null]> = [
-      [STORAGE_KEY, data.profile ? legacyObfuscate(JSON.stringify(wrapProfilePayload(data.profile)), LEGACY_OBFUSCATION_KEY) : null],
+      [STORAGE_KEY, legacyObfuscate(JSON.stringify(wrapProfilePayload(data.profile)), LEGACY_OBFUSCATION_KEY)],
       [FEEDBACK_KEY, JSON.stringify(data.feedback)],
       [HOME_CALIBRATION_KEY, data.homeCalibration ? legacyObfuscate(JSON.stringify(data.homeCalibration), LEGACY_OBFUSCATION_KEY) : null],
       [HOME_FLOORPLAN_KEY, data.homeFloorPlan ? legacyObfuscate(JSON.stringify(data.homeFloorPlan), LEGACY_OBFUSCATION_KEY) : null],
