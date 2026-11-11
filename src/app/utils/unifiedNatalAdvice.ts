@@ -84,12 +84,12 @@ function fallbackStep(evidence: string[]): { step: string; criteria: string } {
 
 /** The only constructor for the public advice contract; every section is normalized here. */
 export function buildUnifiedAdvice(input: UnifiedAdviceInput): UnifiedAdvice {
-  const evidence = unique(input.evidence?.length ? input.evidence : [input.connection]);
+  const evidence = unique(input.evidence !== undefined ? input.evidence : [input.connection]);
   const connection = normalize(input.connection) || (evidence.length
     ? evidence.join(' ')
     : 'Подтверждённые связи для этого вывода отсутствуют.');
   const tensions = unique(input.tensions ?? []);
-  const dataStatus = input.dataStatus ?? (evidence.length ? 'complete' : 'partial');
+  const dataStatus = input.dataStatus ?? (evidence.length ? 'complete' : input.evidence !== undefined ? 'unavailable' : 'partial');
   const tension = tensions.length
     ? tensions.join(' ')
     : 'В доступных показателях для этого вывода отдельное противоречие не отмечено; непроверенные факторы перечислены в ограничениях.';
