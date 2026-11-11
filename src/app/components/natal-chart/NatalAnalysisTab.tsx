@@ -22,7 +22,7 @@ import { analyzePersonalizedHouses } from '../../utils/personalizedHouseAnalysis
 import { analyzeAllNatalHouses } from '../../utils/natalHousePersonalizedAnalysis';
 import { analyzeAllNatalPlanets } from '../../utils/natalPlanetPersonalizedAnalysis';
 import { synthesizeNatalChart } from '../../utils/natalChartSynthesis';
-import { buildConclusionUnifiedAdvice, buildHouseUnifiedAdvice, buildNarrativeUnifiedAdvice, buildPlanetUnifiedAdvice, buildSynthesisUnifiedAdvice } from '../../utils/unifiedNatalAdvice';
+import { buildConclusionUnifiedAdvice, buildHouseUnifiedAdvice, buildLifeAreaBridgeUnifiedAdvice, buildLifeAreaUnifiedAdvice, buildNarrativeUnifiedAdvice, buildPlanetUnifiedAdvice, buildSynthesisUnifiedAdvice } from '../../utils/unifiedNatalAdvice';
 import { getPlanetHouse } from '../../utils/natalStrengthAnalysis';
 import { getSunHouseFocus } from '../../utils/natalAnalysisGuidance';
 import { formatCoreLifeAreaEvidence, getAscendantChartFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus, getPlanetChartFocus } from '../../utils/natalPersonalFocus';
@@ -361,11 +361,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
               {coreLifeAreaInteractions.map((area) => (
                 <section key={area.id} className="rounded-lg border border-cyan-100 bg-cyan-50/60 p-4 space-y-2">
                   <h4 className="font-semibold text-gray-900">{area.title}</h4>
-                  <ul className="space-y-2">
-                    {area.connections.map((connection) => (
-                      <li key={connection} className="text-sm leading-relaxed text-gray-700">{connection}</li>
-                    ))}
-                  </ul>
+                  <UnifiedAdviceBlock advice={buildLifeAreaUnifiedAdvice(area.title, area.connections)} />
                 </section>
               ))}
             </div>
@@ -383,7 +379,12 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                         </li>
                       ))}
                     </ul>
-                    <p className="text-xs leading-relaxed text-gray-600">{bridge.explanation}</p>
+                    <UnifiedAdviceBlock advice={buildLifeAreaBridgeUnifiedAdvice({
+                      connection: bridge.connection,
+                      areas: bridge.areas,
+                      explanation: bridge.explanation,
+                      evidence: bridge.evidenceByArea.map((item) => `${item.areaTitle}: ${item.evidence.map(formatCoreLifeAreaEvidence).join('; ')}`),
+                    })} />
                   </div>
                 ))}
               </section>
@@ -404,7 +405,11 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
               <p className="text-sm text-gray-600">Лагна, Солнце и Луна: общий акцент и разные функции</p>
             </div>
           </div>
-          <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{coreChartSynthesis}</p>
+          <UnifiedAdviceBlock advice={buildNarrativeUnifiedAdvice({
+            connection: [ascendantChartFocus, sunChartFocus, moonChartFocus].join(' '),
+            combinedMeaning: coreChartSynthesis,
+            practicalStep: 'Сопоставьте цели, эмоциональные потребности и повседневные действия; выберите один небольшой шаг, который учитывает все три аспекта.',
+          })} />
         </div>
       </GlassCard>
 
