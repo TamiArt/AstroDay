@@ -22,7 +22,7 @@ import { analyzePersonalizedHouses } from '../../utils/personalizedHouseAnalysis
 import { analyzeAllNatalHouses } from '../../utils/natalHousePersonalizedAnalysis';
 import { analyzeAllNatalPlanets } from '../../utils/natalPlanetPersonalizedAnalysis';
 import { synthesizeNatalChart } from '../../utils/natalChartSynthesis';
-import { buildConclusionUnifiedAdvice, buildHouseUnifiedAdvice, buildPlanetUnifiedAdvice, buildSynthesisUnifiedAdvice } from '../../utils/unifiedNatalAdvice';
+import { buildConclusionUnifiedAdvice, buildHouseUnifiedAdvice, buildNarrativeUnifiedAdvice, buildPlanetUnifiedAdvice, buildSynthesisUnifiedAdvice } from '../../utils/unifiedNatalAdvice';
 import { getPlanetHouse } from '../../utils/natalStrengthAnalysis';
 import { getSunHouseFocus } from '../../utils/natalAnalysisGuidance';
 import { formatCoreLifeAreaEvidence, getAscendantChartFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus, getPlanetChartFocus } from '../../utils/natalPersonalFocus';
@@ -222,7 +222,11 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
 
         <div className="p-4 bg-white rounded-lg border border-purple-200">
           <h4 className="text-sm font-semibold text-purple-700 uppercase mb-2">Управитель Лагны — куда направлена энергия личности</h4>
-          <p className="text-sm text-gray-700 leading-relaxed">{ascendantChartFocus}</p>
+          <UnifiedAdviceBlock advice={buildNarrativeUnifiedAdvice({
+            connection: ascendantChartFocus,
+            combinedMeaning: ascDesc.meaning,
+            practicalStep: ascDesc.practicalAdvice.join(' '),
+          })} />
         </div>
 
         <div className="p-4 bg-white rounded-lg border border-purple-200">
@@ -283,7 +287,13 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
           <div className="p-4 bg-white rounded-lg border border-orange-200">
             <h4 className="text-sm font-semibold text-orange-700 uppercase mb-2">Где светить</h4>
             <p className="text-sm text-gray-700 leading-relaxed">{sunFocus}</p>
-            <p className="text-xs text-gray-700 leading-relaxed mt-3 border-t border-orange-100 pt-3">Фактические показатели вашей карты: {sunChartFocus}</p>
+            <div className="mt-3 border-t border-orange-100 pt-3">
+              <UnifiedAdviceBlock advice={buildNarrativeUnifiedAdvice({
+                connection: sunChartFocus,
+                combinedMeaning: sunDesc.essence,
+                practicalStep: sunDesc.practicalSteps.join(' '),
+              })} />
+            </div>
           </div>
         </div>
         <div className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border-l-4 border-yellow-600">
@@ -308,7 +318,13 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
         <div className="p-4 bg-white rounded-lg border border-blue-200">
           <h4 className="text-sm font-semibold text-blue-700 uppercase mb-2">Конкретная жизненная сфера Луны</h4>
           <p className="text-sm text-gray-700 leading-relaxed">{moonHouseFocus}</p>
-          <p className="text-xs text-gray-700 leading-relaxed mt-3 border-t border-blue-100 pt-3">Фактические показатели вашей карты: {moonChartFocus}</p>
+          <div className="mt-3 border-t border-blue-100 pt-3">
+            <UnifiedAdviceBlock advice={buildNarrativeUnifiedAdvice({
+              connection: moonChartFocus,
+              combinedMeaning: moonDesc.essence,
+              practicalStep: moonDesc.comfort,
+            })} />
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-4 bg-white rounded-lg border border-blue-200">
