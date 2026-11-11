@@ -201,7 +201,7 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
       ? createFinding({
         id: 'chandra-mangala', name: 'Чандра-Мангала-йога', sanskritName: 'Chandra-Mangala Yoga', category: 'lunar',
         description: 'Луна и Марс соединены по знаку или связаны аспектом; традиционно сочетание относят к активности в материальных и практических вопросах.',
-        formalRule: 'Луна и Марс находятся в одном знаке либо между ними присутствует хотя бы один рассчитанный взаимный Parashari graha drishti.',
+        formalRule: 'Луна и Марс находятся в одном знаке либо между ними присутствует хотя бы один рассчитанный аспект Parashari graha drishti в любом направлении.',
         participants: ['Moon', 'Mars'], houses: [moon.house ?? 0, mars.house ?? 0].filter(Boolean),
         evidence: links.length ? links : [`Луна и Марс находятся в одном знаке ${moon.sign}.`],
         caveats: ['Для этой комбинации используется связь по знаку или классический аспект; точный орбис и сила планет не рассчитываются.'],
@@ -338,7 +338,7 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
         found.push(createFinding({
           id: `vipareeta-${sourceHouse}-lord`,
           name: 'Випарита-раджа-йога', sanskritName: 'Vipareeta Raja Yoga', category: 'vipareeta',
-          description: `Управитель ${sourceHouse}-го дома расположен в другом доме дустханы (6/8/12); это базовый критерий одной из разновидностей Випарита-раджа-йоги.`,
+          description: `Управитель ${sourceHouse}-го дома расположен в одном из домов дустханы (6/8/12); это базовый критерий одной из разновидностей Випарита-раджа-йоги.`,
           formalRule: 'Управитель 6-го, 8-го или 12-го дома находится в одном из домов 6/8/12.',
           participants: [lord], houses: [sourceHouse, planet.house],
           evidence: [`Управитель ${sourceHouse}-го дома — ${PLANET_NAMES[lord]}.`, `${PLANET_NAMES[lord]} расположен в ${planet.house}-м доме; оба дома входят в группу дустхан 6/8/12.`],
