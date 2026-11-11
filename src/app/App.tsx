@@ -36,8 +36,13 @@ export default function App() {
     const newProfile: UserProfile = {
       ...data
     };
-    saveUserProfile(newProfile);
-    setProfile(newProfile);
+    try {
+      saveUserProfile(newProfile);
+      setProfile(newProfile);
+    } catch (storageError) {
+      const message = storageError instanceof Error ? storageError.message : 'Не удалось сохранить профиль.';
+      alert(message);
+    }
   };
 
   const handleReset = async () => {
