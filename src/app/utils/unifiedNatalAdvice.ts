@@ -123,6 +123,23 @@ export function buildPlanetUnifiedAdvice(planet: NatalPlanetPersonalizedAnalysis
   });
 }
 
+export function buildConclusionUnifiedAdvice(
+  conclusion: NatalChartSynthesis['conclusions'][number],
+  tensions: string[],
+): UnifiedAdvice {
+  const relevantTensions = tensions.filter((item) =>
+    conclusion.relatedHouses.some((house) => item.includes(`${house}-го дома`))
+    || conclusion.relatedPlanets.some((planet) => item.includes(planet)),
+  );
+  const house = conclusion.relatedHouses[0] ?? 10;
+  return buildUnifiedAdvice({
+    connection: conclusion.evidence.join(' '),
+    combinedMeaning: conclusion.statement,
+    tensions: relevantTensions,
+    practicalStep: HOUSE_ACTIONS[house],
+  });
+}
+
 export function buildSynthesisUnifiedAdvice(synthesis: NatalChartSynthesis): UnifiedAdvice {
   const strongestTheme = synthesis.dominantThemes[0];
   const bridges = synthesis.bridges.slice(0, 3).map((item) => item.evidence);
