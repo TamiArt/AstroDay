@@ -84,6 +84,7 @@ function NumberField({ label, value, onChange, suffix, min = 0, max, hint }: {
 export function VastuPropertyAssessment() {
   const [assessment, setAssessment] = useState<VastuPropertyAssessmentData>(() => loadVastuPropertyAssessment());
   const [saved, setSaved] = useState(true);
+  const [storageError, setStorageError] = useState('');
   const analysis = useMemo(() => analyzeVastuProperty(assessment), [assessment]);
 
   const update = <K extends keyof VastuPropertyAssessmentData>(key: K, value: VastuPropertyAssessmentData[K]) => {
@@ -97,21 +98,33 @@ export function VastuPropertyAssessment() {
   };
 
   const save = () => {
-    saveVastuPropertyAssessment(assessment);
-    setSaved(true);
+    try {
+      saveVastuPropertyAssessment(assessment);
+      setSaved(true);
+      setStorageError('');
+    } catch (error) {
+      setSaved(false);
+      setStorageError(error instanceof Error ? error.message : 'Не удалось сохранить данные объекта.');
+    }
   };
 
   const reset = () => {
     const empty = createEmptyVastuPropertyAssessment();
-    setAssessment(empty);
-    saveVastuPropertyAssessment(empty);
-    setSaved(true);
+    try {
+      saveVastuPropertyAssessment(empty);
+      setAssessment(empty);
+      setSaved(true);
+      setStorageError('');
+    } catch (error) {
+      setStorageError(error instanceof Error ? error.message : 'Не удалось сбросить данные объекта.');
+    }
   };
 
   const money = (value: number) => formatPropertyMoney(value, assessment.currency);
 
   return (
     <div className="space-y-5">
+      {storageError && <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{storageError}</p>}
       <GlassCard>
         <div className="space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
