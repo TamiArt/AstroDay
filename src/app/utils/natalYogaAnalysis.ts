@@ -229,7 +229,7 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
         category: 'mahapurusha',
         description: `${rule.quality}; планета расположена в кендре от Асцендента. Это одна из пяти комбинаций Панча-Махапуруша.`,
         formalRule: `${PLANET_NAMES[rule.planet]} находится в собственном знаке или знаке экзальтации и в доме 1/4/7/10 от Лагны.`,
-        participants: [rule.planet], houses: [planet.house],
+        participants: [rule.planet], houses: planet.house === null ? [] : [planet.house],
         evidence: [`${PLANET_NAMES[rule.planet]} находится в знаке ${planet.sign}; этот знак входит в список собственного достоинства/экзальтации для данного правила.`, `Планета расположена в ${planet.house}-м доме от Асцендента; это кендра (1/4/7/10).`],
         caveats: ['Учитывается только базовый критерий знака и кендры; ретроградность, сожжение, точные градусы и дополнительные традиционные условия не проверяются.'],
       })
@@ -242,7 +242,7 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
     const missing = [...missingHouses.filter((house) => [...KENDRA_HOUSES, ...TRIKONA_HOUSES].includes(house)).map((house) => `${house}-й дом`)];
     if (!hasAscendant) missing.push('знак Асцендента');
     const found: NatalYogaFinding[] = [];
-    if (!missing.length) {
+    {
       for (const kendra of [4, 7, 10]) {
         const kendraLord = lordOfHouse(facts, kendra);
         if (!kendraLord || !isPresent(facts, kendraLord)) continue;
@@ -272,7 +272,7 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
     const missing = missingHouses.filter((house) => housesToCheck.includes(house)).map((house) => `${house}-й дом`);
     if (!hasAscendant) missing.push('знак Асцендента');
     const found: NatalYogaFinding[] = [];
-    if (!missing.length) {
+    {
       for (const wealthHouse of [2, 11]) {
         const wealthLord = lordOfHouse(facts, wealthHouse);
         if (!wealthLord || !isPresent(facts, wealthLord)) continue;
@@ -330,7 +330,7 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
   {
     const missing = missingHouses.filter((house) => DUSTHANA_HOUSES.includes(house)).map((house) => `${house}-й дом`);
     const found: NatalYogaFinding[] = [];
-    if (!missing.length) {
+    {
       for (const sourceHouse of DUSTHANA_HOUSES) {
         const lord = lordOfHouse(facts, sourceHouse);
         const planet = lord ? facts.planets[lord] : null;
