@@ -645,7 +645,9 @@ const shiftedSunChart = {
   ...chart,
   planets: { ...chart.planets, Sun: position('Sun', 30, 'Taurus', 'Krittika') },
 } as NatalChart;
-const shiftedSynthesis = synthesizeNatalChart(buildNatalChartFacts(shiftedSunChart));
+const shiftedFacts = buildNatalChartFacts(shiftedSunChart);
+assert.equal(shiftedFacts.planets.Sun?.sign, 'Телец');
+const shiftedSynthesis = synthesizeNatalChart(shiftedFacts);
 assert.notDeepEqual(shiftedSynthesis.dominantThemes, wholeChart.dominantThemes);
 assert.ok(shiftedSynthesis.conclusions.some((item) => item.evidence.some((line) => line.includes('Телец'))));
 
