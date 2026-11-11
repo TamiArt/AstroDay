@@ -640,6 +640,10 @@ assert.ok(wholeChart.dominantThemes.some((item) => item.house === 11));
 assert.ok(wholeChart.bridges.some((item) => item.fromHouse === 3 && item.toHouse === 6 && item.lord === 'Mercury'));
 assert.ok(wholeChart.planetNetworks.some((item) => item.relation === 'aspect' && item.planets.includes('Mars') && item.planets.includes('Jupiter')));
 assert.ok(wholeChart.conclusions.every((item) => item.evidence.length > 0));
+const conclusionWithTension = wholeChart.conclusions.find((item) => (item.relatedTensions?.length ?? 0) > 0);
+assert.ok(conclusionWithTension, 'At least one synthesis conclusion should inherit attention factors from its related chart indicators');
+const conclusionTensionAdvice = buildConclusionUnifiedAdvice(conclusionWithTension!, wholeChart.tensions);
+assert.ok(conclusionTensionAdvice.tension.includes(conclusionWithTension!.relatedTensions![0]));
 assert.equal(new Set(wholeChart.conclusions.map((item) => item.id)).size, wholeChart.conclusions.length);
 assert.ok(wholeChart.conclusions.every((item) =>
   item.relatedPlanets.every((planet) => NATAL_PLANET_KEYS.includes(planet)),
