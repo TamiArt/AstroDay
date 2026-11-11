@@ -240,8 +240,15 @@ export function synthesizeNatalChart(facts: NatalChartFacts): NatalChartSynthesi
     tensions.push('Часть исходных данных отсутствует; общие выводы следует считать предварительными и читать вместе с ограничениями.');
   }
 
-  const completeness = Math.round((available.length / NATAL_PLANET_KEYS.length * 0.6
-    + (12 - facts.dataQuality.missingHouseNumbers.length) / 12 * 0.4) * 100);
+  const planetsWithKnownHouse = available.filter((key) => facts.planets[key]?.house !== null).length;
+  const housesWithKnownLordPlacement = houses.filter((house) => house.available
+    && house.lord !== null && house.lordHouse !== null).length;
+  const ascendantAvailable = facts.chart.ascendantSign !== null;
+  const completeness = Math.round((
+    planetsWithKnownHouse / NATAL_PLANET_KEYS.length * 0.55
+    + housesWithKnownLordPlacement / 12 * 0.4
+    + Number(ascendantAvailable) * 0.05
+  ) * 100);
   const caveats = unique([
     ...facts.dataQuality.warnings,
     ...facts.dataQuality.unsupportedFactors,
