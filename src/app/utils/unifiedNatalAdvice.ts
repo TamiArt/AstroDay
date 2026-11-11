@@ -62,6 +62,16 @@ export function buildUnifiedAdvice(input: {
   };
 }
 
+export function buildNarrativeUnifiedAdvice(input: {
+  connection: string;
+  combinedMeaning: string;
+  practicalStep: string;
+  tensions?: string[];
+  limitation?: string;
+}): UnifiedAdvice {
+  return buildUnifiedAdvice(input);
+}
+
 export function buildHouseUnifiedAdvice(house: NatalHousePersonalizedAnalysis): UnifiedAdvice {
   if (!house.available) {
     return buildUnifiedAdvice({
