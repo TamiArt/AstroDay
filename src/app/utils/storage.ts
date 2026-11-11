@@ -153,10 +153,12 @@ export function loadUserProfile(): UserProfile | null {
     if (!stored) return null;
 
     const parsed: unknown = JSON.parse(legacyDeobfuscate(stored, LEGACY_OBFUSCATION_KEY));
-    return validateUserProfile(unwrapProfilePayload(parsed));
+    const profile = validateUserProfile(unwrapProfilePayload(parsed));
+    if (!profile) throw new Error('Сохранённый профиль не прошёл проверку структуры.');
+    return profile;
   } catch (error) {
     console.error('Error loading profile:', error);
-    return null;
+    throw new Error('Не удалось прочитать сохранённый профиль. Не создавайте новый профиль поверх старых данных; проверьте доступ к хранилищу и повторите загрузку.');
   }
 }
 
