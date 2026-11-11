@@ -1,6 +1,6 @@
 import { NATAL_PLANET_KEYS, type NatalChartFacts, type NatalPlanetKey } from './natalChartFacts';
 
-export type YogaCategory = 'raja' | 'wealth' | 'mahapurusha' | 'lunar' | 'exchange' | 'vipareeta';
+export type YogaCategory = 'raja' | 'wealth' | 'mahapurusha' | 'lunar' | 'planetary' | 'exchange' | 'vipareeta';
 export type YogaCheckStatus = 'detected' | 'not-detected' | 'incomplete';
 
 export interface NatalYogaFinding {
@@ -180,7 +180,7 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
     const detected = Boolean(sun && mercury && sun.signIndex === mercury.signIndex);
     const finding = detected && sun && mercury
       ? createFinding({
-        id: 'budha-aditya', name: 'Буддха-Адитья-йога', sanskritName: 'Budha-Aditya Yoga', category: 'lunar',
+        id: 'budha-aditya', name: 'Буддха-Адитья-йога', sanskritName: 'Budha-Aditya Yoga', category: 'planetary',
         description: 'Солнце и Меркурий находятся в одном знаке; традиционно сочетание связывают с интеллектом, обучением и выражением мыслей.',
         formalRule: 'Солнце и Меркурий занимают один сидерический знак.',
         participants: ['Sun', 'Mercury'], houses: [sun.house ?? 0, mercury.house ?? 0].filter(Boolean),
