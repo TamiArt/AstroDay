@@ -705,6 +705,7 @@ const unavailableHouseUnified = buildHouseUnifiedAdvice(analyzeAllNatalHouses(in
 assert.ok(unavailableHouseUnified.combinedMeaning.includes('не формируется'));
 assert.equal(unavailableHouseUnified.dataStatus, 'unavailable');
 assert.ok(unavailableHouseUnified.successCriteria.includes('После пересчёта'));
+assert.deepEqual(unavailableHouseUnified.evidence, []);
 
 
 const duplicateNarrative = buildNarrativeUnifiedAdvice({
@@ -721,6 +722,7 @@ const unsupportedAreaAdvice = buildLifeAreaUnifiedAdvice('Неизвестная
 assert.equal(unsupportedAreaAdvice.dataStatus, 'unavailable');
 assert.ok(unsupportedAreaAdvice.limitation.includes('не переданы'));
 assert.ok(unsupportedAreaAdvice.successCriteria.includes('после получения'));
+assert.deepEqual(unsupportedAreaAdvice.evidence, [], 'An unavailable section must not promote its fallback explanation into chart evidence');
 
 const shiftedSunChart = {
   ...chart,
