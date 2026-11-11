@@ -11,7 +11,7 @@ import { buildNatalChartFacts, getNatalFactLinks, getNatalHouseFacts, getNatalPl
 import { analyzeAllNatalHouses } from './natalHousePersonalizedAnalysis';
 import { analyzeAllNatalPlanets } from './natalPlanetPersonalizedAnalysis';
 import { synthesizeNatalChart } from './natalChartSynthesis';
-import { buildConclusionUnifiedAdvice, buildHouseUnifiedAdvice, buildNarrativeUnifiedAdvice, buildPlanetUnifiedAdvice, buildSynthesisUnifiedAdvice } from './unifiedNatalAdvice';
+import { buildConclusionUnifiedAdvice, buildHouseUnifiedAdvice, buildLifeAreaBridgeUnifiedAdvice, buildLifeAreaUnifiedAdvice, buildNarrativeUnifiedAdvice, buildPlanetUnifiedAdvice, buildSynthesisUnifiedAdvice } from './unifiedNatalAdvice';
 import type { NatalChart, PlanetPosition } from './astrology';
 
 function position(name: string, longitude: number, signName: string, nakshatraName: string) {
@@ -672,6 +672,18 @@ const unifiedAscendantAdvice = buildNarrativeUnifiedAdvice({
 assert.ok(unifiedAscendantAdvice.connection.includes('10-м доме'));
 assert.ok(unifiedAscendantAdvice.tension.includes('Сатурна'));
 assert.ok(unifiedAscendantAdvice.practicalStep.includes('этапы'));
+const unifiedCareerAdvice = buildLifeAreaUnifiedAdvice('Профессия и карьера', ['Меркурий связывает 6-й и 10-й дома.']);
+const unifiedBridgeAdvice = buildLifeAreaBridgeUnifiedAdvice({
+  connection: 'Связь Меркурия и Сатурна.',
+  areas: ['Карьера', 'Обучение'],
+  explanation: 'Профессиональная сфера связана с системным обучением.',
+  evidence: ['Меркурий расположен в 10-м доме.', 'Сатурн управляет 9-м домом.'],
+});
+assert.ok(unifiedCareerAdvice.connection.includes('Меркурий'));
+assert.ok(unifiedCareerAdvice.practicalStep.includes('профессиональную цель'));
+assert.ok(unifiedBridgeAdvice.connection.includes('Обучение'));
+assert.ok(unifiedBridgeAdvice.combinedMeaning.includes('обучением'));
+assert.ok(unifiedBridgeAdvice.practicalStep.length > 0);
 
 // Missing source data must be stated explicitly instead of being replaced with generic chart claims.
 const missingPlanetUnified = buildPlanetUnifiedAdvice(missingKetuAnalysis!);
