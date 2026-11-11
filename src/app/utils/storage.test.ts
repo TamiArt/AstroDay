@@ -52,10 +52,14 @@ assert.throws(
 const storageValues = new Map<string, string>();
 let writesBeforeFailure: number | null = null;
 let failureName = 'QuotaExceededError';
+let failReads = false;
 Object.defineProperty(globalThis, 'localStorage', {
   configurable: true,
   value: {
-    getItem: (key: string) => storageValues.get(key) ?? null,
+    getItem: (key: string) => {
+      if (failReads) throw new DOMException('Storage access blocked', 'SecurityError');
+      return storageValues.get(key) ?? null;
+    },
     setItem: (key: string, value: string) => {
       if (writesBeforeFailure !== null) {
         if (writesBeforeFailure === 0) {
@@ -187,5 +191,8 @@ assert.throws(() => saveUserProfile(legacyProfile), /Не удалось сох�
 writesBeforeFailure = 0;
 failureName = 'SecurityError';
 assert.throws(() => saveUserProfile(legacyProfile), /настройки приватности браузера/);
+failReads = true;
+assert.throws(() => loadUserProfile(), /Не удалось прочитать сохранённый профиль/);
+failReads = false;
 
 console.log('storage and archive tests passed');
