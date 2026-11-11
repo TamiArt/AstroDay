@@ -240,10 +240,13 @@ export function buildConclusionUnifiedAdvice(
   tensions: string[],
 ): UnifiedAdvice {
   const relatedHouses = conclusion.relatedHouses;
-  const relevantTensions = unique(tensions).filter((item) =>
-    relatedHouses.some((house) => item.includes(`${house}-го дома`) || item.includes(`${house} домов`))
-    || conclusion.relatedPlanets.some((planet) => item.includes(PLANET_NAMES[planet] ?? planet)),
-  );
+  const directlyRelatedTensions = unique(conclusion.relatedTensions ?? []);
+  const globalContext = unique(tensions);
+  const relevantTensions = directlyRelatedTensions.length
+    ? directlyRelatedTensions
+    : globalContext.length
+      ? [`Общий контекст карты: ${globalContext.join(' ')} Эти факторы не привязаны к данному выводу напрямую.`]
+      : [];
   const evidence = unique(conclusion.evidence);
   const action = relatedHouses.length ? HOUSE_ACTIONS[relatedHouses[0]] : fallbackStep(evidence);
   return buildUnifiedAdvice({
