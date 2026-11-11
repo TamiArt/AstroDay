@@ -148,7 +148,6 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
     if (result.finding) findings.push(result.finding);
     if (result.additionalFindings?.length) findings.push(...result.additionalFindings);
   };
-  const missingCorePlanets = CLASSICAL_PLANETS.filter((key) => !isPresent(facts, key));
   const missingHouses = Array.from({ length: 12 }, (_, index) => index + 1)
     .filter((house) => !facts.houses.some((item) => item.number === house));
   const hasAscendant = Boolean(facts.chart.ascendantSign);
@@ -301,7 +300,7 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
   {
     const missing = CLASSICAL_PLANETS.filter((key) => !isPresent(facts, key)).map((key) => PLANET_NAMES[key]);
     const found: NatalYogaFinding[] = [];
-    if (!missing.length) {
+    {
       for (let i = 0; i < CLASSICAL_PLANETS.length; i += 1) {
         for (let j = i + 1; j < CLASSICAL_PLANETS.length; j += 1) {
           const a = CLASSICAL_PLANETS[i];
