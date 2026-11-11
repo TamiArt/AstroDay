@@ -188,6 +188,12 @@ assert.throws(() => restoreUserArchive(JSON.stringify({
   data: { profile: legacyProfile, feedback: 'broken' },
 })), /Текущие данные не изменены/);
 assert.deepEqual(JSON.parse(exportData()).data, stateBeforeInvalidImport, 'Invalid archive validation must happen before writes');
+assert.throws(() => restoreUserArchive(JSON.stringify({
+  format: 'astroday-user-archive',
+  schemaVersion: 1,
+  exportedAt: '2026-11-11T00:00:00.000Z',
+  data: { ...exported.data, homeFloorPlan: { ...floorPlan, imageDataUrl: 'https://example.com/remote-image.png' } },
+})), /Текущие данные не изменены/, 'Archive restore must not accept remote floor-plan image URLs');
 
 writesBeforeFailure = 0;
 failureName = 'QuotaExceededError';
