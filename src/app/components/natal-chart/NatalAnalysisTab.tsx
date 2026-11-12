@@ -108,17 +108,70 @@ function InsightCard({ icon: Icon, title, subtitle, accent, children }: InsightC
   );
 }
 
-function UnifiedAdviceBlock({ advice }: { advice: ReturnType<typeof buildHouseUnifiedAdvice> }) {
+const HOUSE_PLAIN_NAMES: Record<number, string> = {
+  1: 'личность и самостоятельность', 2: 'личные деньги и накопления',
+  3: 'навыки и общение', 4: 'дом и семья', 5: 'творчество и дети',
+  6: 'работа и повседневные обязанности', 7: 'брак и партнёрство',
+  8: 'общие деньги и перемены', 9: 'обучение и мировоззрение',
+  10: 'профессия и карьера', 11: 'доходы, клиенты и окружение',
+  12: 'отдых, расходы и уединение',
+};
+
+const HOUSE_PLANET_NAMES: Record<string, string> = {
+  Sun: 'Солнце', Moon: 'Луна', Mars: 'Марс', Mercury: 'Меркурий',
+  Jupiter: 'Юпитер', Venus: 'Венера', Saturn: 'Сатурн', Rahu: 'Раху', Ketu: 'Кету',
+};
+
+function getHouseConnectionText(house: ReturnType<typeof analyzeAllNatalHouses>[number]): string {
+  if (!house.available || !house.lord || house.lordHouse === null) {
+    return 'Положение управителя не определено, поэтому связь с другими сферами пока нельзя описать.';
+  }
+  const destination = HOUSE_PLAIN_NAMES[house.lordHouse] ?? `${house.lordHouse}-й дом`;
+  if (house.lordHouse === house.house) {
+    return `Управитель находится в своём доме. Тема ${HOUSE_PLAIN_NAMES[house.house]} получает прямой акцент.`;
+  }
+  return `Управитель находится в ${house.lordHouse}-м доме. Поэтому тема ${HOUSE_PLAIN_NAMES[house.house]} связывается с темой «${destination}».`;
+}
+
+function HouseQuickMeaning({ house }: { house: ReturnType<typeof analyzeAllNatalHouses>[number] }) {
+  if (!house.available) {
+    return <p className="text-sm text-gray-600">Нет исходных данных, чтобы определить знак и управителя этого дома.</p>;
+  }
+  const occupants = house.occupants.map((planet) => HOUSE_PLANET_NAMES[planet] ?? planet);
   return (
-    <div className="rounded-lg border border-indigo-100 bg-indigo-50/60 p-3 space-y-2">
-      <p className="text-sm leading-relaxed text-gray-800">{advice.connection}</p>
-      <p className="text-sm leading-relaxed text-gray-800">{advice.combinedMeaning}</p>
-      <p className="text-sm leading-relaxed text-gray-700">{advice.tension}</p>
-      <p className="text-sm leading-relaxed text-indigo-900"><strong>Практический шаг:</strong> {advice.practicalStep}</p>
-      <p className="text-xs leading-relaxed text-indigo-800"><strong>Проверяемый результат:</strong> {advice.successCriteria}</p>
-      <p className="text-xs text-gray-600">Полнота основания: {advice.dataStatus === 'complete' ? 'достаточно для этого вывода' : advice.dataStatus === 'partial' ? 'часть показателей не подтверждена' : 'персональный вывод недоступен'}</p>
-      {advice.evidence.length ? <details className="text-xs text-gray-600"><summary className="cursor-pointer font-medium">Основания вывода ({advice.evidence.length})</summary><ul className="mt-1 list-disc pl-4 space-y-1">{advice.evidence.map((item) => <li key={item}>{item}</li>)}</ul></details> : null}
-      <p className="text-xs leading-relaxed text-gray-500">{advice.limitation}</p>
+    <div className="space-y-3">
+      <div>
+        <p className="text-xs font-semibold text-gray-500">О ЧЁМ ЭТОТ ДОМ</p>
+        <p className="mt-1 text-sm text-gray-800">{house.theme.charAt(0).toUpperCase() + house.theme.slice(1)}.</p>
+      </div>
+      <div>
+        <p className="text-xs font-semibold text-gray-500">ПЛАНЕТЫ В ДОМЕ</p>
+        <p className="mt-1 text-sm text-gray-800">{occupants.length ? occupants.join(', ') : 'Планет нет — основное внимание уделяем управителю дома.'}</p>
+      </div>
+      <div>
+        <p className="text-xs font-semibold text-gray-500">УПРАВИТЕЛЬ</p>
+        <p className="mt-1 text-sm text-gray-800">{house.lordName ?? 'Не определён'}{house.lordSign ? ` находится в знаке ${house.lordSign}` : ''}{house.lordHouse ? `, в ${house.lordHouse}-м доме` : ''}{house.lordDignity ? `. Положение: ${house.lordDignity}` : ''}.</p>
+      </div>
+      <div className="rounded-lg bg-indigo-50/70 p-3">
+        <p className="text-xs font-semibold text-indigo-800">ЧТО ЭТО ЗНАЧИТ ПРОСТЫМИ СЛОВАМИ</p>
+        <p className="mt-1 text-sm leading-relaxed text-indigo-950">{getHouseConnectionText(house)}</p>
+        {house.ruledHouses.filter((item) => item !== house.house).length > 0 && (
+          <p className="mt-2 text-xs text-indigo-800">Этот же управитель отвечает также за {house.ruledHouses.filter((item) => item !== house.house).map((item) => `${item}-й дом (${HOUSE_PLAIN_NAMES[item]})`).join(', ')}.</p>
+        )}
+      </div>
+      <details className="rounded-lg border border-gray-100 p-3">
+        <summary className="cursor-pointer text-sm font-medium text-gray-700">Дополнительные показатели</summary>
+        <div className="mt-2 space-y-2 text-xs text-gray-600">
+          <p><strong>Знак дома:</strong> {house.sign ?? 'не определён'}</p>
+          <p><strong>Аспекты на дом:</strong> {house.aspects.length ? house.aspects.map((item) => HOUSE_PLANET_NAMES[item] ?? item).join(', ') : 'не обнаружены по выбранной схеме'}</p>
+          <p><strong>Связанные дома:</strong> {house.connectedHouses.length ? house.connectedHouses.join(', ') : 'отдельная связь не выявлена'}</p>
+          {house.dispositorChain.length > 0 && <p><strong>Цепочка диспозиторов:</strong> {house.dispositorChain.map((item) => `${HOUSE_PLANET_NAMES[item.planet] ?? item.planet} — ${item.sign}${item.house === null ? '' : `, ${item.house}-й дом`}`).join(' → ')}</p>}
+          {house.supportingFactors.length > 0 && <p><strong>Поддержка:</strong> {house.supportingFactors.join(' ')}</p>}
+          {house.attentionFactors.length > 0 && <p><strong>Что требует внимания:</strong> {house.attentionFactors.join(' ')}</p>}
+          {house.evidence.length > 0 && <details><summary className="cursor-pointer font-medium">Технические основания</summary><ul className="mt-1 list-disc space-y-1 pl-4">{house.evidence.map((item) => <li key={item}>{item}</li>)}</ul></details>}
+          {house.limitations.length > 0 && <p className="text-gray-500">{house.limitations[0]}</p>}
+        </div>
+      </details>
     </div>
   );
 }
@@ -422,83 +475,16 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
               <HomeIcon className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900">Подробный персональный анализ всех 12 домов</h3>
-              <p className="text-sm text-gray-600">Знак, управитель, его положение и диспозиторная цепочка, планеты в доме, аспекты и связанные сферы</p>
+              <h3 className="text-lg font-bold text-gray-900">Все 12 домов простыми словами</h3>
+              <p className="text-sm text-gray-600">Для каждого дома: его тема, планеты, управитель и простое объяснение связи с другой сферой жизни.</p>
+              <p className="mt-1 text-xs text-indigo-700">Асцендент: {natalChart.ascendant.signName}. Система: Джйотиш, Лахири, целые знаки.</p>
             </div>
           </div>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             {allHouseAnalyses.map((house) => (
               <section key={house.house} className="rounded-xl border border-gray-200 bg-white/80 p-4 space-y-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h4 className="font-semibold text-gray-900">{house.house}-й дом — {house.theme}</h4>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {house.available
-                        ? `Знак: ${house.sign}; управитель: ${house.lordName ?? 'не определён'}${house.lordSign ? ` в ${house.lordSign}` : ''}; положение: ${house.lordHouse ? `${house.lordHouse}-й дом` : 'не определено'}${house.lordDignity ? `; достоинство: ${house.lordDignity}` : ''}`
-                        : 'Исходные данные дома отсутствуют'}
-                    </p>
-                  </div>
-                  <span className={`shrink-0 rounded-full px-2 py-1 text-xs font-medium ${
-                    house.synthesis === 'supportive' ? 'bg-green-100 text-green-700'
-                      : house.synthesis === 'challenging' ? 'bg-amber-100 text-amber-800'
-                        : house.synthesis === 'mixed' ? 'bg-blue-100 text-blue-700'
-                          : house.synthesis === 'incomplete' ? 'bg-gray-100 text-gray-600'
-                            : 'bg-slate-100 text-slate-700'
-                  }`}>
-                    {house.synthesis === 'supportive' ? 'Есть поддержка'
-                      : house.synthesis === 'challenging' ? 'Требует внимания'
-                        : house.synthesis === 'mixed' ? 'Смешанные факторы'
-                          : house.synthesis === 'incomplete' ? 'Недостаточно данных' : 'Нейтрально'}
-                  </span>
-                </div>
-                <UnifiedAdviceBlock advice={buildHouseUnifiedAdvice(house)} />
-                {house.dispositorChain.length ? (
-                  <div className="rounded-lg bg-indigo-50 p-3">
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-indigo-800 mb-1">Цепочка диспозиторов</h5>
-                    <p className="text-sm text-indigo-900">
-                      {house.dispositorChain.map((item) => `${item.planet} — ${item.sign}${item.house === null ? '' : `, ${item.house}-й дом`}${item.dignity ? `, ${item.dignity}` : ''}${item.aspectedBy.length ? `, аспекты от: ${item.aspectedBy.join(', ')}` : ''}`).join(' → ')}
-                    </p>
-                  </div>
-                ) : null}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Планеты в доме</h5>
-                    <p className="text-sm text-gray-700">{house.occupants.length ? house.occupants.join(', ') : 'Нет планет'}</p>
-                  </div>
-                  <div>
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Аспекты на дом</h5>
-                    <p className="text-sm text-gray-700">{house.aspects.length ? house.aspects.join(', ') : 'Не обнаружены по выбранной схеме'}</p>
-                  </div>
-                  <div>
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Управляемые дома</h5>
-                    <p className="text-sm text-gray-700">{house.ruledHouses.length ? house.ruledHouses.join(', ') : 'Не определены'}</p>
-                  </div>
-                  <div>
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Связанные дома</h5>
-                    <p className="text-sm text-gray-700">{house.connectedHouses.length ? house.connectedHouses.join(', ') : 'Нет отдельной связи по положению управителя'}</p>
-                  </div>
-                </div>
-                {house.supportingFactors.length ? (
-                  <div className="rounded-lg bg-green-50 p-3 space-y-1">
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-green-800">Поддерживающие показатели</h5>
-                    {house.supportingFactors.map((item) => <p key={item} className="text-sm text-green-900">{item}</p>)}
-                  </div>
-                ) : null}
-                {house.attentionFactors.length ? (
-                  <div className="rounded-lg bg-amber-50 p-3 space-y-1">
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-amber-800">Факторы, требующие внимания</h5>
-                    {house.attentionFactors.map((item) => <p key={item} className="text-sm text-amber-900">{item}</p>)}
-                  </div>
-                ) : null}
-                <details className="rounded-lg border border-gray-100 p-3">
-                  <summary className="cursor-pointer text-sm font-medium text-gray-700">Показать доказательства и ограничения</summary>
-                  <ul className="mt-2 space-y-1 list-disc pl-5">
-                    {house.evidence.map((item) => <li key={item} className="text-xs leading-relaxed text-gray-600">{item}</li>)}
-                  </ul>
-                  <ul className="mt-2 space-y-1 list-disc pl-5">
-                    {house.limitations.map((item) => <li key={item} className="text-xs leading-relaxed text-gray-500">{item}</li>)}
-                  </ul>
-                </details>
+                <h4 className="font-semibold text-gray-900">{house.house}-й дом — {house.theme}</h4>
+                <HouseQuickMeaning house={house} />
               </section>
             ))}
           </div>
