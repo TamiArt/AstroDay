@@ -53,6 +53,7 @@ AstroDay — клиентское приложение на React 18, TypeScript
 | 29 | Углублённый анализ дробных карт | **Завершён**; полный verify — [run 43182919066](https://github.com/TamiArt/AstroDay/actions/runs/43182919066), commit `46806f8d2daf9a39a91817bb39aa9e35f55239ae` |
 | 30 | Глубокий анализ Вимшоттари Даши | **Завершён**; полный verify — [run 43184874874](https://github.com/TamiArt/AstroDay/actions/runs/43184874874), commit `db6831bfcec4d9d6335148e7115e19f23c910332` |
 | 31 | Транзиты и взаимодействие с натальной картой | **Завершён**; полный verify — [run 43185975401](https://github.com/TamiArt/AstroDay/actions/runs/43185975401), commit `cfa31223e17994164231424896568dd18aa36bf2` |
+| 32 | Динамика транзитов и единый прогноз по жизненным сферам | Реализация добавлена; полный verify ожидает подтверждения |
 
 Завершённый этап означает, что реализация и полный `npm run verify` подтверждены для указанного commit/run. Это не означает, что все ручные сценарии или все астрологические школы проверены.
 
@@ -92,3 +93,4 @@ AstroDay — клиентское приложение на React 18, TypeScript
 - [docs/VASTU_PROPERTY_ANALYSIS.md](docs/VASTU_PROPERTY_ANALYSIS.md) — методика анализа Васту и недвижимости.
 - [docs/ADVANCED_ASTROLOGY.md](docs/ADVANCED_ASTROLOGY.md) — расчёт подпериодов Вимшоттари и применение варг.
 - [docs/VIMSHOTTARI_DASHA_ANALYSIS.md](docs/VIMSHOTTARI_DASHA_ANALYSIS.md) — доказательный анализ управителей периодов, D1 и профильных варг (этап 30).
+- [docs/TRANSIT_TIMELINE_AND_UNIFIED_FORECAST.md](docs/TRANSIT_TIMELINE_AND_UNIFIED_FORECAST.md) — календарь транзитов и единый прогноз по восьми жизненным сферам (этап 32).
