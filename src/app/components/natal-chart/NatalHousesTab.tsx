@@ -93,7 +93,7 @@ function TopicCard({ topic, natalChart }: { topic: LifeTopicInsight; natalChart:
         )}
 
         <p className="text-xs leading-relaxed text-gray-500">
-          Основные дома задают предмет анализа; дополнительные дома показывают связанные темы и не имеют автоматически равного веса. Поддержка оценивается здесь по достоинству управителей и их диспозиторов, а не по полной Shadbala.
+          Основные дома задают предмет анализа; дополнительные дома показывают связанные темы и не имеют автоматически равного веса. Поддержка оценивается здесь по достоинству управителей и их диспозиторов, а не по полной Shadbala <TermTooltip term="shadbala" />.
         </p>
 
         <div className="rounded-lg border border-green-200 bg-green-50 p-4">
