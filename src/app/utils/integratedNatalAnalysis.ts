@@ -77,11 +77,6 @@ export function addIntegratedFactor(list: IntegratedEvidence[], item: Omit<Integ
   }
   list.push({ ...item, id: item.factorId + ':' + item.area, duplicateMentions: 1 });
 }
-function getPolarity(value: string): IntegratedPolarity {
-  if (/challeng|attention|weak|напряж|ослаб|требу.*вниман|ограничен/i.test(value)) return 'tension';
-  if (/support|поддерж|благоприят|устойчив|сильн/i.test(value)) return 'supportive';
-  return 'neutral';
-}
 
 /** Evidence-first cross-layer synthesis. Duplicate references to the same factor never increase corroboration. */
 export function buildIntegratedNatalAnalysis(chart: NatalChart, asOf: Date = new Date()): IntegratedNatalAnalysis {
