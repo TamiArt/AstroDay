@@ -96,15 +96,16 @@ export function buildIntegratedNatalAnalysis(chart: NatalChart, asOf: Date = new
   const evidence: IntegratedEvidence[] = [];
 
   for (const house of houses) {
-    const area = AREAS.find((item) => item.houses.includes(house.house));
-    if (!area || !house.available) continue;
-    addFactor(evidence, {
-      factorId: `natal:house:${house.house}:lord:${house.lord ?? 'unknown'}`,
-      source: 'house', sourceFamily: 'natal-structure', area: area.id,
-      title: `${house.house}-й дом: ${house.theme}`, statement: house.interpretation,
-      polarity: house.synthesis === 'supportive' ? 'supportive' : house.synthesis === 'challenging' ? 'tension' : house.synthesis === 'mixed' ? 'mixed' : 'neutral',
-      references: house.evidence,
-    });
+    if (!house.available) continue;
+    for (const area of AREAS.filter((item) => item.houses.includes(house.house))) {
+      addFactor(evidence, {
+        factorId: `natal:house:${house.house}:lord:${house.lord ?? 'unknown'}`,
+        source: 'house', sourceFamily: 'natal-structure', area: area.id,
+        title: `${house.house}-й дом: ${house.theme}`, statement: house.interpretation,
+        polarity: house.synthesis === 'supportive' ? 'supportive' : house.synthesis === 'challenging' ? 'tension' : house.synthesis === 'mixed' ? 'mixed' : 'neutral',
+        references: house.evidence,
+      });
+    }
   }
   for (const planet of planets) {
     if (!planet.available) continue;
