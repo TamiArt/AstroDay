@@ -23,7 +23,6 @@ import { SIGNS_RU } from '../../utils/astrology';
 import type { NatalChart as NatalChartType } from '../../utils/astrology';
 import { analyzeAllNatalHouses } from '../../utils/natalHousePersonalizedAnalysis';
 import { analyzeAllNatalPlanets } from '../../utils/natalPlanetPersonalizedAnalysis';
-import { buildPlanetUnifiedAdvice } from '../../utils/unifiedNatalAdvice';
 import { getPlanetHouse } from '../../utils/natalStrengthAnalysis';
 import { getSunHouseFocus } from '../../utils/natalAnalysisGuidance';
 import { getMoonHouseFocus } from '../../utils/natalPersonalFocus';
@@ -304,7 +303,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
             <h4 className="text-sm font-semibold text-orange-700 uppercase mb-2">Где светить</h4>
             <p className="text-sm text-gray-700 leading-relaxed">{sunFocus}</p>
             <div className="mt-3 border-t border-orange-100 pt-3">
-              <UnifiedAdviceBlock advice={buildPlanetUnifiedAdvice(allPlanetAnalyses.find((item) => item.planet === 'Sun')!)} />
+              <PlanetQuickMeaning planet={allPlanetAnalyses.find((item) => item.planet === 'Sun')!} />
             </div>
           </div>
         </div>
@@ -331,7 +330,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
           <h4 className="text-sm font-semibold text-blue-700 uppercase mb-2">Конкретная жизненная сфера Луны</h4>
           <p className="text-sm text-gray-700 leading-relaxed">{moonHouseFocus}</p>
           <div className="mt-3 border-t border-blue-100 pt-3">
-            <UnifiedAdviceBlock advice={buildPlanetUnifiedAdvice(allPlanetAnalyses.find((item) => item.planet === 'Moon')!)} />
+            <PlanetQuickMeaning planet={allPlanetAnalyses.find((item) => item.planet === 'Moon')!} />
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
