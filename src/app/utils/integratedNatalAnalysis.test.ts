@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import type { NatalChart, PlanetPosition } from './astrology';
-import { buildIntegratedNatalAnalysis } from './integratedNatalAnalysis';
+import { addIntegratedFactor, buildIntegratedNatalAnalysis, type IntegratedEvidence } from './integratedNatalAnalysis';
 
 const signs = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
 const lords = ['Mars', 'Venus', 'Mercury', 'Moon', 'Sun', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Saturn', 'Jupiter'];
@@ -22,6 +22,19 @@ function chartWith(planets: Record<string, number>): NatalChart {
     planets: Object.fromEntries(Object.entries(planets).map(([name, sign]) => [name, position(name, sign)])),
   } as unknown as NatalChart;
 }
+
+const deduplicated: IntegratedEvidence[] = [];
+const repeatedFactor = {
+  factorId: 'natal:planet:Venus:placement', source: 'planet' as const,
+  sourceFamily: 'natal-structure' as const, area: 'relationships' as const,
+  title: 'Венера: положение', statement: 'Положение Венеры в D1.',
+  polarity: 'neutral' as const, references: ['D1 position'],
+};
+addIntegratedFactor(deduplicated, repeatedFactor);
+addIntegratedFactor(deduplicated, { ...repeatedFactor, references: ['same fact in planet analysis'] });
+assert.equal(deduplicated.length, 1, 'the same underlying factor must be represented once');
+assert.equal(deduplicated[0].duplicateMentions, 2, 'duplicate mentions are tracked without increasing factor count');
+assert.equal(deduplicated[0].references.length, 2, 'source references are preserved after deduplication');
 
 const chart = chartWith({
   Sun: 8, Moon: 8, Mars: 0, Mercury: 7, Jupiter: 3,
