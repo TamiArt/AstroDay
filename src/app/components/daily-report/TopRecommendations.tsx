@@ -4,6 +4,7 @@ import { PanchangData } from '../../utils/panchang';
 import { Aspect } from '../../utils/astrology';
 import { PersonalRecommendationResult } from '../../utils/personalRecommendations';
 import { GlassCard } from '../common/GlassCard';
+import { TermTooltip } from '../common/TermTooltip';
 
 interface TopRecommendationsProps {
   tithi: PanchangData['tithi'];
@@ -116,7 +117,7 @@ export function TopRecommendations({
             <Sparkles className="w-5 h-5" />
           </div>
           <div className="flex-1">
-            <p className="mb-1">Микро-упайя: {personalRecommendation.microUpaya.title}</p>
+            <p className="mb-1">Микро-упайя <TermTooltip term="upaya" />: {personalRecommendation.microUpaya.title}</p>
             <p className="opacity-70">{personalRecommendation.microUpaya.action}</p>
           </div>
         </div>
