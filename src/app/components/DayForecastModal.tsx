@@ -19,7 +19,7 @@ export function DayForecastModal({ date, forecast, profile, comparisonForecast, 
   const isPast = date < new Date();
   const smartPlan = buildSmartDayPlan(forecast);
   const comparison = comparisonForecast ? compareSmartPeriods(comparisonForecast, forecast) : null;
-  const factorLabels: Record<string, string> = { natal: 'Натальная карта', dasha: 'Даша', transit: 'Транзиты', panchang: 'Панчанга', energy: 'Ресурс дня', timing: 'Планетарный час', 'data-quality': 'Качество данных' };
+  const factorLabels: Record<string, string> = { natal: 'Натальная карта', varga: 'Дробная карта', dasha: 'Даша', transit: 'Транзиты', panchang: 'Панчанга', energy: 'Ресурс дня', timing: 'Планетарный час', 'data-quality': 'Качество данных' };
 
   return (
     <div
