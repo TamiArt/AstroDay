@@ -21,13 +21,12 @@ import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { SIGNS_RU } from '../../utils/astrology';
 import type { NatalChart as NatalChartType } from '../../utils/astrology';
-import { analyzePersonalizedHouses } from '../../utils/personalizedHouseAnalysis';
 import { analyzeAllNatalHouses } from '../../utils/natalHousePersonalizedAnalysis';
 import { analyzeAllNatalPlanets } from '../../utils/natalPlanetPersonalizedAnalysis';
-import { buildLifeAreaBridgeUnifiedAdvice, buildLifeAreaUnifiedAdvice, buildNarrativeUnifiedAdvice, buildPlanetUnifiedAdvice } from '../../utils/unifiedNatalAdvice';
+import { buildPlanetUnifiedAdvice } from '../../utils/unifiedNatalAdvice';
 import { getPlanetHouse } from '../../utils/natalStrengthAnalysis';
 import { getSunHouseFocus } from '../../utils/natalAnalysisGuidance';
-import { formatCoreLifeAreaEvidence, getAscendantChartFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus, getPlanetChartFocus } from '../../utils/natalPersonalFocus';
+import { getMoonHouseFocus } from '../../utils/natalPersonalFocus';
 import { getAscendantDescription, getMoonDescription, getSunDescription } from '../../utils/natalChartDescriptions';
 import { GlassCard } from '../common/GlassCard';
 import { TermTooltip } from '../common/TermTooltip';
@@ -210,18 +209,11 @@ function PlanetQuickMeaning({ planet }: { planet: ReturnType<typeof analyzeAllNa
 export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
   const sunHouse = getPlanetHouse(natalChart, 'Sun');
   const moonHouse = getPlanetHouse(natalChart, 'Moon');
-  const personalizedHouses = analyzePersonalizedHouses(natalChart);
   const sunFocus = getSunHouseFocus(natalChart, sunHouse);
   const chartFacts = buildNatalChartFacts(natalChart);
   const allHouseAnalyses = analyzeAllNatalHouses(chartFacts);
   const allPlanetAnalyses = analyzeAllNatalPlanets(chartFacts);
-  const ascendantChartFocus = getAscendantChartFocus(natalChart, chartFacts);
-  const sunChartFocus = getPlanetChartFocus(natalChart, 'Sun', chartFacts);
-  const moonChartFocus = getPlanetChartFocus(natalChart, 'Moon', chartFacts);
   const moonHouseFocus = getMoonHouseFocus(natalChart, moonHouse);
-  const coreChartSynthesis = getCoreChartSynthesis(natalChart);
-  const coreLifeAreaInteractions = getCoreInteractionsByLifeArea(natalChart);
-  const coreLifeAreaBridges = getCoreLifeAreaBridges(natalChart);
   const ascDesc = getAscendantDescription(natalChart.ascendant.signName);
   const sunSignRu = SIGNS_RU[natalChart.planets.Sun.sign] ?? natalChart.planets.Sun.signName;
   const moonSignRu = SIGNS_RU[natalChart.planets.Moon.sign] ?? natalChart.planets.Moon.signName;
@@ -361,77 +353,26 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
         </div>
       </InsightCard>
 
-      {coreLifeAreaInteractions.length > 0 ? (
-        <GlassCard>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 pb-3 border-b border-gray-200">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-600 to-blue-600">
-                <Target className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Где взаимодействия показателей затрагивают жизненные сферы</h3>
-                <p className="text-sm text-gray-600">Только связи, подтверждённые положением планет или управлением домами</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {coreLifeAreaInteractions.map((area) => (
-                <section key={area.id} className="rounded-lg border border-cyan-100 bg-cyan-50/60 p-4 space-y-2">
-                  <h4 className="font-semibold text-gray-900">{area.title}</h4>
-                  <UnifiedAdviceBlock advice={buildLifeAreaUnifiedAdvice(area.title, area.connections)} />
-                </section>
-              ))}
-            </div>
-            {coreLifeAreaBridges.length > 0 ? (
-              <section className="rounded-lg border border-indigo-100 bg-indigo-50/60 p-4 space-y-3">
-                <h4 className="font-semibold text-gray-900">Как несколько жизненных сфер связаны между собой</h4>
-                {coreLifeAreaBridges.map((bridge) => (
-                  <div key={bridge.id} className="space-y-1">
-                    <p className="text-sm font-medium text-gray-800">{bridge.connection}</p>
-                    <p className="text-sm text-gray-700">Подтверждённые сферы: {bridge.areas.join(', ')}.</p>
-                    <ul className="space-y-2 pl-3 border-l border-indigo-200">
-                      {bridge.evidenceByArea.map((item) => (
-                        <li key={item.areaId} className="text-xs leading-relaxed text-gray-600">
-                          <span className="font-semibold">{item.areaTitle}:</span> {item.evidence.map(formatCoreLifeAreaEvidence).join('; ')}.
-                        </li>
-                      ))}
-                    </ul>
-                    <UnifiedAdviceBlock advice={buildLifeAreaBridgeUnifiedAdvice({
-                      connection: bridge.connection,
-                      areas: bridge.areas,
-                      explanation: bridge.explanation,
-                      evidence: bridge.evidenceByArea.map((item) => `${item.areaTitle}: ${item.evidence.map(formatCoreLifeAreaEvidence).join('; ')}`),
-                    })} />
-                  </div>
-                ))}
-              </section>
-            ) : null}
-            <p className="text-xs leading-relaxed text-gray-500">Если связь планет не имеет опоры в домах конкретной сферы, она здесь не показывается. Это традиционная символическая интерпретация, а не прогноз событий.</p>
-          </div>
-        </GlassCard>
-      ) : null}
-
       <GlassCard>
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 pb-3 border-b border-gray-200">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600">
-              <Sparkles className="w-6 h-6 text-white" />
+        <section className="space-y-3">
+          <h3 className="text-lg font-bold text-gray-900">Как складываются три главных показателя</h3>
+          <p className="text-sm text-gray-600">Лагна, Солнце и Луна описывают разные стороны личности. Их не нужно смешивать в одну характеристику.</p>
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-lg border border-purple-100 bg-purple-50/60 p-3">
+              <h4 className="font-semibold text-gray-900">Лагна — ваш способ действовать</h4>
+              <p className="mt-1 text-sm text-gray-700">{ascDesc.meaning}</p>
             </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900">Как три главных показателя складываются вместе</h3>
-              <p className="text-sm text-gray-600">Лагна, Солнце и Луна: общий акцент и разные функции</p>
+            <div className="rounded-lg border border-amber-100 bg-amber-50/60 p-3">
+              <h4 className="font-semibold text-gray-900">Солнце — цели и воля</h4>
+              <p className="mt-1 text-sm text-gray-700">{sunDesc.essence} {sunDesc.lifePurpose}</p>
+            </div>
+            <div className="rounded-lg border border-blue-100 bg-blue-50/60 p-3">
+              <h4 className="font-semibold text-gray-900">Луна — чувства и потребности</h4>
+              <p className="mt-1 text-sm text-gray-700">{moonDesc.essence} {moonDesc.emotionalNeeds}</p>
             </div>
           </div>
-          <UnifiedAdviceBlock advice={buildNarrativeUnifiedAdvice({
-            connection: [ascendantChartFocus, sunChartFocus, moonChartFocus].join(' '),
-            combinedMeaning: coreChartSynthesis,
-            practicalStep: 'Сопоставьте цель, потребность и способ действия; выберите одно изменение на ближайшие семь дней.',
-            successCriteria: 'Через семь дней зафиксированы выполненные действия и наблюдаемое изменение; отдельно отмечено, какой из трёх факторов учтён.',
-            evidence: [ascendantChartFocus, sunChartFocus, moonChartFocus],
-            tensions: wholeChartSynthesis.tensions,
-            dataStatus: wholeChartSynthesis.dataQuality.completeness === 100 ? 'complete' : 'partial',
-            limitation: wholeChartSynthesis.dataQuality.caveats.join(' '),
-          })} />
-        </div>
+          <p className="text-sm text-gray-700">Практически это можно читать так: Лагна показывает, как вы обычно действуете; Солнце — к чему стремитесь; Луна — что помогает чувствовать себя спокойно и устойчиво.</p>
+        </section>
       </GlassCard>
 
       <GlassCard>
@@ -570,55 +511,6 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                 </details>
               </section>
             ))}
-          </div>
-        </div>
-      </GlassCard>
-
-      <GlassCard>
-        <div className="space-y-4">
-          <div className="flex items-center gap-3 pb-3 border-b border-gray-200">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600">
-              <Layers className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900">Ключевые сферы карты</h3>
-              <p className="text-sm text-gray-600">Быстрый ориентир для практической работы с картой</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              { icon: Users, title: 'Личность', house: 1, text: 'Как вы входите в жизнь и принимаете решения.', tone: 'purple' },
-              { icon: Briefcase, title: 'Карьера', house: 10, text: 'Как строится реализация, статус и профессиональный рост.', tone: 'blue' },
-              { icon: Heart, title: 'Отношения', house: 7, text: 'Партнерство, близость и баланс в обмене с другими.', tone: 'pink' },
-              { icon: HomeIcon, title: 'Дом и семья', house: 4, text: 'Внутренняя опора, род, пространство и чувство безопасности.', tone: 'green' },
-            ].map((area) => {
-              const Icon = area.icon;
-              const house = natalChart.houses?.find((item) => item.house === area.house);
-              const personal = personalizedHouses.find((item) => item.house === area.house);
-              const styles = LIFE_AREA_STYLES[area.tone as keyof typeof LIFE_AREA_STYLES];
-
-              return (
-                <div key={area.house} className={`p-4 rounded-lg border ${styles.card}`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Icon className={`w-5 h-5 ${styles.icon}`} />
-                    <h4 className="font-semibold text-gray-900">{area.title} ({area.house}-й дом)</h4>
-                  </div>
-                  <p className="text-sm text-gray-600 leading-relaxed mb-2">{area.text}</p>
-                  <p className={`text-xs ${styles.meta} font-medium mb-2`}>
-                    {personal ? `${personal.sign}, управитель ${personal.lord}` : house ? 'Знак и управитель дома определены, подробности недоступны' : 'Данные дома недоступны'}
-                  </p>
-                  {personal ? (
-                    <div className="space-y-2 border-t border-white/70 pt-3">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-600">Что это означает именно в вашей карте</p>
-                      <p className="text-sm leading-relaxed text-gray-800">
-                        {personal.interpretation}
-                      </p>
-                    </div>
-                  ) : null}
-                </div>
-              );
-            })}
           </div>
         </div>
       </GlassCard>
