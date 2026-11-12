@@ -1,4 +1,4 @@
-// [КОМПОНЕНТ] Благоприятные окна времени
+// [КОМПОНЕНТ] Традиционные временные ориентиры
 import { GlassCard } from '../common/GlassCard';
 
 interface FavorableWindowsProps {
@@ -9,11 +9,11 @@ interface FavorableWindowsProps {
 export function FavorableWindows({ planetaryHour, windows }: FavorableWindowsProps) {
   const visibleWindows = windows.length > 0
     ? windows
-    : [`Текущий час ${planetaryHour} — используйте для задач этой планеты`];
+    : [`Сейчас планетарный час ${planetaryHour}. В Джйотиш его символически связывают с темами этой планеты.`];
 
   return (
     <GlassCard>
-      <h3 className="mb-4">Благоприятные окна времени</h3>
+      <h3 className="mb-4">Планетарные часы и традиционные временные ориентиры</h3>
 
       <div className="space-y-3">
         {visibleWindows.map((window, index) => (
@@ -27,11 +27,11 @@ export function FavorableWindows({ planetaryHour, windows }: FavorableWindowsPro
                   color: 'white'
                 }}
               >
-                {index === 0 ? 'Идеально' : index === 1 ? 'Хорошо' : 'Поддержка'}
+                {index === 0 ? 'Первое окно' : index === 1 ? 'Следующее окно' : 'Дополнительное окно'}
               </span>
             </div>
             <p className="opacity-70">
-              Рассчитано по планетарным часам для текущего местоположения.
+              Время рассчитано по местному восходу и закату. В традиции Джйотиш планетарным часам приписывают символические темы; это не гарантия результата и не причина откладывать важные дела.
             </p>
           </div>
         ))}
