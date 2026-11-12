@@ -51,12 +51,13 @@ AstroDay — клиентское приложение на React 18, TypeScript
 | 24 | Единый стиль персональных рекомендаций | Реализованы 8 полей контракта, проверяемые критерии, chart-specific evidence, прямые противоречия для выводов синтеза, статусы полноты и единый UI; итоговый verify ожидает подтверждения |
 | 28 | Повышение точности астрологических расчётов | **Завершён**; полный verify — [run 43180515943](https://github.com/TamiArt/AstroDay/actions/runs/43180515943), commit `9311e3e386230576d3af8a09b8742df4745f684b` |
 | 29 | Углублённый анализ дробных карт | **Завершён**; полный verify — [run 43182919066](https://github.com/TamiArt/AstroDay/actions/runs/43182919066), commit `46806f8d2daf9a39a91817bb39aa9e35f55239ae` |
+| 30 | Глубокий анализ Вимшоттари Даши | Реализованы профили управителей трёх уровней, D1 evidence, диспозиторы, достоинство, аспекты, профильные варги и объяснение связей; полный verify ожидает подтверждения |
 
 Завершённый этап означает, что реализация и полный `npm run verify` подтверждены для указанного commit/run. Это не означает, что все ручные сценарии или все астрологические школы проверены.
 
 Для этапа 15 полный `npm run verify` прошёл в GitHub Actions run [42679836562](https://github.com/TamiArt/AstroDay/actions/runs/42679836562). Этап 16 прошёл полный `npm run verify`: [run 42681939339](https://github.com/TamiArt/AstroDay/actions/runs/42681939339) на commit `9a779f55f8e6960002a628a4416ba6c105312f59`.
 
-Этап 29: спецификация и методические ограничения описаны в [docs/DIVISIONAL_CHART_ANALYSIS.md](docs/DIVISIONAL_CHART_ANALYSIS.md).\n\n## Команды проверки
+Этап 29: спецификация и методические ограничения описаны в [docs/DIVISIONAL_CHART_ANALYSIS.md](docs/DIVISIONAL_CHART_ANALYSIS.md). Этап 30: методика глубокого анализа Вимшоттари описана в [docs/VIMSHOTTARI_DASHA_ANALYSIS.md](docs/VIMSHOTTARI_DASHA_ANALYSIS.md).\n\n## Команды проверки
 
 Из `package.json`:
 
@@ -89,3 +90,4 @@ AstroDay — клиентское приложение на React 18, TypeScript
 - [docs/INTERPRETATION_QUALITY.md](docs/INTERPRETATION_QUALITY.md) — контроль доказательности, категоричности и ограничений трактовок.
 - [docs/VASTU_PROPERTY_ANALYSIS.md](docs/VASTU_PROPERTY_ANALYSIS.md) — методика анализа Васту и недвижимости.
 - [docs/ADVANCED_ASTROLOGY.md](docs/ADVANCED_ASTROLOGY.md) — расчёт подпериодов Вимшоттари и применение варг.
+- [docs/VIMSHOTTARI_DASHA_ANALYSIS.md](docs/VIMSHOTTARI_DASHA_ANALYSIS.md) — доказательный анализ управителей периодов, D1 и профильных варг (этап 30).
