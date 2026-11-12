@@ -389,8 +389,8 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                     <h4 className="font-semibold text-gray-900">{planet.name}</h4>
                     <p className="text-xs text-gray-500 mt-1">
                       {planet.available
-                        ? `${planet.sign}, ${planet.degreeInSign?.toFixed(2)}°; ${planet.house ? `${planet.house}-й дом` : 'дом не определён'}; ${planet.nakshatra ?? 'накшатра не определена'}${planet.pada ? `, пада ${planet.pada}` : ''}`
-                        : 'Позиция отсутствует в исходных данных'}
+                        ? `${planet.sign}; ${planet.house ? `${planet.house}-й дом — ${HOUSE_PLAIN_NAMES[planet.house]}` : 'дом не определён'}`
+                        : 'Положение планеты не рассчитано'}
                     </p>
                   </div>
                   <span className={`shrink-0 rounded-full px-2 py-1 text-xs font-medium ${
@@ -411,6 +411,10 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                   <summary className="cursor-pointer text-sm font-medium text-gray-700">Дополнительные астрологические показатели</summary>
                   <div className="mt-3 space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Градус и накшатра</h5>
+                    <p className="text-sm text-gray-700">{planet.degreeInSign?.toFixed(2) ?? '—'}° · {planet.nakshatra ?? 'накшатра не определена'}{planet.pada ? `, пада ${planet.pada}` : ''}</p>
+                  </div>
                   <div>
                     <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Управляемые дома</h5>
                     <p className="text-sm text-gray-700">{planet.ruledHouses.length ? planet.ruledHouses.join(', ') : 'Не определены'}</p>
