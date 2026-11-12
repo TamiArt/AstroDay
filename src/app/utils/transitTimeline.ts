@@ -226,9 +226,10 @@ export function buildTransitTimeline(
       const before = getPosition({ ...natalChart, planets: previous.positions }, planet);
       const after = getPosition({ ...natalChart, planets: current.positions }, planet);
       if (before.sign !== after.sign) {
-        const boundary = ((before.sign + 1) % 12) * 30;
+        const movement = signedDelta(after.siderealLon - before.siderealLon);
+        const boundary = movement >= 0 ? ((before.sign + 1) % 12) * 30 : before.sign * 30;
         const ingressAt = findRoot(previous.date, current.date, (date) => {
-          const position = snapshot(natalChart, date).positions[planet];
+          const position = positionAt(natalChart, planet, date);
           return signedDelta(position.siderealLon - boundary);
         });
         const id = 'sign:' + planet + ':' + ingressAt.toISOString();
