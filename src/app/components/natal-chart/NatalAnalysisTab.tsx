@@ -25,7 +25,7 @@ import { analyzePersonalizedHouses } from '../../utils/personalizedHouseAnalysis
 import { analyzeAllNatalHouses } from '../../utils/natalHousePersonalizedAnalysis';
 import { analyzeAllNatalPlanets } from '../../utils/natalPlanetPersonalizedAnalysis';
 import { synthesizeNatalChart } from '../../utils/natalChartSynthesis';
-import { buildConclusionUnifiedAdvice, buildHouseUnifiedAdvice, buildLifeAreaBridgeUnifiedAdvice, buildLifeAreaUnifiedAdvice, buildNarrativeUnifiedAdvice, buildPlanetUnifiedAdvice, buildSynthesisUnifiedAdvice } from '../../utils/unifiedNatalAdvice';
+import { buildConclusionUnifiedAdvice, buildLifeAreaBridgeUnifiedAdvice, buildLifeAreaUnifiedAdvice, buildNarrativeUnifiedAdvice, buildPlanetUnifiedAdvice, buildSynthesisUnifiedAdvice } from '../../utils/unifiedNatalAdvice';
 import { getPlanetHouse } from '../../utils/natalStrengthAnalysis';
 import { getSunHouseFocus } from '../../utils/natalAnalysisGuidance';
 import { formatCoreLifeAreaEvidence, getAscendantChartFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus, getPlanetChartFocus } from '../../utils/natalPersonalFocus';
@@ -284,7 +284,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
 
         <div className="p-4 bg-white rounded-lg border border-purple-200">
           <h4 className="text-sm font-semibold text-purple-700 uppercase mb-2">Управитель Лагны — куда направлена энергия личности</h4>
-          <UnifiedAdviceBlock advice={buildHouseUnifiedAdvice(allHouseAnalyses[0])} />
+          <HouseQuickMeaning house={allHouseAnalyses[0]} />
         </div>
 
         <div className="p-4 bg-white rounded-lg border border-purple-200">
