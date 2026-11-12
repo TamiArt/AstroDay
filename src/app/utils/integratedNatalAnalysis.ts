@@ -201,7 +201,7 @@ export function buildIntegratedNatalAnalysis(chart: NatalChart, asOf: Date = new
     area: area.id, title: area.title, sourceFamilies: area.sourceFamilies,
     factorIds: unique(area.evidence.map((item) => item.factorId)), explanation: area.summary,
   }));
-  const complete = missingPlanets.length === 0 && missingHouses.length === 0 && warnings.length === 0;
+  const complete = missingPlanets.length === 0 && missingHouses.length === 0 && yogas.dataQuality.complete;
   return {
     generatedAt: asOf,
     headline: repeatedThemes.length ? `Выявлено ${repeatedThemes.length} тематических сфер с совпадениями между слоями анализа.` : 'Недостаточно межслойных совпадений для выделения повторяющихся тем.',
