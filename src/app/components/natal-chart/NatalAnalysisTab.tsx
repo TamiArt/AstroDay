@@ -143,6 +143,7 @@ function HouseQuickMeaning({ house }: { house: ReturnType<typeof analyzeAllNatal
       <div>
         <p className="text-xs font-semibold text-gray-500">О ЧЁМ ЭТОТ ДОМ</p>
         <p className="mt-1 text-sm text-gray-800">{house.theme.charAt(0).toUpperCase() + house.theme.slice(1)}.</p>
+        <p className="mt-1 text-xs text-gray-600">Знак: {house.sign ?? 'не определён'}.</p>
       </div>
       <div>
         <p className="text-xs font-semibold text-gray-500">ПЛАНЕТЫ В ДОМЕ</p>
