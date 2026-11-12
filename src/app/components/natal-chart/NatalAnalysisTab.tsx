@@ -136,7 +136,7 @@ function HouseQuickMeaning({ house }: { house: ReturnType<typeof analyzeAllNatal
           <p><strong>Знак дома:</strong> {house.sign ?? 'не определён'}</p>
           <p><strong>Аспекты на дом:</strong> {house.aspects.length ? house.aspects.map((item) => HOUSE_PLANET_NAMES[item] ?? item).join(', ') : 'не обнаружены по выбранной схеме'}</p>
           <p><strong>Связанные дома:</strong> {house.connectedHouses.length ? house.connectedHouses.join(', ') : 'отдельная связь не выявлена'}</p>
-          {house.dispositorChain.length > 0 && <p><strong>Цепочка диспозиторов:</strong> {house.dispositorChain.map((item) => `${HOUSE_PLANET_NAMES[item.planet] ?? item.planet} — ${item.sign}${item.house === null ? '' : `, ${item.house}-й дом`}`).join(' → ')}</p>}
+          {house.dispositorChain.length > 0 && <p><strong>Цепочка диспозиторов <TermTooltip term="dispositor" />:</strong> {house.dispositorChain.map((item) => `${HOUSE_PLANET_NAMES[item.planet] ?? item.planet} — ${item.sign}${item.house === null ? '' : `, ${item.house}-й дом`}`).join(' → ')}</p>}
           {house.supportingFactors.length > 0 && <p><strong>Поддержка:</strong> {house.supportingFactors.join(' ')}</p>}
           {house.attentionFactors.length > 0 && <p><strong>Что требует внимания:</strong> {house.attentionFactors.join(' ')}</p>}
           {house.evidence.length > 0 && <details><summary className="cursor-pointer font-medium">Технические основания</summary><ul className="mt-1 list-disc space-y-1 pl-4">{house.evidence.map((item) => <li key={item}>{item}</li>)}</ul></details>}
@@ -213,7 +213,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
         </div>
 
         <div className="p-4 bg-white rounded-lg border border-purple-200">
-          <h4 className="text-sm font-semibold text-purple-700 uppercase mb-2">Управитель Лагны — куда направлена энергия личности</h4>
+          <h4 className="text-sm font-semibold text-purple-700 uppercase mb-2">Управитель Лагны <TermTooltip term="lagna" /> — куда направлена энергия личности</h4>
           <HouseQuickMeaning house={allHouseAnalyses[0]} />
         </div>
 
@@ -412,7 +412,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                   <div className="mt-3 space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Градус и накшатра</h5>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Градус и накшатра <TermTooltip term="nakshatra" /></h5>
                     <p className="text-sm text-gray-700">{planet.degreeInSign?.toFixed(2) ?? '—'}° · {planet.nakshatra ?? 'накшатра не определена'}{planet.pada ? `, пада ${planet.pada}` : ''}</p>
                   </div>
                   <div>
@@ -420,23 +420,23 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                     <p className="text-sm text-gray-700">{planet.ruledHouses.length ? planet.ruledHouses.join(', ') : 'Не определены'}</p>
                   </div>
                   <div>
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Достоинство</h5>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Достоинство <TermTooltip term="dignity" /></h5>
                     <p className="text-sm text-gray-700">{planet.dignity?.label ?? 'Не определено'}</p>
                   </div>
                   <div>
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Соединения по знаку</h5>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Соединения по знаку <TermTooltip term="conjunction" /></h5>
                     <p className="text-sm text-gray-700">{planet.conjunctions.length ? planet.conjunctions.join(', ') : 'Не обнаружены'}</p>
                   </div>
                   <div>
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Исходящие аспекты</h5>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Исходящие аспекты <TermTooltip term="aspect" /></h5>
                     <p className="text-sm text-gray-700">{planet.aspectsToPlanets.length ? planet.aspectsToPlanets.join(', ') : 'Не обнаружены'}</p>
                   </div>
                   <div>
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Входящие аспекты</h5>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Входящие аспекты <TermTooltip term="aspect" /></h5>
                     <p className="text-sm text-gray-700">{planet.receivesAspectsFrom.length ? planet.receivesAspectsFrom.join(', ') : 'Не обнаружены'}</p>
                   </div>
                   <div>
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Аспекты на дома</h5>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Аспекты на дома <TermTooltip term="aspect" /></h5>
                     <p className="text-sm text-gray-700">{planet.aspectsToHouses.length ? planet.aspectsToHouses.join(', ') : 'Не обнаружены'}</p>
                   </div>
                 </div>
