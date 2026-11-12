@@ -48,6 +48,7 @@ export function NatalYogasSection({ natalChart }: { natalChart: NatalChart }) {
         </div>
 
         {detected ? (
+          <>
           <div className="rounded-lg bg-indigo-50/70 p-3 text-sm leading-relaxed text-indigo-950">
           Йога — это сочетание нескольких показателей натальной карты, а не отдельная планета. Ниже показано, какие именно положения образуют комбинацию, какие темы она затрагивает и какие дополнительные условия могут усиливать или ослаблять её трактовку. Само наличие йоги не гарантирует конкретных событий.
         </div>
@@ -95,6 +96,7 @@ export function NatalYogasSection({ natalChart }: { natalChart: NatalChart }) {
               </details>
             ))}
           </div>
+          </>
         ) : (
           <p className="text-sm text-gray-600">По проверенным правилам подтверждённых комбинаций пока не найдено.</p>
         )}
