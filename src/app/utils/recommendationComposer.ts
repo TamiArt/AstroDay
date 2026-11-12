@@ -40,18 +40,18 @@ export interface RecommendationTextBundle {
 
 const PRECISION_TONES: Record<RecommendationPrecisionLevel, RecommendationTone> = {
   high: {
-    lead: 'Сегодня лучше',
-    avoidLead: 'Избегайте',
+    lead: 'Как необязательную идею можно рассмотреть',
+    avoidLead: 'На что можно обратить внимание',
   },
   medium: {
-    lead: 'Сегодня разумнее',
+    lead: 'Если это подходит вашим обстоятельствам, можно',
     confidenceNote: 'Часть выводов по домам и варгам лучше читать как вероятную тенденцию из-за точности исходных данных.',
-    avoidLead: 'С осторожностью избегайте',
+    avoidLead: 'В качестве напоминания можно учесть',
   },
   low: {
-    lead: 'Как мягкую тенденцию на сегодня можно взять',
+    lead: 'Как тему для размышления можно выбрать',
     confidenceNote: 'Не делайте жёстких выводов по домам, Лагне и варгам: исходное время или timezone требуют проверки.',
-    avoidLead: 'Особенно не спешите',
+    avoidLead: 'Не воспринимайте это как запрет; просто учтите',
   },
 };
 
@@ -60,28 +60,28 @@ function finishSentence(text: string): string {
 }
 
 function energyAction(level: number): string {
-  if (level >= 75) return 'энергии достаточно для видимого шага, но лучше держать один главный фокус';
-  if (level >= 55) return 'темп дня рабочий: выбирайте задачи, где важна последовательность';
-  return 'энергию стоит беречь: планируйте короткие действия и паузы между ними';
+  if (level >= 75) return 'условный индекс астрологической модели выше среднего; это не измерение вашей физической или эмоциональной энергии';
+  if (level >= 55) return 'условный индекс модели находится в среднем диапазоне и не оценивает реальную продуктивность';
+  return 'условный индекс модели ниже среднего; он не говорит о вашем самочувствии и не предписывает снижать активность';
 }
 
 function buildContextSentence(input: RecommendationTextInput): string {
   const factors = [
-    `час ${getPlanetName(input.hourPlanet)} задаёт способ действия`,
-    `период ${getPlanetName(input.dashaPlanet)} держит долгий фон`,
+    `планетарный час ${getPlanetName(input.hourPlanet)} в традиции связывают с определёнными темами`,
+    `период ${getPlanetName(input.dashaPlanet)} рассматривают как общий символический фон`,
   ];
 
   if (input.antardashaPlanet) {
     factors.push(`под-период ${getPlanetName(input.antardashaPlanet)} уточняет тему`);
   }
 
-  return `Ключ дня складывается так: ${factors.join(', ')}`;
+  return `В расчёте учтены следующие традиционные астрологические связи: ${factors.join(', ')}`;
 }
 
 function buildMainRecommendation(input: RecommendationTextInput): string {
   const tone = PRECISION_TONES[input.precisionLevel];
   const parts = [
-    `${tone.lead} ${input.hourAction}`,
+    `${tone.lead}: ${input.hourAction}. Сопоставьте эту идею со своими реальными задачами и предпочтениями.`,
     buildContextSentence(input),
     input.moonTransitText || `текущая Луна идёт через знак ${input.currentMoonSign}`,
     input.panchangFocus,
@@ -94,11 +94,11 @@ function buildMainRecommendation(input: RecommendationTextInput): string {
 function buildAvoidRecommendation(input: RecommendationTextInput): string {
   const tone = PRECISION_TONES[input.precisionLevel];
   const avoidParts = [
-    `${tone.avoidLead}: ${input.hourAvoid}`,
+    `${tone.avoidLead}: ${input.hourAvoid}. Это не запрет и не прогноз; ориентируйтесь на факты и собственные решения.`,
   ];
 
   if (input.difficultYogaName) {
-    avoidParts.push(`${input.difficultYogaName} просит не давить на события и не обещать лишнего`);
+    avoidParts.push(`Йогу дня ${input.difficultYogaName} в традиции связывают с осторожностью; это символическая трактовка, а не указание на неблагоприятное событие`);
   }
 
   if (input.tenseAspectText) {
@@ -115,7 +115,7 @@ function buildAvoidRecommendation(input: RecommendationTextInput): string {
 function buildReasoning(input: RecommendationTextInput): string[] {
   const reasoning = [
     `Главный период: ${getPlanetName(input.dashaPlanet)}${input.antardashaPlanet ? `, под-период ${getPlanetName(input.antardashaPlanet)}` : ''}.`,
-    `Час ${getPlanetName(input.hourPlanet)} показывает ближайший способ действия: ${input.hourAction}.`,
+    `Планетарный час ${getPlanetName(input.hourPlanet)} традиционно связывают с темой: ${input.hourAction}.`,
     input.panchangFocus,
     energyAction(input.energyLevel),
   ];
@@ -126,7 +126,7 @@ function buildReasoning(input: RecommendationTextInput): string[] {
   }
   if (input.moonTransitText) reasoning.push(input.moonTransitText);
   if (input.aspectReason) reasoning.push(input.aspectReason);
-  reasoning.push(...input.vargaHints);
+  reasoning.push(...input.vargaHints.map((hint) => `Дополнительная символическая трактовка варги: ${hint}`));
 
   const tone = PRECISION_TONES[input.precisionLevel];
   if (tone.confidenceNote) reasoning.push(tone.confidenceNote);
