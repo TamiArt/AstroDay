@@ -39,7 +39,7 @@ function VargaDetail({ analysis }: { analysis: VargaAnalysis }) {
       <summary className="cursor-pointer list-none">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div><h4 className="font-bold text-gray-900">{analysis.name}</h4><p className="text-sm text-indigo-700">{analysis.topic}</p></div>
-          <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs text-indigo-800">Отдельное правило варги</span>
+          <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs text-indigo-800">Дополнительная карта по теме</span>
         </div>
         <p className="mt-2 text-sm leading-relaxed text-gray-700">Эта дополнительная карта рассматривает тему «{analysis.topic.toLowerCase()}». Основная карта D1 показывает общий жизненный рисунок, а эта карта помогает подробнее рассмотреть только указанную область. Её нельзя читать отдельно от D1.</p>
       </summary>
@@ -74,14 +74,14 @@ export function DivisionalChartsTab({ natalChart }: DivisionalChartsTabProps) {
       <GlassCard>
         <div className="flex items-center gap-3 border-b border-indigo-100 pb-3">
           <div className="rounded-lg bg-indigo-100 p-2"><Layers className="h-6 w-6 text-indigo-700" /></div>
-          <div><h3 className="text-lg font-bold text-gray-900">Дробные карты — углублённый анализ</h3><p className="text-sm text-gray-600">D1 задаёт основу; варги добавляют тематические свидетельства, но не заменяют её</p></div>
+          <div><h3 className="text-lg font-bold text-gray-900">Дополнительные карты — подробности по отдельным темам</h3><p className="text-sm text-gray-600">Основная карта рождения показывает общий рисунок; дополнительные карты уточняют отдельные жизненные области</p></div>
         </div>
         <div className="mt-4 rounded-lg border border-indigo-100 bg-indigo-50 p-4">
-          <h4 className="font-semibold text-indigo-950">Базовая карта D1 — Раши</h4>
+          <h4 className="font-semibold text-indigo-950">Основная карта рождения — D1 (Раши)</h4>
           <p className="mt-1 text-sm text-indigo-900">Асцендент: {report.baseChart.ascendantSign}, {report.baseChart.ascendantDegree.toFixed(2)}°.</p>
           <p className="mt-2 text-sm text-gray-700">{report.baseChart.principle}</p>
           <div className="mt-3 grid gap-2 md:grid-cols-2">{report.baseChart.evidence.map((item) => <HouseEvidence key={item.house} item={item} />)}</div>
-          <p className="mt-3 text-xs text-gray-600">Тематическая область D1: {base.topic}. Основа анализа — 1-й, 5-й, 9-й и 10-й дома.</p>
+          <p className="mt-3 text-xs text-gray-600">Это основная карта, с которой сравниваются все дополнительные карты.</p>
         </div>
       </GlassCard>
 
@@ -93,8 +93,8 @@ export function DivisionalChartsTab({ natalChart }: DivisionalChartsTabProps) {
       </GlassCard>
 
       <GlassCard>
-        <div className="flex items-center gap-2"><BookOpen className="h-5 w-5 text-indigo-700" /><h3 className="text-lg font-semibold text-gray-900">Тематический анализ и сопоставление с D1</h3></div>
-        <p className="mt-2 mb-4 text-sm text-gray-600">Каждый раздел показывает исходные дома D1, дома соответствующей варги, управителей и положения тех же планет в обеих картах. Автоматический рейтинг «хорошо/плохо» намеренно не используется.</p>
+        <div className="flex items-center gap-2"><BookOpen className="h-5 w-5 text-indigo-700" /><h3 className="text-lg font-semibold text-gray-900">Как дополнительные карты уточняют основную карту</h3></div>
+        <p className="mt-2 mb-4 text-sm text-gray-600">Откройте интересующую тему, чтобы увидеть, какие показатели повторяются в основной карте и дополнительной. Система не делит карты на «хорошие» и «плохие» — она показывает, где указания совпадают, а где различаются.</p>
         <div className="space-y-3">{report.analyses.map((analysis) => <VargaDetail key={analysis.division} analysis={analysis} />)}</div>
       </GlassCard>
 
