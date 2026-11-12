@@ -303,12 +303,14 @@ export function buildTransitTimeline(
     const orbAt = (date: Date) => aspectOrb(positionAt(natalChart, transitPlanet, date).siderealLon, natalLongitude, definition.angle);
     let index = samples.findIndex((item, i) => i > 0 && samples[i - 1].date <= event.exactAt && item.date >= event.exactAt);
     if (index < 1) index = Math.max(1, samples.findIndex((item) => item.date >= event.exactAt));
-    let leftIndex = index;
-    while (leftIndex > 0 && orbAt(samples[leftIndex - 1].date) <= definition.orb) leftIndex -= 1;
-    let rightIndex = index;
-    while (rightIndex < samples.length - 1 && orbAt(samples[rightIndex + 1].date) <= definition.orb) rightIndex += 1;
-    const startsAt = leftIndex === 0 ? new Date(startDate) : findRoot(samples[leftIndex - 1].date, samples[leftIndex].date, (date) => orbAt(date) - definition.orb);
-    const endsAt = rightIndex === samples.length - 1 ? new Date(endDate) : findRoot(samples[rightIndex].date, samples[rightIndex + 1].date, (date) => orbAt(date) - definition.orb);
+    let leftOutside = index - 1;
+    while (leftOutside >= 0 && orbAt(samples[leftOutside].date) <= definition.orb) leftOutside -= 1;
+    const leftInside = leftOutside + 1 < index ? samples[leftOutside + 1].date : event.exactAt;
+    let rightOutside = index;
+    while (rightOutside < samples.length && orbAt(samples[rightOutside].date) <= definition.orb) rightOutside += 1;
+    const rightInside = rightOutside - 1 >= index ? samples[rightOutside - 1].date : event.exactAt;
+    const startsAt = leftOutside < 0 ? new Date(startDate) : findRoot(samples[leftOutside].date, leftInside, (date) => orbAt(date) - definition.orb);
+    const endsAt = rightOutside >= samples.length ? new Date(endDate) : findRoot(rightInside, samples[rightOutside].date, (date) => orbAt(date) - definition.orb);
     const id = 'window:' + event.id;
     if (!aspectWindows.some((item) => item.id === id)) aspectWindows.push({
       id, transitPlanet: event.planet, natalPlanet: event.natalPlanet!, aspect: event.aspect!,
