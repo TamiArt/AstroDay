@@ -3,7 +3,7 @@ import { analyzeDivisionalCharts } from './divisionalChartAnalysis';
 import { analyzeTransits } from './transitAnalysis';
 import { buildNatalChartFacts } from './natalChartFacts';
 import { analyzeNatalYogas } from './natalYogaAnalysis';
-import { analyzePersonalizedHouses, getVargaEvidence } from './personalizedHouseAnalysis';
+import { analyzePersonalizedHouses } from './personalizedHouseAnalysis';
 import { buildTransitTimeline, type TransitTimelineReport } from './transitTimeline';
 import { analyzeVimshottariDasha } from './vimshottariDashaAnalysis';
 
@@ -49,6 +49,8 @@ export interface UnifiedLifeForecastReport {
   methodology: string[];
   warnings: string[];
 }
+
+const PLANET_NAMES_RU: Record<string, string> = { Sun: 'Солнце', Moon: 'Луна', Mars: 'Марс', Mercury: 'Меркурий', Jupiter: 'Юпитер', Venus: 'Венера', Saturn: 'Сатурн', Rahu: 'Раху', Ketu: 'Кету' };
 
 const AREAS: AreaDefinition[] = [
   { id: 'career', title: 'Работа и профессиональная реализация', houses: [2, 6, 10, 11], primaryHouses: [6, 10], vargas: [10], keywords: ['карьер', 'работ', 'професс'], limitation: 'D10 уточняет профессиональную тему, но не определяет должность, рынок труда или гарантированный карьерный результат.' },
@@ -156,7 +158,7 @@ export function buildUnifiedLifeForecast(
     const transitEvents = transitTimeline.events.filter((event) => {
       if (event.kind === 'house-ingress') return area.houses.includes(event.natalHouse ?? 0);
       if (event.kind === 'exact-aspect') {
-        const natalPlanet = Object.keys(chart.planets).find((name) => chart.planets[name as keyof NatalChart['planets']].name === event.natalPlanet);
+        const natalPlanet = Object.keys(chart.planets).find((name) => PLANET_NAMES_RU[name] === event.natalPlanet);
         const ruled = chart.houses?.filter((house) => house.lord === natalPlanet).map((house) => house.house) ?? [];
         const natalHouse = chart.houses?.find((house) => house.sign === chart.planets[natalPlanet as keyof NatalChart['planets']]?.sign)?.house;
         return area.houses.includes(natalHouse ?? 0) || ruled.some((house) => area.houses.includes(house));
