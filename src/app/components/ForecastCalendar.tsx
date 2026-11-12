@@ -7,7 +7,7 @@ import { FORECAST_CALC_VERSION, getForecastProfileKey, getOrCalculateForecast } 
 import { formatDateKey } from '../utils/dateUtils';
 import { GlassCard } from './common/GlassCard';
 import { DayForecastModal } from './DayForecastModal';
-import { SMART_CALENDAR_AREAS, compareSmartPeriods, getForecastAreaIds, summarizeSmartMonth, type SmartCalendarAreaId } from '../utils/smartCalendar';
+import { SMART_CALENDAR_AREAS, getForecastAreaIds, summarizeSmartMonth, type SmartCalendarAreaId } from '../utils/smartCalendar';
 
 interface ForecastCalendarProps {
   profile: UserProfile;
@@ -74,7 +74,7 @@ export function ForecastCalendar({ profile }: ForecastCalendarProps) {
     monthDays,
   ), [monthForecastList, areaFilter, monthDays]);
 
-  const openDay = async (date: Date, forecast: DayForecast) => {
+  const openDay = async (date: Date) => {
     setSelectedDate(date);
     setComparisonForecast(null);
     const today = new Date();
@@ -88,7 +88,6 @@ export function ForecastCalendar({ profile }: ForecastCalendarProps) {
     } catch {
       // Comparison is optional; the selected day's forecast remains available.
     }
-    void forecast;
   };
 
   const handleDayClick = async (date: Date) => {
@@ -97,7 +96,7 @@ export function ForecastCalendar({ profile }: ForecastCalendarProps) {
 
     if (forecast) {
       // Прогноз есть в кэше — показываем сразу
-      await openDay(date, forecast);
+      await openDay(date);
     } else {
       // Прогноза нет — нужно рассчитать
       if (!online) {
@@ -109,7 +108,7 @@ export function ForecastCalendar({ profile }: ForecastCalendarProps) {
       try {
         const newForecast = await getOrCalculateForecast(date, profile);
         setForecasts(prev => new Map(prev).set(dateStr, newForecast));
-        await openDay(date, newForecast);
+        await openDay(date);
       } catch (error) {
         console.error('Ошибка расчёта прогноза:', error);
         alert('Не удалось рассчитать прогноз для этой даты');
