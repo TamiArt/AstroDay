@@ -165,6 +165,14 @@ export function buildUnifiedLifeForecast(
       }
       return false;
     });
+    const relevantAspectWindows = transitTimeline.aspectWindows.filter((window) => {
+      const natalPlanet = Object.keys(chart.planets).find((name) => PLANET_NAMES_RU[name] === window.natalPlanet);
+      if (!natalPlanet) return false;
+      const natalPosition = chart.planets[natalPlanet as keyof NatalChart['planets']];
+      const natalHouse = chart.houses?.find((house) => house.sign === natalPosition.sign)?.house ?? 0;
+      const ruledHouses = chart.houses?.filter((house) => house.lord === natalPlanet).map((house) => house.house) ?? [];
+      return area.houses.includes(natalHouse) || ruledHouses.some((house) => area.houses.includes(house));
+    });
     transitEvents.forEach((event) => evidence.push({
       source: 'transit', label: event.kind === 'exact-aspect' ? `${event.planet} · ${event.aspect} · ${event.natalPlanet}` : `${event.planet} · ${event.kind === 'house-ingress' ? 'вход в дом' : 'вход в знак'}`,
       detail: event.evidence.join(' '),
@@ -183,9 +191,15 @@ export function buildUnifiedLifeForecast(
       evidence.push({ source: 'dasha', label: `Календарь Даши · ${item.layer} ${item.planet}`, detail: item.evidence.join(' ') });
     });
 
+    relevantAspectWindows.forEach((window) => evidence.push({
+      source: 'transit', label: 'Окно транзитного аспекта · ' + window.transitPlanet + ' / ' + window.natalPlanet,
+      detail: window.evidence.join(' '),
+    }));
+
     const timingIndicators = [
       ...dashaPeriods.map((item) => `${item.layer} ${item.planet}: ${item.startsAt.toLocaleDateString('ru-RU')} — ${item.endsAt.toLocaleDateString('ru-RU')}.`),
       ...activations.map((item) => `${item.layer} ${item.planet}: ${item.startsAt.toLocaleDateString('ru-RU')} — ${item.endsAt.toLocaleDateString('ru-RU')}; ${item.repeatedByTransit ? 'есть транзитное пересечение' : 'без найденного пересечения'}.`),
+      ...relevantAspectWindows.slice(0, 12).map((item) => `Аспект ${item.transitPlanet} — ${item.aspect} — ${item.natalPlanet}: действует ${item.startsAt.toLocaleString('ru-RU')} — ${item.endsAt.toLocaleString('ru-RU')}; точность ${item.exactAt.toLocaleString('ru-RU')}. Связь усиливается к точному моменту и ослабевает после него.`),
       ...transitEvents.slice(0, 12).map((item) => `${item.exactAt.toLocaleString('ru-RU')}: ${item.evidence[0]}`),
     ];
     const sourceCount = evidence.length;
