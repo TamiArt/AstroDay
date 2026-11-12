@@ -22,7 +22,7 @@ export interface PlanetaryHourInfo {
 export interface FavorableTimeWindow {
   label: string;
   planet: string;
-  quality: 'Идеально' | 'Хорошо' | 'Мягко';
+  quality: 'Традиционный ориентир' | 'Дополнительный ориентир' | 'Мягкий ориентир';
   description: string;
   start: Date;
   end: Date;
@@ -210,10 +210,10 @@ export function calculateFavorableTimeWindows(
 ): FavorableTimeWindow[] {
   const hours = calculatePlanetaryHoursForDay(date, latitude, longitude, timezone);
   const favorablePlanets: Record<string, { quality: FavorableTimeWindow['quality']; description: string }> = {
-    Jupiter: { quality: 'Идеально', description: 'Юпитер поддерживает обучение, наставничество, важные решения и щедрые шаги.' },
-    Venus: { quality: 'Идеально', description: 'Венера помогает отношениям, красоте, переговорам и мягкому согласованию.' },
-    Mercury: { quality: 'Хорошо', description: 'Меркурий усиливает коммуникацию, документы, планирование и обучение.' },
-    Moon: { quality: 'Мягко', description: 'Луна подходит для заботы, восстановления, семейных дел и эмоционального контакта.' }
+    Jupiter: { quality: 'Традиционный ориентир', description: 'В традиции планетарных часов Юпитер символически связывают с обучением, наставничеством и расширением кругозора.' },
+    Venus: { quality: 'Традиционный ориентир', description: 'В традиции планетарных часов Венеру символически связывают с отношениями, красотой и согласованием интересов.' },
+    Mercury: { quality: 'Дополнительный ориентир', description: 'В традиции планетарных часов Меркурий символически связывают с общением, документами, планированием и обучением.' },
+    Moon: { quality: 'Мягкий ориентир', description: 'В традиции планетарных часов Луну символически связывают с заботой, отдыхом, семейными делами и эмоциональным контактом.' }
   };
 
   return hours
