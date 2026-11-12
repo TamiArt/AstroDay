@@ -21,7 +21,7 @@ function point(name: string, longitude: number): PlanetPosition {
 }
 const positions = { A: point('A', 0), B: point('B', 89.5), C: point('C', 180) };
 const motions = {
-  A: { planet: 'A', dailyMotion: 1, state: 'direct' as const, sampleWindowHours: 12 },
+  A: { planet: 'A', dailyMotion: -1, state: 'retrograde' as const, sampleWindowHours: 12 },
   B: { planet: 'B', dailyMotion: 0, state: 'stationary' as const, sampleWindowHours: 12 },
   C: { planet: 'C', dailyMotion: -1, state: 'retrograde' as const, sampleWindowHours: 12 },
 };
