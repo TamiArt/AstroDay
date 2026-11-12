@@ -15,6 +15,7 @@ import {
 import { HOUSES_DETAILED } from '../../utils/housesDescriptions';
 import { analyzeHouseLords, type HouseLordInsight } from '../../utils/natalHouseLordAnalysis';
 import { GlassCard } from '../common/GlassCard';
+import { TermTooltip } from '../common/TermTooltip';
 
 interface NatalHousesTabProps {
   natalChart: NatalChartType;
@@ -191,7 +192,7 @@ function HouseLordCard({ insight }: { insight: HouseLordInsight }) {
 
         <div className="grid gap-3 md:grid-cols-2">
           <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-            <h5 className="mb-2 text-sm font-semibold text-gray-900">Положение и достоинство</h5>
+            <h5 className="mb-2 text-sm font-semibold text-gray-900">Положение и достоинство <TermTooltip term="dignity" /></h5>
             <p className="text-xs leading-relaxed text-gray-700">
               {insight.lordSign ?? 'Знак не определён'} · {insight.dignity}. {insight.dignityExplanation}
             </p>
@@ -204,7 +205,7 @@ function HouseLordCard({ insight }: { insight: HouseLordInsight }) {
           </div>
 
           <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-            <h5 className="mb-2 text-sm font-semibold text-gray-900">Цепочка диспозиторов</h5>
+            <h5 className="mb-2 text-sm font-semibold text-gray-900">Цепочка диспозиторов <TermTooltip term="dispositor" /></h5>
             {insight.dispositorChain.length ? (
               <ol className="space-y-1.5">
                 {insight.dispositorChain.map((step) => (
@@ -250,7 +251,7 @@ function HouseLordCard({ insight }: { insight: HouseLordInsight }) {
         </div>
 
         <details className="rounded-lg border border-gray-200 bg-white p-3">
-          <summary className="cursor-pointer text-sm font-semibold text-gray-800">Аспекты, соединения и исходные доказательства</summary>
+          <summary className="cursor-pointer text-sm font-semibold text-gray-800">Аспекты <TermTooltip term="aspect" />, соединения и исходные основания</summary>
           <div className="mt-3 space-y-3">
             <div>
               <h5 className="mb-1 text-xs font-semibold text-gray-800">Аспекты на положение управителя</h5>
@@ -261,7 +262,7 @@ function HouseLordCard({ insight }: { insight: HouseLordInsight }) {
               <EvidenceList items={insight.outgoingAspects.map((item) => `${item.kind} на ${item.targetHouse}-й дом`)} />
             </div>
             <div>
-              <h5 className="mb-1 text-xs font-semibold text-gray-800">Соединения по знаку</h5>
+              <h5 className="mb-1 text-xs font-semibold text-gray-800">Соединения по знаку <TermTooltip term="conjunction" /></h5>
               <EvidenceList items={insight.conjunctions.length ? insight.conjunctions : ['Других планет в том же знаке нет.']} />
               <p className="mt-1 text-xs text-gray-500">Соединение определяется по общему знаку; точный градусный орбис здесь не рассчитывается.</p>
             </div>
@@ -288,7 +289,7 @@ export function NatalHousesTab({ natalChart }: NatalHousesTabProps) {
             <div>
               <h3 className="mb-2 font-semibold text-gray-900">Дома твоей натальной карты — персональная интерпретация</h3>
               <p className="text-sm leading-relaxed text-gray-700">
-                Здесь учитываются знак дома, его управитель и достоинство, положение планет, их накшатры и граха-дришти.
+                Здесь учитываются знак дома, его управитель и достоинство, положение планет, их накшатры <TermTooltip term="nakshatra" /> и граха-дришти <TermTooltip term="grahaDrishti" />.
                 В оценке достоинства 90/100 означает экзальтацию, 75/100 — собственный знак, 25/100 — падение,
                 50/100 — прочий знак. Это условная шкала достоинства, не полная Shadbala и не научная мера силы.
                 Для каждой жизненной сферы отдельно показана связь Махадаши и Антардаши с её домами и управителями.
