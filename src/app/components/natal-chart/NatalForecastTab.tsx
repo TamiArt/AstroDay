@@ -72,11 +72,11 @@ export function NatalForecastTab({ natalChart }: NatalForecastTabProps) {
   const report = useMemo(() => {
     if (!isCalculated) return null;
     try {
-      return buildUnifiedLifeForecast(natalChart, parseInputDate(startValue), parseInputDate(endValue));
+      return buildUnifiedLifeForecast(natalChart, parseInputDate(startValue), parseInputDate(endValue), { stepHours: Number(stepHours) });
     } catch (cause) {
       return { error: cause instanceof Error ? cause.message : 'Не удалось рассчитать единый прогноз' };
     }
-  }, [natalChart, startValue, endValue, calculationKey, isCalculated]);
+  }, [natalChart, startValue, endValue, stepHours, calculationKey, isCalculated]);
   const selected = report && !('error' in report) ? report.areas.find((area) => area.id === selectedArea) : null;
   const runCalculation = () => {
     setError('');
