@@ -73,7 +73,9 @@ export interface TransitDashaContext {
   mahadasha: string;
   antardasha: string | null;
   pratyantardasha: string | null;
-  periodEnd: Date;
+  mahadashaEnd: Date;
+  antardashaEnd: Date | null;
+  pratyantardashaEnd: Date | null;
   activeThemes: string[];
   transitActivations: string[];
 }
@@ -280,7 +282,9 @@ export function analyzeTransits(
     mahadasha: dashaReport.current.mahadasha.profile.planetName,
     antardasha: dashaReport.current.antardasha?.profile.planetName ?? null,
     pratyantardasha: dashaReport.current.pratyantardasha?.profile.planetName ?? null,
-    periodEnd: dashaReport.current.pratyantardasha?.endDate ?? dashaReport.current.antardasha?.endDate ?? dashaReport.current.mahadasha.endDate,
+    mahadashaEnd: dashaReport.current.mahadasha.endDate,
+    antardashaEnd: dashaReport.current.antardasha?.endDate ?? null,
+    pratyantardashaEnd: dashaReport.current.pratyantardasha?.endDate ?? null,
     activeThemes: [...dashaAreas.keys()],
     transitActivations: aspects.filter((aspect) =>
       activeLayers.some((layer) => layer.planet === aspect.natalPlanet),
