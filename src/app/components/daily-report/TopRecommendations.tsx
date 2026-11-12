@@ -26,42 +26,42 @@ function getAspectRecommendation(aspect: Aspect | null) {
 
   if (aspect.type === 'trine' || aspect.type === 'sextile') {
     return {
-      title: `Используйте поддержку ${aspect.planet1} и ${aspect.planet2}`,
-      text: `${aspect.description}. Это окно возможностей: запланируйте шаг, где нужна лёгкость, контакт или творческое решение.`
+      title: `Символическая связь ${aspect.planet1} и ${aspect.planet2}`,
+      text: `${aspect.description}. В традиционной трактовке такой аспект связывают с более согласованным взаимодействием тем. Это повод обдумать подход, а не обещание лёгкого результата.`
     };
   }
 
   if (aspect.type === 'square' || aspect.type === 'opposition') {
     return {
-      title: `Снижайте напряжение ${aspect.planet1} и ${aspect.planet2}`,
-      text: `${aspect.description}. Не форсируйте конфликтные темы: сначала структура, пауза и проверка фактов.`
+      title: `Возможное напряжение между ${aspect.planet1} и ${aspect.planet2}`,
+      text: `${aspect.description}. В традиционной трактовке аспект связывают с необходимостью согласовать разные интересы. Ориентируйтесь на реальные обстоятельства и проверяйте факты.`
     };
   }
 
   return {
-    title: `Сфокусируйте энергию ${aspect.planet1} и ${aspect.planet2}`,
-    text: `${aspect.description}. Хорошо работает одно ясное намерение вместо множества параллельных действий.`
+    title: `Связь ${aspect.planet1} и ${aspect.planet2}`,
+    text: `${aspect.description}. Эту символическую трактовку можно использовать как повод выбрать один понятный приоритет.`
   };
 }
 
 function getYogaRecommendation(yoga: PanchangData['yoga'], tithi: PanchangData['tithi'], planetaryHour: string) {
   if (difficultYogas.includes(yoga.name)) {
     return {
-      title: 'Не принимайте решения на импульсе',
-      text: `${yoga.name} несёт качество "${yoga.meaning.toLowerCase()}". В час ${planetaryHour} действуйте точечно: меньше обещаний, больше проверки деталей.`
+      title: 'Традиционная трактовка йоги дня',
+      text: `${yoga.name} традиционно связывают с темой "${yoga.meaning.toLowerCase()}". Планетарный час ${planetaryHour} — дополнительный календарный ориентир, а не оценка исхода решения.`
     };
   }
 
   if (supportiveYogas.includes(yoga.name)) {
     return {
-      title: 'Закрепите важное намерение действием',
-      text: `${yoga.name} поддерживает результат. ${tithi.name} добавляет тему: ${tithi.meaning.toLowerCase()}. Сделайте один конкретный шаг.`
+      title: 'Традиционная трактовка йоги дня',
+      text: `${yoga.name} в традиции связывают с более созидательным настроем; это не гарантирует результат. ${tithi.name} добавляет тему: ${tithi.meaning.toLowerCase()}. Сделайте один конкретный шаг.`
     };
   }
 
   return {
     title: 'Держите день простым и последовательным',
-    text: `${tithi.name}: ${tithi.meaning.toLowerCase()}. Час ${planetaryHour} подсказывает, через какую энергию лучше действовать сейчас.`
+    text: `${tithi.name}: ${tithi.meaning.toLowerCase()}. Час ${planetaryHour} указывает на планетарный час в традиционной системе; он не определяет, как вам следует поступать.`
   };
 }
 
@@ -77,7 +77,7 @@ export function TopRecommendations({
 
   return (
     <GlassCard>
-      <h3 className="mb-6">Топ-3 рекомендации</h3>
+      <h3 className="mb-2">Идеи для внимания на сегодня</h3><p className="mb-6 text-sm text-gray-600">Это подсказки на основе традиционной астрологической модели, а не обязательные указания. Проверяйте их по своим обстоятельствам.</p>
 
       <div className="space-y-4">
         <div className="flex items-start gap-4 p-4 rounded-2xl bg-green-500/10 border border-green-500/30">
