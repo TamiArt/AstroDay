@@ -60,7 +60,7 @@ function AspectCard({ item }: { item: TransitNatalAspect }) {
   return <article className="rounded-lg border border-gray-200 bg-white p-3">
     <div className="flex flex-wrap items-center justify-between gap-2">
       <p className="text-sm font-semibold text-gray-900">{ru(item.transitPlanet)} → ваша натальная {ru(item.natalPlanet)}: {item.aspect}</p>
-      <span className="text-xs text-gray-600">Орбис {item.orb.toFixed(2)}° · сила {item.strength}%</span>
+      <span className="text-xs text-gray-600">Отклонение от точного угла: {item.orb.toFixed(2)}° · расчётный показатель: {item.strength}%</span>
     </div>
     <p className="mt-2 text-sm leading-relaxed text-gray-700">Сейчас транзитная планета {ru(item.transitPlanet)} затрагивает качества вашей натальной планеты {ru(item.natalPlanet)}. {ru(item.transitPlanet)} отвечает за {PLANET_MEANINGS[item.transitPlanet] ?? 'текущие стремления'}, а {ru(item.natalPlanet)} — за {PLANET_MEANINGS[item.natalPlanet] ?? 'личные реакции'}.</p>
     <p className="mt-2 rounded-lg bg-indigo-50 p-3 text-sm leading-relaxed text-indigo-950"><strong>Что означает эта комбинация:</strong> {aspectMeaning} Транзит проходит по {item.transitHouse}-му дому ({houseMeaning(item.transitHouse)}); натальная планета находится в {item.natalHouse ? `${item.natalHouse}-м доме (${houseMeaning(item.natalHouse)})` : 'доме, который не удалось определить'}.</p>
@@ -88,7 +88,7 @@ function AreaCard({ area }: { area: TransitLifeArea }) {
       : area.dashaEvidence.length
         ? `Тема связана с текущими периодами Даши (${dashaNames.join(', ')}). Это символический фон периода; прямого транзитного совпадения по выбранным правилам не найдено.`
         : 'Тема затронута текущими транзитными положениями или аспектами. Совпадения с активными периодами Даши по выбранным правилам не обнаружено.'}</p>
-    <p className="mt-1 text-xs text-gray-500">Связанные дома: {area.houses.join(', ')} — {area.houses.map(houseMeaning).join('; ')}.</p>
+    <p className="mt-1 text-xs text-gray-500">Связанные дома: {area.houses.map((house) => `${house}-й дом — ${houseMeaning(house)}`).join('; ')}.</p>
     {(area.dashaEvidence.length + area.transitEvidence.length) > 0 && <button type="button" onClick={() => setShowEvidence((value) => !value)} className="mt-2 text-xs font-semibold text-indigo-700">{showEvidence ? 'Скрыть основания' : 'Посмотреть, какие расчёты это показывают'}</button>}
     {showEvidence && <div className="mt-2 space-y-2">{area.dashaEvidence.map((item, index) => <p key={`d-${index}`} className="rounded-lg bg-purple-50 p-2 text-xs text-gray-700">{item}</p>)}{area.transitEvidence.map((item, index) => <p key={`t-${index}`} className="rounded-lg bg-blue-50 p-2 text-xs text-gray-700">{item}</p>)}</div>}
   </article>;
@@ -98,6 +98,10 @@ function TransitReport({ report }: { report: TransitAnalysisReport }) {
   const [showAllAreas, setShowAllAreas] = useState(false);
   const visibleAreas = showAllAreas ? report.lifeAreas : report.lifeAreas.slice(0, 6);
   return <div className="space-y-6">
+    <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-4">
+      <h3 className="font-semibold text-gray-900">Что такое транзит и как читать этот раздел</h3>
+      <p className="mt-1 text-sm text-gray-700">Транзит — это текущее положение планеты на небе. Приложение сравнивает его с вашей картой рождения и показывает символические связи с домами и планетами. Это астрологическая модель для размышления, а не научный прогноз и не обещание событий.</p>
+    </div>
     <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-4">
       <h3 className="font-semibold text-gray-900">Как читать текущие периоды <TermTooltip term="dasha" /></h3>
       <p className="mt-1 text-sm text-gray-700"><strong>Махадаша</strong> — большой жизненный период, задающий общий фон. <strong>Антардаша</strong> — более короткий этап внутри него. <strong>Пратьянтардаша</strong> — ещё более короткий подпериод, который уточняет текущий отрезок времени. Все три периода действуют одновременно, но не означают три отдельных события.</p>
