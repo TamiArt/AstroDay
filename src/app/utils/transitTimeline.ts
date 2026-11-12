@@ -140,14 +140,14 @@ function formatPlanet(planet: string): string {
 
 function dashaThemeHouses(theme: string): number[] {
   const value = theme.toLocaleLowerCase('ru-RU');
-  if (/карьер|работ|професс/.test(value)) return [2, 6, 10, 11];
-  if (/деньг|финанс|ресурс|доход/.test(value)) return [2, 5, 9, 11];
-  if (/отнош|партнёр|партнер|брак/.test(value)) return [5, 7, 8, 12];
-  if (/дет|родитель/.test(value)) return [5, 9];
-  if (/обуч|знан|образован/.test(value)) return [4, 5, 9];
-  if (/твор|искус|созидан/.test(value)) return [3, 5, 9, 10];
-  if (/дом|семь|недвиж/.test(value)) return [2, 4, 11];
-  if (/развит|духов|мировозз|личност/.test(value)) return [1, 5, 8, 9, 12];
+  if (/карьер|работ|професс|career|job/.test(value)) return [2, 6, 10, 11];
+  if (/деньг|финанс|ресурс|доход|money|finance|wealth/.test(value)) return [2, 5, 9, 11];
+  if (/отнош|партнёр|партнер|брак|relationship|partner/.test(value)) return [5, 7, 8, 12];
+  if (/дет|родитель|child|parent/.test(value)) return [5, 9];
+  if (/обуч|знан|образован|learn|education|knowledge/.test(value)) return [4, 5, 9];
+  if (/твор|искус|созидан|creativ|art/.test(value)) return [3, 5, 9, 10];
+  if (/дом|семь|недвиж|home|family|property/.test(value)) return [2, 4, 11];
+  if (/развит|духов|мировозз|личност|growth|spiritual/.test(value)) return [1, 5, 8, 9, 12];
   return [];
 }
 function buildDashaActivations(chart: NatalChart, start: Date, end: Date, aspectWindows: TransitAspectWindow[]): DashaActivation[] {
