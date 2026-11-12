@@ -81,6 +81,7 @@ export function buildUnifiedLifeForecast(
   chart: NatalChart,
   startDate: Date = new Date(),
   endDate: Date = new Date(startDate.getTime() + 365 * 86400000),
+  options: { stepHours?: number } = {},
 ): UnifiedLifeForecastReport {
   if (!(startDate instanceof Date) || !Number.isFinite(startDate.getTime()) ||
       !(endDate instanceof Date) || !Number.isFinite(endDate.getTime()) || endDate <= startDate) {
@@ -95,7 +96,7 @@ export function buildUnifiedLifeForecast(
   const vargaReport = analyzeDivisionalCharts(chart);
   const dasha = analyzeVimshottariDasha(chart, startDate);
   const transitNow = analyzeTransits(chart, startDate);
-  const transitTimeline = buildTransitTimeline(chart, startDate, endDate);
+  const transitTimeline = buildTransitTimeline(chart, startDate, endDate, { stepHours: options.stepHours ?? 24 });
   const areas = AREAS.map((area): UnifiedLifeAreaForecast => {
     const evidence: ForecastEvidence[] = [];
     const supporting = new Set<string>();
