@@ -238,7 +238,7 @@ export function buildTransitTimeline(
   validateRange(natalChart, startDate, endDate, stepHours);
   if (!natalChart.houses || natalChart.houses.length !== 12) throw new Error('Для календаря нужны все 12 натальных домов');
 
-  const samples = [];
+  const samples: ReturnType<typeof snapshot>[] = [];
   for (let time = startDate.getTime(); time < endDate.getTime(); time += stepHours * 3600000) {
     samples.push(snapshot(natalChart, new Date(time)));
   }
