@@ -264,6 +264,7 @@ export function ForecastCalendar({ profile }: ForecastCalendarProps) {
             <button key={area.id} type="button" onClick={() => setAreaFilter(area.id)} aria-pressed={areaFilter === area.id} className={`rounded-full px-3 py-1.5 text-xs border ${areaFilter === area.id ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-secondary'}`}>{area.label}</button>
           ))}
         </div>
+        <p className="mb-3 text-xs opacity-50">Дни без найденного акцента по выбранной сфере приглушаются; даты без расчёта остаются доступными для открытия и расчёта.</p>
         {/* Дни недели */}
         <div className="grid grid-cols-7 gap-2 mb-2">
           {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(day => (
