@@ -18,8 +18,15 @@ function VargaEvidence({ item }: { item: DashaVargaEvidence }) {
           {item.relevantHouseRelation === 'occupies-and-rules' ? 'Положение + управление' : item.relevantHouseRelation === 'occupies' ? 'Занимает дом' : item.relevantHouseRelation === 'rules' ? 'Управляет домом' : item.relevantHouseRelation === 'no-direct-house-link' ? 'Прямой связи нет' : 'Недоступно'}
         </span>
       </div>
-      <p className="mt-1 text-xs text-gray-700">{item.planetSign ? `${item.planetSign}, ${item.planetHouse}-й дом` : 'Положение не определено'}</p>
-      <p className="mt-1 text-xs text-gray-600">{item.explanation}</p>
+      <p className="mt-1 text-xs text-gray-700">{item.planetSign ? `Планета находится в знаке ${item.planetSign}, в ${item.planetHouse}-м доме.` : 'Положение планеты не определено.'}</p>
+      <p className="mt-1 text-xs leading-relaxed text-gray-600">{item.relevantHouseRelation === 'occupies-and-rules'
+        ? 'Планета одновременно находится в доме этой темы и управляет им — это прямая связь.'
+        : item.relevantHouseRelation === 'occupies'
+          ? 'Планета находится в доме, связанном с темой периода.'
+          : item.relevantHouseRelation === 'rules'
+            ? 'Планета управляет домом, связанным с темой периода.'
+            : 'Прямую связь этой планеты с тематическим домом по выбранным правилам не нашли.'}</p>
+      <details className="mt-2"><summary className="cursor-pointer text-xs font-medium text-gray-500">Подробное объяснение расчёта</summary><p className="mt-1 text-xs text-gray-500">{item.explanation}</p></details>
     </div>
   );
 }
