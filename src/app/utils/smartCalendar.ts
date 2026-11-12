@@ -210,7 +210,7 @@ export function compareSmartForecastPeriods(
     currentTopAreas, targetTopAreas,
     newlyHighlighted: targetTopAreas.filter((area) => !currentSet.has(area)),
     lessHighlighted: currentTopAreas.filter((area) => !targetSet.has(area)),
-    caveat: 'Сравниваются только дни с рассчитанными прогнозами. Неполное покрытие месяца может смещать средние значения и частоту сфер; сравнение не является прогнозом вероятности событий.',
+    caveat: 'Сравниваются только дни с рассчитанными прогнозами; неполное покрытие месяца может смещать средние значения и частоту сфер. Сравнение не является прогнозом вероятности событий.',
   };
 }
 
