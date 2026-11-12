@@ -7,7 +7,7 @@ import { FORECAST_CALC_VERSION, getForecastProfileKey, getOrCalculateForecast } 
 import { formatDateKey } from '../utils/dateUtils';
 import { GlassCard } from './common/GlassCard';
 import { DayForecastModal } from './DayForecastModal';
-import { SMART_CALENDAR_AREAS, getForecastAreaIds, summarizeSmartMonth, type SmartCalendarAreaId } from '../utils/smartCalendar';
+import { SMART_CALENDAR_AREAS, compareSmartForecastPeriods, getForecastAreaIds, summarizeSmartMonth, type SmartCalendarAreaId } from '../utils/smartCalendar';
 
 interface ForecastCalendarProps {
   profile: UserProfile;
@@ -16,6 +16,7 @@ interface ForecastCalendarProps {
 export function ForecastCalendar({ profile }: ForecastCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [forecasts, setForecasts] = useState<Map<string, DayForecast>>(new Map());
+  const [currentPeriodForecasts, setCurrentPeriodForecasts] = useState<DayForecast[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
@@ -60,6 +61,17 @@ export function ForecastCalendar({ profile }: ForecastCalendarProps) {
         .forEach(f => forecastMap.set(f.date, f));
 
       setForecasts(forecastMap);
+
+      const now = new Date();
+      const sameAsCurrentMonth = now.getFullYear() === currentMonth.getFullYear() && now.getMonth() === currentMonth.getMonth();
+      if (sameAsCurrentMonth) {
+        setCurrentPeriodForecasts([...forecastMap.values()]);
+      } else {
+        const currentStart = formatDateKey(new Date(now.getFullYear(), now.getMonth(), 1));
+        const currentEnd = formatDateKey(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+        const currentForecasts = await getForecastsInRange(currentStart, currentEnd);
+        setCurrentPeriodForecasts(currentForecasts.filter((item) => item.profileKey === profileKey && item.calcVersion === FORECAST_CALC_VERSION));
+      }
     } catch (error) {
       console.error('Ошибка загрузки прогнозов:', error);
     } finally {
@@ -69,6 +81,14 @@ export function ForecastCalendar({ profile }: ForecastCalendarProps) {
 
   const monthDays = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
   const monthForecastList = useMemo(() => [...forecasts.values()], [forecasts]);
+  const selectedMonthLabel = currentMonth.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+  const currentMonthLabel = new Date().toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+  const filteredTargetForecasts = areaFilter === 'all' ? monthForecastList : monthForecastList.filter((item) => getForecastAreaIds(item).includes(areaFilter));
+  const filteredCurrentForecasts = areaFilter === 'all' ? currentPeriodForecasts : currentPeriodForecasts.filter((item) => getForecastAreaIds(item).includes(areaFilter));
+  const periodComparison = useMemo(() => {
+    if (currentMonthLabel === selectedMonthLabel) return null;
+    return compareSmartForecastPeriods(filteredCurrentForecasts, filteredTargetForecasts, currentMonthLabel, selectedMonthLabel);
+  }, [filteredCurrentForecasts, filteredTargetForecasts, currentMonthLabel, selectedMonthLabel]);
   const monthSummary = useMemo(() => summarizeSmartMonth(
     areaFilter === 'all' ? monthForecastList : monthForecastList.filter((item) => getForecastAreaIds(item).includes(areaFilter)),
     monthDays,
@@ -287,6 +307,16 @@ export function ForecastCalendar({ profile }: ForecastCalendarProps) {
           ) : <p className="text-sm opacity-60">Для выбранного фильтра пока нет рассчитанных дней. Выберите дату, чтобы построить персональный прогноз.</p>}
           <p className="text-xs opacity-50">Сводка строится по уже рассчитанным дням месяца; пропуски не интерпретируются как отсутствие влияния.</p>
         </div>
+
+        {periodComparison && <div className="mt-4 rounded-2xl border border-border p-4 space-y-3">
+          <div><h3 className="font-semibold">Сравнение периодов</h3><p className="text-xs opacity-60">{periodComparison.currentLabel} → {periodComparison.targetLabel}{areaFilter !== 'all' ? ` · ${SMART_CALENDAR_AREAS.find((item) => item.id === areaFilter)?.label}` : ''}</p></div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="rounded-xl bg-secondary p-3"><p className="text-xs opacity-60">{periodComparison.currentLabel} · {periodComparison.currentDays} дней с данными</p><p className="text-xl font-semibold">{periodComparison.currentAverageEnergy === null ? '—' : `${periodComparison.currentAverageEnergy}/100`}</p></div>
+            <div className="rounded-xl bg-secondary p-3"><p className="text-xs opacity-60">{periodComparison.targetLabel} · {periodComparison.targetDays} дней с данными</p><p className="text-xl font-semibold">{periodComparison.targetAverageEnergy === null ? '—' : `${periodComparison.targetAverageEnergy}/100`}</p>{periodComparison.energyDelta !== null && <p className="text-xs">{periodComparison.energyDelta > 0 ? '+' : ''}{periodComparison.energyDelta} пунктов к текущему периоду</p>}</div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2"><div><p className="text-xs font-semibold opacity-70">Чаще выделены сейчас</p><p className="mt-1 text-sm">{periodComparison.currentTopAreas.join(', ') || 'Недостаточно данных'}</p></div><div><p className="text-xs font-semibold opacity-70">Чаще выделены в выбранном месяце</p><p className="mt-1 text-sm">{periodComparison.targetTopAreas.join(', ') || 'Недостаточно данных'}</p></div></div>
+          <p className="text-xs opacity-50">{periodComparison.caveat}</p>
+        </div>}
 
         {/* Легенда */}
         <div className="mt-6 p-4 rounded-2xl bg-secondary">
