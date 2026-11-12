@@ -55,7 +55,7 @@ function PlanetProfile({ analysis }: { analysis: DashaLayerAnalysis }) {
     <div className="space-y-4">
       <section className="rounded-xl border border-indigo-100 bg-indigo-50/70 p-4">
         <h5 className="text-sm font-semibold text-indigo-900">Что означает период этой планеты простыми словами</h5>
-        <p className="mt-1 text-sm leading-relaxed text-gray-800">В традиционной астрологии период {profile.planetName} связывают с темами: {PERIOD_PLANET_MEANINGS[profile.planetName] ?? 'личные задачи и качества этой планеты'}. В вашей карте эта планета находится в {profile.house ? `${profile.house}-м доме — сфере «${PERIOD_HOUSE_MEANINGS[profile.house] ?? 'жизненные задачи'}»` : 'доме, который не удалось определить'}{profile.ruledHouses.length ? ` и управляет домами ${profile.ruledHouses.map((house) => `${house}-м (${PERIOD_HOUSE_MEANINGS[house]})`).join(', ')}` : ''}. Поэтому её период рассматривают через эти темы. Это не означает, что событие обязательно произойдёт: период показывает символический фокус, а не готовый сценарий.</p>
+        <p className="mt-1 text-sm leading-relaxed text-gray-800">В традиции Джйотиш с периодом {profile.planetName} связывают темы {PERIOD_PLANET_MEANINGS[profile.planetName] ?? 'личные задачи и качества этой планеты'}. В вашей карте планета находится в {profile.house ? `${profile.house}-м доме — сфере «${PERIOD_HOUSE_MEANINGS[profile.house] ?? 'жизненные задачи'}»` : 'доме, который не удалось определить'}{profile.ruledHouses.length ? ` и управляет домами ${profile.ruledHouses.map((house) => `${house}-м (${PERIOD_HOUSE_MEANINGS[house]})`).join(', ')}` : ''}. Поэтому в трактовке периода учитываются именно эти темы. Это символическая интерпретация, а не предсказание или обещание события.</p>
       </section>
 
       <details className="rounded-lg border border-gray-200 p-3">
@@ -67,10 +67,10 @@ function PlanetProfile({ analysis }: { analysis: DashaLayerAnalysis }) {
           <p className="mt-1 text-lg font-bold text-gray-900">{profile.planetName}</p>
           <p className="text-sm text-gray-700">{profile.sign}, {profile.degreeInSign.toFixed(2)}° · {profile.house ? `${profile.house}-й дом` : 'дом не определён'}</p>
           <p className="mt-2 text-sm text-gray-700">Управляет домами: {profile.ruledHouses.length ? profile.ruledHouses.join(', ') : 'не определены'}</p>
-          <p className="mt-1 text-sm text-gray-700">Достоинство: {profile.dignity?.label ?? 'не определено'}</p>
+          <p className="mt-1 text-sm text-gray-700">Достоинство <TermTooltip term="dignity" />: {profile.dignity?.label ?? 'не определено'}</p>
         </div>
         <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Диспозитор</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Диспозитор <TermTooltip term="dispositor" /></p>
           {profile.dispositor ? <>
             <p className="mt-1 text-lg font-bold text-gray-900">{PLANET_NAMES_RU[profile.dispositor.planet] ?? profile.dispositor.planet}</p>
             <p className="text-sm text-gray-700">{profile.dispositor.sign} · {profile.dispositor.house ? `${profile.dispositor.house}-й дом` : 'дом не определён'}</p>
@@ -90,11 +90,11 @@ function PlanetProfile({ analysis }: { analysis: DashaLayerAnalysis }) {
 
       <section className="grid gap-3 md:grid-cols-2">
         <div className="rounded-lg border border-gray-200 p-3">
-          <h5 className="text-sm font-semibold text-gray-900">Аспекты от планеты</h5>
+          <h5 className="text-sm font-semibold text-gray-900">Аспекты от планеты <TermTooltip term="aspect" /></h5>
           {profile.aspectsFromPlanet.length ? <ul className="mt-2 space-y-1">{profile.aspectsFromPlanet.map((item, i) => <li key={i} className="text-xs text-gray-700">{item.kind === 'conjunction' ? 'Соединение' : 'Граха-дришти'} с {PLANET_NAMES_RU[item.target] ?? item.target} ({item.targetHouse}-й дом)</li>)}</ul> : <p className="mt-2 text-xs text-gray-500">Не обнаружены по выбранной системе.</p>}
         </div>
         <div className="rounded-lg border border-gray-200 p-3">
-          <h5 className="text-sm font-semibold text-gray-900">Аспекты к планете</h5>
+          <h5 className="text-sm font-semibold text-gray-900">Аспекты к планете <TermTooltip term="aspect" /></h5>
           {profile.aspectsToPlanet.length ? <ul className="mt-2 space-y-1">{profile.aspectsToPlanet.map((item, i) => <li key={i} className="text-xs text-gray-700">{PLANET_NAMES_RU[item.source] ?? item.source} ({item.sourceHouse}-й дом)</li>)}</ul> : <p className="mt-2 text-xs text-gray-500">Не обнаружены по выбранной системе.</p>}
         </div>
       </section>
@@ -148,13 +148,13 @@ export function NatalDashaTab({ natalChart }: NatalDashaTabProps) {
         </div>
         <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50 p-4">
           <p className="text-sm font-semibold text-blue-950">Как строится анализ</p>
-          <p className="mt-1 text-sm leading-relaxed text-blue-900">Махадаша задаёт общий временной фон, Антардаша добавляет второй управитель, Пратьянтардаша — более короткий слой. Каждый из трёх управителей отдельно проверяется по D1, а профильные варги используются только как дополнительное сопоставление.</p>
+          <p className="mt-1 text-sm leading-relaxed text-blue-900">Здесь показаны три вложенных уровня времени: Махадаша — большой период, Антардаша — подпериод внутри него, Пратьянтардаша — ещё более короткий этап. Название указывает, с какой планетой связан каждый уровень в традиционной трактовке, но не означает, что в эти даты обязательно произойдёт определённое событие. Каждую планету сначала проверяем по основной карте рождения D1, а дополнительные карты (варги) используем только для уточнения.</p>
         </div>
       </GlassCard>
 
       <GlassCard>
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div><p className="text-xs font-semibold uppercase tracking-wide text-purple-700">Текущая комбинация</p><h3 className="mt-1 text-xl font-bold text-gray-900">{current.mahadasha.profile.planetName} / {current.antardasha?.profile.planetName ?? '—'} / {current.pratyantardasha?.profile.planetName ?? '—'}</h3><p className="mt-1 text-xs text-gray-600">Махадаша / Антардаша / Пратьянтардаша</p></div>
+          <div><p className="text-xs font-semibold uppercase tracking-wide text-purple-700">Текущая комбинация</p><h3 className="mt-1 text-xl font-bold text-gray-900">{current.mahadasha.profile.planetName} / {current.antardasha?.profile.planetName ?? '—'} / {current.pratyantardasha?.profile.planetName ?? '—'}</h3><p className="mt-1 text-xs text-gray-600">Большой период / подпериод / короткий этап</p></div>
           <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-800">Расчёт на текущую дату</span>
         </div>
         <div className="mt-4">
