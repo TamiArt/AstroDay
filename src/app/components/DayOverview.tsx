@@ -270,7 +270,7 @@ export function DayOverview({
                         />
                       </div>
                       <span className="text-sm font-bold" style={{ color: area.color }}>
-                        {area.score}%
+                        {area.score}/100
                       </span>
                     </div>
                   </div>
