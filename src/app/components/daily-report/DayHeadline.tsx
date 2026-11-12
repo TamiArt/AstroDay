@@ -11,9 +11,9 @@ interface DayHeadlineProps {
 export function DayHeadline({ tithi, moonSign, energyLevel }: DayHeadlineProps) {
   // Map energy level (0-100) to display categories
   const getEnergyCategory = (level: number): { color: string; label: string; icon: number } => {
-    if (level < 40) return { color: '#ef4444', label: 'Время для отдыха', icon: 1 };
-    if (level < 70) return { color: '#fbbf24', label: 'Умеренная энергия', icon: 2 };
-    return { color: '#10b981', label: 'Высокий потенциал', icon: 3 };
+    if (level < 40) return { color: '#94a3b8', label: 'Ниже среднего по модели', icon: 1 };
+    if (level < 70) return { color: '#64748b', label: 'Средний индекс модели', icon: 2 };
+    return { color: '#6366f1', label: 'Выше среднего по модели', icon: 3 };
   };
 
   const energy = getEnergyCategory(energyLevel);
@@ -34,10 +34,10 @@ export function DayHeadline({ tithi, moonSign, energyLevel }: DayHeadlineProps) 
   };
 
   const title = energyLevel >= 70
-    ? 'День активного потенциала'
+    ? 'Астрологический фон дня'
     : energyLevel >= 40
-      ? 'День мягкого продвижения'
-      : 'День восстановления и тишины';
+      ? 'Астрологический фон дня'
+      : 'Астрологический фон дня';
   const moonSignQuality = moonSignQualities[moonSign] || 'бережному выбору дел';
 
   return (
@@ -62,8 +62,7 @@ export function DayHeadline({ tithi, moonSign, energyLevel }: DayHeadlineProps) 
         <div className="flex-1">
           <h2 className="mb-2">{title}</h2>
           <p className="opacity-80 leading-relaxed">
-            Сегодня {tithi.name} — {tithi.meaning.toLowerCase()}.
-            Луна в {moonSign}, что благоприятствует {moonSignQuality}.
+            Сегодня {tithi.name}. В традиции Джйотиш этот лунный день связывают с темой «{tithi.meaning.toLowerCase()}». Положение Луны в {moonSign} символически связывают с темами: {moonSignQuality}. Это не предсказание фактического хода дня.
           </p>
         </div>
       </div>
@@ -73,8 +72,8 @@ export function DayHeadline({ tithi, moonSign, energyLevel }: DayHeadlineProps) 
         style={{ background: 'var(--secondary)' }}
       >
         <div className="flex-1">
-          <p className="mb-1 opacity-70">Энергия дня</p>
-          <p>{energy.label}</p>
+          <p className="mb-1 opacity-70">Условный индекс модели</p>
+          <p>{energy.label} · {energyLevel}/100</p>
         </div>
         <div
           className="w-16 h-16 rounded-full flex items-center justify-center"
