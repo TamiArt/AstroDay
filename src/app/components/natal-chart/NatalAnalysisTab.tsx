@@ -4,17 +4,14 @@ import { NatalPrecisionSection } from './NatalPrecisionSection';
 import { NatalIntegratedSynthesisSection } from './NatalIntegratedSynthesisSection';
 import {
   AlertCircle,
-  Briefcase,
   CheckCircle,
   Heart,
   Home as HomeIcon,
-  Layers,
   Moon,
   Sparkles,
   Star,
   Sun,
   Target,
-  Users,
   Zap,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -41,30 +38,6 @@ interface InsightCardProps {
   accent: string;
   children: ReactNode;
 }
-
-const LIFE_AREA_STYLES = {
-  purple: {
-    card: 'bg-purple-50 border-purple-200',
-    icon: 'text-purple-600',
-    meta: 'text-purple-700',
-  },
-  blue: {
-    card: 'bg-blue-50 border-blue-200',
-    icon: 'text-blue-600',
-    meta: 'text-blue-700',
-  },
-  pink: {
-    card: 'bg-pink-50 border-pink-200',
-    icon: 'text-pink-600',
-    meta: 'text-pink-700',
-  },
-  green: {
-    card: 'bg-green-50 border-green-200',
-    icon: 'text-green-600',
-    meta: 'text-green-700',
-  },
-} as const;
-
 
 function BulletList({ items, tone }: { items: string[]; tone: 'green' | 'orange' | 'blue' | 'yellow' }) {
   const toneClass = {
