@@ -356,7 +356,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
             <div>
               <h3 className="text-lg font-bold text-gray-900">Все 12 домов простыми словами</h3>
               <p className="text-sm text-gray-600">Для каждого дома: его тема, планеты, управитель и простое объяснение связи с другой сферой жизни.</p>
-              <p className="mt-1 text-xs text-indigo-700">Асцендент: {natalChart.ascendant.signName}. Система: Джйотиш, Лахири, целые знаки.</p>
+              <p className="mt-1 text-xs text-indigo-700">Восходящий знак (Асцендент): {natalChart.ascendant.signName}. Используется система Джйотиш с айанамшей Лахири и методом целых знаков: каждый знак считается отдельным домом.</p>
             </div>
           </div>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -377,8 +377,8 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
               <Star className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900">Полный персональный анализ 9 планет</h3>
-              <p className="text-sm text-gray-600">Положение, достоинство, управление домами, соединения, аспекты и цепочки диспозиторов</p>
+              <h3 className="text-lg font-bold text-gray-900">Разбор девяти планет и лунных узлов</h3>
+              <p className="text-sm text-gray-600">Где находится планета, с какими жизненными сферами её связывает карта и какие дополнительные связи учитываются в трактовке.</p>
             </div>
           </div>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -416,8 +416,8 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                     <p className="text-sm text-gray-700">{planet.degreeInSign?.toFixed(2) ?? '—'}° · {planet.nakshatra ?? 'накшатра не определена'}{planet.pada ? `, пада ${planet.pada}` : ''}</p>
                   </div>
                   <div>
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Управляемые дома</h5>
-                    <p className="text-sm text-gray-700">{planet.ruledHouses.length ? planet.ruledHouses.join(', ') : 'Не определены'}</p>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Какими сферами управляет планета</h5>
+                    <p className="text-sm text-gray-700">{planet.ruledHouses.length ? planet.ruledHouses.map((house) => `${house}-й дом — ${HOUSE_PLAIN_NAMES[house]}`).join('; ') : 'Не определены'}</p>
                   </div>
                   <div>
                     <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Достоинство <TermTooltip term="dignity" /></h5>
@@ -442,7 +442,8 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                 </div>
                 {planet.outgoingAspectDetails.length || planet.incomingAspectDetails.length || planet.houseAspectDetails.length ? (
                   <div className="rounded-lg bg-sky-50 p-3 space-y-1">
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-sky-800">Геометрия аспектов</h5>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-sky-800">Как планеты связаны аспектами</h5>
+                    <p className="text-xs text-sky-800">Аспект — это связь между планетами или домами по определённому угловому правилу. Здесь указано, из какого дома идёт связь и какой тип аспекта использован.</p>
                     {planet.outgoingAspectDetails.map((aspect) => <p key={`out-${aspect.planet}`} className="text-xs text-sky-900">Из {aspect.sourceHouse}-го дома к {aspect.planet} в {aspect.targetHouse}-м доме: {aspect.offset}-й Parashari аспект.</p>)}
                     {planet.incomingAspectDetails.map((aspect) => <p key={`in-${aspect.planet}`} className="text-xs text-sky-900">От {aspect.planet} из {aspect.sourceHouse}-го дома к этой планете в {aspect.targetHouse}-м доме: {aspect.offset}-й Parashari аспект.</p>)}
                     {planet.houseAspectDetails.map((aspect) => <p key={`house-${aspect.house}`} className="text-xs text-sky-900">Аспект на {aspect.house}-й дом: {aspect.kind}.</p>)}
@@ -450,7 +451,8 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                 ) : null}
                 {planet.dispositorChain.length ? (
                   <div className="rounded-lg bg-violet-50 p-3 space-y-1">
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-violet-800">Цепочка диспозиторов</h5>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-violet-800">Цепочка управителей знаков <TermTooltip term="dispositor" /></h5>
+                    <p className="text-xs text-violet-800">Каждая планета находится в определённом знаке. У этого знака есть своя управляющая планета; её положение образует следующее звено цепочки. Так приложение показывает дополнительные связи между планетами.</p>
                     <p className="text-sm text-violet-900">
                       {planet.dispositorChain.map((step) => `${step.planet} — ${step.sign}${step.house === null ? '' : `, ${step.house}-й дом`}${step.dignity ? `, ${step.dignity}` : ''}`).join(' → ')}
                     </p>
