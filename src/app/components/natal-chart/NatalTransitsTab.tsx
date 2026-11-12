@@ -73,7 +73,8 @@ function LordHitCard({ item }: { item: TransitHouseLordHit }) {
   return <article className="rounded-lg border border-gray-200 bg-white p-3">
     <p className="text-sm font-semibold text-gray-900">{item.house}-й дом — {item.houseTopic}</p>
     <p className="mt-1 text-sm text-gray-700">Управитель этой сферы — {item.lordName}. Сейчас транзитное {item.transitPlanetName} {relation} к его положению в натальной карте.</p>
-    <p className="mt-2 text-sm leading-relaxed text-indigo-950">{item.detail} Простыми словами: текущие обстоятельства могут символически затрагивать сферу «{item.houseTopic}» через темы планеты-управителя. Само по себе это не означает, что обязательно произойдёт конкретное событие.</p>
+    <p className="mt-2 text-sm leading-relaxed text-indigo-950">Простыми словами: текущие обстоятельства могут символически затрагивать сферу «{item.houseTopic}» через темы планеты-управителя. Само по себе это не означает, что обязательно произойдёт конкретное событие.</p>
+    <details className="mt-2 rounded-lg border border-gray-100 p-2"><summary className="cursor-pointer text-xs font-medium text-gray-600">Техническое основание связи</summary><p className="mt-1 text-xs text-gray-500">{item.detail}</p></details>
   </article>;
 }
 function AreaCard({ area }: { area: TransitLifeArea }) {
