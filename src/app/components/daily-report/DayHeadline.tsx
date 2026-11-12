@@ -33,11 +33,7 @@ export function DayHeadline({ tithi, moonSign, energyLevel }: DayHeadlineProps) 
     Pisces: 'интуиции, отдыху и творческому потоку'
   };
 
-  const title = energyLevel >= 70
-    ? 'Астрологический фон дня'
-    : energyLevel >= 40
-      ? 'Астрологический фон дня'
-      : 'Астрологический фон дня';
+  const title = 'Астрологический фон дня';
   const moonSignQuality = moonSignQualities[moonSign] || 'бережному выбору дел';
 
   return (
