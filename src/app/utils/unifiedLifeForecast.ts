@@ -3,7 +3,7 @@ import { analyzeDivisionalCharts } from './divisionalChartAnalysis';
 import { analyzeTransits } from './transitAnalysis';
 import { buildNatalChartFacts } from './natalChartFacts';
 import { analyzeNatalYogas } from './natalYogaAnalysis';
-import { analyzePersonalizedHouses } from './personalizedHouseAnalysis';
+import { analyzeLifeTopics, analyzePersonalizedHouses } from './personalizedHouseAnalysis';
 import { buildTransitTimeline, type TransitTimelineReport } from './transitTimeline';
 import { analyzeVimshottariDasha } from './vimshottariDashaAnalysis';
 
@@ -93,6 +93,8 @@ export function buildUnifiedLifeForecast(
 
   const houseInsights = analyzePersonalizedHouses(chart);
   const housesByNumber = new Map(houseInsights.map((item) => [item.house, item]));
+  const lifeTopics = analyzeLifeTopics(chart, startDate);
+  const lifeTopicById = new Map(lifeTopics.map((item) => [item.id, item]));
   const facts = buildNatalChartFacts(chart);
   const yoga = analyzeNatalYogas(facts);
   const vargaReport = analyzeDivisionalCharts(chart);
@@ -107,12 +109,23 @@ export function buildUnifiedLifeForecast(
       const insight = housesByNumber.get(houseNumber);
       if (!insight) continue;
       evidence.push({ source: 'house', label: `${houseNumber}-й дом · ${insight.sign}`, detail: insight.evidence.join(' ') });
-      insight.supportingFactors.forEach((item) => supporting.add(item));
-      insight.attentionPoints.forEach((item) => tension.add(item));
       if (insight.lord) evidence.push({
         source: 'planet', label: `Управитель ${houseNumber}-го дома: ${insight.lord}`,
         detail: insight.interpretation,
       });
+    }
+
+    const lifeTopicId = area.id === 'finances' ? 'money'
+      : area.id === 'home' ? 'home_family'
+        : area.id === 'personal-growth' ? 'inner_growth'
+          : area.id === 'learning' || area.id === 'creativity' ? 'talents'
+            : area.id;
+    const topicInsight = lifeTopicById.get(lifeTopicId as 'talents' | 'money' | 'career' | 'children' | 'relationships' | 'home_family' | 'wellbeing' | 'inner_growth');
+    if (topicInsight) {
+      topicInsight.supportingFactors.forEach((item) => supporting.add(item));
+      topicInsight.attentionPoints.forEach((item) => tension.add(item));
+      evidence.push({ source: 'house', label: topicInsight.title, detail: topicInsight.evidence.join(' ') });
+      evidence.push({ source: 'dasha', label: 'Временной контекст сферы', detail: topicInsight.timingNote });
     }
 
     for (const finding of yoga.findings) {
@@ -157,6 +170,10 @@ export function buildUnifiedLifeForecast(
 
     const transitEvents = transitTimeline.events.filter((event) => {
       if (event.kind === 'house-ingress') return area.houses.includes(event.natalHouse ?? 0);
+      if (event.kind === 'sign-ingress') {
+        const transitPlanetKey = Object.keys(PLANET_NAMES_RU).find((name) => PLANET_NAMES_RU[name] === event.planet);
+        return Boolean(transitPlanetKey && chart.houses?.some((house) => area.houses.includes(house.house) && house.lord === transitPlanetKey));
+      }
       if (event.kind === 'exact-aspect') {
         const natalPlanet = Object.keys(chart.planets).find((name) => PLANET_NAMES_RU[name] === event.natalPlanet);
         const ruled = chart.houses?.filter((house) => house.lord === natalPlanet).map((house) => house.house) ?? [];
