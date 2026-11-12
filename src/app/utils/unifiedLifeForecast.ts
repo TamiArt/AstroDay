@@ -70,9 +70,6 @@ function areaMatches(text: string, area: AreaDefinition): boolean {
   const value = text.toLocaleLowerCase('ru-RU');
   return area.keywords.some((keyword) => value.includes(keyword));
 }
-function inRange(date: Date, start: Date, end: Date): boolean {
-  return date >= start && date <= end;
-}
 
 /**
  * Combines the existing D1 house/planet, yoga, varga, dasha and transit engines.
