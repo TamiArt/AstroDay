@@ -272,9 +272,13 @@ export function buildTransitTimeline(
           for (const orientation of orientations) {
             const beforeOffset = aspectOffset(beforeTransit, natalLongitude, orientation);
             const afterOffset = aspectOffset(afterTransit, natalLongitude, orientation);
-            if (beforeOffset === 0 || afterOffset === 0 || Math.sign(beforeOffset) === Math.sign(afterOffset)) continue;
-            const exactAt = findRoot(previous.date, current.date, (date) =>
-              aspectOffset(positionAt(natalChart, transitPlanet, date).siderealLon, natalLongitude, orientation));
+            if (Math.sign(beforeOffset) === Math.sign(afterOffset) && beforeOffset !== 0 && afterOffset !== 0) continue;
+            const exactAt = beforeOffset === 0
+              ? previous.date
+              : afterOffset === 0
+                ? current.date
+                : findRoot(previous.date, current.date, (date) =>
+                  aspectOffset(positionAt(natalChart, transitPlanet, date).siderealLon, natalLongitude, orientation));
             const eventId = `aspect:${transitPlanet}:${natalPlanet}:${definition.angle}:${orientation}:${exactAt.toISOString()}`;
             if (!seen.has(eventId)) {
               seen.add(eventId);
