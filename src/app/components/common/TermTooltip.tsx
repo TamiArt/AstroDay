@@ -13,7 +13,7 @@ export function TermTooltip({ term, label }: TermTooltipProps) {
     <details className="group relative inline-flex align-middle">
       <summary
         className="inline-flex cursor-pointer list-none items-center gap-1 rounded-sm text-inherit outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600 [&::-webkit-details-marker]:hidden"
-        aria-label={`Пояснение: ${info.title}`}
+        aria-label={`Пояснение: ${info.title}`}\n        onClick={(event) => event.stopPropagation()}
         title={`Пояснение: ${info.title}`}
       >
         {label && <span>{label}</span>}
