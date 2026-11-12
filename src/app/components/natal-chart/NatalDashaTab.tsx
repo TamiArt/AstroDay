@@ -24,6 +24,24 @@ function VargaEvidence({ item }: { item: DashaVargaEvidence }) {
   );
 }
 
+const PERIOD_PLANET_MEANINGS: Record<string, string> = {
+  Солнце: 'личные цели, уверенность, самостоятельность и отношения с авторитетами',
+  Луна: 'эмоциональное состояние, семья, привычки и ощущение безопасности',
+  Марс: 'инициатива, энергия, конкуренция и умение действовать решительно',
+  Меркурий: 'обучение, общение, документы, анализ и работа с информацией',
+  Юпитер: 'образование, наставники, развитие и жизненные принципы',
+  Венера: 'отношения, творчество, комфорт, удовольствия и личные ценности',
+  Сатурн: 'ответственность, дисциплина, терпение и долгосрочные обязательства',
+  Раху: 'амбиции, необычный опыт и стремление выйти за привычные рамки',
+  Кету: 'самостоятельное исследование, концентрация и освобождение от лишнего',
+};
+const PERIOD_HOUSE_MEANINGS: Record<number, string> = {
+  1: 'личность и самостоятельность', 2: 'деньги и накопления', 3: 'навыки и общение',
+  4: 'дом и семья', 5: 'творчество и дети', 6: 'работа и повседневные обязанности',
+  7: 'брак и партнёрство', 8: 'общие ресурсы и перемены', 9: 'обучение и мировоззрение',
+  10: 'профессия и карьера', 11: 'доходы и окружение', 12: 'отдых и уединение',
+};
+
 function PlanetProfile({ analysis }: { analysis: DashaLayerAnalysis }) {
   const { profile } = analysis;
   return (
@@ -47,8 +65,13 @@ function PlanetProfile({ analysis }: { analysis: DashaLayerAnalysis }) {
         </div>
       </div>
 
+      <section className="rounded-xl border border-indigo-100 bg-indigo-50/70 p-4">
+        <h5 className="text-sm font-semibold text-indigo-900">Что означает период этой планеты простыми словами</h5>
+        <p className="mt-1 text-sm leading-relaxed text-gray-800">В традиционной астрологии период {profile.planetName} связывают с темами: {PERIOD_PLANET_MEANINGS[profile.planetName] ?? 'личные задачи и качества этой планеты'}. В вашей карте эта планета находится в {profile.house ? `${profile.house}-м доме — сфере «${PERIOD_HOUSE_MEANINGS[profile.house] ?? 'жизненные задачи'}»` : 'доме, который не удалось определить'}{profile.ruledHouses.length ? ` и управляет домами ${profile.ruledHouses.map((house) => `${house}-м (${PERIOD_HOUSE_MEANINGS[house]})`).join(', ')}` : ''}. Поэтому её период рассматривают через эти темы. Это не означает, что событие обязательно произойдёт: период показывает символический фокус, а не готовый сценарий.</p>
+      </section>
+
       <section>
-        <h5 className="mb-2 text-sm font-semibold text-gray-900">Почему эта планета связана с темами карты</h5>
+        <h5 className="mb-2 text-sm font-semibold text-gray-900">Почему расчёт связывает планету с этими темами</h5>
         <ul className="space-y-2">{analysis.whyHighlighted.map((reason, index) => <li key={index} className="flex gap-2 text-sm leading-relaxed text-gray-700"><span className="font-bold text-indigo-600">•</span><span>{reason}</span></li>)}</ul>
       </section>
 
@@ -64,12 +87,12 @@ function PlanetProfile({ analysis }: { analysis: DashaLayerAnalysis }) {
       </section>
 
       <section>
-        <h5 className="mb-2 text-sm font-semibold text-gray-900">Связь с жизненными сферами по D1</h5>
+        <h5 className="mb-2 text-sm font-semibold text-gray-900">Какие сферы затрагивает эта планета в основной карте</h5>
         {profile.lifeAreaLinks.length ? <div className="grid gap-2 md:grid-cols-2">{profile.lifeAreaLinks.map((area) => <div key={area.area} className="rounded-lg border border-gray-200 bg-white p-3"><p className="text-sm font-semibold text-gray-900">{area.label}</p><p className="mt-1 text-xs text-gray-600">Дома: {area.relevantHouses.join(', ')}</p><ul className="mt-1 list-disc space-y-1 pl-4">{area.reasons.map((reason) => <li key={reason} className="text-xs text-gray-700">{reason}</li>)}</ul></div>)}</div> : <p className="rounded-lg bg-gray-50 p-3 text-sm text-gray-600">Прямые связи с настроенными жизненными сферами не найдены. Это не означает, что тема исключена из жизни.</p>}
       </section>
 
       <section>
-        <h5 className="mb-2 text-sm font-semibold text-gray-900">Сопоставление с профильными варгами</h5>
+        <h5 className="mb-2 text-sm font-semibold text-gray-900">Дополнительная проверка темы по дробным картам</h5>
         {profile.vargas.length ? <div className="grid gap-2 md:grid-cols-2">{profile.vargas.map((item, index) => <VargaEvidence key={`${item.division}-${index}`} item={item} />)}</div> : <p className="text-sm text-gray-600">Для выявленных связей нет соответствующей профильной варги.</p>}
       </section>
 
