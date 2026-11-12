@@ -251,7 +251,7 @@ function HouseLordCard({ insight }: { insight: HouseLordInsight }) {
         </div>
 
         <details className="rounded-lg border border-gray-200 bg-white p-3">
-          <summary className="cursor-pointer text-sm font-semibold text-gray-800">Аспекты <TermTooltip term="aspect" />, соединения и исходные основания</summary>
+          <summary className="cursor-pointer text-sm font-semibold text-gray-800">Аспекты, соединения и исходные основания</summary>
           <div className="mt-3 space-y-3">
             <div>
               <h5 className="mb-1 text-xs font-semibold text-gray-800">Аспекты на положение управителя</h5>
