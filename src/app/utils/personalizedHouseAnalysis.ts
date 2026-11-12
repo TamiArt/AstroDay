@@ -299,19 +299,19 @@ export function analyzePersonalizedHouses(chart: NatalChart): PersonalizedHouseI
       lordKey,
     );
     const lordCondition = evaluatePlanetCondition(chart, lordKey);
-    const houseAspects = (houseFacts?.aspectedBy ?? []).map((source) => `${PLANET_RU[source] ?? source} аспектирует ${house.house}-й дом по используемой схеме граха-дришти.`);
+    const houseAspects = (houseFacts?.aspectedBy ?? []).map((source) => `${PLANET_RU[source] ?? source} образует аспект на ${house.house}-й дом по системе планетных аспектов Джйотиш (граха-дришти).`);
     const lordHouseAspects = lordHouse ? describeHouseDrishti(chart, lordHouse) : [];
     const sign = houseFacts?.sign ?? (SIGN_RU[house.signName] ?? house.signName);
     const houseSignStyle = describeHouseSignStyle(house.signName, house.house);
     const interpretation = lordHouse
-      ? `В традиционной Джйотиш этот дом связан с темой: ${HOUSE_MEANING[house.house]}. В твоей карте он начинается в знаке ${sign}. ${houseSignStyle ?? ''} Управитель — ${PLANET_RU[lordKey] ?? lordKey}; он расположен в ${lordHouse}-м доме (${getLordHouseMeaning(lordHouse)}). Поэтому темы этих двух домов стоит рассматривать вместе: решения и опыт в сфере «${getLordHouseMeaning(lordHouse)}» символически связываются с темой этого дома.`
+      ? `В традиции Джйотиш этот дом связывают с темой «${HOUSE_MEANING[house.house]}». В вашей карте он начинается в знаке ${sign}. ${houseSignStyle ?? ''} Управитель — ${PLANET_RU[lordKey] ?? lordKey}; он расположен в ${lordHouse}-м доме (${getLordHouseMeaning(lordHouse)}). Поэтому темы этих двух домов стоит рассматривать вместе: решения и опыт в сфере «${getLordHouseMeaning(lordHouse)}» символически связываются с темой этого дома.`
       : `Дом в знаке ${sign}; ${houseSignStyle ?? ''} Положение его управителя в доступных данных определить не удалось. Общая тема: ${HOUSE_MEANING[house.house]}.`;
 
     const evidence = [
       `Знак дома: ${sign}`,
       ...(houseSignStyle ? [`Стиль знака дома: ${houseSignStyle}`] : []),
       `Управитель: ${PLANET_RU[lordKey] ?? lordKey}${lordEvidence ? ` — ${formatPlanetEvidence(lordEvidence)}` : ''}`,
-      lordCondition ? `Достоинство управителя: ${lordCondition.label}; качественная шкала ${lordCondition.score}/100. Это не Shadbala.` : 'Достоинство управителя: нет данных.',
+      lordCondition ? `Положение управителя в знаке: ${lordCondition.label}; условная оценка ${lordCondition.score}/100. Это упрощённая оценка одного признака, а не полная система Шадбала и не измерение реальной силы человека.` : 'Достоинство управителя: нет данных.',
       ...occupantInterpretations.map((item) => `Планета в доме: ${item}`),
       ...planetaryConnections.map((item) => `Связь планет: ${item}`),
       ...houseAspects,
@@ -387,11 +387,11 @@ function getTopicEvidence(chart: NatalChart, houses: number[]): string[] {
     const parts = [
       String(houseNumber) + '-й дом в знаке ' + sign + ' управляется ' + (PLANET_RU[house.lord] ?? house.lord),
       lordHouse ? 'управитель находится в ' + lordHouse + '-м доме (' + getLordHouseMeaning(lordHouse) + ')' : 'положение управителя не определено',
-      condition ? 'достоинство управителя: ' + condition.label : '',
+      condition ? 'положение управителя в знаке: ' + condition.label : '',
       occupants.length ? 'в доме расположены ' + occupants.map((name) => PLANET_RU[name] ?? name).join(', ') : 'планет в доме нет',
       aspects.length ? 'дом получает влияния: ' + aspects.join(' ') : 'прямые граха-дришти на дом не обнаружены',
       lordAspects.length ? 'положение управителя дополнительно аспектируют: ' + lordAspects.join(' ') : '',
-      dispositor ? 'диспозитор управителя — ' + (PLANET_RU[dispositor] ?? dispositor) +
+      dispositor ? 'управитель знака, в котором находится планета (диспозитор), — ' + (PLANET_RU[dispositor] ?? dispositor) +
         (dispositorHouse ? ', расположен в ' + dispositorHouse + '-м доме' : '') +
         (dispositorCondition ? ', достоинство: ' + dispositorCondition.label : '') : '',
     ];
