@@ -22,7 +22,7 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
       title: 'Титхи',
       value: panchang.tithi.name,
       tooltip: 'Что это?',
-      description: panchang.tithi.meaning,
+      description: `Традиционная трактовка: ${panchang.tithi.meaning.toLowerCase()}.`,
       details: 'Титхи — это лунный день, который рассчитывают по угловому расстоянию между Солнцем и Луной. В лунном месяце 30 титхи. В традиции Джйотиш их используют как один из символических ориентиров календарного дня.'
     },
     {
@@ -32,7 +32,7 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
       title: 'Накшатра',
       value: nakshatra?.name || '',
       tooltip: 'Что это?',
-      description: `Управитель: ${nakshatra?.lord}. Божество: ${nakshatra?.deity}`,
+      description: `Планета-управитель: ${nakshatra?.lord}. Связанное божество в традиции: ${nakshatra?.deity}.`,
       details: 'Накшатра — один из 27 участков звёздного круга, через которые проходит Луна. Луна обычно находится в одном таком участке около суток. В Джйотиш накшатру используют для символического описания дня; она не предсказывает конкретные события.'
     },
     {
@@ -42,7 +42,7 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
       title: 'Йога',
       value: panchang.yoga.name,
       tooltip: 'Что это?',
-      description: panchang.yoga.meaning,
+      description: `Традиционная трактовка: ${panchang.yoga.meaning.toLowerCase()}.`,
       details: 'Йогу дня рассчитывают по сумме долгот Солнца и Луны. В панчанге выделяют 27 йог. Это традиционная характеристика календарного дня, а не гарантия успеха или неудачи дела.'
     },
     {
@@ -52,7 +52,7 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
       title: 'Карана',
       value: panchang.karana.name,
       tooltip: 'Что это?',
-      description: panchang.karana.quality,
+      description: `Традиционная трактовка: ${panchang.karana.quality.toLowerCase()}.`,
       details: 'Карана — половина лунного дня (титхи). В календаре используются 11 видов каран, часть из которых повторяется циклически. В традиции это дополнительный символический ориентир для оценки дня.'
     },
     {
@@ -62,7 +62,7 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
       title: 'Вара (День недели)',
       value: panchang.vara.name,
       tooltip: 'Что это?',
-      description: `${panchang.vara.planet}: ${panchang.vara.quality}`,
+      description: `Планета дня — ${panchang.vara.planet}. Традиционная тема: ${panchang.vara.quality.toLowerCase()}.`,
       details: 'Вара — день недели в индийском календаре. Каждому дню традиционно сопоставляют планету. Это общий календарный символ, а не описание характера конкретного человека.'
     }
   ];
