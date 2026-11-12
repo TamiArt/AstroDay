@@ -4,6 +4,7 @@ import { analyzeDivisionalCharts, VARGA_ANALYSIS_RULES, type VargaAnalysis, type
 import { calculateAllDivisionalCharts } from '../../utils/divisionalCharts';
 import { GlassCard } from '../common/GlassCard';
 import { DivisionalChartWheel } from '../DivisionalChartWheel';
+import { TermTooltip } from '../common/TermTooltip';
 
 const PLANET_NAMES_RU: Record<string, string> = {
   Sun: 'Солнце', Moon: 'Луна', Mars: 'Марс', Mercury: 'Меркурий',
@@ -41,13 +42,13 @@ function VargaDetail({ analysis }: { analysis: VargaAnalysis }) {
           <div><h4 className="font-bold text-gray-900">{analysis.name}</h4><p className="text-sm text-indigo-700">{analysis.topic}</p></div>
           <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs text-indigo-800">Дополнительная карта по теме</span>
         </div>
-        <p className="mt-2 text-sm leading-relaxed text-gray-700">Эта дополнительная карта рассматривает тему «{analysis.topic.toLowerCase()}». Основная карта D1 показывает общий жизненный рисунок, а эта карта помогает подробнее рассмотреть только указанную область. Её нельзя читать отдельно от D1.</p>
+        <p className="mt-2 text-sm leading-relaxed text-gray-700">Эта дополнительная карта рассматривает тему «{analysis.topic.toLowerCase()}». Основная карта рождения D1 <TermTooltip term="d1" /> показывает общий рисунок карты, а дополнительная варга <TermTooltip term="varga" /> помогает подробнее рассмотреть только указанную область. Её нельзя читать отдельно от D1.</p>
       </summary>
       <div className="mt-4 space-y-4">
         <section className="rounded-lg bg-indigo-50/70 p-3"><h5 className="text-sm font-semibold text-indigo-900">Как понять результат</h5><p className="mt-1 text-sm leading-relaxed text-gray-800">Сравните, какие планеты и темы повторяются в основной карте D1 и в дополнительной карте. Если указания совпадают, трактовка темы становится более согласованной. Если различаются, это не ошибка: дополнительная карта показывает другой слой той же жизненной области.</p></section>
         <details className="rounded-lg border border-gray-200 p-3"><summary className="cursor-pointer text-sm font-semibold text-gray-700">Подробные технические основания</summary><p className="mt-2 text-xs text-gray-600">{analysis.interpretiveScope}</p>
-        <section><h5 className="mb-2 text-sm font-semibold text-gray-900">D1 — исходные показатели</h5><div className="grid gap-2 md:grid-cols-2">{analysis.d1Evidence.map((item) => <HouseEvidence key={item.house} item={item} />)}</div></section>
-        <section><h5 className="mb-2 text-sm font-semibold text-gray-900">Показатели тематической варги</h5><div className="grid gap-2 md:grid-cols-2">{analysis.vargaEvidence.map((item) => <HouseEvidence key={item.house} item={item} />)}</div></section>
+        <section><h5 className="mb-2 text-sm font-semibold text-gray-900">D1 — исходные показатели <TermTooltip term="d1" /></h5><div className="grid gap-2 md:grid-cols-2">{analysis.d1Evidence.map((item) => <HouseEvidence key={item.house} item={item} />)}</div></section>
+        <section><h5 className="mb-2 text-sm font-semibold text-gray-900">Показатели тематической варги <TermTooltip term="varga" /></h5><div className="grid gap-2 md:grid-cols-2">{analysis.vargaEvidence.map((item) => <HouseEvidence key={item.house} item={item} />)}</div></section>
         <section><h5 className="mb-2 text-sm font-semibold text-gray-900">Сопоставление одних и тех же планет</h5>
           <div className="overflow-x-auto"><table className="w-full text-xs text-left"><thead><tr className="border-b text-gray-500"><th className="py-2 pr-2">Планета / роль</th><th className="py-2 pr-2">D1</th><th className="py-2 pr-2">{analysis.name.split(' — ')[0]}</th></tr></thead><tbody>
             {analysis.comparisons.map((item) => <tr key={item.planet} className="border-b border-gray-100"><td className="py-2 pr-2 font-medium">{item.planet}<div className="text-gray-500">{item.role === 'karaka' ? 'карака' : 'управитель тематического дома D1'}</div></td><td className="py-2 pr-2">{item.d1Sign}, {item.d1House}-й дом</td><td className="py-2 pr-2">{item.vargaSign}, {item.vargaHouse}-й дом</td></tr>)}
@@ -76,7 +77,7 @@ export function DivisionalChartsTab({ natalChart }: DivisionalChartsTabProps) {
           <div><h3 className="text-lg font-bold text-gray-900">Дополнительные карты — подробности по отдельным темам</h3><p className="text-sm text-gray-600">Основная карта рождения показывает общий рисунок; дополнительные карты уточняют отдельные жизненные области</p></div>
         </div>
         <div className="mt-4 rounded-lg border border-indigo-100 bg-indigo-50 p-4">
-          <h4 className="font-semibold text-indigo-950">Основная карта рождения — D1 (Раши)</h4>
+          <h4 className="font-semibold text-indigo-950">Основная карта рождения — D1 (Раши) <TermTooltip term="d1" /></h4>
           <p className="mt-1 text-sm text-indigo-900">Асцендент: {report.baseChart.ascendantSign}, {report.baseChart.ascendantDegree.toFixed(2)}°.</p>
           <p className="mt-2 text-sm text-gray-700">{report.baseChart.principle}</p>
           <div className="mt-3 grid gap-2 md:grid-cols-2">{report.baseChart.evidence.map((item) => <HouseEvidence key={item.house} item={item} />)}</div>
