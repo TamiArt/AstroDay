@@ -171,21 +171,21 @@ export function NatalDashaTab({ natalChart }: NatalDashaTabProps) {
 
       <GlassCard>
         <div className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-purple-700" /><h3 className="text-lg font-semibold text-gray-900">Почему выделены именно эти темы</h3></div>
-        <p className="mt-2 mb-4 text-sm text-gray-600">Сначала читается D1: дом планеты, управляемые ею дома, достоинство, диспозитор и аспекты. Затем ищутся прямые тематические связи в варгах. Отсутствующие связи не заменяются общими описаниями планет.</p>
+        <p className="mt-2 mb-4 text-sm text-gray-600">Для каждого периода важно не только название планеты. Мы смотрим, где она находится в вашей карте и какие жизненные темы связывает. Дополнительные карты могут уточнить эту тему, но не заменяют основную карту. Если прямой связи нет, приложение не придумывает её.</p>
         <PeriodCard analysis={current.mahadasha} active />
         {current.antardasha && <PeriodCard analysis={current.antardasha} active />}
         {current.pratyantardasha && <PeriodCard analysis={current.pratyantardasha} active />}
       </GlassCard>
 
       <GlassCard>
-        <div className="flex items-center gap-2"><Layers3 className="h-5 w-5 text-indigo-700" /><h3 className="text-lg font-semibold text-gray-900">Антардаши текущей Махадаши</h3></div>
-        <p className="mt-2 mb-3 text-sm text-gray-600">Раскрывайте подпериод, чтобы увидеть его собственного управителя, связи с домами D1 и профильными варгами.</p>
+        <div className="flex items-center gap-2"><Layers3 className="h-5 w-5 text-indigo-700" /><h3 className="text-lg font-semibold text-gray-900">Короткие периоды внутри текущей Махадаши</h3></div>
+        <p className="mt-2 mb-3 text-sm text-gray-600">Внутри большого периода последовательно меняются более короткие периоды. Откройте нужный, чтобы увидеть, с какими жизненными темами связан его управитель.</p>
         <div className="space-y-2">{report.mahadashaAntardashas.map((item, index) => <PeriodCard key={`${item.planet}-${index}`} analysis={item} active={item.planet === current.antardasha?.planet && item.startDate.getTime() === current.antardasha.startDate.getTime()} />)}</div>
       </GlassCard>
 
       {current.antardasha && <GlassCard>
-        <div className="flex items-center gap-2"><Clock3 className="h-5 w-5 text-indigo-700" /><h3 className="text-lg font-semibold text-gray-900">Пратьянтардаши текущей Антардаши</h3></div>
-        <p className="mt-2 mb-3 text-sm text-gray-600">Короткие подпериоды рассчитываются внутри полной Антардаши, а не только в её остатке после рождения.</p>
+        <div className="flex items-center gap-2"><Clock3 className="h-5 w-5 text-indigo-700" /><h3 className="text-lg font-semibold text-gray-900">Ещё более короткие этапы текущего подпериода</h3></div>
+        <p className="mt-2 mb-3 text-sm text-gray-600">Это самые короткие из отображаемых этапов. Они уточняют, какая планета символически выделяется внутри текущего подпериода.</p>
         <div className="space-y-2">{report.antardashaPratyantardashas.map((item, index) => <PeriodCard key={`${item.planet}-${index}`} analysis={item} active={item.planet === current.pratyantardasha?.planet && item.startDate.getTime() === current.pratyantardasha.startDate.getTime()} />)}</div>
       </GlassCard>}
 
