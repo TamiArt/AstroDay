@@ -29,7 +29,7 @@ export interface TransitTimelineEvent {
   aspect?: TimelineAspect;
   exactAt: Date;
   from?: string;
-  to: string;
+  to?: string;
   natalHouse?: number;
   orb?: number;
   maxOrb?: number;
