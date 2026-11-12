@@ -123,7 +123,7 @@ export function buildSmartDayPlan(forecast: DayForecast): SmartDayPlan {
   const difficultPanchang = Boolean(forecast.warning);
   const strongEnergy = forecast.energyLevel >= 70;
   const positiveDirection = /начинайте|начните|проявляйте инициатив|активн|смелый шаг|новые проекты|расширяйте возможности/i.test(forecast.topRecommendation);
-  const cautionDirection = /не форсируйте|не принимайте важных решений|не спешите|пауза|осторож|не подогревайте конфликт/i.test(forecast.avoidRecommendation);
+  const cautionDirection = /не форсируйте|не принимайте важных решений|не спешите|пауза|осторож|не подогревайте конфликт|не переводить в спор|не спорьте|не обещайте больше|с осторожностью/i.test(forecast.avoidRecommendation);
   const conflicts: SmartDayConflict[] = [];
 
   if ((strongEnergy || positiveDirection) && (difficultPanchang || cautionDirection)) {
