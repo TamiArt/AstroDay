@@ -87,7 +87,7 @@ function classifyFactor(reason: string): SmartDayFactor {
   if (/натальн|вашей карте|домом|управител/.test(value)) {
     return { source: 'natal', title: 'Связь с натальной картой', explanation: reason };
   }
-  if (/титхи|йога|экадаши|новолуние|полнолуние/.test(value)) {
+  if (/титхи|йога|экадаши|новолуние|полнолуние|сиддхи|сиддха|прити|саубхагья|шобхана|атиганда|шула|вьягхата|вьятипата|вайдхрити|ганда/.test(value)) {
     return { source: 'panchang', title: 'Панчанга дня', explanation: reason };
   }
   if (/энерг|темп дня|паузы|короткие действия/.test(value)) {
