@@ -5,6 +5,11 @@ import { analyzeNatalYogas } from '../../utils/natalYogaAnalysis';
 import type { NatalChart } from '../../utils/astrology';
 import { GlassCard } from '../common/GlassCard';
 
+const PLANET_NAMES_RU: Record<string, string> = {
+  Sun: 'Солнце', Moon: 'Луна', Mars: 'Марс', Mercury: 'Меркурий',
+  Jupiter: 'Юпитер', Venus: 'Венера', Saturn: 'Сатурн', Rahu: 'Раху', Ketu: 'Кету',
+};
+
 const CATEGORY_LABELS = {
   raja: 'Раджа-йоги',
   wealth: 'Дхана-йоги',
@@ -43,7 +48,10 @@ export function NatalYogasSection({ natalChart }: { natalChart: NatalChart }) {
         </div>
 
         {detected ? (
-          <div className="space-y-3">
+          <div className="rounded-lg bg-indigo-50/70 p-3 text-sm leading-relaxed text-indigo-950">
+          Йога — это сочетание нескольких показателей натальной карты, а не отдельная планета. Ниже показано, какие именно положения образуют комбинацию, какие темы она затрагивает и какие дополнительные условия могут усиливать или ослаблять её трактовку. Само наличие йоги не гарантирует конкретных событий.
+        </div>
+        <div className="space-y-3">
             {analysis.findings.map((finding) => (
               <details key={finding.id} className="rounded-xl border border-purple-200 bg-purple-50/40 p-3">
                 <summary className="cursor-pointer list-none">
@@ -63,7 +71,7 @@ export function NatalYogasSection({ natalChart }: { natalChart: NatalChart }) {
                   <ul className="list-disc space-y-1 pl-5">
                     {finding.evidence.map((item) => <li key={item} className="text-sm text-gray-700">{item}</li>)}
                   </ul>
-                  <p className="text-xs text-gray-500">Планеты: {finding.participants.join(', ')}. Дома: {finding.houses.length ? finding.houses.join(', ') : 'не определены'}.</p>
+                  <p className="text-xs text-gray-500">Участвуют планеты: {finding.participants.map((planet) => PLANET_NAMES_RU[planet] ?? planet).join(', ')}. Дома: {finding.houses.length ? finding.houses.join(', ') : 'не определены'}.</p>
                   {finding.assessment.supportingFactors.length > 0 && (
                     <div className="rounded-lg bg-emerald-50 p-2">
                       <p className="text-xs font-semibold text-emerald-900">Поддерживающие факторы</p>
