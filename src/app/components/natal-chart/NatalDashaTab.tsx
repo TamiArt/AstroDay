@@ -53,9 +53,17 @@ function PlanetProfile({ analysis }: { analysis: DashaLayerAnalysis }) {
   const { profile } = analysis;
   return (
     <div className="space-y-4">
+      <section className="rounded-xl border border-indigo-100 bg-indigo-50/70 p-4">
+        <h5 className="text-sm font-semibold text-indigo-900">Что означает период этой планеты простыми словами</h5>
+        <p className="mt-1 text-sm leading-relaxed text-gray-800">В традиционной астрологии период {profile.planetName} связывают с темами: {PERIOD_PLANET_MEANINGS[profile.planetName] ?? 'личные задачи и качества этой планеты'}. В вашей карте эта планета находится в {profile.house ? `${profile.house}-м доме — сфере «${PERIOD_HOUSE_MEANINGS[profile.house] ?? 'жизненные задачи'}»` : 'доме, который не удалось определить'}{profile.ruledHouses.length ? ` и управляет домами ${profile.ruledHouses.map((house) => `${house}-м (${PERIOD_HOUSE_MEANINGS[house]})`).join(', ')}` : ''}. Поэтому её период рассматривают через эти темы. Это не означает, что событие обязательно произойдёт: период показывает символический фокус, а не готовый сценарий.</p>
+      </section>
+
+      <details className="rounded-lg border border-gray-200 p-3">
+        <summary className="cursor-pointer text-sm font-semibold text-gray-800">Положение планеты, её управитель и дополнительные характеристики</summary>
+        <div className="mt-3">
       <div className="grid gap-3 md:grid-cols-2">
         <div className="rounded-xl border border-purple-100 bg-purple-50 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-purple-700">Планета периода в D1</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-purple-700">Положение планеты в основной карте</p>
           <p className="mt-1 text-lg font-bold text-gray-900">{profile.planetName}</p>
           <p className="text-sm text-gray-700">{profile.sign}, {profile.degreeInSign.toFixed(2)}° · {profile.house ? `${profile.house}-й дом` : 'дом не определён'}</p>
           <p className="mt-2 text-sm text-gray-700">Управляет домами: {profile.ruledHouses.length ? profile.ruledHouses.join(', ') : 'не определены'}</p>
@@ -72,10 +80,8 @@ function PlanetProfile({ analysis }: { analysis: DashaLayerAnalysis }) {
         </div>
       </div>
 
-      <section className="rounded-xl border border-indigo-100 bg-indigo-50/70 p-4">
-        <h5 className="text-sm font-semibold text-indigo-900">Что означает период этой планеты простыми словами</h5>
-        <p className="mt-1 text-sm leading-relaxed text-gray-800">В традиционной астрологии период {profile.planetName} связывают с темами: {PERIOD_PLANET_MEANINGS[profile.planetName] ?? 'личные задачи и качества этой планеты'}. В вашей карте эта планета находится в {profile.house ? `${profile.house}-м доме — сфере «${PERIOD_HOUSE_MEANINGS[profile.house] ?? 'жизненные задачи'}»` : 'доме, который не удалось определить'}{profile.ruledHouses.length ? ` и управляет домами ${profile.ruledHouses.map((house) => `${house}-м (${PERIOD_HOUSE_MEANINGS[house]})`).join(', ')}` : ''}. Поэтому её период рассматривают через эти темы. Это не означает, что событие обязательно произойдёт: период показывает символический фокус, а не готовый сценарий.</p>
-      </section>
+        </div>
+      </details>
 
       <details className="rounded-lg border border-gray-200 p-3">
         <summary className="cursor-pointer text-sm font-semibold text-gray-800">Почему расчёт связывает планету с этими темами</summary>
