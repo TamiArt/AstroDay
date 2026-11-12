@@ -128,7 +128,7 @@ export function DayOverview({
                   <div
                     className="h-full rounded-full transition-all"
                     style={{
-                      width: `${area.score}/100`,
+                      width: `${area.score}%`,
                       background: area.color
                     }}
                   />
@@ -264,7 +264,7 @@ export function DayOverview({
                         <div
                           className="h-full rounded-full transition-all"
                           style={{
-                            width: `${area.score}/100`,
+                            width: `${area.score}%`,
                             background: area.color
                           }}
                         />
