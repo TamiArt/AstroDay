@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertCircle, BarChart3, BookOpen, Clock, Eye, Layers, Star, Users, Zap } from 'lucide-react';
+import { AlertCircle, BarChart3, BookOpen, Clock, Eye, Layers, Orbit, Star, Users, Zap } from 'lucide-react';
 import { NatalChart as NatalChartType } from '../utils/astrology';
 import { AspectsTableEnhanced } from './AspectsTableEnhanced';
 import { GlassCard } from './common/GlassCard';

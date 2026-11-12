@@ -14,20 +14,18 @@ const SIGN_RU = ['Овен', 'Телец', 'Близнецы', 'Рак', 'Лев
 const SPECIAL_ASPECTS: Partial<Record<TransitPlanet, number[]>> = {
   Mars: [4, 7, 8], Jupiter: [5, 7, 9], Saturn: [3, 7, 10],
 };
-const LIFE_AREAS = [
-  { id: 'self', label: 'Личность и направление', houses: [1] },
+const LIFE_AREAS: Array<{ id: string; label: string; houses: number[] }> = [
   { id: 'finances', label: 'Деньги и ресурсы', houses: [2, 11] },
-  { id: 'communication', label: 'Общение и инициативы', houses: [3] },
-  { id: 'home', label: 'Дом и недвижимость', houses: [4] },
-  { id: 'creativity', label: 'Творчество и дети', houses: [5] },
-  { id: 'work', label: 'Работа и повседневные обязанности', houses: [6, 10] },
-  { id: 'relationships', label: 'Партнёрство и отношения', houses: [7] },
-  { id: 'transformation', label: 'Общие ресурсы и перемены', houses: [8] },
-  { id: 'learning', label: 'Обучение и мировоззрение', houses: [9] },
-  { id: 'career', label: 'Карьера и статус', houses: [10] },
-  { id: 'gains', label: 'Результаты и окружение', houses: [11] },
-  { id: 'retreat', label: 'Отдых и завершение циклов', houses: [12] },
-] as const;
+  { id: 'career', label: 'Работа и карьера', houses: [2, 6, 10, 11] },
+  { id: 'relationships', label: 'Отношения и партнёрство', houses: [5, 7, 12] },
+  { id: 'home', label: 'Дом и недвижимость', houses: [4, 11] },
+  { id: 'family', label: 'Семья и род', houses: [2, 4, 9] },
+  { id: 'children', label: 'Дети и созидание', houses: [5, 9] },
+  { id: 'learning', label: 'Обучение и знания', houses: [4, 5, 9] },
+  { id: 'creativity', label: 'Творчество и самовыражение', houses: [3, 5, 9] },
+  { id: 'spirituality', label: 'Духовные практики', houses: [8, 9, 12] },
+  { id: 'health', label: 'Режим и здоровье', houses: [1, 6, 8] },
+];;
 
 export interface TransitHousePosition {
   planet: TransitPlanet;
@@ -91,10 +89,6 @@ export interface TransitAnalysisReport {
   warnings: string[];
 }
 
-function normalizeAngle(value: number): number {
-  const result = value % 360;
-  return result < 0 ? result + 360 : result;
-}
 function houseFromSign(sign: number, ascendantSign: number): number {
   return ((sign - ascendantSign + 12) % 12) + 1;
 }

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { CalendarClock, ChevronDown, Orbit, ShieldAlert, Sparkles } from 'lucide-react';
+import { ChevronDown, Orbit, ShieldAlert } from 'lucide-react';
 import type { NatalChart as NatalChartType } from '../../utils/astrology';
 import { analyzeTransits, type TransitAnalysisReport, type TransitLifeArea } from '../../utils/transitAnalysis';
 import { GlassCard } from '../common/GlassCard';
