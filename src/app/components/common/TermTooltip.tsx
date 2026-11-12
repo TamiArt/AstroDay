@@ -10,7 +10,7 @@ export function TermTooltip({ term, label }: TermTooltipProps) {
   const info = ASTROLOGY_TERMS[term];
 
   return (
-    <details className="group relative inline-flex align-middle">
+    <details className="group relative inline-flex align-middle" onClick={(event) => event.stopPropagation()}>
       <summary
         className="inline-flex cursor-pointer list-none items-center gap-1 rounded-sm text-inherit outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600 [&::-webkit-details-marker]:hidden"
         aria-label={`Пояснение: ${info.title}`}
