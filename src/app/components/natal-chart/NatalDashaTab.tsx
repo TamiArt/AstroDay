@@ -15,7 +15,7 @@ function VargaEvidence({ item }: { item: DashaVargaEvidence }) {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-semibold text-gray-900">{item.name} · {item.topic}</p>
         <span className={`rounded-full px-2 py-1 text-xs ${item.relevantHouseRelation === 'no-direct-house-link' ? 'bg-gray-100 text-gray-600' : 'bg-indigo-50 text-indigo-700'}`}>
-          {item.relevantHouseRelation === 'occupies-and-rules' ? 'Положение + управление' : item.relevantHouseRelation === 'occupies' ? 'Занимает дом' : item.relevantHouseRelation === 'rules' ? 'Управляет домом' : item.relevantHouseRelation === 'no-direct-house-link' ? 'Прямой связи нет' : 'Недоступно'}
+          {item.relevantHouseRelation === 'occupies-and-rules' ? 'Находится в тематическом доме и управляет им' : item.relevantHouseRelation === 'occupies' ? 'Находится в тематическом доме' : item.relevantHouseRelation === 'rules' ? 'Управляет тематическим домом' : item.relevantHouseRelation === 'no-direct-house-link' ? 'Прямой связи не найдено' : 'Нет данных'}
         </span>
       </div>
       <p className="mt-1 text-xs text-gray-700">{item.planetSign ? `Планета находится в знаке ${item.planetSign}, в ${item.planetHouse}-м доме.` : 'Положение планеты не определено.'}</p>
@@ -55,7 +55,7 @@ function PlanetProfile({ analysis }: { analysis: DashaLayerAnalysis }) {
     <div className="space-y-4">
       <section className="rounded-xl border border-indigo-100 bg-indigo-50/70 p-4">
         <h5 className="text-sm font-semibold text-indigo-900">Что означает период этой планеты простыми словами</h5>
-        <p className="mt-1 text-sm leading-relaxed text-gray-800">В традиции Джйотиш с периодом {profile.planetName} связывают темы {PERIOD_PLANET_MEANINGS[profile.planetName] ?? 'личные задачи и качества этой планеты'}. В вашей карте планета находится в {profile.house ? `${profile.house}-м доме — сфере «${PERIOD_HOUSE_MEANINGS[profile.house] ?? 'жизненные задачи'}»` : 'доме, который не удалось определить'}{profile.ruledHouses.length ? ` и управляет домами ${profile.ruledHouses.map((house) => `${house}-м (${PERIOD_HOUSE_MEANINGS[house]})`).join(', ')}` : ''}. Поэтому в трактовке периода учитываются именно эти темы. Это символическая интерпретация, а не предсказание или обещание события.</p>
+        <p className="mt-1 text-sm leading-relaxed text-gray-800">В традиции Джйотиш период планеты {profile.planetName} связывают с темами: {PERIOD_PLANET_MEANINGS[profile.planetName] ?? 'качествами этой планеты'}. В вашей карте она расположена {profile.house ? `в ${profile.house}-м доме — области «${PERIOD_HOUSE_MEANINGS[profile.house] ?? 'жизненные задачи'}»` : 'в доме, который не удалось определить'}{profile.ruledHouses.length ? ` и является управителем ${profile.ruledHouses.map((house) => `${house}-го дома (${PERIOD_HOUSE_MEANINGS[house]})`).join(', ')}` : ''}. **Почему это важно:** в астрологической трактовке период связывают не только с названием планеты, но и с темами домов, с которыми она связана в вашей карте. Это символическая интерпретация, а не прогноз того, что обязательно случится.</p>
       </section>
 
       <details className="rounded-lg border border-gray-200 p-3">
@@ -66,11 +66,11 @@ function PlanetProfile({ analysis }: { analysis: DashaLayerAnalysis }) {
           <p className="text-xs font-semibold uppercase tracking-wide text-purple-700">Положение планеты в основной карте</p>
           <p className="mt-1 text-lg font-bold text-gray-900">{profile.planetName}</p>
           <p className="text-sm text-gray-700">{profile.sign}, {profile.degreeInSign.toFixed(2)}° · {profile.house ? `${profile.house}-й дом` : 'дом не определён'}</p>
-          <p className="mt-2 text-sm text-gray-700">Управляет домами: {profile.ruledHouses.length ? profile.ruledHouses.join(', ') : 'не определены'}</p>
+          <p className="mt-2 text-sm text-gray-700">Какими сферами управляет: {profile.ruledHouses.length ? profile.ruledHouses.map((house) => `${house}-й дом (${PERIOD_HOUSE_MEANINGS[house] ?? 'отдельная тема'})`).join('; ') : 'в этой карте не определено'}</p>
           <p className="mt-1 text-sm text-gray-700">Достоинство <TermTooltip term="dignity" />: {profile.dignity?.label ?? 'не определено'}</p>
         </div>
         <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Диспозитор <TermTooltip term="dispositor" /></p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Управитель знака этой планеты — диспозитор <TermTooltip term="dispositor" /></p>
           {profile.dispositor ? <>
             <p className="mt-1 text-lg font-bold text-gray-900">{PLANET_NAMES_RU[profile.dispositor.planet] ?? profile.dispositor.planet}</p>
             <p className="text-sm text-gray-700">{profile.dispositor.sign} · {profile.dispositor.house ? `${profile.dispositor.house}-й дом` : 'дом не определён'}</p>
