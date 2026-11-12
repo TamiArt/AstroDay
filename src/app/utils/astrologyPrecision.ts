@@ -101,8 +101,13 @@ export function calculateAngularAspects(
       let phase: AngularAspectResult['phase'] = 'unknown', isApplying: boolean | null = null;
       if (known) {
         const future = angularSeparation(a.siderealLon + (v1 as number) / 24, b.siderealLon + (v2 as number) / 24);
-        isApplying = Math.abs(future - definition.angle) < orb;
-        phase = isApplying ? 'applying' : 'separating';
+        if (orb <= 1e-8) {
+          isApplying = null;
+          phase = 'unknown';
+        } else {
+          isApplying = Math.abs(future - definition.angle) < orb;
+          phase = isApplying ? 'applying' : 'separating';
+        }
       }
       results.push({ planet1, planet2, aspect: definition.aspect, exactAngle: definition.angle, separation, orb, maxOrb, isApplying, phase });
     }

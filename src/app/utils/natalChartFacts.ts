@@ -98,7 +98,7 @@ export interface NatalChartFacts {
     zodiac: 'Sidereal';
     ayanamsha: 'Lahiri';
     aspectSystem: 'Parashari graha drishti';
-    conjunctionRule: 'same sidereal sign; exact orb is not calculated';
+    conjunctionRule: 'same sidereal sign; degree orb is calculated separately';
     nodesAspectRule: 'Rahu/Ketu aspects excluded; conjunctions retained';
   };
   planets: Record<NatalPlanetKey, NatalPlanetFacts | null>;
@@ -316,7 +316,7 @@ export function buildNatalChartFacts(chart: NatalChart): NatalChartFacts {
       zodiac: 'Sidereal',
       ayanamsha: 'Lahiri',
       aspectSystem: 'Parashari graha drishti',
-      conjunctionRule: 'same sidereal sign; exact orb is not calculated',
+      conjunctionRule: 'same sidereal sign; degree orb is calculated separately',
       nodesAspectRule: 'Rahu/Ketu aspects excluded; conjunctions retained',
     },
     planets: planetFacts,
@@ -331,7 +331,7 @@ export function buildNatalChartFacts(chart: NatalChart): NatalChartFacts {
       unsupportedFactors: [
         'Ретроградность не хранится в PlanetPosition и не выводится из знака/долготы.',
         'Сожжение не рассчитывается: в модели нет отдельного валидированного правила и порогов орбиса.',
-        'Точные орбисы соединений и аспектов не рассчитываются; соединение фиксируется по одному сидерическому знаку.',
+        'Точные орбисы не входят в граф традиционных Parashari-связей; численные угловые аспекты и градусные соединения доступны в блоке точности расчётов.',
         'Аспекты Раху/Кету исключены из-за различий школ; соединения узлов с планетами по знаку сохраняются.',
       ],
     },
