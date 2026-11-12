@@ -5,6 +5,18 @@ import { calculateAllDivisionalCharts } from '../../utils/divisionalCharts';
 import { GlassCard } from '../common/GlassCard';
 import { DivisionalChartWheel } from '../DivisionalChartWheel';
 
+const PLANET_NAMES_RU: Record<string, string> = {
+  Sun: 'Солнце', Moon: 'Луна', Mars: 'Марс', Mercury: 'Меркурий',
+  Jupiter: 'Юпитер', Venus: 'Венера', Saturn: 'Сатурн', Rahu: 'Раху', Ketu: 'Кету',
+};
+const HOUSE_MEANINGS: Record<number, string> = {
+  1: 'личность и самостоятельность', 2: 'личные деньги и накопления',
+  3: 'общение и навыки', 4: 'дом и семья', 5: 'творчество и дети',
+  6: 'работа и повседневные обязанности', 7: 'брак и партнёрство',
+  8: 'общие ресурсы и перемены', 9: 'обучение и мировоззрение',
+  10: 'профессия и карьера', 11: 'доходы и окружение', 12: 'отдых и уединение',
+};
+
 interface DivisionalChartsTabProps {
   natalChart: NatalChartType;
 }
@@ -12,9 +24,9 @@ interface DivisionalChartsTabProps {
 function HouseEvidence({ item }: { item: VargaHouseEvidence }) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-3">
-      <p className="text-sm font-semibold text-gray-900">{item.house}-й дом · {item.sign}</p>
-      <p className="mt-1 text-xs text-gray-700">Управитель: {item.lord}{item.lordHouse ? ` · расположен в ${item.lordHouse}-м доме` : ' · положение управителя недоступно'}</p>
-      <p className="mt-1 text-xs text-gray-600">Обитатели: {item.occupants.length ? item.occupants.join(', ') : 'планет нет'}</p>
+      <p className="text-sm font-semibold text-gray-900">{item.house}-й дом — {HOUSE_MEANINGS[item.house] ?? 'отдельная тема карты'}</p>
+      <p className="mt-1 text-xs text-gray-700">Знак: {item.sign}. Управитель: {PLANET_NAMES_RU[item.lord] ?? item.lord}{item.lordHouse ? `, находится в ${item.lordHouse}-м доме` : ' — положение не определено'}.</p>
+      <p className="mt-1 text-xs text-gray-600">Планеты в доме: {item.occupants.length ? item.occupants.map((planet) => PLANET_NAMES_RU[planet] ?? planet).join(', ') : 'нет'}</p>
     </div>
   );
 }
@@ -29,9 +41,11 @@ function VargaDetail({ analysis }: { analysis: VargaAnalysis }) {
           <div><h4 className="font-bold text-gray-900">{analysis.name}</h4><p className="text-sm text-indigo-700">{analysis.topic}</p></div>
           <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs text-indigo-800">Отдельное правило варги</span>
         </div>
-        <p className="mt-2 text-sm text-gray-700">{analysis.interpretiveScope}</p>
+        <p className="mt-2 text-sm leading-relaxed text-gray-700">Эта дополнительная карта рассматривает тему «{analysis.topic.toLowerCase()}». Основная карта D1 показывает общий жизненный рисунок, а эта карта помогает подробнее рассмотреть только указанную область. Её нельзя читать отдельно от D1.</p>
       </summary>
       <div className="mt-4 space-y-4">
+        <section className="rounded-lg bg-indigo-50/70 p-3"><h5 className="text-sm font-semibold text-indigo-900">Как понять результат</h5><p className="mt-1 text-sm leading-relaxed text-gray-800">Сравните, какие планеты и темы повторяются в основной карте D1 и в дополнительной карте. Если указания совпадают, трактовка темы становится более согласованной. Если различаются, это не ошибка: дополнительная карта показывает другой слой той же жизненной области.</p></section>
+        <details className="rounded-lg border border-gray-200 p-3"><summary className="cursor-pointer text-sm font-semibold text-gray-700">Подробные технические основания</summary><p className="mt-2 text-xs text-gray-600">{analysis.interpretiveScope}</p>
         <section><h5 className="mb-2 text-sm font-semibold text-gray-900">D1 — исходные показатели</h5><div className="grid gap-2 md:grid-cols-2">{analysis.d1Evidence.map((item) => <HouseEvidence key={item.house} item={item} />)}</div></section>
         <section><h5 className="mb-2 text-sm font-semibold text-gray-900">Показатели тематической варги</h5><div className="grid gap-2 md:grid-cols-2">{analysis.vargaEvidence.map((item) => <HouseEvidence key={item.house} item={item} />)}</div></section>
         <section><h5 className="mb-2 text-sm font-semibold text-gray-900">Сопоставление одних и тех же планет</h5>
@@ -42,6 +56,7 @@ function VargaDetail({ analysis }: { analysis: VargaAnalysis }) {
         <section className="rounded-lg bg-slate-50 p-3"><h5 className="text-sm font-semibold text-gray-900">Правило расчёта</h5><p className="mt-1 text-xs text-gray-700">{analysis.calculationRule}</p><p className="mt-2 text-xs text-gray-600">Размер сегмента: {analysis.boundarySensitivity.segmentWidthDegrees.toFixed(4)}°. До ближайшей границы Лагны: {analysis.boundarySensitivity.distanceToNearestAscendantBoundary.toFixed(4)}° ({riskLabel}). Это геометрическая близость, не оценка точности времени рождения.</p></section>
         <section><h5 className="mb-2 text-sm font-semibold text-gray-900">Ограничения интерпретации</h5><ul className="list-disc space-y-1 pl-5">{analysis.limitations.map((item) => <li key={item} className="text-xs text-gray-600">{item}</li>)}</ul></section>
         <section><h5 className="mb-2 text-sm font-semibold text-gray-900">Методика</h5><ul className="list-disc space-y-1 pl-5">{analysis.methodology.map((item) => <li key={item} className="text-xs text-gray-600">{item}</li>)}</ul></section>
+        </details>
       </div>
     </details>
   );
