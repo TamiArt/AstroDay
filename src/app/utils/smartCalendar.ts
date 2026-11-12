@@ -22,7 +22,7 @@ export const SMART_CALENDAR_AREAS: SmartCalendarArea[] = [
 ];
 
 export interface SmartDayFactor {
-  source: 'natal' | 'dasha' | 'transit' | 'panchang' | 'energy' | 'timing' | 'data-quality';
+  source: 'natal' | 'varga' | 'dasha' | 'transit' | 'panchang' | 'energy' | 'timing' | 'data-quality';
   title: string;
   explanation: string;
 }
@@ -77,6 +77,7 @@ export function getForecastAreaIds(forecast: DayForecast): SmartCalendarAreaId[]
 
 function classifyFactor(reason: string): SmartDayFactor {
   const value = reason.toLocaleLowerCase('ru-RU');
+  if (/d12|d20|d24|варг/.test(value)) return { source: 'varga', title: 'Профильная дробная карта', explanation: reason };
   if (/махадаша|антардаша|пратьянтардаша|главный период|под-период/.test(value)) {
     return { source: 'dasha', title: 'Фон периода Даши', explanation: reason };
   }
@@ -132,6 +133,7 @@ export function buildSmartDayPlan(forecast: DayForecast): SmartDayPlan {
     });
   }
 
+  const uncertain = (forecast.precisionNotes ?? []).filter((note) => /погрешност|приблизительно|проверьте|требуют проверки|не делайте жёстких выводов/i.test(note));
   return {
     date: forecast.date,
     recommendation: forecast.topRecommendation,
@@ -139,7 +141,7 @@ export function buildSmartDayPlan(forecast: DayForecast): SmartDayPlan {
     areas: getForecastAreaIds(forecast),
     factors,
     conflicts,
-    confidence: (forecast.precisionNotes?.length ?? 0) > 1 ? 'low' : (forecast.precisionNotes?.length ?? 0) === 1 ? 'medium' : 'high',
+    confidence: uncertain.length > 1 ? 'low' : uncertain.length === 1 ? 'medium' : 'high',
     confidenceNotes: forecast.precisionNotes ?? [],
   };
 }
