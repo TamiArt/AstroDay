@@ -20,7 +20,7 @@ export type AstrologyTermId =
   | 'd1'
   | 'wholeSign'
   | 'ayanamsha'
-  | 'shadbala';
+  | 'shadbala'\n  | 'transit'\n  | 'orb'\n  | 'retrograde'\n  | 'pada'\n  | 'sidereal'\n  | 'tropical'\n  | 'karaka';
 
 export interface AstrologyTerm {
   title: string;
