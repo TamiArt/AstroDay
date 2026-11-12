@@ -25,14 +25,18 @@ export function NatalPrecisionSection({ natalChart }: { natalChart: NatalChart }
           <p className="mt-1 text-xs leading-relaxed text-gray-600">{item.explanation}</p>
         </div>)}
       </div>
+      <div className="rounded-lg bg-white p-3"><h4 className="text-sm font-semibold">Долготы и накшатры</h4>
+        <p className="mt-1 text-xs text-gray-600">Асцендент: tropical {report.ascendant.tropicalLongitude.toFixed(4)}° · sidereal {report.ascendant.siderealLongitude.toFixed(4)}° · накшатра №{report.ascendant.nakshatraIndex + 1}, пада {report.ascendant.pada}</p>
+        <div className="mt-2 overflow-x-auto"><table className="w-full text-xs text-left"><thead><tr className="border-b text-gray-500"><th className="py-1 pr-2">Точка</th><th className="py-1 pr-2">Tropical°</th><th className="py-1 pr-2">Sidereal°</th><th className="py-1 pr-2">Накшатра / пада</th></tr></thead><tbody>{report.planets.map((p) => <tr key={p.planet} className="border-b border-gray-100"><td className="py-1 pr-2 font-medium">{p.planet}</td><td className="py-1 pr-2 tabular-nums">{p.tropicalLongitude.toFixed(3)}</td><td className="py-1 pr-2 tabular-nums">{p.siderealLongitude.toFixed(3)}</td><td className="py-1 pr-2">{p.nakshatraIndex + 1} / {p.pada}</td></tr>)}</tbody></table></div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="rounded-lg bg-white p-3"><h4 className="text-sm font-semibold">Ретроградность</h4>
           <p className="mt-1 text-sm text-gray-700">{retrograde.length ? retrograde.map((p) => p.planet).join(', ') : 'Ретроградных классических планет не обнаружено.'}</p>
           <p className="mt-1 text-xs text-gray-500">{report.planets.filter((p) => p.motion).map((p) => p.planet + ' ' + p.motion!.dailyMotion.toFixed(3) + '°/сутки').join(' · ')}</p>
         </div>
         <div className="rounded-lg bg-white p-3"><h4 className="text-sm font-semibold">Сожжение (Surya Siddhanta)</h4>
-          <p className="mt-1 text-sm text-gray-700">{combust.length ? combust.map((p) => p.planet + ' — ' + p.combustion.separation!.toFixed(2) + '° / порог ' + p.combustion.threshold + '°').join('; ') : 'Планет в пределах применяемых орбисов нет.'}</p>
-          <p className="mt-1 text-xs text-gray-500">Другие школы могут использовать иные пороги.</p>
+          <p className="mt-1 text-sm text-gray-700">{report.planets.filter((p) => p.combustion.threshold !== null).map((p) => p.planet + ': ' + p.combustion.separation!.toFixed(2) + '° / ' + p.combustion.threshold + '° — ' + (p.combustion.isCombust ? 'сожжена' : 'вне орбиса')).join('; ')}</p>
+          <p className="mt-1 text-xs text-gray-500">Другие школы могут использовать иные пороги: например, Mercury 12°/8° вместо 14°/12°, Saturn 16° вместо 15°.</p>
         </div>
       </div>
       <div className="rounded-lg bg-white p-3"><h4 className="text-sm font-semibold">Соединения: знак и градусный орбис отдельно</h4>

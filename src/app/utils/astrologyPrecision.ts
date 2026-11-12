@@ -101,7 +101,8 @@ export function calculateAngularAspects(
       let phase: AngularAspectResult['phase'] = 'unknown', isApplying: boolean | null = null;
       if (known) {
         const future = angularSeparation(a.siderealLon + (v1 as number) / 24, b.siderealLon + (v2 as number) / 24);
-        if (orb <= 1e-8) {
+        const relativeDailyMotion = (v2 as number) - (v1 as number);
+        if (orb <= 1e-8 || Math.abs(relativeDailyMotion) <= STATIONARY_EPSILON) {
           isApplying = null;
           phase = 'unknown';
         } else {
@@ -143,6 +144,7 @@ export function buildNatalPrecisionReport(
       zodiac: 'Sidereal zodiac.', ayanamsha: 'Mean Lahiri; nutation is not included.',
       nakshatra: '27 equal sectors (13°20′); pada is one of 108 equal sectors (3°20′).',
       ascendant: 'Intersection of the ecliptic and eastern horizon using local sidereal time and mean obliquity.',
+      nodes: 'Mean Rahu node with Ketu exactly opposite; true-node mode is not implemented.',
       combustion: 'Surya Siddhanta working orbs: Mercury 14°/12° retrograde, Venus 10°/8°, Mars 17°, Jupiter 11°, Saturn 15°. Alternative modern tables use Mercury 12°/8° and sometimes Saturn 16°; school-dependent.',
       aspects: 'Ecliptic angular aspects: 0°/60°/90°/120°/180°; defaults 10°/6°/8°/8°/10°; orbs are configurable.',
       conjunction: 'Same-sign conjunction and degree conjunction within ' + conjunctionOrb + '° are independent flags.',
@@ -163,6 +165,7 @@ export function buildNatalPrecisionReport(
       { topic: 'Сожжение', status: 'school-dependent', explanation: 'Численное расстояние точно в рамках координатной модели; порог зависит от школы.' },
       { topic: 'Аспекты и орбисы', status: 'school-dependent', explanation: 'Угол вычисляется численно; допустимый орбис является настройкой интерпретационной системы.' },
       { topic: 'Соединения', status: 'exact-mathematics', explanation: 'Совпадение знака и градусный орбис отображаются отдельно.' },
+      { topic: 'Лунные узлы', status: 'school-dependent', explanation: 'Используется средний узел; true node может дать немного иную долготу и классификацию около границ.' },
     ],
     limitations: [
       'Долготы — результат модели эфемерид astronomy-engine, а не абсолютные наблюдаемые величины.',
