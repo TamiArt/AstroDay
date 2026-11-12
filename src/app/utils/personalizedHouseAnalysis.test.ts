@@ -11,6 +11,7 @@ import { buildNatalChartFacts, getNatalFactLinks, getNatalHouseFacts, getNatalPl
 import { analyzeAllNatalHouses } from './natalHousePersonalizedAnalysis';
 import { analyzeAllNatalPlanets } from './natalPlanetPersonalizedAnalysis';
 import { synthesizeNatalChart } from './natalChartSynthesis';
+import { buildConclusionUnifiedAdvice, buildHouseUnifiedAdvice, buildLifeAreaBridgeUnifiedAdvice, buildLifeAreaUnifiedAdvice, buildNarrativeUnifiedAdvice, buildPlanetUnifiedAdvice, buildSynthesisUnifiedAdvice } from './unifiedNatalAdvice';
 import type { NatalChart, PlanetPosition } from './astrology';
 
 function position(name: string, longitude: number, signName: string, nakshatraName: string) {
@@ -571,6 +572,7 @@ assert.ok(secondHouseWithUnknownLordPlacement.interpretation.includes('дом н
 const allPlanetAnalyses = analyzeAllNatalPlanets(natalFacts);
 assert.equal(allPlanetAnalyses.length, 9);
 assert.deepEqual(allPlanetAnalyses.map((item) => item.planet), [...NATAL_PLANET_KEYS]);
+assert.ok(allPlanetAnalyses.every((item) => item.evidence.length > 0));
 const sunAnalysis = allPlanetAnalyses.find((item) => item.planet === 'Sun');
 assert.equal(sunAnalysis?.sign, 'Лев');
 assert.equal(sunAnalysis?.house, 5);
@@ -638,8 +640,94 @@ assert.ok(wholeChart.dominantThemes.some((item) => item.house === 11));
 assert.ok(wholeChart.bridges.some((item) => item.fromHouse === 3 && item.toHouse === 6 && item.lord === 'Mercury'));
 assert.ok(wholeChart.planetNetworks.some((item) => item.relation === 'aspect' && item.planets.includes('Mars') && item.planets.includes('Jupiter')));
 assert.ok(wholeChart.conclusions.every((item) => item.evidence.length > 0));
+const conclusionWithTension = wholeChart.conclusions.find((item) => (item.relatedTensions?.length ?? 0) > 0);
+assert.ok(conclusionWithTension, 'At least one synthesis conclusion should inherit attention factors from its related chart indicators');
+const conclusionTensionAdvice = buildConclusionUnifiedAdvice(conclusionWithTension!, wholeChart.tensions);
+assert.ok(conclusionTensionAdvice.tension.includes(conclusionWithTension!.relatedTensions![0]));
+assert.equal(new Set(wholeChart.conclusions.map((item) => item.id)).size, wholeChart.conclusions.length);
+assert.ok(wholeChart.conclusions.every((item) =>
+  item.relatedPlanets.every((planet) => NATAL_PLANET_KEYS.includes(planet)),
+));
 assert.ok(wholeChart.conclusions.every((item) => item.relatedHouses.every((house) => house >= 1 && house <= 12)));
 assert.ok(wholeChart.methodology.some((item) => item.includes('эвристика')));
+
+const unifiedHouseAdvice = analyzeAllNatalHouses(natalFacts).map(buildHouseUnifiedAdvice);
+const unifiedPlanetAdvice = allPlanetAnalyses.map(buildPlanetUnifiedAdvice);
+const unifiedSynthesisAdvice = buildSynthesisUnifiedAdvice(wholeChart);
+const unifiedConclusionAdvice = wholeChart.conclusions.map((item) =>
+  buildConclusionUnifiedAdvice(item, wholeChart.tensions),
+);
+for (const advice of [...unifiedHouseAdvice, ...unifiedPlanetAdvice, unifiedSynthesisAdvice, ...unifiedConclusionAdvice]) {
+  assert.ok(advice.connection.length > 0);
+  assert.ok(advice.combinedMeaning.length > 0);
+  assert.ok(advice.tension.length > 0);
+  assert.ok(advice.practicalStep.length > 0);
+  assert.ok(advice.successCriteria.length > 0);
+  assert.ok(advice.limitation.length > 0);
+  assert.ok(Array.isArray(advice.evidence));
+  assert.ok(['complete', 'partial', 'unavailable'].includes(advice.dataStatus));
+}
+assert.ok(unifiedHouseAdvice[6].connection.includes('Дом 7:'));
+assert.ok(unifiedHouseAdvice[6].evidence.some((item) => item.toLocaleLowerCase('ru-RU').includes('управитель')));
+assert.ok(unifiedPlanetAdvice.find((item) => item.connection.includes('аспекты'))?.connection.length);
+assert.ok(unifiedSynthesisAdvice.connection.length > 0);
+const unlinkedConclusionAdvice = buildConclusionUnifiedAdvice(
+  { ...wholeChart.conclusions[0], relatedHouses: [] },
+  wholeChart.tensions,
+);
+assert.ok(unlinkedConclusionAdvice.practicalStep.includes('основанием'));
+assert.ok(unlinkedConclusionAdvice.successCriteria.includes('наблюдаемый результат'));
+assert.ok(!unlinkedConclusionAdvice.practicalStep.includes('профессиональную цель'));
+const unifiedAscendantAdvice = buildNarrativeUnifiedAdvice({
+  connection: 'Управитель Асцендента расположен в 10-м доме и получает аспект Сатурна.',
+  combinedMeaning: 'Личная стратегия связана с профессиональной реализацией.',
+  tensions: ['Аспект Сатурна добавляет необходимость учитывать сроки и обязательства.'],
+  practicalStep: 'Разбейте профессиональную цель на этапы.',
+  successCriteria: 'Зафиксируйте три завершённых этапа.',
+});
+assert.ok(unifiedAscendantAdvice.connection.includes('10-м доме'));
+assert.ok(unifiedAscendantAdvice.tension.includes('Сатурна'));
+assert.ok(unifiedAscendantAdvice.practicalStep.includes('этапы'));
+const unifiedCareerAdvice = buildLifeAreaUnifiedAdvice('Профессия и карьера', ['Меркурий связывает 6-й и 10-й дома.']);
+const unifiedBridgeAdvice = buildLifeAreaBridgeUnifiedAdvice({
+  connection: 'Связь Меркурия и Сатурна.',
+  areas: ['Карьера', 'Обучение'],
+  explanation: 'Профессиональная сфера связана с системным обучением.',
+  evidence: ['Меркурий расположен в 10-м доме.', 'Сатурн управляет 9-м домом.'],
+});
+assert.ok(unifiedCareerAdvice.evidence.some((item) => item.includes('Меркурий')));
+assert.ok(unifiedCareerAdvice.practicalStep.includes('профессиональную задачу'));
+assert.ok(unifiedCareerAdvice.successCriteria.includes('законченный кейс'));
+assert.ok(unifiedBridgeAdvice.connection.includes('Обучение'));
+assert.ok(unifiedBridgeAdvice.combinedMeaning.includes('обучением'));
+assert.ok(unifiedBridgeAdvice.practicalStep.length > 0);
+assert.ok(unifiedBridgeAdvice.successCriteria.includes('наблюдаемый результат'));
+
+// Missing source data must be stated explicitly instead of being replaced with generic chart claims.
+const missingPlanetUnified = buildPlanetUnifiedAdvice(missingKetuAnalysis!);
+assert.ok(missingPlanetUnified.connection.includes('отсутствует'));
+const unavailableHouseUnified = buildHouseUnifiedAdvice(analyzeAllNatalHouses(incompleteFacts).find((item) => item.house === 5)!);
+assert.ok(unavailableHouseUnified.combinedMeaning.includes('не формируется'));
+assert.equal(unavailableHouseUnified.dataStatus, 'unavailable');
+assert.ok(unavailableHouseUnified.successCriteria.includes('После пересчёта'));
+assert.deepEqual(unavailableHouseUnified.evidence, []);
+
+
+const duplicateNarrative = buildNarrativeUnifiedAdvice({
+  connection: '  Факт карты  \n  и его связь ',
+  combinedMeaning: 'Совместная трактовка.',
+  practicalStep: 'Проверьте один вывод.',
+  successCriteria: 'Есть запись результата.',
+  evidence: ['Один факт.', 'Один факт.'],
+});
+assert.equal(duplicateNarrative.connection, 'Факт карты и его связь');
+assert.deepEqual(duplicateNarrative.evidence, ['Один факт.']);
+assert.equal(duplicateNarrative.dataStatus, 'complete');
+const unsupportedAreaAdvice = buildLifeAreaUnifiedAdvice('Неизвестная сфера', []);
+assert.equal(unsupportedAreaAdvice.dataStatus, 'unavailable');
+assert.ok(unsupportedAreaAdvice.limitation.includes('не переданы'));
+assert.ok(unsupportedAreaAdvice.successCriteria.includes('после получения'));
+assert.deepEqual(unsupportedAreaAdvice.evidence, [], 'An unavailable section must not promote its fallback explanation into chart evidence');
 
 const shiftedSunChart = {
   ...chart,
@@ -656,3 +744,39 @@ assert.ok(incompleteSynthesis.dataQuality.completeness < 100);
 assert.ok(incompleteSynthesis.dataQuality.missingHouses.includes(5));
 assert.ok(incompleteSynthesis.tensions.some((item) => item.includes('отсутствует')));
 assert.ok(incompleteSynthesis.dataQuality.caveats.length > 0);
+
+// A chart with all nine planets but no usable Ascendant must not report full completeness.
+const chartWithoutAscendant = { ...chart, ascendant: undefined } as unknown as NatalChart;
+const noAscendantSynthesis = synthesizeNatalChart(buildNatalChartFacts(chartWithoutAscendant));
+assert.ok(noAscendantSynthesis.dataQuality.completeness < 100);
+assert.ok(noAscendantSynthesis.dataQuality.caveats.some((item) => item.includes('Асцендент')));
+
+// A present planet whose sign has no corresponding house remains incomplete in the planet analysis.
+const chartWithUnplacedSun = {
+  ...chart,
+  planets: { ...chart.planets, Sun: position('Sun', 360, 'Aries', 'Ashwini') },
+} as NatalChart;
+const unplacedSunFacts = buildNatalChartFacts(chartWithUnplacedSun);
+const unplacedSunAnalysis = analyzeAllNatalPlanets(unplacedSunFacts).find((item) => item.planet === 'Sun');
+assert.equal(unplacedSunAnalysis?.available, true);
+assert.equal(unplacedSunAnalysis?.house, null);
+assert.equal(unplacedSunAnalysis?.synthesis, 'incomplete');
+const unplacedSunSynthesis = synthesizeNatalChart(unplacedSunFacts);
+assert.ok(unplacedSunSynthesis.dataQuality.completeness < 100);
+const unplacedSunAdvice = buildPlanetUnifiedAdvice(unplacedSunAnalysis!);
+assert.equal(unplacedSunAdvice.dataStatus, 'partial');
+assert.ok(unplacedSunAdvice.tension.includes('не хватает части положения'));
+assert.ok(unplacedSunAdvice.evidence.some((item) => item.includes('Дом планеты не определён')));
+
+// A house whose lord has no placement is incomplete and the omission is surfaced in caveats.
+const noMarsChart = {
+  ...chart,
+  planets: { ...chart.planets, Mars: undefined },
+} as unknown as NatalChart;
+const noMarsFacts = buildNatalChartFacts(noMarsChart);
+const firstHouseWithoutLordPlacement = analyzeAllNatalHouses(noMarsFacts)[0];
+assert.equal(firstHouseWithoutLordPlacement.synthesis, 'incomplete');
+assert.ok(noMarsFacts.dataQuality.warnings.some((item) => item.includes('управителя 1-го дома')));
+const noMarsSynthesis = synthesizeNatalChart(noMarsFacts);
+assert.ok(noMarsSynthesis.dataQuality.completeness < 100);
+assert.ok(noMarsSynthesis.dataQuality.caveats.some((item) => item.includes('управителя 1-го дома')));

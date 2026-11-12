@@ -1,81 +1,63 @@
-import { Aspect, NatalChart } from './astrology';
+import type { Aspect, NatalChart } from './astrology';
+import {
+  calculateAngularAspects,
+  calculatePlanetMotion,
+  type PlanetMotion,
+} from './astrologyPrecision';
+import type { PlanetPosition } from './astrology';
 
-const ASPECT_DEFINITIONS: Array<{ angle: number; orb: number; type: Aspect['type']; label: string }> = [
-  { angle: 0, orb: 10, type: 'conjunction', label: 'соединён с' },
-  { angle: 60, orb: 6, type: 'sextile', label: 'в секстиле к' },
-  { angle: 90, orb: 8, type: 'square', label: 'в квадрате к' },
-  { angle: 120, orb: 8, type: 'trine', label: 'в трине к' },
-  { angle: 180, orb: 10, type: 'opposition', label: 'в оппозиции к' },
-];
+const LABELS: Record<Aspect['type'], string> = {
+  conjunction: 'соединён с',
+  sextile: 'в секстиле к',
+  square: 'в квадрате к',
+  trine: 'в трине к',
+  opposition: 'в оппозиции к',
+  special: 'имеет специальную связь с',
+};
+const MOTION_PLANETS = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
 
-function getAngularDistance(longitudeA: number, longitudeB: number): number {
-  const diff = Math.abs(longitudeA - longitudeB);
-  return diff > 180 ? 360 - diff : diff;
+function getMotions(chart: NatalChart, prefix = ''): Record<string, PlanetMotion | null> {
+  const result: Record<string, PlanetMotion | null> = {};
+  for (const planet of MOTION_PLANETS) {
+    result[prefix + planet] = calculatePlanetMotion(planet, chart.date);
+  }
+  for (const planet of ['Rahu', 'Ketu']) result[prefix + planet] = null;
+  return result;
 }
 
-function findAspectsBetween(
-  planet1: string,
-  longitude1: number,
-  planet2: string,
-  longitude2: number,
-  isTransit: boolean
-): Aspect[] {
-  const angle = getAngularDistance(longitude1, longitude2);
-  const aspects: Aspect[] = [];
-
-  for (const definition of ASPECT_DEFINITIONS) {
-    const orb = Math.abs(angle - definition.angle);
-    if (orb <= definition.orb) {
-      const subject1 = isTransit ? `транзитный ${planet1}` : planet1;
-      const subject2 = isTransit ? `натальный ${planet2}` : planet2;
-
-      aspects.push({
-        planet1,
-        planet2,
-        type: definition.type,
-        angle: definition.angle,
-        orb,
-        strength: Math.round(((definition.orb - orb) / definition.orb) * 100),
-        description: `${subject1} ${definition.label} ${subject2}`,
-        isTransit,
-        context: isTransit ? 'transit' : 'natal',
-        isApplying: longitude1 < longitude2,
-      });
-    }
-  }
-
-  return aspects;
+function toAspect(
+  item: ReturnType<typeof calculateAngularAspects>[number],
+  isTransit: boolean,
+): Aspect {
+  return {
+    planet1: item.planet1.replace(/^(Transit|Natal) /, ''),
+    planet2: item.planet2.replace(/^(Transit|Natal) /, ''),
+    type: item.aspect,
+    angle: item.exactAngle,
+    orb: item.orb,
+    strength: item.maxOrb === 0 ? 0 : Math.round(((item.maxOrb - item.orb) / item.maxOrb) * 100),
+    description: (isTransit ? 'Транзитный ' : '') + item.planet1.replace(/^(Transit|Natal) /, '') +
+      ' ' + LABELS[item.aspect] + ' ' + (isTransit ? 'натальный ' : '') + item.planet2.replace(/^(Transit|Natal) /, ''),
+    isTransit,
+    context: isTransit ? 'transit' : 'natal',
+    isApplying: item.isApplying ?? undefined,
+  };
 }
 
 export function calculateNatalAspects(chart: NatalChart): Aspect[] {
-  const planets = Object.entries(chart.planets);
-  const aspects: Aspect[] = [];
-
-  for (let i = 0; i < planets.length - 1; i++) {
-    for (let j = i + 1; j < planets.length; j++) {
-      const [planet1, position1] = planets[i];
-      const [planet2, position2] = planets[j];
-      aspects.push(...findAspectsBetween(planet1, position1.siderealLon, planet2, position2.siderealLon, false));
-    }
-  }
-
-  return aspects.sort((a, b) => b.strength - a.strength || a.orb - b.orb);
+  const motions = getMotions(chart);
+  const aspects = calculateAngularAspects(chart.planets as Record<string, PlanetPosition>, motions);
+  return aspects.map((item) => toAspect(item, false))
+    .sort((a, b) => b.strength - a.strength || a.orb - b.orb);
 }
 
 export function calculateTransitAspects(natalChart: NatalChart, transitChart: NatalChart): Aspect[] {
-  const aspects: Aspect[] = [];
-
-  Object.entries(transitChart.planets).forEach(([transitName, transitPlanet]) => {
-    Object.entries(natalChart.planets).forEach(([natalName, natalPlanet]) => {
-      aspects.push(...findAspectsBetween(
-        transitName,
-        transitPlanet.siderealLon,
-        natalName,
-        natalPlanet.siderealLon,
-        true
-      ));
-    });
-  });
-
-  return aspects.sort((a, b) => b.strength - a.strength || a.orb - b.orb);
+  const positions: Record<string, PlanetPosition> = {};
+  for (const [name, position] of Object.entries(transitChart.planets)) positions['Transit ' + name] = position;
+  for (const [name, position] of Object.entries(natalChart.planets)) positions['Natal ' + name] = position;
+  const motions = { ...getMotions(transitChart, 'Transit '), ...getMotions(natalChart, 'Natal ') };
+  const aspects = calculateAngularAspects(positions, motions)
+    .filter((item) => item.planet1.startsWith('Transit ') && item.planet2.startsWith('Natal '));
+  return aspects.map((item) => toAspect(item, true))
+    .sort((a, b) => b.strength - a.strength || a.orb - b.orb);
 }

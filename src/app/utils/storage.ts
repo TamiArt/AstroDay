@@ -141,12 +141,10 @@ const PARTNER_PROFILE_KEY = 'astroday_partner_profile';
 const VASTU_PROPERTY_KEY = 'astroday_vastu_property_assessment';
 
 export function saveUserProfile(profile: UserProfile): void {
-  try {
-    const payload = wrapProfilePayload(profile);
-    localStorage.setItem(STORAGE_KEY, legacyObfuscate(JSON.stringify(payload), LEGACY_OBFUSCATION_KEY));
-  } catch (error) {
-    console.error('Error saving profile:', error);
-  }
+  const validated = validateUserProfile(profile);
+  if (!validated) throw new Error('Профиль содержит некорректные данные и не был сохранён.');
+  const payload = wrapProfilePayload(validated);
+  writeStorageValue(STORAGE_KEY, legacyObfuscate(JSON.stringify(payload), LEGACY_OBFUSCATION_KEY), 'профиль');
 }
 
 export function loadUserProfile(): UserProfile | null {
@@ -155,21 +153,24 @@ export function loadUserProfile(): UserProfile | null {
     if (!stored) return null;
 
     const parsed: unknown = JSON.parse(legacyDeobfuscate(stored, LEGACY_OBFUSCATION_KEY));
-    return validateUserProfile(unwrapProfilePayload(parsed));
+    const profile = validateUserProfile(unwrapProfilePayload(parsed));
+    if (!profile) throw new Error('Сохранённый профиль не прошёл проверку структуры.');
+    return profile;
   } catch (error) {
     console.error('Error loading profile:', error);
-    return null;
+    throw new Error('Не удалось прочитать сохранённый профиль. Не создавайте новый профиль поверх старых данных; проверьте доступ к хранилищу и повторите загрузку.');
   }
 }
 
 export function saveDailyFeedback(feedback: DailyFeedback): void {
-  try {
-    const existing = loadAllFeedback();
-    existing[feedback.date] = feedback;
-    localStorage.setItem(FEEDBACK_KEY, JSON.stringify(existing));
-  } catch (error) {
-    console.error('Error saving feedback:', error);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(feedback.date) || !Number.isInteger(feedback.mood) || feedback.mood < 1 || feedback.mood > 5) {
+    throw new Error('Оценка настроения содержит некорректные данные и не была сохранена.');
   }
+  const stored = localStorage.getItem(FEEDBACK_KEY);
+  const existing = stored ? validateFeedbackMap(JSON.parse(stored)) : {};
+  if (!existing) throw new Error('Сохранённая обратная связь повреждена. Экспортируйте архив до дальнейших изменений.');
+  existing[feedback.date] = feedback;
+  writeStorageValue(FEEDBACK_KEY, JSON.stringify(existing), 'обратную связь');
 }
 
 export function loadAllFeedback(): Record<string, DailyFeedback> {
@@ -225,11 +226,7 @@ export function loadVastuChecklist(): VastuChecklistItem[] {
 }
 
 function saveLegacyHomeValue(key: string, value: unknown): void {
-  try {
-    localStorage.setItem(key, legacyObfuscate(JSON.stringify(value), LEGACY_OBFUSCATION_KEY));
-  } catch (error) {
-    console.error(`Error saving ${key}:`, error);
-  }
+  writeStorageValue(key, legacyObfuscate(JSON.stringify(value), LEGACY_OBFUSCATION_KEY), 'данные раздела «Дом»');
 }
 
 function loadLegacyHomeValue<T>(key: string, fallback: T): T {
@@ -289,7 +286,7 @@ export function loadVastuPropertyAssessment(): VastuPropertyAssessment {
 }
 
 export function deleteVastuPropertyAssessment(): void {
-  localStorage.removeItem(VASTU_PROPERTY_KEY);
+  removeStorageValue(VASTU_PROPERTY_KEY, 'оценку недвижимости');
 }
 
 export function savePartnerProfile(profile: PartnerBirthProfile): void {
@@ -312,45 +309,349 @@ export function loadPartnerProfile(): PartnerBirthProfile | null {
 }
 
 export function deletePartnerProfile(): void {
-  localStorage.removeItem(PARTNER_PROFILE_KEY);
+  removeStorageValue(PARTNER_PROFILE_KEY, 'профиль партнёра');
 }
 
 export function deleteHomeData(): void {
-  localStorage.removeItem(HOME_CALIBRATION_KEY);
-  localStorage.removeItem(HOME_FLOORPLAN_KEY);
-  localStorage.removeItem(HOME_PROGRESS_KEY);
-  localStorage.removeItem(HOME_VASTU_CHECKLIST_KEY);
-  deleteVastuPropertyAssessment();
+  applyStorageEntries([
+    [HOME_CALIBRATION_KEY, null],
+    [HOME_FLOORPLAN_KEY, null],
+    [HOME_PROGRESS_KEY, null],
+    [HOME_VASTU_CHECKLIST_KEY, null],
+    [VASTU_PROPERTY_KEY, null],
+  ]);
 }
 
 export async function deleteAllData(): Promise<void> {
-  localStorage.removeItem(STORAGE_KEY);
-  localStorage.removeItem(FEEDBACK_KEY);
-  deleteHomeData();
-  deletePartnerProfile();
-
-  try {
-    await clearForecastCache();
-  } catch (error) {
-    console.error('Error clearing forecast cache:', error);
-  }
+  await clearForecastCache();
+  applyStorageEntries([
+    [STORAGE_KEY, null],
+    [FEEDBACK_KEY, null],
+    [HOME_CALIBRATION_KEY, null],
+    [HOME_FLOORPLAN_KEY, null],
+    [HOME_PROGRESS_KEY, null],
+    [HOME_VASTU_CHECKLIST_KEY, null],
+    [VASTU_PROPERTY_KEY, null],
+    [PARTNER_PROFILE_KEY, null],
+  ]);
 }
 
+export interface UserArchiveData {
+  profile: UserProfile;
+  feedback: Record<string, DailyFeedback>;
+  homeCalibration: HomeCalibrationData | null;
+  homeFloorPlan: HomeFloorPlanData | null;
+  homeProgress: HomeProgressItem[];
+  vastuChecklist: VastuChecklistItem[];
+  vastuPropertyAssessment: VastuPropertyAssessment;
+  partnerProfile: PartnerBirthProfile | null;
+}
+
+export interface UserArchive {
+  format: 'astroday-user-archive';
+  schemaVersion: 1;
+  exportedAt: string;
+  data: UserArchiveData;
+}
+
+export interface ArchiveRestoreResult {
+  profile: UserProfile;
+  restoredSections: string[];
+  legacyProfileOnly: boolean;
+}
+
+const ARCHIVE_FORMAT = 'astroday-user-archive';
+const ARCHIVE_SCHEMA_VERSION = 1;
+const MAX_ARCHIVE_SIZE = 50 * 1024 * 1024;
+
+/** Exports all user-owned data. Recomputable forecast cache is intentionally excluded. */
 export function exportData(): string {
-  return JSON.stringify({
-    profile: loadUserProfile(),
-    feedback: loadAllFeedback(),
-    homeCalibration: loadHomeCalibration(),
-    homeFloorPlan: loadHomeFloorPlan(),
-    homeProgress: loadHomeProgress(),
-    vastuChecklist: loadVastuChecklist(),
-    vastuPropertyAssessment: loadVastuPropertyAssessment(),
-    partnerProfile: loadPartnerProfile(),
-  }, null, 2);
+  const read = <T>(key: string, obfuscated: boolean, fallback: T): T => {
+    const stored = localStorage.getItem(key);
+    if (stored === null) return fallback;
+    const raw = obfuscated ? legacyDeobfuscate(stored, LEGACY_OBFUSCATION_KEY) : stored;
+    return JSON.parse(raw) as T;
+  };
+
+  const storedProfile = read<unknown>(STORAGE_KEY, true, null);
+  if (storedProfile === null) throw new Error('В браузере нет основного профиля. Архив не создан.');
+  const profile = validateUserProfile(storedProfile);
+  if (!profile) throw new Error('Профиль в хранилище повреждён. Архив не создан, чтобы не скрыть потерю данных.');
+
+  const feedback = validateFeedbackMap(read<unknown>(FEEDBACK_KEY, false, {}));
+  if (!feedback) throw new Error('Данные обратной связи повреждены. Архив не создан.');
+
+  const homeCalibration = validateHomeCalibration(read<unknown>(HOME_CALIBRATION_KEY, true, null));
+  if (read<unknown>(HOME_CALIBRATION_KEY, true, null) !== null && !homeCalibration) throw new Error('Данные калибровки дома повреждены. Архив не создан.');
+
+  const homeFloorPlan = validateHomeFloorPlan(read<unknown>(HOME_FLOORPLAN_KEY, true, null));
+  if (read<unknown>(HOME_FLOORPLAN_KEY, true, null) !== null && !homeFloorPlan) throw new Error('План помещения повреждён. Архив не создан.');
+
+  const homeProgress = validateHomeProgress(read<unknown>(HOME_PROGRESS_KEY, true, []));
+  if (!homeProgress) throw new Error('Данные прогресса дома повреждены. Архив не создан.');
+
+  const vastuChecklist = validateVastuChecklist(read<unknown>(HOME_VASTU_CHECKLIST_KEY, true, []));
+  if (!vastuChecklist) throw new Error('Чек-лист Васту повреждён. Архив не создан.');
+
+  const rawAssessment = read<unknown>(VASTU_PROPERTY_KEY, true, createEmptyVastuPropertyAssessment());
+  const validatedAssessment = validateVastuPropertyAssessment(rawAssessment);
+  if (!validatedAssessment) throw new Error('Оценка недвижимости повреждена. Архив не создан.');
+
+  const rawPartner = read<unknown>(PARTNER_PROFILE_KEY, true, null);
+  const partnerProfile = rawPartner === null ? null : validatePartnerProfile(rawPartner);
+  if (rawPartner !== null && !partnerProfile) throw new Error('Профиль партнёра повреждён. Архив не создан.');
+
+  const archive: UserArchive = {
+    format: ARCHIVE_FORMAT,
+    schemaVersion: ARCHIVE_SCHEMA_VERSION,
+    exportedAt: new Date().toISOString(),
+    data: {
+      profile,
+      feedback,
+      homeCalibration,
+      homeFloorPlan,
+      homeProgress,
+      vastuChecklist,
+      vastuPropertyAssessment: validatedAssessment,
+      partnerProfile,
+    },
+  };
+  return JSON.stringify(archive, null, 2);
+}
+
+/** Validates a complete archive before changing any existing browser data. */
+export function restoreUserArchive(json: string): ArchiveRestoreResult {
+  if (json.length > MAX_ARCHIVE_SIZE) throw new Error('Архив слишком большой (максимум 50 МБ).');
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(json);
+  } catch {
+    throw new Error('Файл не является корректным JSON-архивом AstroDay.');
+  }
+
+  let archiveData: UserArchiveData | null = null;
+  if (isRecord(parsed) && parsed.format === ARCHIVE_FORMAT) {
+    if (parsed.schemaVersion !== ARCHIVE_SCHEMA_VERSION) {
+      throw new Error('Версия архива не поддерживается. Обновите AstroDay перед восстановлением.');
+    }
+    if (!isRecord(parsed.data)) throw new Error('В архиве отсутствует раздел пользовательских данных.');
+    archiveData = validateArchiveData(parsed.data);
+    if (!archiveData) throw new Error('Архив содержит повреждённые или несовместимые данные. Текущие данные не изменены.');
+  } else if (isRecord(parsed) && 'profile' in parsed && 'feedback' in parsed) {
+    // Legacy v0 exportData() payload: all sections existed, but there was no archive envelope/version.
+    archiveData = validateArchiveData(parsed);
+    if (!archiveData) throw new Error('Старый архив содержит повреждённые или несовместимые данные. Текущие данные не изменены.');
+  }
+
+  if (archiveData) {
+    const data = archiveData;
+    const entries: Array<[string, string | null]> = [
+      [STORAGE_KEY, legacyObfuscate(JSON.stringify(wrapProfilePayload(data.profile)), LEGACY_OBFUSCATION_KEY)],
+      [FEEDBACK_KEY, JSON.stringify(data.feedback)],
+      [HOME_CALIBRATION_KEY, data.homeCalibration ? legacyObfuscate(JSON.stringify(data.homeCalibration), LEGACY_OBFUSCATION_KEY) : null],
+      [HOME_FLOORPLAN_KEY, data.homeFloorPlan ? legacyObfuscate(JSON.stringify(data.homeFloorPlan), LEGACY_OBFUSCATION_KEY) : null],
+      [HOME_PROGRESS_KEY, data.homeProgress.length ? legacyObfuscate(JSON.stringify(data.homeProgress), LEGACY_OBFUSCATION_KEY) : null],
+      [HOME_VASTU_CHECKLIST_KEY, data.vastuChecklist.length ? legacyObfuscate(JSON.stringify(data.vastuChecklist), LEGACY_OBFUSCATION_KEY) : null],
+      [VASTU_PROPERTY_KEY, legacyObfuscate(JSON.stringify(data.vastuPropertyAssessment), LEGACY_OBFUSCATION_KEY)],
+      [PARTNER_PROFILE_KEY, data.partnerProfile ? legacyObfuscate(JSON.stringify(data.partnerProfile), LEGACY_OBFUSCATION_KEY) : null],
+    ];
+    applyStorageEntries(entries);
+    return {
+      profile: data.profile,
+      restoredSections: ['Профиль', 'Обратная связь', 'Калибровка', 'План помещения', 'Прогресс дома', 'Чек-лист Васту', 'Оценка недвижимости', 'Профиль партнёра'],
+      legacyProfileOnly: false,
+    };
+  }
+
+  // Backward compatibility: older downloads contained only a profile object.
+  const legacyProfile = validateUserProfile(parsed);
+  if (!legacyProfile) throw new Error('Файл не похож на архив AstroDay или старый JSON профиля.');
+  applyStorageEntries([[STORAGE_KEY, legacyObfuscate(JSON.stringify(wrapProfilePayload(legacyProfile)), LEGACY_OBFUSCATION_KEY)]]);
+  return { profile: legacyProfile, restoredSections: ['Профиль'], legacyProfileOnly: true };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
+}
+
+function writeStorageValue(key: string, value: string, label: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch (error) {
+    const name = error instanceof Error ? error.name : '';
+    const reason = name === 'QuotaExceededError' || name === 'NS_ERROR_DOM_QUOTA_REACHED'
+      ? 'В браузере недостаточно места. Освободите место или скачайте архив и удалите ненужные данные.'
+      : 'Проверьте настройки приватности браузера и разрешение на локальное хранение.';
+    throw new Error(`Не удалось сохранить ${label}. ${reason} Исходные введённые данные не следует закрывать до повторной попытки.`);
+  }
+}
+
+function removeStorageValue(key: string, label: string): void {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    throw new Error(`Не удалось удалить ${label}. Проверьте разрешение браузера на изменение локальных данных.`);
+  }
+}
+
+function applyStorageEntries(entries: Array<[string, string | null]>): void {
+  const snapshots = new Map<string, string | null>();
+  try {
+    for (const [key] of entries) snapshots.set(key, localStorage.getItem(key));
+  } catch {
+    throw new Error('Не удалось прочитать текущее хранилище. Архив не восстановлен.');
+  }
+
+  try {
+    for (const [key, value] of entries) {
+      if (value === null) localStorage.removeItem(key);
+      else writeStorageValue(key, value, 'архив AstroDay');
+    }
+  } catch (error) {
+    let rollbackSucceeded = true;
+    for (const [key, previous] of snapshots) {
+      try {
+        if (previous === null) localStorage.removeItem(key);
+        else localStorage.setItem(key, previous);
+      } catch {
+        rollbackSucceeded = false;
+      }
+    }
+    const reason = error instanceof Error ? error.message : 'Неизвестная ошибка записи.';
+    throw new Error(rollbackSucceeded
+      ? `Восстановление прервано: ${reason} Предыдущие данные восстановлены.`
+      : `Восстановление прервано: ${reason} Автоматический откат завершился не полностью. Не закрывайте вкладку и скачайте доступные данные.`);
+  }
+}
+
+function validateFeedbackMap(value: unknown): Record<string, DailyFeedback> | null {
+  if (!isRecord(value)) return null;
+  const result: Record<string, DailyFeedback> = {};
+  for (const [date, item] of Object.entries(value)) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !isRecord(item)
+      || item.date !== date || !Number.isInteger(item.mood)
+      || (item.mood as number) < 1 || (item.mood as number) > 5
+      || (item.notes !== undefined && typeof item.notes !== 'string')) return null;
+    result[date] = { date, mood: item.mood as number, ...(typeof item.notes === 'string' ? { notes: item.notes } : {}) };
+  }
+  return result;
+}
+
+function validateHomeCalibration(value: unknown): HomeCalibrationData | null {
+  if (value === null) return null;
+  if (!isRecord(value) || typeof value.northOffset !== 'number' || !Number.isFinite(value.northOffset)
+    || value.northOffset < -180 || value.northOffset > 180
+    || typeof value.calibratedAt !== 'string' || (value.source !== 'sun' && value.source !== 'manual')
+    || (value.warning !== undefined && typeof value.warning !== 'string')) return null;
+  return value as unknown as HomeCalibrationData;
+}
+
+function validateHomeFloorPlan(value: unknown): HomeFloorPlanData | null {
+  if (value === null) return null;
+  if (!isRecord(value) || typeof value.imageDataUrl !== 'string'
+    || (value.imageDataUrl !== '' && !/^data:image\/[a-z0-9.+-]+;base64,/i.test(value.imageDataUrl))
+    || !Array.isArray(value.rooms)
+    || typeof value.northOffset !== 'number' || !Number.isFinite(value.northOffset)
+    || value.northOffset < -180 || value.northOffset > 180
+    || (value.northBearingDegrees !== undefined && (typeof value.northBearingDegrees !== 'number' || !Number.isFinite(value.northBearingDegrees) || value.northBearingDegrees < 0 || value.northBearingDegrees >= 360))
+    || (value.markers !== undefined && !Array.isArray(value.markers))) return null;
+  const validRooms = value.rooms.every((room) => isRecord(room)
+    && typeof room.id === 'string' && typeof room.name === 'string'
+    && ['x', 'y', 'width', 'height'].every((key) => typeof room[key] === 'number' && Number.isFinite(room[key]))
+    && typeof room.baguaZone === 'string' && typeof room.vastuZone === 'string');
+  const markers = Array.isArray(value.markers) ? value.markers : [];
+  const validMarkers = markers.every((marker) => isRecord(marker)
+    && typeof marker.id === 'string' && typeof marker.label === 'string'
+    && typeof marker.x === 'number' && Number.isFinite(marker.x) && marker.x >= 0 && marker.x <= 1
+    && typeof marker.y === 'number' && Number.isFinite(marker.y) && marker.y >= 0 && marker.y <= 1
+    && ['entrance', 'window', 'obstruction', 'water', 'clutter', 'kitchen', 'bathroom', 'workspace'].includes(String(marker.type)));
+  return validRooms && validMarkers ? value as unknown as HomeFloorPlanData : null;
+}
+
+function validateHomeProgress(value: unknown): HomeProgressItem[] | null {
+  if (!Array.isArray(value)) return null;
+  return value.every((item) => isRecord(item) && typeof item.id === 'string'
+    && typeof item.label === 'string' && typeof item.done === 'boolean')
+    ? value as HomeProgressItem[] : null;
+}
+
+function validateVastuChecklist(value: unknown): VastuChecklistItem[] | null {
+  if (!Array.isArray(value)) return null;
+  return value.every((item) => isRecord(item) && typeof item.id === 'string'
+    && typeof item.label === 'string' && typeof item.done === 'boolean'
+    && ['abundance', 'relationships', 'wellbeing'].includes(String(item.goal)))
+    ? value as VastuChecklistItem[] : null;
+}
+
+function validateVastuPropertyAssessment(value: unknown): VastuPropertyAssessment | null {
+  if (!isRecord(value) || value.schemaVersion !== 1
+    || typeof value.propertyName !== 'string' || value.propertyName.length > 120
+    || !['apartment', 'house', 'land', 'office', 'retail', 'other'].includes(String(value.propertyType))
+    || !['', 'north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'].includes(String(value.facingDirection))
+    || !['', 'north', 'east', 'south', 'west'].includes(String(value.entranceWall))
+    || typeof value.entrancePosition !== 'number' || !Number.isFinite(value.entrancePosition) || value.entrancePosition < 0 || value.entrancePosition > 100
+    || !['square', 'rectangle', 'irregular', 'triangular', 'narrow', 'unknown'].includes(String(value.plotShape))
+    || !['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest', 'flat', 'unknown'].includes(String(value.plotSlope))
+    || !/^[A-Z]{3}$/.test(String(value.currency))
+    || typeof value.notes !== 'string' || value.notes.length > 4000) return null;
+
+  const roadSides = value.roadSides;
+  const waterSides = value.waterSides;
+  if (!Array.isArray(roadSides) || !Array.isArray(waterSides)) return null;
+  const directions = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'];
+  if (![...roadSides, ...waterSides].every((direction) => directions.includes(String(direction)))) return null;
+
+  const fallback = createEmptyVastuPropertyAssessment();
+  const rooms = value.rooms;
+  if (!isRecord(rooms) || !Object.keys(fallback.rooms).every((sector) =>
+    ['', 'prayer', 'kitchen', 'master-bedroom', 'bedroom', 'guest-bedroom', 'living', 'dining', 'study', 'office', 'bathroom', 'toilet', 'stairs', 'storage', 'laundry', 'water', 'balcony', 'open', 'other'].includes(String(rooms[sector])),
+  )) return null;
+  const condition = value.condition;
+  if (!isRecord(condition) || !Object.keys(fallback.condition).every((id) =>
+    ['ok', 'attention', 'unknown'].includes(String(condition[id])),
+  )) return null;
+
+  const numericFields: Array<keyof VastuPropertyAssessment> = [
+    'purchasePrice', 'closingCosts', 'renovationCost', 'monthlyRent', 'vacancyRatePercent',
+    'monthlyOperatingCosts', 'annualPropertyTax', 'annualInsurance', 'annualCapitalReserve', 'monthlyMortgagePayment',
+  ];
+  if (!numericFields.every((key) => {
+    const numericValue = value[key];
+    return typeof numericValue === 'number' && Number.isFinite(numericValue) && numericValue >= 0;
+  }) || (value.vacancyRatePercent as number) > 100) return null;
+
+  return value as unknown as VastuPropertyAssessment;
+}
+
+function validatePartnerProfile(value: unknown): PartnerBirthProfile | null {
+  if (!isRecord(value)) return null;
+  const name = readString(value, 'name');
+  const birthDate = readString(value, 'birthDate');
+  const birthTime = readString(value, 'birthTime');
+  const birthPlace = readString(value, 'birthPlace');
+  const latitude = readNumber(value, 'latitude');
+  const longitude = readNumber(value, 'longitude');
+  const timezone = readString(value, 'timezone');
+  if (!name || !birthDate || !birthTime || !birthPlace || latitude === null || longitude === null || !timezone
+    || !isValidCoordinates(latitude, longitude) || !isValidIanaTimezone(timezone)) return null;
+  return { name, birthDate, birthTime, birthPlace, latitude, longitude, timezone };
+}
+
+function validateArchiveData(value: Record<string, unknown>): UserArchiveData | null {
+  const profile = validateUserProfile(value.profile);
+  const feedback = validateFeedbackMap(value.feedback);
+  const homeCalibration = validateHomeCalibration(value.homeCalibration);
+  const homeFloorPlan = validateHomeFloorPlan(value.homeFloorPlan);
+  const homeProgress = validateHomeProgress(value.homeProgress);
+  const vastuChecklist = validateVastuChecklist(value.vastuChecklist);
+  const vastuPropertyAssessment = validateVastuPropertyAssessment(value.vastuPropertyAssessment);
+  const partnerProfile = value.partnerProfile === null ? null : validatePartnerProfile(value.partnerProfile);
+  if (!profile || !feedback
+    || (value.homeCalibration !== null && !homeCalibration)
+    || (value.homeFloorPlan !== null && !homeFloorPlan)
+    || !homeProgress || !vastuChecklist || !vastuPropertyAssessment
+    || (value.partnerProfile !== null && !partnerProfile)) return null;
+  return { profile, feedback, homeCalibration, homeFloorPlan, homeProgress, vastuChecklist, vastuPropertyAssessment, partnerProfile };
 }
 
 function isTimezoneAccuracy(value: unknown): value is NonNullable<UserProfile['timezoneAccuracy']> {

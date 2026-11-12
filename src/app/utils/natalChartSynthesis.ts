@@ -27,6 +27,7 @@ export interface NatalSynthesisEvidence {
   evidence: string[];
   relatedHouses: number[];
   relatedPlanets: NatalPlanetKey[];
+  relatedTensions?: string[];
   kind: 'chart-anchor' | 'planet-positions' | 'concentration' | 'house-bridge' | 'planet-network' | 'dispositor-pattern' | 'balance';
 }
 
@@ -213,8 +214,8 @@ export function synthesizeNatalChart(facts: NatalChartFacts): NatalChartSynthesi
     });
   }
 
-  const planetSupportive = planets.filter((planet) => planet.available && planet.synthesis === 'supportive').length;
-  const planetAttention = planets.filter((planet) => planet.available && planet.synthesis === 'challenging').length;
+  const planetSupportive = planets.filter((planet) => planet.available && planet.supportingFactors.length > 0).length;
+  const planetAttention = planets.filter((planet) => planet.available && planet.attentionFactors.length > 0).length;
   if (planetSupportive || planetAttention) {
     const planetEvidence = planets.flatMap((planet) => [
       ...planet.supportingFactors.map((item) => `${PLANET_NAMES[planet.planet]}: ${item}`),
@@ -240,8 +241,15 @@ export function synthesizeNatalChart(facts: NatalChartFacts): NatalChartSynthesi
     tensions.push('Часть исходных данных отсутствует; общие выводы следует считать предварительными и читать вместе с ограничениями.');
   }
 
-  const completeness = Math.round((available.length / NATAL_PLANET_KEYS.length * 0.6
-    + (12 - facts.dataQuality.missingHouseNumbers.length) / 12 * 0.4) * 100);
+  const planetsWithKnownHouse = available.filter((key) => facts.planets[key]?.house !== null).length;
+  const housesWithKnownLordPlacement = houses.filter((house) => house.available
+    && house.lord !== null && house.lordHouse !== null).length;
+  const ascendantAvailable = facts.chart.ascendantSign !== null;
+  const completeness = Math.round((
+    planetsWithKnownHouse / NATAL_PLANET_KEYS.length * 0.55
+    + housesWithKnownLordPlacement / 12 * 0.4
+    + Number(ascendantAvailable) * 0.05
+  ) * 100);
   const caveats = unique([
     ...facts.dataQuality.warnings,
     ...facts.dataQuality.unsupportedFactors,
@@ -258,6 +266,22 @@ export function synthesizeNatalChart(facts: NatalChartFacts): NatalChartSynthesi
   const headline = dominantThemes[0]
     ? `Главный повторяющийся акцент — ${dominantThemes[0].house}-й дом: ${dominantThemes[0].theme}.`
     : 'Для выделения доминирующих тем недостаточно согласованных показателей.';
+  for (const conclusion of conclusions) {
+    const houseTensions = houses
+      .filter((house) => conclusion.relatedHouses.includes(house.house))
+      .flatMap((house) => [
+        ...house.attentionFactors,
+        ...(house.synthesis === 'mixed' ? ['В этом доме одновременно присутствуют поддерживающие и требующие внимания факторы.'] : []),
+      ]);
+    const planetTensions = planets
+      .filter((planet) => conclusion.relatedPlanets.includes(planet.planet))
+      .flatMap((planet) => [
+        ...planet.attentionFactors,
+        ...(planet.synthesis === 'mixed' ? [`${PLANET_NAMES[planet.planet]} имеет смешанный профиль: поддерживающие и требующие внимания показатели присутствуют одновременно.`] : []),
+      ]);
+    conclusion.relatedTensions = unique([...houseTensions, ...planetTensions]);
+  }
+
   const overview = `В синтез включены ${available.length} из 9 планет и ${12 - facts.dataQuality.missingHouseNumbers.length} из 12 домов. Выводы строятся по повторяющимся положениям, управлению домами, связям управителей, аспектам и диспозиторным отношениям; отдельные показатели не трактуются изолированно.`;
 
   return {

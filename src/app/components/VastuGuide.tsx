@@ -29,6 +29,7 @@ export function VastuGuide() {
   const [selectedZoneId, setSelectedZoneId] = useState('north');
   const [moneyGoal, setMoneyGoal] = useState<typeof VASTU_MONEY_FOCUS[number]['id']>('stable-income');
   const [remedyType, setRemedyType] = useState<VastuRemedyType>('spatial');
+  const [storageError, setStorageError] = useState('');
   const [checklist, setChecklist] = useState<VastuChecklistItem[]>(() => {
     const saved = loadVastuChecklist();
     return VASTU_ACTION_PLANS.map((action) => ({
@@ -41,11 +42,21 @@ export function VastuGuide() {
   const activeActions = checklist.filter((action) => action.goal === activeGoal);
   const completedActions = activeActions.filter((action) => action.done).length;
 
-  const toggleAction = (id: string) => {
-    const next = checklist.map((item) => item.id === id ? { ...item, done: !item.done } : item);
+  const persistChecklist = (next: VastuChecklistItem[]) => {
     setChecklist(next);
-    saveVastuChecklist(next);
+    try {
+      saveVastuChecklist(next);
+      setStorageError('');
+    } catch (error) {
+      setStorageError(error instanceof Error ? error.message : 'Не удалось сохранить чек-лист.');
+    }
   };
+
+  const toggleAction = (id: string) => {
+    persistChecklist(checklist.map((item) => item.id === id ? { ...item, done: !item.done } : item));
+  };
+
+  const retrySave = () => persistChecklist(checklist);
   const selectedZone = VASTU_DIRECTIONS.find((zone) => zone.id === selectedZoneId) ?? VASTU_DIRECTIONS[0];
 
   const selectGoal = (goal: VastuGoal) => {
@@ -56,6 +67,7 @@ export function VastuGuide() {
 
   return (
     <div className="space-y-6">
+      {storageError && <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive space-y-2"><p>{storageError}</p><button type="button" onClick={retrySave} className="underline font-semibold">Повторить сохранение</button></div>}
       <GlassCard>
         <div className="space-y-4">
           <div className="max-w-3xl">

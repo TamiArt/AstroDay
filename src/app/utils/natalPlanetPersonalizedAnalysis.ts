@@ -232,7 +232,9 @@ function analyzePlanet(
     }
   }
 
-  const synthesis = item.dataAvailability.house === 'missing' || item.dataAvailability.dignity === 'missing'
+  const synthesis = item.dataAvailability.house === 'missing'
+    || item.dataAvailability.dignity === 'missing'
+    || item.dataAvailability.dispositor === 'missing'
     ? 'incomplete'
     : supportingFactors.length && attentionFactors.length
       ? 'mixed'

@@ -1,4 +1,6 @@
 import { buildNatalChartFacts } from '../../utils/natalChartFacts';
+import { NatalYogasSection } from './NatalYogasSection';
+import { NatalPrecisionSection } from './NatalPrecisionSection';
 import {
   AlertCircle,
   Briefcase,
@@ -22,6 +24,7 @@ import { analyzePersonalizedHouses } from '../../utils/personalizedHouseAnalysis
 import { analyzeAllNatalHouses } from '../../utils/natalHousePersonalizedAnalysis';
 import { analyzeAllNatalPlanets } from '../../utils/natalPlanetPersonalizedAnalysis';
 import { synthesizeNatalChart } from '../../utils/natalChartSynthesis';
+import { buildConclusionUnifiedAdvice, buildHouseUnifiedAdvice, buildLifeAreaBridgeUnifiedAdvice, buildLifeAreaUnifiedAdvice, buildNarrativeUnifiedAdvice, buildPlanetUnifiedAdvice, buildSynthesisUnifiedAdvice } from '../../utils/unifiedNatalAdvice';
 import { getPlanetHouse } from '../../utils/natalStrengthAnalysis';
 import { getSunHouseFocus } from '../../utils/natalAnalysisGuidance';
 import { formatCoreLifeAreaEvidence, getAscendantChartFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus, getPlanetChartFocus } from '../../utils/natalPersonalFocus';
@@ -104,6 +107,21 @@ function InsightCard({ icon: Icon, title, subtitle, accent, children }: InsightC
   );
 }
 
+function UnifiedAdviceBlock({ advice }: { advice: ReturnType<typeof buildHouseUnifiedAdvice> }) {
+  return (
+    <div className="rounded-lg border border-indigo-100 bg-indigo-50/60 p-3 space-y-2">
+      <p className="text-sm leading-relaxed text-gray-800">{advice.connection}</p>
+      <p className="text-sm leading-relaxed text-gray-800">{advice.combinedMeaning}</p>
+      <p className="text-sm leading-relaxed text-gray-700">{advice.tension}</p>
+      <p className="text-sm leading-relaxed text-indigo-900"><strong>Практический шаг:</strong> {advice.practicalStep}</p>
+      <p className="text-xs leading-relaxed text-indigo-800"><strong>Проверяемый результат:</strong> {advice.successCriteria}</p>
+      <p className="text-xs text-gray-600">Полнота основания: {advice.dataStatus === 'complete' ? 'достаточно для этого вывода' : advice.dataStatus === 'partial' ? 'часть показателей не подтверждена' : 'персональный вывод недоступен'}</p>
+      {advice.evidence.length ? <details className="text-xs text-gray-600"><summary className="cursor-pointer font-medium">Основания вывода ({advice.evidence.length})</summary><ul className="mt-1 list-disc pl-4 space-y-1">{advice.evidence.map((item) => <li key={item}>{item}</li>)}</ul></details> : null}
+      <p className="text-xs leading-relaxed text-gray-500">{advice.limitation}</p>
+    </div>
+  );
+}
+
 export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
   const sunHouse = getPlanetHouse(natalChart, 'Sun');
   const moonHouse = getPlanetHouse(natalChart, 'Moon');
@@ -128,6 +146,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
 
   return (
     <div className="space-y-6">
+      <NatalPrecisionSection natalChart={natalChart} />
       <GlassCard>
         <section className="space-y-4">
           <div className="flex items-center justify-between gap-3 border-b border-gray-200 pb-3">
@@ -140,6 +159,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
           <div className="rounded-xl border border-indigo-100 bg-indigo-50/70 p-4 space-y-2">
             <h4 className="font-semibold text-indigo-950">{wholeChartSynthesis.headline}</h4>
             <p className="text-sm leading-relaxed text-indigo-900">{wholeChartSynthesis.overview}</p>
+          <UnifiedAdviceBlock advice={buildSynthesisUnifiedAdvice(wholeChartSynthesis)} />
           </div>
           {wholeChartSynthesis.dominantThemes.length ? (
             <div>
@@ -162,7 +182,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                 {wholeChartSynthesis.conclusions.map((item) => (
                   <details key={item.id} className="rounded-lg border border-gray-200 p-3">
                     <summary className="cursor-pointer text-sm font-medium text-gray-800">{item.title}</summary>
-                    <p className="mt-2 text-sm leading-relaxed text-gray-700">{item.statement}</p>
+                    <UnifiedAdviceBlock advice={buildConclusionUnifiedAdvice(item, wholeChartSynthesis.tensions)} />
                     <p className="mt-2 text-xs text-gray-500">Дома: {item.relatedHouses.length ? item.relatedHouses.join(', ') : 'не определены'}; планеты: {item.relatedPlanets.length ? item.relatedPlanets.join(', ') : 'не определены'}.</p>
                     <ul className="mt-2 list-disc pl-4 space-y-1">{item.evidence.map((evidence) => <li key={evidence} className="text-xs text-gray-600">{evidence}</li>)}</ul>
                   </details>
@@ -191,6 +211,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
           </details>
         </section>
       </GlassCard>
+      <NatalYogasSection natalChart={natalChart} />
       <InsightCard
         icon={Star}
         title={ascDesc.title}
@@ -208,7 +229,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
 
         <div className="p-4 bg-white rounded-lg border border-purple-200">
           <h4 className="text-sm font-semibold text-purple-700 uppercase mb-2">Управитель Лагны — куда направлена энергия личности</h4>
-          <p className="text-sm text-gray-700 leading-relaxed">{ascendantChartFocus}</p>
+          <UnifiedAdviceBlock advice={buildHouseUnifiedAdvice(allHouseAnalyses[0])} />
         </div>
 
         <div className="p-4 bg-white rounded-lg border border-purple-200">
@@ -269,7 +290,9 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
           <div className="p-4 bg-white rounded-lg border border-orange-200">
             <h4 className="text-sm font-semibold text-orange-700 uppercase mb-2">Где светить</h4>
             <p className="text-sm text-gray-700 leading-relaxed">{sunFocus}</p>
-            <p className="text-xs text-gray-700 leading-relaxed mt-3 border-t border-orange-100 pt-3">Фактические показатели вашей карты: {sunChartFocus}</p>
+            <div className="mt-3 border-t border-orange-100 pt-3">
+              <UnifiedAdviceBlock advice={buildPlanetUnifiedAdvice(allPlanetAnalyses.find((item) => item.planet === 'Sun')!)} />
+            </div>
           </div>
         </div>
         <div className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border-l-4 border-yellow-600">
@@ -294,7 +317,9 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
         <div className="p-4 bg-white rounded-lg border border-blue-200">
           <h4 className="text-sm font-semibold text-blue-700 uppercase mb-2">Конкретная жизненная сфера Луны</h4>
           <p className="text-sm text-gray-700 leading-relaxed">{moonHouseFocus}</p>
-          <p className="text-xs text-gray-700 leading-relaxed mt-3 border-t border-blue-100 pt-3">Фактические показатели вашей карты: {moonChartFocus}</p>
+          <div className="mt-3 border-t border-blue-100 pt-3">
+            <UnifiedAdviceBlock advice={buildPlanetUnifiedAdvice(allPlanetAnalyses.find((item) => item.planet === 'Moon')!)} />
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-4 bg-white rounded-lg border border-blue-200">
@@ -331,11 +356,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
               {coreLifeAreaInteractions.map((area) => (
                 <section key={area.id} className="rounded-lg border border-cyan-100 bg-cyan-50/60 p-4 space-y-2">
                   <h4 className="font-semibold text-gray-900">{area.title}</h4>
-                  <ul className="space-y-2">
-                    {area.connections.map((connection) => (
-                      <li key={connection} className="text-sm leading-relaxed text-gray-700">{connection}</li>
-                    ))}
-                  </ul>
+                  <UnifiedAdviceBlock advice={buildLifeAreaUnifiedAdvice(area.title, area.connections)} />
                 </section>
               ))}
             </div>
@@ -353,7 +374,12 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                         </li>
                       ))}
                     </ul>
-                    <p className="text-xs leading-relaxed text-gray-600">{bridge.explanation}</p>
+                    <UnifiedAdviceBlock advice={buildLifeAreaBridgeUnifiedAdvice({
+                      connection: bridge.connection,
+                      areas: bridge.areas,
+                      explanation: bridge.explanation,
+                      evidence: bridge.evidenceByArea.map((item) => `${item.areaTitle}: ${item.evidence.map(formatCoreLifeAreaEvidence).join('; ')}`),
+                    })} />
                   </div>
                 ))}
               </section>
@@ -374,7 +400,16 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
               <p className="text-sm text-gray-600">Лагна, Солнце и Луна: общий акцент и разные функции</p>
             </div>
           </div>
-          <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{coreChartSynthesis}</p>
+          <UnifiedAdviceBlock advice={buildNarrativeUnifiedAdvice({
+            connection: [ascendantChartFocus, sunChartFocus, moonChartFocus].join(' '),
+            combinedMeaning: coreChartSynthesis,
+            practicalStep: 'Сопоставьте цель, потребность и способ действия; выберите одно изменение на ближайшие семь дней.',
+            successCriteria: 'Через семь дней зафиксированы выполненные действия и наблюдаемое изменение; отдельно отмечено, какой из трёх факторов учтён.',
+            evidence: [ascendantChartFocus, sunChartFocus, moonChartFocus],
+            tensions: wholeChartSynthesis.tensions,
+            dataStatus: wholeChartSynthesis.dataQuality.completeness === 100 ? 'complete' : 'partial',
+            limitation: wholeChartSynthesis.dataQuality.caveats.join(' '),
+          })} />
         </div>
       </GlassCard>
 
@@ -414,7 +449,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                           : house.synthesis === 'incomplete' ? 'Недостаточно данных' : 'Нейтрально'}
                   </span>
                 </div>
-                <p className="text-sm leading-relaxed text-gray-700">{house.interpretation}</p>
+                <UnifiedAdviceBlock advice={buildHouseUnifiedAdvice(house)} />
                 {house.dispositorChain.length ? (
                   <div className="rounded-lg bg-indigo-50 p-3">
                     <h5 className="text-xs font-semibold uppercase tracking-wide text-indigo-800 mb-1">Цепочка диспозиторов</h5>
@@ -504,7 +539,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                           : planet.synthesis === 'incomplete' ? 'Недостаточно данных' : 'Нейтрально'}
                   </span>
                 </div>
-                <p className="text-sm leading-relaxed text-gray-700">{planet.interpretation}</p>
+                <UnifiedAdviceBlock advice={buildPlanetUnifiedAdvice(planet)} />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Управляемые дома</h5>

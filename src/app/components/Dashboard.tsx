@@ -1,7 +1,7 @@
 // [РЕФАКТОРИНГ] Использован хук useAstroCalculations и переиспользуемые компоненты
 import { lazy, Suspense, useEffect, useState, type ChangeEvent } from 'react';
 import { Heart, Info, Download, Trash2, Sparkles, Upload } from 'lucide-react';
-import { UserProfile, importUserProfile, saveDailyFeedback, saveUserProfile } from '../utils/storage';
+import { UserProfile, exportData, restoreUserArchive, saveDailyFeedback } from '../utils/storage';
 import { useAstroCalculations } from '../hooks/useAstroCalculations';
 import { ErrorDisplay } from './common/ErrorDisplay';
 import { LoadingSpinner } from './common/LoadingSpinner';
@@ -106,14 +106,16 @@ export function Dashboard({ profile, onReset, onProfileUpdate }: DashboardProps)
   } = useAstroCalculations(profile);
 
   const handleMoodSelect = (mood: number) => {
-    setDailyMood(mood);
-    saveDailyFeedback({
-      date: formatDateKey(currentDate),
-      mood
-    });
+    try {
+      saveDailyFeedback({ date: formatDateKey(currentDate), mood });
+      setDailyMood(mood);
+    } catch (storageError) {
+      const message = storageError instanceof Error ? storageError.message : 'Не удалось сохранить настроение.';
+      alert(message);
+    }
   };
 
-  const handleProfileImport = async (event: ChangeEvent<HTMLInputElement>) => {
+  const handleArchiveImport = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = '';
 
@@ -121,12 +123,13 @@ export function Dashboard({ profile, onReset, onProfileUpdate }: DashboardProps)
 
     try {
       const json = await file.text();
-      const importedProfile = importUserProfile(json);
-      saveUserProfile(importedProfile);
-      onProfileUpdate(importedProfile);
-      alert('Профиль импортирован. Прогнозы будут пересчитаны под новые данные.');
+      const restored = restoreUserArchive(json);
+      onProfileUpdate?.(restored.profile);
+      alert(restored.legacyProfileOnly
+        ? 'Старый файл профиля восстановлен. Остальные данные браузера не изменялись.'
+        : `Архив восстановлен. Разделы: ${restored.restoredSections.join(', ')}. Прогнозы будут пересчитаны под восстановленный профиль.`);
     } catch (importError) {
-      const message = importError instanceof Error ? importError.message : 'Не удалось импортировать профиль.';
+      const message = importError instanceof Error ? importError.message : 'Не удалось восстановить архив.';
       alert(message);
     }
   };
@@ -420,18 +423,24 @@ export function Dashboard({ profile, onReset, onProfileUpdate }: DashboardProps)
                 <div className="flex gap-3">
                   <button
                     onClick={() => {
-                      const data = JSON.stringify(profile, null, 2);
-                      const blob = new Blob([data], { type: 'application/json' });
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement('a');
-                      a.href = url;
-                      a.download = 'astrology-profile.json';
-                      a.click();
+                      try {
+                        const data = exportData();
+                        const blob = new Blob([data], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'astroday-archive.json';
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      } catch (exportError) {
+                        const message = exportError instanceof Error ? exportError.message : 'Не удалось создать архив.';
+                        alert(message);
+                      }
                     }}
                     className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl border border-border hover:bg-secondary transition-colors"
                   >
                     <Download className="w-4 h-4" />
-                    Скачать данные
+                    Скачать архив
                   </button>
 
                   <label
@@ -440,12 +449,12 @@ export function Dashboard({ profile, onReset, onProfileUpdate }: DashboardProps)
                     }`}
                   >
                     <Upload className="w-4 h-4" />
-                    Импорт JSON
+                    Восстановить архив
                     <input
                       type="file"
                       accept="application/json"
                       className="hidden"
-                      onChange={handleProfileImport}
+                      onChange={handleArchiveImport}
                       disabled={!onProfileUpdate}
                     />
                   </label>
