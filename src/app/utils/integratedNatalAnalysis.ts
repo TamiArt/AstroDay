@@ -67,7 +67,7 @@ const VARGA_AREAS: Record<number, IntegratedAreaId[]> = {
   16: ['home', 'retreat'], 20: ['wisdom', 'retreat'], 24: ['skills', 'creativity'], 27: ['identity', 'work'],
 };
 const unique = <T,>(items: T[]): T[] => [...new Set(items)];
-function addFactor(list: IntegratedEvidence[], item: Omit<IntegratedEvidence, 'id' | 'duplicateMentions'>): void {
+export function addIntegratedFactor(list: IntegratedEvidence[], item: Omit<IntegratedEvidence, 'id' | 'duplicateMentions'>): void {
   const existing = list.find((entry) => entry.factorId === item.factorId && entry.area === item.area);
   if (existing) {
     existing.duplicateMentions += 1;
@@ -99,7 +99,7 @@ export function buildIntegratedNatalAnalysis(chart: NatalChart, asOf: Date = new
   for (const house of houses) {
     if (!house.available) continue;
     for (const area of AREAS.filter((item) => item.houses.includes(house.house))) {
-      addFactor(evidence, {
+      addIntegratedFactor(evidence, {
         factorId: `natal:house:${house.house}:lord:${house.lord ?? 'unknown'}`,
         source: 'house', sourceFamily: 'natal-structure', area: area.id,
         title: `${house.house}-й дом: ${house.theme}`, statement: house.interpretation,
@@ -112,7 +112,7 @@ export function buildIntegratedNatalAnalysis(chart: NatalChart, asOf: Date = new
     if (!planet.available) continue;
     const relatedHouses = unique([...planet.ruledHouses, ...(planet.house ? [planet.house] : [])]);
     for (const area of AREAS.filter((item) => item.houses.some((house) => relatedHouses.includes(house)))) {
-      addFactor(evidence, {
+      addIntegratedFactor(evidence, {
         factorId: `natal:planet:${planet.planet}:placement`, source: 'planet',
         sourceFamily: 'natal-structure', area: area.id, title: `${planet.name}: положение и управление`,
         statement: planet.interpretation, polarity: planet.synthesis === 'supportive' ? 'supportive' : planet.synthesis === 'challenging' ? 'tension' : planet.synthesis === 'mixed' ? 'mixed' : 'neutral',
@@ -123,7 +123,7 @@ export function buildIntegratedNatalAnalysis(chart: NatalChart, asOf: Date = new
   for (const yoga of yogas.findings) {
     const relevant = yoga.houses.filter((house) => house >= 1 && house <= 12);
     for (const area of AREAS.filter((item) => item.houses.some((house) => relevant.includes(house)))) {
-      addFactor(evidence, {
+      addIntegratedFactor(evidence, {
         factorId: `natal:yoga:${yoga.id}`, source: 'yoga', sourceFamily: 'natal-structure',
         area: area.id, title: yoga.name, statement: yoga.description, polarity: 'neutral',
         references: [...yoga.evidence, ...yoga.caveats],
@@ -137,7 +137,7 @@ export function buildIntegratedNatalAnalysis(chart: NatalChart, asOf: Date = new
       const relevant = varga.vargaEvidence.filter((item) => area.houses.includes(item.house));
       const d1 = varga.d1Evidence.map((item) => `D1 дом ${item.house}: ${item.sign}, управитель ${item.lord}, дом управителя ${item.lordHouse ?? 'не определён'}.`);
       const projected = relevant.map((item) => `D${varga.division}, дом ${item.house}: ${item.sign}, управитель ${item.lord}, дом управителя ${item.lordHouse ?? 'не определён'}, планеты: ${item.occupants.join(', ') || 'нет'}.`);
-      addFactor(evidence, {
+      addIntegratedFactor(evidence, {
         factorId: `varga:D${varga.division}:${areaId}`, source: 'varga',
         sourceFamily: 'varga-projection', area: areaId, title: `D${varga.division} — ${varga.topic}`,
         statement: projected.length ? projected.join(' ') : `Варга D${varga.division} рассмотрена как дополнительная проверка темы «${varga.topic}».`,
@@ -150,7 +150,7 @@ export function buildIntegratedNatalAnalysis(chart: NatalChart, asOf: Date = new
     for (const link of layer.profile.lifeAreaLinks) {
       const area = AREAS.find((item) => item.id === DASHA_AREAS[link.area]) ?? AREAS.find((item) => item.houses.some((house) => link.relevantHouses.includes(house)));
       if (!area) continue;
-      addFactor(evidence, {
+      addIntegratedFactor(evidence, {
         factorId: `dasha:${layer.planet}:${area.id}`, source: 'dasha',
         sourceFamily: 'timing-dasha', area: area.id,
         title: `${layer.layer === 'mahadasha' ? 'Махадаша' : layer.layer === 'antardasha' ? 'Антардаша' : 'Пратьянтардаша'}: ${PLANET_NAMES[layer.planet as NatalPlanetKey] ?? layer.planet}`,
@@ -162,7 +162,7 @@ export function buildIntegratedNatalAnalysis(chart: NatalChart, asOf: Date = new
   for (const aspect of transits.aspects) {
     const linkedHouses = [aspect.natalHouse, aspect.transitHouse].filter((house): house is number => house !== null);
     for (const area of AREAS.filter((item) => item.houses.some((house) => linkedHouses.includes(house)))) {
-      addFactor(evidence, {
+      addIntegratedFactor(evidence, {
         factorId: `transit:${aspect.transitPlanet}:${aspect.natalPlanet}:${aspect.aspect}:${aspect.angle.toFixed(2)}`,
         source: 'transit', sourceFamily: 'timing-transit', area: area.id,
         title: `Точный транзитный аспект: ${aspect.transitPlanet} — ${aspect.natalPlanet}`,
