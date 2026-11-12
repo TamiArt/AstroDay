@@ -67,7 +67,6 @@ export function DivisionalChartsTab({ natalChart }: DivisionalChartsTabProps) {
   const requestedDivisions = new Set(VARGA_ANALYSIS_RULES.map((rule) => rule.division));
   const divisionalCharts = calculateAllDivisionalCharts(natalChart.planets, natalChart.ascendant.siderealLon)
     .filter((chart) => requestedDivisions.has(chart.division));
-  const base = VARGA_ANALYSIS_RULES[0];
 
   return (
     <div className="space-y-6">
