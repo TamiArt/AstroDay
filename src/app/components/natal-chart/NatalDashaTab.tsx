@@ -1,4 +1,4 @@
-import { AlertCircle, CalendarClock, ChevronDown, Clock3, Layers3, ShieldAlert, Sparkles } from 'lucide-react';
+import { CalendarClock, ChevronDown, Clock3, Layers3, ShieldAlert, Sparkles } from 'lucide-react';
 import type { NatalChart as NatalChartType } from '../../utils/astrology';
 import { analyzeVimshottariDasha, type DashaLayerAnalysis, type DashaVargaEvidence } from '../../utils/vimshottariDashaAnalysis';
 import { GlassCard } from '../common/GlassCard';
@@ -7,6 +7,7 @@ import { TermTooltip } from '../common/TermTooltip';
 interface NatalDashaTabProps { natalChart: NatalChartType; }
 const formatDate = (date: Date) => date.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
 const layerNames = { mahadasha: 'Махадаша', antardasha: 'Антардаша', pratyantardasha: 'Пратьянтардаша' };
+const PLANET_NAMES_RU: Record<string, string> = { Sun: 'Солнце', Moon: 'Луна', Mars: 'Марс', Mercury: 'Меркурий', Jupiter: 'Юпитер', Venus: 'Венера', Saturn: 'Сатурн', Rahu: 'Раху', Ketu: 'Кету' };
 
 function VargaEvidence({ item }: { item: DashaVargaEvidence }) {
   return (
@@ -38,7 +39,7 @@ function PlanetProfile({ analysis }: { analysis: DashaLayerAnalysis }) {
         <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Диспозитор</p>
           {profile.dispositor ? <>
-            <p className="mt-1 text-lg font-bold text-gray-900">{profile.dispositor.planet === 'Rahu' || profile.dispositor.planet === 'Ketu' ? profile.dispositor.planet : profile.dispositor.planet}</p>
+            <p className="mt-1 text-lg font-bold text-gray-900">{PLANET_NAMES_RU[profile.dispositor.planet] ?? profile.dispositor.planet}</p>
             <p className="text-sm text-gray-700">{profile.dispositor.sign} · {profile.dispositor.house ? `${profile.dispositor.house}-й дом` : 'дом не определён'}</p>
             <p className="mt-1 text-sm text-gray-700">Достоинство: {profile.dispositor.dignity?.label ?? 'не определено'}</p>
             <p className="mt-1 text-xs text-gray-600">Управляет домами: {profile.dispositor.ruledHouses.join(', ') || 'не определены'}</p>
@@ -54,11 +55,11 @@ function PlanetProfile({ analysis }: { analysis: DashaLayerAnalysis }) {
       <section className="grid gap-3 md:grid-cols-2">
         <div className="rounded-lg border border-gray-200 p-3">
           <h5 className="text-sm font-semibold text-gray-900">Аспекты от планеты</h5>
-          {profile.aspectsFromPlanet.length ? <ul className="mt-2 space-y-1">{profile.aspectsFromPlanet.map((item, i) => <li key={i} className="text-xs text-gray-700">{item.kind === 'conjunction' ? 'Соединение' : 'Граха-дришти'} с {item.target} ({item.targetHouse}-й дом)</li>)}</ul> : <p className="mt-2 text-xs text-gray-500">Не обнаружены по выбранной системе.</p>}
+          {profile.aspectsFromPlanet.length ? <ul className="mt-2 space-y-1">{profile.aspectsFromPlanet.map((item, i) => <li key={i} className="text-xs text-gray-700">{item.kind === 'conjunction' ? 'Соединение' : 'Граха-дришти'} с {PLANET_NAMES_RU[item.target] ?? item.target} ({item.targetHouse}-й дом)</li>)}</ul> : <p className="mt-2 text-xs text-gray-500">Не обнаружены по выбранной системе.</p>}
         </div>
         <div className="rounded-lg border border-gray-200 p-3">
           <h5 className="text-sm font-semibold text-gray-900">Аспекты к планете</h5>
-          {profile.aspectsToPlanet.length ? <ul className="mt-2 space-y-1">{profile.aspectsToPlanet.map((item, i) => <li key={i} className="text-xs text-gray-700">{item.source} ({item.sourceHouse}-й дом)</li>)}</ul> : <p className="mt-2 text-xs text-gray-500">Не обнаружены по выбранной системе.</p>}
+          {profile.aspectsToPlanet.length ? <ul className="mt-2 space-y-1">{profile.aspectsToPlanet.map((item, i) => <li key={i} className="text-xs text-gray-700">{PLANET_NAMES_RU[item.source] ?? item.source} ({item.sourceHouse}-й дом)</li>)}</ul> : <p className="mt-2 text-xs text-gray-500">Не обнаружены по выбранной системе.</p>}
         </div>
       </section>
 
