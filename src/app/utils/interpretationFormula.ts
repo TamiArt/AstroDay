@@ -273,23 +273,23 @@ export function buildFormulaInterpretation(
   const dignityText = dignityMatch ? ` В традиции это положение отмечено как ${dignityMatch[1]}.` : '';
 
   return {
-    essence: `${planet.ru} в ${formula.prep} — это ваша стратегия работы с темой: ${planet.field}. Вы решаете задачи через ${formula.quality}.${dignityText}`,
+    essence: `${planet.ru} в ${formula.prep} в символике Джйотиш связывают с темами «${planet.field}». Такое положение может описывать склонность решать задачи через ${formula.quality}.${dignityText} Это возможная астрологическая трактовка, а не установленное свойство характера.`,
     characteristics: [
-      `Когда ${formula.problem} → вы ${formula.reaction}. Окружающие считывают вас как ${formula.impression}.`,
-      `Вы инстинктивно ${formula.instinct}, чтобы ${formula.result}.`,
+      `В ситуациях, когда ${formula.problem}, возможна реакция: ${formula.reaction}. Со стороны это иногда может выглядеть как поведение ${formula.impression}. Проверяйте, подходит ли такое описание вашему реальному опыту.`,
+      `Одна из возможных привычных стратегий — ${formula.instinct}, чтобы ${formula.result}.`,
     ],
     strengths: [
-      `Ваш суперскилл — ${formula.superSkill}.`,
-      `Вы достигаете успеха, когда ${formula.successCondition}.`,
+      `Возможная сильная сторона — умение ${formula.superSkill}.`,
+      `Эта особенность может быть полезна, когда ${formula.successCondition}.`,
     ],
     challenges: [
-      `Ваша слабость — ${formula.distortion}.`,
-      `Вы теряете энергию, когда ${formula.energyLoss}.`,
+      `Зона внимания — риск ${formula.distortion}, особенно если эта реакция становится автоматической.`,
+      `Стоит понаблюдать, не утомляет ли вас ситуация, в которой вы ${formula.energyLoss}.`,
     ],
     practice: [
-      `Замечайте, когда вы ${formula.badHabit}.`,
+      `Понаблюдайте, бывает ли так, что вы ${formula.badHabit}.`,
       `Остановитесь и ${formula.alternativeAction}.`,
-      `Результат: ${formula.positiveChange}.`,
+      `Возможный эффект такого шага: ${formula.positiveChange}.`,
     ],
   };
 }
