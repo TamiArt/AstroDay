@@ -262,8 +262,6 @@ export function buildTransitTimeline(
       for (const natalPlanet of CLASSICAL) {
         const natalLongitude = getPosition(natalChart, natalPlanet).siderealLon;
         for (const definition of ASPECTS) {
-          const beforeOrb = aspectOrb(beforeTransit, natalLongitude, definition.angle);
-          const afterOrb = aspectOrb(afterTransit, natalLongitude, definition.angle);
           const orientations = targetOrientations(definition.angle);
           for (const orientation of orientations) {
             const beforeOffset = aspectOffset(beforeTransit, natalLongitude, orientation);
