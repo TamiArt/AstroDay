@@ -1,5 +1,5 @@
 import type { NatalChart, PlanetPosition } from './astrology';
-import { calculateNatalChart } from './astrology';
+import { calculateNatalChart, calculatePlanetPosition } from './astrology';
 import { calculatePlanetMotion } from './astrologyPrecision';
 import { analyzeVimshottariDasha } from './vimshottariDashaAnalysis';
 
@@ -93,6 +93,11 @@ function snapshot(chart: NatalChart, date: Date) {
     positions: calculated.planets,
     houses: Object.fromEntries(PLANETS.map((planet) => [planet, houseFromSign(calculated.planets[planet].sign, chart.ascendant.sign)])) as Record<TimelinePlanet, number>,
   };
+}
+function positionAt(chart: NatalChart, planet: TimelinePlanet, date: Date): PlanetPosition {
+  return planet === 'Rahu' || planet === 'Ketu'
+    ? snapshot(chart, date).positions[planet]
+    : calculatePlanetPosition(planet, date);
 }
 function validateRange(chart: NatalChart, start: Date, end: Date, stepHours: number) {
   if (!(start instanceof Date) || !Number.isFinite(start.getTime()) || !(end instanceof Date) || !Number.isFinite(end.getTime())) {
@@ -240,7 +245,7 @@ export function buildTransitTimeline(
         const movement = signedDelta(after.siderealLon - before.siderealLon);
         const signBoundary = movement >= 0 ? ((before.sign + 1) % 12) * 30 : before.sign * 30;
         const ingressAt = findRoot(previous.date, current.date, (date) => {
-          const position = snapshot(natalChart, date).positions[planet];
+          const position = positionAt(natalChart, planet, date);
           return signedDelta(position.siderealLon - signBoundary);
         });
         const id = 'house:' + planet + ':' + ingressAt.toISOString();
@@ -268,7 +273,7 @@ export function buildTransitTimeline(
             const afterOffset = aspectOffset(afterTransit, natalLongitude, orientation);
             if (beforeOffset === 0 || afterOffset === 0 || Math.sign(beforeOffset) === Math.sign(afterOffset)) continue;
             const exactAt = findRoot(previous.date, current.date, (date) =>
-              aspectOffset(snapshot(natalChart, date).positions[transitPlanet].siderealLon, natalLongitude, orientation));
+              aspectOffset(positionAt(natalChart, transitPlanet, date).siderealLon, natalLongitude, orientation));
             const eventId = `aspect:${transitPlanet}:${natalPlanet}:${definition.angle}:${orientation}:${exactAt.toISOString()}`;
             if (!seen.has(eventId)) {
               seen.add(eventId);
@@ -295,7 +300,7 @@ export function buildTransitTimeline(
     const definition = ASPECTS.find((item) => item.label === event.aspect);
     if (!transitPlanet || !natalPlanet || !definition) continue;
     const natalLongitude = natalChart.planets[natalPlanet].siderealLon;
-    const orbAt = (date: Date) => aspectOrb(snapshot(natalChart, date).positions[transitPlanet].siderealLon, natalLongitude, definition.angle);
+    const orbAt = (date: Date) => aspectOrb(positionAt(natalChart, transitPlanet, date).siderealLon, natalLongitude, definition.angle);
     let index = samples.findIndex((item, i) => i > 0 && samples[i - 1].date <= event.exactAt && item.date >= event.exactAt);
     if (index < 1) index = Math.max(1, samples.findIndex((item) => item.date >= event.exactAt));
     let leftIndex = index;
