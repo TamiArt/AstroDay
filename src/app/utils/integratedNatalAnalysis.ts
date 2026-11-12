@@ -60,7 +60,8 @@ const AREAS: Array<{ id: IntegratedAreaId; title: string; houses: number[] }> = 
   { id: 'retreat', title: 'Восстановление и завершение циклов', houses: [12] },
 ];
 const PLANET_NAMES: Record<NatalPlanetKey, string> = { Sun: 'Солнце', Moon: 'Луна', Mars: 'Марс', Mercury: 'Меркурий', Jupiter: 'Юпитер', Venus: 'Венера', Saturn: 'Сатурн', Rahu: 'Раху', Ketu: 'Кету' };
-const DASHA_AREAS: Record<string, IntegratedAreaId> = { finances: 'resources', career: 'career', relationships: 'relationships', home: 'home', family: 'home', children: 'creativity', learning: 'wisdom', creativity: 'creativity', spirituality: 'retreat', health: 'work' };\nconst VARGA_AREAS: Record<number, IntegratedAreaId[]> = {
+const DASHA_AREAS: Record<string, IntegratedAreaId> = { finances: 'resources', career: 'career', relationships: 'relationships', home: 'home', family: 'home', children: 'creativity', learning: 'wisdom', creativity: 'creativity', spirituality: 'retreat', health: 'work' };
+const VARGA_AREAS: Record<number, IntegratedAreaId[]> = {
   2: ['resources'], 3: ['skills'], 4: ['home'], 7: ['creativity'],
   9: ['relationships', 'wisdom'], 10: ['career', 'work'], 12: ['home'],
   16: ['home', 'retreat'], 20: ['wisdom', 'retreat'], 24: ['skills', 'creativity'], 27: ['identity', 'work'],
