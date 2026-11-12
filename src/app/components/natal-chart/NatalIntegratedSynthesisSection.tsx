@@ -56,19 +56,20 @@ function explainEvidence(item: IntegratedEvidence, area: IntegratedAreaSynthesis
     const number = Number(item.factorId.match(/house:(\d+)/)?.[1]);
     const lordHouse = item.references.map((ref) => ref.match(/расположен в (\d+)-м доме/)?.[1]).find(Boolean);
     const occupants = item.references.find((ref) => ref.startsWith('Планеты в доме:'));
-    const lord = item.references.find((ref) => ref.includes('управитель —'));
-    return `Ваша сфера «${area.title.toLowerCase()}» связана с ${number}-м домом — ${houseTopic(number)}. ${lord ?? ''} ${lordHouse ? `Его управитель находится в ${lordHouse}-м доме, поэтому эта тема также связана со сферой «${houseTopic(Number(lordHouse))}».` : ''} ${occupants ?? ''}`.trim();
+    const lordReference = item.references.find((ref) => ref.includes('управитель —'));
+    const lordName = lordReference?.split('управитель —')[1]?.replace(/[.]/g, '').trim();
+    return `Ваша сфера «${area.title.toLowerCase()}» связана с ${number}-м домом — ${houseTopic(number)}. ${lordName ? `Управитель этого дома — ${lordName}.` : ''} ${lordHouse && lordName ? `${lordName} находится в ${lordHouse}-м доме, поэтому эта тема также связана со сферой «${houseTopic(Number(lordHouse))}».` : ''} ${occupants ?? ''}`.trim();
   }
   if (item.source === 'planet' && planetKey) {
     const name = PLANETS[planetKey] ?? planetKey;
     const meaning = PLANET_MEANINGS[planetKey] ?? 'своя символическая функция';
     const placement = item.references.find((ref) => ref.startsWith(name + ':')) ?? item.references.find((ref) => ref.includes('расположен'));
     const ruled = item.references.find((ref) => ref.includes('управляет домами'));
-    return `${name} связан(а) с темами ${meaning}. В вашей карте его положение и дома, которыми он управляет, добавляют эту планету к теме «${area.title.toLowerCase()}». ${placement ?? ''} ${ruled ?? ''}`.trim();
+    return `Планета ${name} символизирует ${meaning}. В вашей карте её положение и дома, которыми она управляет, связывают её с темой «${area.title.toLowerCase()}». ${placement ?? ''} ${ruled ?? ''}`.trim();
   }
   if (item.source === 'dasha' && planetKey) {
     const name = PLANETS[planetKey] ?? planetKey;
-    return `Сейчас действует один из периодов планеты ${name}. В традиционной астрологии это означает, что темы, связанные с ${name.toLowerCase()} ( ${PLANET_MEANINGS[planetKey] ?? 'её символикой'} ), могут становиться заметнее. В этой карте период сопоставлен со сферой «${area.title.toLowerCase()}». Это описание периода, а не обещание конкретного события.`;
+    return `Сейчас действует ${item.title}. В традиционной астрологии периоды этой планеты связывают с темами: ${PLANET_MEANINGS[planetKey] ?? 'её символикой'}. В этой карте период сопоставлен со сферой «${area.title.toLowerCase()}». Это описание символического фокуса времени, а не обещание конкретного события.`;
   }
   if (item.source === 'transit') {
     const match = item.factorId.match(/transit:([A-Z][a-z]+):([A-Z][a-z]+):([^:]+):/);
