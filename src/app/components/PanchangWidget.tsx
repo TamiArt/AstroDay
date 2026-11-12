@@ -99,13 +99,7 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h3>{item.title}</h3>
-                    <button
-                      className="p-1 rounded-lg hover:bg-secondary transition-colors"
-                      title={item.tooltip}
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <TermTooltip term={item.term} />
-                    </button>
+                    <TermTooltip term={item.term} label={item.tooltip} />
                   </div>
                   <p className="opacity-90 mb-2">{item.value}</p>
                   <p className="opacity-70">{item.description}</p>
@@ -132,8 +126,7 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
         <div className="flex gap-3">
           <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
           <p className="opacity-80 leading-relaxed">
-            Панчанг помогает выбрать благоприятное время для важных дел. Например, Пурнима (полнолуние)
-            хороша для завершения проектов, а Экадаши — для медитации и духовных практик.
+            Панчанг используют в традиции Джйотиш как один из ориентиров при выборе времени для дел. Например, Пурниму (полнолуние) связывают с завершением, а Экадаши — с постом и духовными практиками. Это культурная традиция, а не научно подтверждённый способ предсказать результат.
           </p>
         </div>
       </div>
