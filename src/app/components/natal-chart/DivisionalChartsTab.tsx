@@ -74,26 +74,26 @@ export function DivisionalChartsTab({ natalChart }: DivisionalChartsTabProps) {
       <GlassCard>
         <div className="flex items-center gap-3 border-b border-indigo-100 pb-3">
           <div className="rounded-lg bg-indigo-100 p-2"><Layers className="h-6 w-6 text-indigo-700" /></div>
-          <div><h3 className="text-lg font-bold text-gray-900">Дополнительные карты — подробности по отдельным темам</h3><p className="text-sm text-gray-600">Основная карта рождения показывает общий рисунок; дополнительные карты уточняют отдельные жизненные области</p></div>
+          <div><h3 className="text-lg font-bold text-gray-900">Дополнительные карты — подробности по отдельным темам</h3><p className="text-sm text-gray-600">D1 — общая карта рождения. Дополнительные карты рассчитываются по отдельным правилам и помогают рассмотреть конкретную тему, но не заменяют основную карту.</p></div>
         </div>
         <div className="mt-4 rounded-lg border border-indigo-100 bg-indigo-50 p-4">
           <h4 className="font-semibold text-indigo-950">Основная карта рождения — D1 (Раши) <TermTooltip term="d1" /></h4>
-          <p className="mt-1 text-sm text-indigo-900">Асцендент: {report.baseChart.ascendantSign}, {report.baseChart.ascendantDegree.toFixed(2)}°.</p>
+          <p className="mt-1 text-sm text-indigo-900">Восходящий знак (Асцендент): {report.baseChart.ascendantSign}, {report.baseChart.ascendantDegree.toFixed(2)}°.</p>
           <p className="mt-2 text-sm text-gray-700">{report.baseChart.principle}</p>
           <div className="mt-3 grid gap-2 md:grid-cols-2">{report.baseChart.evidence.map((item) => <HouseEvidence key={item.house} item={item} />)}</div>
-          <p className="mt-3 text-xs text-gray-600">Это основная карта, с которой сравниваются все дополнительные карты.</p>
+          <p className="mt-3 text-xs text-gray-600">Все выводы по дополнительным картам нужно сверять с D1. Если время рождения указано неточно, положения в некоторых варгах могут измениться.</p>
         </div>
       </GlassCard>
 
       <GlassCard>
-        <h3 className="mb-4 text-lg font-semibold text-gray-900">Схемы всех 12 карт</h3>
+        <h3 className="mb-1 text-lg font-semibold text-gray-900">Схемы дополнительных карт</h3><p className="mb-4 text-sm text-gray-600">Обозначение D2, D9, D10 и т. п. — номер конкретного деления знаков. Это технические схемы расчёта, а не отдельные гороскопы.</p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {divisionalCharts.map((chart) => <div key={chart.division} className="rounded-lg border border-gray-200 bg-white p-3"><DivisionalChartWheel chart={chart} size={210} /><p className="mt-2 text-center text-xs text-gray-600">{chart.calculationRule === 'specific' ? 'Отдельное правило Парашари' : 'Общая формула'}</p></div>)}
         </div>
       </GlassCard>
 
       <GlassCard>
-        <div className="flex items-center gap-2"><BookOpen className="h-5 w-5 text-indigo-700" /><h3 className="text-lg font-semibold text-gray-900">Как дополнительные карты уточняют основную карту</h3></div>
+        <div className="flex items-center gap-2"><BookOpen className="h-5 w-5 text-indigo-700" /><h3 className="text-lg font-semibold text-gray-900">Как читать дополнительные карты</h3></div>
         <p className="mt-2 mb-4 text-sm text-gray-600">Откройте интересующую тему, чтобы увидеть, какие показатели повторяются в основной карте и дополнительной. Система не делит карты на «хорошие» и «плохие» — она показывает, где указания совпадают, а где различаются.</p>
         <div className="space-y-3">{report.analyses.map((analysis) => <VargaDetail key={analysis.division} analysis={analysis} />)}</div>
       </GlassCard>
