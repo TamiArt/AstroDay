@@ -16,7 +16,7 @@ export function NatalPrecisionSection({ natalChart }: { natalChart: NatalChart }
     <section className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4 space-y-4">
       <div>
         <h3 className="text-lg font-bold text-gray-900">Точность астрологических расчётов</h3>
-        <p className="text-sm text-gray-600">Численные показатели отделены от правил, зависящих от выбранной астрологической школы.</p>
+        <p className="text-sm text-gray-600">Здесь отдельно показаны математические координаты и астрологические правила. Координаты можно проверить расчётом; трактовка аспектов, достоинств и других показателей зависит от выбранной школы Джйотиш.</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {report.quality.map((item) => <div key={item.topic} className="rounded-lg border border-white bg-white/80 p-3">
@@ -26,21 +26,21 @@ export function NatalPrecisionSection({ natalChart }: { natalChart: NatalChart }
         </div>)}
       </div>
       <div className="rounded-lg bg-white p-3"><h4 className="text-sm font-semibold">Долготы и накшатры <TermTooltip term="nakshatra" /></h4>
-        <p className="mt-1 text-xs text-gray-600">Асцендент: tropical {report.ascendant.tropicalLongitude.toFixed(4)}° · sidereal {report.ascendant.siderealLongitude.toFixed(4)}° · накшатра №{report.ascendant.nakshatraIndex + 1}, пада {report.ascendant.pada}</p>
-        <div className="mt-2 overflow-x-auto"><table className="w-full text-xs text-left"><thead><tr className="border-b text-gray-500"><th className="py-1 pr-2">Точка</th><th className="py-1 pr-2">Tropical° <TermTooltip term="tropical" /></th><th className="py-1 pr-2">Sidereal° <TermTooltip term="sidereal" /></th><th className="py-1 pr-2">Накшатра / пада</th></tr></thead><tbody>{report.planets.map((p) => <tr key={p.planet} className="border-b border-gray-100"><td className="py-1 pr-2 font-medium">{p.planet}</td><td className="py-1 pr-2 tabular-nums">{p.tropicalLongitude.toFixed(3)}</td><td className="py-1 pr-2 tabular-nums">{p.siderealLongitude.toFixed(3)}</td><td className="py-1 pr-2">{p.nakshatraIndex + 1} / {p.pada}</td></tr>)}</tbody></table></div>
+        <p className="mt-1 text-xs text-gray-600">Асцендент: тропическая долгота {report.ascendant.tropicalLongitude.toFixed(4)}° · сидерическая долгота {report.ascendant.siderealLongitude.toFixed(4)}° · накшатра №{report.ascendant.nakshatraIndex + 1}, часть (пада) {report.ascendant.pada}</p>
+        <div className="mt-2 overflow-x-auto"><table className="w-full text-xs text-left"><thead><tr className="border-b text-gray-500"><th className="py-1 pr-2">Точка</th><th className="py-1 pr-2">Тропическая долгота <TermTooltip term="tropical" /></th><th className="py-1 pr-2">Сидерическая долгота <TermTooltip term="sidereal" /></th><th className="py-1 pr-2">Накшатра / пада</th></tr></thead><tbody>{report.planets.map((p) => <tr key={p.planet} className="border-b border-gray-100"><td className="py-1 pr-2 font-medium">{p.planet}</td><td className="py-1 pr-2 tabular-nums">{p.tropicalLongitude.toFixed(3)}</td><td className="py-1 pr-2 tabular-nums">{p.siderealLongitude.toFixed(3)}</td><td className="py-1 pr-2">{p.nakshatraIndex + 1} / {p.pada}</td></tr>)}</tbody></table></div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="rounded-lg bg-white p-3"><h4 className="text-sm font-semibold">Ретроградность <TermTooltip term="retrograde" /></h4>
           <p className="mt-1 text-sm text-gray-700">{retrograde.length ? retrograde.map((p) => p.planet).join(', ') : 'Ретроградных классических планет не обнаружено.'}</p>
           <p className="mt-1 text-xs text-gray-500">{report.planets.filter((p) => p.motion).map((p) => p.planet + ' ' + p.motion!.dailyMotion.toFixed(3) + '°/сутки').join(' · ')}</p>
         </div>
-        <div className="rounded-lg bg-white p-3"><h4 className="text-sm font-semibold">Сожжение (Surya Siddhanta)</h4>
+        <div className="rounded-lg bg-white p-3"><h4 className="text-sm font-semibold">Близость к Солнцу (традиционный критерий сожжения)</h4>
           <p className="mt-1 text-sm text-gray-700">{report.planets.filter((p) => p.combustion.threshold !== null).map((p) => p.planet + ': ' + p.combustion.separation!.toFixed(2) + '° / ' + p.combustion.threshold + '° — ' + (p.combustion.isCombust ? 'сожжена' : 'вне орбиса')).join('; ')}</p>
-          <p className="mt-1 text-xs text-gray-500">Другие школы могут использовать иные пороги: например, Mercury 12°/8° вместо 14°/12°, Saturn 16° вместо 15°.</p>
+          <p className="mt-1 text-xs text-gray-500">В разных школах используются разные пороговые расстояния. Поэтому отметка «сожжена» означает только соответствие выбранному в приложении правилу, а не физическое повреждение планеты или человека.</p>
         </div>
       </div>
       <div className="rounded-lg bg-white p-3"><h4 className="text-sm font-semibold">Соединения: знак и градусный орбис отдельно</h4>
-        <p className="mt-1 text-xs text-gray-600">Градусное соединение использует орбис 8°; один общий знак сам по себе не означает тесное соединение.</p>
+        <p className="mt-1 text-xs text-gray-600">Для этого расчёта соединением по градусам считается расстояние не более 8°. Орбис — допустимое отклонение от точного угла. Нахождение в одном знаке само по себе ещё не означает тесного соединения.</p>
         <div className="mt-2 flex flex-wrap gap-2">{report.conjunctions.filter((p) => p.sameSign || p.withinDegreeOrb).map((p) =>
           <span key={p.planet1 + '-' + p.planet2} className="rounded-md bg-slate-100 px-2 py-1 text-xs text-gray-700">
             {p.planet1} + {p.planet2}: {p.angularSeparation.toFixed(2)}° · {p.classification}
