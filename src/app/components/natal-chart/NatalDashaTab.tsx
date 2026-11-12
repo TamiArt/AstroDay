@@ -70,10 +70,10 @@ function PlanetProfile({ analysis }: { analysis: DashaLayerAnalysis }) {
         <p className="mt-1 text-sm leading-relaxed text-gray-800">В традиционной астрологии период {profile.planetName} связывают с темами: {PERIOD_PLANET_MEANINGS[profile.planetName] ?? 'личные задачи и качества этой планеты'}. В вашей карте эта планета находится в {profile.house ? `${profile.house}-м доме — сфере «${PERIOD_HOUSE_MEANINGS[profile.house] ?? 'жизненные задачи'}»` : 'доме, который не удалось определить'}{profile.ruledHouses.length ? ` и управляет домами ${profile.ruledHouses.map((house) => `${house}-м (${PERIOD_HOUSE_MEANINGS[house]})`).join(', ')}` : ''}. Поэтому её период рассматривают через эти темы. Это не означает, что событие обязательно произойдёт: период показывает символический фокус, а не готовый сценарий.</p>
       </section>
 
-      <section>
-        <h5 className="mb-2 text-sm font-semibold text-gray-900">Почему расчёт связывает планету с этими темами</h5>
-        <ul className="space-y-2">{analysis.whyHighlighted.map((reason, index) => <li key={index} className="flex gap-2 text-sm leading-relaxed text-gray-700"><span className="font-bold text-indigo-600">•</span><span>{reason}</span></li>)}</ul>
-      </section>
+      <details className="rounded-lg border border-gray-200 p-3">
+        <summary className="cursor-pointer text-sm font-semibold text-gray-800">Почему расчёт связывает планету с этими темами</summary>
+        <ul className="mt-2 space-y-2">{analysis.whyHighlighted.map((reason, index) => <li key={index} className="flex gap-2 text-xs leading-relaxed text-gray-600"><span className="font-bold text-indigo-600">•</span><span>{reason}</span></li>)}</ul>
+      </details>
 
       <section className="grid gap-3 md:grid-cols-2">
         <div className="rounded-lg border border-gray-200 p-3">
