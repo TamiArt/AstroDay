@@ -1,5 +1,6 @@
 // [КОМПОНЕНТ] Традиционные временные ориентиры
 import { GlassCard } from '../common/GlassCard';
+import { TermTooltip } from '../common/TermTooltip';
 
 interface FavorableWindowsProps {
   planetaryHour: string;
@@ -13,7 +14,7 @@ export function FavorableWindows({ planetaryHour, windows }: FavorableWindowsPro
 
   return (
     <GlassCard>
-      <h3 className="mb-4">Планетарные часы и традиционные временные ориентиры</h3>
+      <h3 className="mb-4">Планетарные часы <TermTooltip term="planetaryHour" /> и традиционные временные ориентиры</h3>
 
       <div className="space-y-3">
         {visibleWindows.map((window, index) => (
