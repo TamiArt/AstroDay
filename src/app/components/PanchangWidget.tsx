@@ -77,7 +77,7 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
       }}
     >
       <div className="mb-6">
-        <h2 className="mb-2">Панчанг на сегодня</h2>
+        <h2 className="mb-2">Панчанг <TermTooltip term="panchang" /> на сегодня</h2>
         <p className="opacity-70">
           Пять элементов индийского календаря. В Джйотиш их используют для традиционного символического описания дня.
         </p>
