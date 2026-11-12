@@ -128,13 +128,13 @@ export function DayOverview({
                   <div
                     className="h-full rounded-full transition-all"
                     style={{
-                      width: `${area.score}/100%`,
+                      width: `${area.score}%`,
                       background: area.color
                     }}
                   />
                 </div>
                 <span className="text-sm font-bold" style={{ color: area.color }}>
-                  {area.score}
+                  {area.score}/100
                 </span>
               </div>
             </div>
