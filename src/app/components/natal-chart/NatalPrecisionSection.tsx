@@ -1,5 +1,6 @@
 import { buildNatalPrecisionReport } from '../../utils/astrologyPrecision';
 import type { NatalChart } from '../../utils/astrology';
+import { TermTooltip } from '../common/TermTooltip';
 
 const LABELS = {
   'validated-reference': 'Сверено с эталонами',
@@ -24,12 +25,12 @@ export function NatalPrecisionSection({ natalChart }: { natalChart: NatalChart }
           <p className="mt-1 text-xs leading-relaxed text-gray-600">{item.explanation}</p>
         </div>)}
       </div>
-      <div className="rounded-lg bg-white p-3"><h4 className="text-sm font-semibold">Долготы и накшатры</h4>
+      <div className="rounded-lg bg-white p-3"><h4 className="text-sm font-semibold">Долготы и накшатры <TermTooltip term="nakshatra" /></h4>
         <p className="mt-1 text-xs text-gray-600">Асцендент: tropical {report.ascendant.tropicalLongitude.toFixed(4)}° · sidereal {report.ascendant.siderealLongitude.toFixed(4)}° · накшатра №{report.ascendant.nakshatraIndex + 1}, пада {report.ascendant.pada}</p>
-        <div className="mt-2 overflow-x-auto"><table className="w-full text-xs text-left"><thead><tr className="border-b text-gray-500"><th className="py-1 pr-2">Точка</th><th className="py-1 pr-2">Tropical°</th><th className="py-1 pr-2">Sidereal°</th><th className="py-1 pr-2">Накшатра / пада</th></tr></thead><tbody>{report.planets.map((p) => <tr key={p.planet} className="border-b border-gray-100"><td className="py-1 pr-2 font-medium">{p.planet}</td><td className="py-1 pr-2 tabular-nums">{p.tropicalLongitude.toFixed(3)}</td><td className="py-1 pr-2 tabular-nums">{p.siderealLongitude.toFixed(3)}</td><td className="py-1 pr-2">{p.nakshatraIndex + 1} / {p.pada}</td></tr>)}</tbody></table></div>
+        <div className="mt-2 overflow-x-auto"><table className="w-full text-xs text-left"><thead><tr className="border-b text-gray-500"><th className="py-1 pr-2">Точка</th><th className="py-1 pr-2">Tropical° <TermTooltip term="tropical" /></th><th className="py-1 pr-2">Sidereal° <TermTooltip term="sidereal" /></th><th className="py-1 pr-2">Накшатра / пада</th></tr></thead><tbody>{report.planets.map((p) => <tr key={p.planet} className="border-b border-gray-100"><td className="py-1 pr-2 font-medium">{p.planet}</td><td className="py-1 pr-2 tabular-nums">{p.tropicalLongitude.toFixed(3)}</td><td className="py-1 pr-2 tabular-nums">{p.siderealLongitude.toFixed(3)}</td><td className="py-1 pr-2">{p.nakshatraIndex + 1} / {p.pada}</td></tr>)}</tbody></table></div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div className="rounded-lg bg-white p-3"><h4 className="text-sm font-semibold">Ретроградность</h4>
+        <div className="rounded-lg bg-white p-3"><h4 className="text-sm font-semibold">Ретроградность <TermTooltip term="retrograde" /></h4>
           <p className="mt-1 text-sm text-gray-700">{retrograde.length ? retrograde.map((p) => p.planet).join(', ') : 'Ретроградных классических планет не обнаружено.'}</p>
           <p className="mt-1 text-xs text-gray-500">{report.planets.filter((p) => p.motion).map((p) => p.planet + ' ' + p.motion!.dailyMotion.toFixed(3) + '°/сутки').join(' · ')}</p>
         </div>
@@ -45,7 +46,7 @@ export function NatalPrecisionSection({ natalChart }: { natalChart: NatalChart }
             {p.planet1} + {p.planet2}: {p.angularSeparation.toFixed(2)}° · {p.classification}
           </span>)}</div>
       </div>
-      <div className="rounded-lg bg-white p-3"><h4 className="text-sm font-semibold">Угловые аспекты и орбисы</h4>
+      <div className="rounded-lg bg-white p-3"><h4 className="text-sm font-semibold">Угловые аспекты и орбисы <TermTooltip term="orb" /></h4>
         {report.aspects.length ? <ul className="mt-2 space-y-1 text-xs text-gray-700">{report.aspects.slice(0, 10).map((a) =>
           <li key={a.planet1 + '-' + a.planet2 + '-' + a.aspect}>{a.planet1} — {a.planet2}: {a.aspect}, расстояние {a.separation.toFixed(2)}°, орбис {a.orb.toFixed(2)}° / {a.maxOrb}°; {a.phase === 'unknown' ? 'фаза неизвестна' : a.phase === 'applying' ? 'сходящийся' : 'расходящийся'}</li>)}</ul>
           : <p className="mt-1 text-xs text-gray-600">Аспекты в пределах заданных орбисов не обнаружены.</p>}
