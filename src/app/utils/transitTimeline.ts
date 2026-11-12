@@ -151,27 +151,55 @@ function dashaThemeHouses(theme: string): number[] {
   return [];
 }
 function buildDashaActivations(chart: NatalChart, start: Date, end: Date, aspectWindows: TransitAspectWindow[]): DashaActivation[] {
-  const report = analyzeVimshottariDasha(chart, start);
-  const windows = [
-    ...report.mahadashaAntardashas.map((item) => ({
-      layer: 'Антардаша' as const, planet: item.profile.planetName, start: item.startDate, end: item.endDate,
+  const periods: Array<{
+    layer: 'Махадаша' | 'Антардаша' | 'Пратьянтардаша';
+    planet: string;
+    start: Date;
+    end: Date;
+    themes: string[];
+    evidence: string[];
+  }> = [];
+  const addPeriod = (
+    layer: 'Махадаша' | 'Антардаша' | 'Пратьянтардаша',
+    item: { profile: { planetName: string; lifeAreaLinks: Array<{ label: string }> }; startDate: Date; endDate: Date; whyHighlighted: string[] },
+  ) => {
+    periods.push({
+      layer, planet: item.profile.planetName, start: item.startDate, end: item.endDate,
       themes: item.profile.lifeAreaLinks.map((link) => link.label), evidence: item.whyHighlighted,
-    })),
-    ...report.antardashaPratyantardashas.map((item) => ({
-      layer: 'Пратьянтардаша' as const, planet: item.profile.planetName, start: item.startDate, end: item.endDate,
-      themes: item.profile.lifeAreaLinks.map((link) => link.label), evidence: item.whyHighlighted,
-    })),
-    {
-      layer: 'Махадаша' as const,
-      planet: report.current.mahadasha.profile.planetName,
-      start: report.current.mahadasha.startDate,
-      end: report.current.mahadasha.endDate,
-      themes: report.current.mahadasha.profile.lifeAreaLinks.map((link) => link.label),
-      evidence: report.current.mahadasha.whyHighlighted,
-    },
-  ];
+    });
+  };
+
+  // Walk each Mahadasha intersecting the requested range. For every Antardasha
+  // inside it, request its own Pratyantardasha tree so future subperiods are not
+  // silently omitted from the calendar.
+  let cursor = new Date(start);
+  for (let guard = 0; guard < 4 && cursor < end; guard += 1) {
+    const report = analyzeVimshottariDasha(chart, cursor);
+    addPeriod('Махадаша', report.current.mahadasha);
+    for (const antar of report.mahadashaAntardashas) {
+      addPeriod('Антардаша', antar);
+      const overlapStart = Math.max(start.getTime(), antar.startDate.getTime());
+      const overlapEnd = Math.min(end.getTime(), antar.endDate.getTime());
+      if (overlapEnd <= overlapStart) continue;
+      const queryTime = Math.max(overlapStart, antar.startDate.getTime() + 1);
+      if (queryTime >= antar.endDate.getTime()) continue;
+      const antarReport = analyzeVimshottariDasha(chart, new Date(queryTime));
+      for (const pratyantar of antarReport.antardashaPratyantardashas) {
+        addPeriod('Пратьянтардаша', pratyantar);
+      }
+    }
+    const nextMahadasha = report.current.mahadasha.endDate.getTime() + 1;
+    if (nextMahadasha >= end.getTime() || nextMahadasha <= cursor.getTime()) break;
+    cursor = new Date(nextMahadasha);
+  }
+
+  const uniquePeriods = new Map<string, typeof periods[number]>();
+  for (const item of periods) {
+    const key = item.layer + ':' + item.planet + ':' + item.start.toISOString();
+    if (!uniquePeriods.has(key)) uniquePeriods.set(key, item);
+  }
   const activations: DashaActivation[] = [];
-  for (const item of windows) {
+  for (const item of uniquePeriods.values()) {
     const startsAt = new Date(Math.max(start.getTime(), item.start.getTime()));
     const endsAt = new Date(Math.min(end.getTime(), item.end.getTime()));
     if (endsAt <= startsAt || item.themes.length === 0) continue;
