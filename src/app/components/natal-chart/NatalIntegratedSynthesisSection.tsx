@@ -91,6 +91,19 @@ function explainEvidence(item: IntegratedEvidence, area: IntegratedAreaSynthesis
   return item.statement;
 }
 
+function evidenceTitle(item: IntegratedEvidence): string {
+  if (item.source !== 'transit') return item.title;
+  const match = item.factorId.match(/transit:([A-Z][a-z]+):([A-Z][a-z]+):([^:]+):/);
+  if (!match) return item.title;
+  return `Транзитное ${PLANETS[match[1]] ?? match[1]} к натальной планете ${PLANETS[match[2]] ?? match[2]} — ${match[3]}`;
+}
+function sourceFamilyName(family: string): string {
+  return family === 'natal-structure' ? 'натальная карта'
+    : family === 'varga-projection' ? 'дополнительные карты'
+      : family === 'timing-dasha' ? 'периоды Даши'
+        : family === 'timing-transit' ? 'транзиты' : family;
+}
+
 function EvidenceCard({ item, area }: { item: IntegratedEvidence; area: IntegratedAreaSynthesis }) {
   const [expanded, setExpanded] = useState(false);
   const sourceName = item.source === 'house' ? 'Дом и его управитель'
@@ -102,7 +115,7 @@ function EvidenceCard({ item, area }: { item: IntegratedEvidence; area: Integrat
   return (
     <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
       <p className="text-xs font-semibold text-indigo-700">{sourceName}</p>
-      <p className="mt-1 text-sm font-semibold text-gray-900">{item.title}</p>
+      <p className="mt-1 text-sm font-semibold text-gray-900">{evidenceTitle(item)}</p>
       <p className="mt-1 text-sm leading-relaxed text-gray-700">{explainEvidence(item, area)}</p>
       {item.references.length > 0 && <button type="button" onClick={() => setExpanded((value) => !value)} className="mt-2 text-xs font-medium text-indigo-700">{expanded ? 'Скрыть технические основания' : 'Почему сделан такой вывод?'}</button>}
       {expanded && <ul className="mt-2 list-disc space-y-1 pl-4">{item.references.filter(Boolean).slice(0, 6).map((ref, index) => <li key={index} className="text-xs text-gray-500">{ref}</li>)}</ul>}
@@ -152,7 +165,7 @@ export function NatalIntegratedSynthesisSection({ natalChart }: Props) {
           <p className="mt-2 text-xs text-gray-600">В расчёт включены {9 - report.dataQuality.missingPlanets.length} из 9 планет и {12 - report.dataQuality.missingHouses.length} из 12 домов.</p>
         </div>
         {prominentAreas.length > 1 && <section className="space-y-2"><h4 className="text-sm font-semibold text-gray-800">Другие заметные темы</h4><div className="grid gap-2 md:grid-cols-2">{prominentAreas.slice(1).map((area) => <div key={area.id} className="rounded-lg border border-gray-200 p-3"><p className="text-sm font-semibold text-gray-900">{area.title}</p><p className="mt-1 text-sm text-gray-600">{AREA_MEANINGS[area.id]}</p></div>)}</div></section>}
-        {report.repeatedThemes.length > 0 && <section className="space-y-2"><h4 className="text-sm font-semibold text-gray-800">Темы, которые подтверждаются разными частями анализа</h4>{report.repeatedThemes.map((item) => <p key={item.area} className="rounded-lg border border-indigo-100 p-3 text-sm text-gray-700"><strong>{item.title}:</strong> эта тема встречается и в натальных показателях, и в дополнительных слоях анализа. Это согласование трактовок, а не гарантия события.</p>)}</section>}
+        {report.repeatedThemes.length > 0 && <section className="space-y-2"><h4 className="text-sm font-semibold text-gray-800">Темы, которые подтверждаются разными частями анализа</h4>{report.repeatedThemes.map((item) => <p key={item.area} className="rounded-lg border border-indigo-100 p-3 text-sm text-gray-700"><strong>{item.title}:</strong> эта тема отмечена в нескольких слоях анализа: {item.sourceFamilies.map(sourceFamilyName).join(', ')}. Это согласование символических указаний, а не гарантия события.</p>)}</section>}
         {report.contradictions.length > 0 && <section className="space-y-2"><h4 className="flex items-center gap-2 text-sm font-semibold text-amber-800"><AlertTriangle className="h-4 w-4" />Где показатели неоднозначны</h4>{report.contradictions.map((item, index) => <div key={item.area + index} className="rounded-lg bg-amber-50 p-3"><p className="text-sm font-medium text-amber-900">{item.title}</p><p className="mt-1 text-sm text-amber-800">В этой сфере есть как поддерживающие, так и требующие внимания показатели. Поэтому её нельзя описать только как лёгкую или только как сложную.</p></div>)}</section>}
         <section className="space-y-2"><h4 className="text-sm font-semibold text-gray-800">Объяснение по всем жизненным сферам</h4><div className="grid gap-3 lg:grid-cols-2">{report.areas.map((area) => <AreaCard key={area.id} area={area} />)}</div></section>
         <details className="rounded-xl border border-gray-200 p-4">
