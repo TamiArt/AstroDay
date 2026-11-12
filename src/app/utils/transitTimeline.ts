@@ -133,6 +133,18 @@ function formatPlanet(planet: string): string {
   return PLANET_RU[planet as TimelinePlanet] ?? planet;
 }
 
+function dashaThemeHouses(theme: string): number[] {
+  const value = theme.toLocaleLowerCase('ru-RU');
+  if (/карьер|работ|професс/.test(value)) return [2, 6, 10, 11];
+  if (/деньг|финанс|ресурс|доход/.test(value)) return [2, 5, 9, 11];
+  if (/отнош|партнёр|партнер|брак/.test(value)) return [5, 7, 8, 12];
+  if (/дет|родитель/.test(value)) return [5, 9];
+  if (/обуч|знан|образован/.test(value)) return [4, 5, 9];
+  if (/твор|искус|созидан/.test(value)) return [3, 5, 9, 10];
+  if (/дом|семь|недвиж/.test(value)) return [2, 4, 11];
+  if (/развит|духов|мировозз|личност/.test(value)) return [1, 5, 8, 9, 12];
+  return [];
+}
 function buildDashaActivations(chart: NatalChart, start: Date, end: Date, aspectWindows: TransitAspectWindow[]): DashaActivation[] {
   const report = analyzeVimshottariDasha(chart, start);
   const windows = [
@@ -159,9 +171,14 @@ function buildDashaActivations(chart: NatalChart, start: Date, end: Date, aspect
     const endsAt = new Date(Math.min(end.getTime(), item.end.getTime()));
     if (endsAt <= startsAt || item.themes.length === 0) continue;
     const matched = aspectWindows.filter((aspect) => {
-      const overlap = aspect.exactAt >= startsAt && aspect.exactAt <= endsAt;
-      return overlap && item.themes.some((theme) => theme.toLowerCase().includes('карьер') && /карьер|работ|професс/i.test(theme) ||
-        theme.toLowerCase().includes('деньг') && /деньг|финанс|ресурс/i.test(theme));
+      if (aspect.exactAt < startsAt || aspect.exactAt > endsAt) return false;
+      const natalPlanetKey = Object.keys(chart.planets).find((key) => PLANET_RU[key as TimelinePlanet] === aspect.natalPlanet) as TimelinePlanet | undefined;
+      if (!natalPlanetKey) return false;
+      const natalPosition = chart.planets[natalPlanetKey];
+      const natalHouse = chart.houses?.find((house) => house.sign === natalPosition.sign)?.house ?? 0;
+      const ruledHouses = chart.houses?.filter((house) => house.lord === natalPlanetKey).map((house) => house.house) ?? [];
+      const relatedHouses = new Set([natalHouse, ...ruledHouses]);
+      return item.themes.some((theme) => dashaThemeHouses(theme).some((house) => relatedHouses.has(house)));
     });
     activations.push({
       id: item.layer + ':' + item.planet + ':' + startsAt.toISOString(),
@@ -220,7 +237,8 @@ export function buildTransitTimeline(
         }
       }
       if (previous.houses[planet] !== current.houses[planet]) {
-        const signBoundary = ((before.sign + 1) % 12) * 30;
+        const movement = signedDelta(after.siderealLon - before.siderealLon);
+        const signBoundary = movement >= 0 ? ((before.sign + 1) % 12) * 30 : before.sign * 30;
         const ingressAt = findRoot(previous.date, current.date, (date) => {
           const position = snapshot(natalChart, date).positions[planet];
           return signedDelta(position.siderealLon - signBoundary);
@@ -265,29 +283,36 @@ export function buildTransitTimeline(
                 evidence: [`${formatPlanet(transitPlanet)} достигает точного аспекта «${definition.label}» к натальному ${formatPlanet(natalPlanet)} (угол ${definition.angle}°).`, `Расчётная скорость транзитной планеты: ${motion.dailyMotion.toFixed(3)}°/сутки (${motion.state}).`],
               });
             }
-            // A window is emitted once per exact crossing; its edges are the first/last
-            // sampled moments inside the configured orb and are explicitly approximate.
-            if (beforeOrb > definition.orb && afterOrb <= definition.orb) {
-              const startAt = findRoot(previous.date, current.date, (date) =>
-                aspectOrb(snapshot(natalChart, date).positions[transitPlanet].siderealLon, natalLongitude, definition.angle) - definition.orb);
-              const endAt = (() => {
-                const horizon = new Date(Math.min(endDate.getTime(), exactAt.getTime() + 180 * 86400000));
-                return horizon;
-              })();
-              const windowId = `window:${transitPlanet}:${natalPlanet}:${definition.angle}:${exactAt.toISOString()}`;
-              if (!aspectWindows.some((item) => item.id === windowId)) aspectWindows.push({
-                id: windowId, transitPlanet: formatPlanet(transitPlanet), natalPlanet: formatPlanet(natalPlanet),
-                aspect: definition.label, startsAt: startAt, exactAt, endsAt: endAt,
-                maxOrb: definition.orb,
-                evidence: [`Период включён при орбисе не более ${definition.orb}°; точный момент уточнён бисекцией.`, 'Окончание окна ограничено горизонтом поиска, если выход из орбиса не попал в выбранный интервал.'],
-              });
-            }
+
           }
         }
       }
     }
   }
 
+  // Derive complete orb windows around each exact crossing by scanning both directions.
+  for (const event of events.filter((item) => item.kind === 'exact-aspect')) {
+    const transitPlanet = CLASSICAL.find((planet) => PLANET_RU[planet] === event.planet);
+    const natalPlanet = CLASSICAL.find((planet) => PLANET_RU[planet] === event.natalPlanet);
+    const definition = ASPECTS.find((item) => item.label === event.aspect);
+    if (!transitPlanet || !natalPlanet || !definition) continue;
+    const natalLongitude = natalChart.planets[natalPlanet].siderealLon;
+    const orbAt = (date: Date) => aspectOrb(snapshot(natalChart, date).positions[transitPlanet].siderealLon, natalLongitude, definition.angle);
+    let index = samples.findIndex((item, i) => i > 0 && samples[i - 1].date <= event.exactAt && item.date >= event.exactAt);
+    if (index < 1) index = Math.max(1, samples.findIndex((item) => item.date >= event.exactAt));
+    let leftIndex = index;
+    while (leftIndex > 0 && orbAt(samples[leftIndex - 1].date) <= definition.orb) leftIndex -= 1;
+    let rightIndex = index;
+    while (rightIndex < samples.length - 1 && orbAt(samples[rightIndex + 1].date) <= definition.orb) rightIndex += 1;
+    const startsAt = leftIndex === 0 ? new Date(startDate) : findRoot(samples[leftIndex - 1].date, samples[leftIndex].date, (date) => orbAt(date) - definition.orb);
+    const endsAt = rightIndex === samples.length - 1 ? new Date(endDate) : findRoot(samples[rightIndex].date, samples[rightIndex + 1].date, (date) => orbAt(date) - definition.orb);
+    const id = 'window:' + event.id;
+    if (!aspectWindows.some((item) => item.id === id)) aspectWindows.push({
+      id, transitPlanet: event.planet, natalPlanet: event.natalPlanet!, aspect: event.aspect!,
+      startsAt, exactAt: event.exactAt, endsAt, maxOrb: definition.orb,
+      evidence: ['Период действия: орбис не превышает ' + definition.orb + '°; точный момент уточнён бисекцией.', 'Если граница выходит за выбранный диапазон, окно обрезается его началом или концом.'],
+    });
+  }
   const sortedEvents = events.sort((a, b) => a.exactAt.getTime() - b.exactAt.getTime());
   const dashaActivations = buildDashaActivations(natalChart, startDate, endDate, aspectWindows);
   return {
