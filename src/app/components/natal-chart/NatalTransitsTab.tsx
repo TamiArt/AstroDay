@@ -3,6 +3,7 @@ import { ChevronDown, Orbit, ShieldAlert } from 'lucide-react';
 import type { NatalChart as NatalChartType } from '../../utils/astrology';
 import { analyzeTransits, type TransitAnalysisReport, type TransitLifeArea, type TransitNatalAspect, type TransitHouseLordHit, type TransitHousePosition } from '../../utils/transitAnalysis';
 import { GlassCard } from '../common/GlassCard';
+import { TermTooltip } from '../common/TermTooltip';
 
 interface NatalTransitsTabProps { natalChart: NatalChartType; }
 const formatDate = (date: Date) => date.toLocaleString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -98,7 +99,7 @@ function TransitReport({ report }: { report: TransitAnalysisReport }) {
   const visibleAreas = showAllAreas ? report.lifeAreas : report.lifeAreas.slice(0, 6);
   return <div className="space-y-6">
     <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-4">
-      <h3 className="font-semibold text-gray-900">Как читать текущие периоды</h3>
+      <h3 className="font-semibold text-gray-900">Как читать текущие периоды <TermTooltip term="dasha" /></h3>
       <p className="mt-1 text-sm text-gray-700"><strong>Махадаша</strong> — большой жизненный период, задающий общий фон. <strong>Антардаша</strong> — более короткий этап внутри него. <strong>Пратьянтардаша</strong> — ещё более короткий подпериод, который уточняет текущий отрезок времени. Все три периода действуют одновременно, но не означают три отдельных события.</p>
     </div>
     <div className="grid gap-3 md:grid-cols-3">
@@ -137,7 +138,7 @@ export function NatalTransitsTab({ natalChart }: NatalTransitsTabProps) {
     catch (error) { return { data: null, error: error instanceof Error ? error.message : 'Не удалось рассчитать транзиты' }; }
   }, [natalChart]);
   return <div className="space-y-5">
-    <GlassCard><div className="flex items-start gap-3"><div className="rounded-xl bg-indigo-100 p-3"><Orbit className="h-6 w-6 text-indigo-700"/></div><div><h2 className="text-xl font-bold text-gray-900">Транзиты и натальная карта</h2><p className="mt-1 text-sm text-gray-600">Положение планет на {formatDate(report.data?.moment ?? new Date())}. Здесь показано, какие темы натальной карты символически затрагиваются движением планет на выбранный момент.</p></div></div></GlassCard>
+    <GlassCard><div className="flex items-start gap-3"><div className="rounded-xl bg-indigo-100 p-3"><Orbit className="h-6 w-6 text-indigo-700"/></div><div><h2 className="flex items-center gap-2 text-xl font-bold text-gray-900">Транзиты и натальная карта <TermTooltip term="transit" /></h2><p className="mt-1 text-sm text-gray-600">Положение планет на {formatDate(report.data?.moment ?? new Date())}. Здесь показано, какие темы натальной карты символически затрагиваются движением планет на выбранный момент.</p></div></div></GlassCard>
     {report.error ? <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">{report.error}</div> : report.data && <TransitReport report={report.data}/>}
   </div>;
 }
