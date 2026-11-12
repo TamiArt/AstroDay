@@ -57,13 +57,14 @@ assert.deepEqual(comparison.lessHighlighted, ['Карьера', 'Финансы'
 
 const periodComparison = compareSmartForecastPeriods(
   [today, quiet],
-  [fixture({ date: '2026-12-01', energyLevel: 70, bestAreas: ['Творчество', 'Обучение'] })],
+  [fixture({ date: '2026-12-01', energyLevel: 70, bestAreas: ['Творчество', 'Обучение'], topRecommendation: 'Выделите время на творчество и обучение.', reasoning: [] })],
   'ноябрь 2026', 'декабрь 2026',
 );
 assert.equal(periodComparison.currentDays, 2);
 assert.equal(periodComparison.targetDays, 1);
 assert.equal(periodComparison.energyDelta, 13);
 assert.ok(periodComparison.targetTopAreas.includes('Творчество'));
+assert.ok(periodComparison.newlyHighlighted.includes('Творчество'));
 assert.ok(periodComparison.caveat.includes('неполное покрытие'));
 
 const summary = summarizeSmartMonth([today, quiet], 30);
