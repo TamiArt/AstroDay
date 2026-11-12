@@ -238,7 +238,7 @@ export function buildConclusionUnifiedAdvice(
     evidence,
     combinedMeaning: conclusion.statement,
     tensions: relevantTensions,
-    practicalStep: action.step,
+    practicalStep: relatedHouses.length ? action.step : action.step + ' До начала зафиксируйте проверяемый результат, по которому оцените выполненный шаг.',
     successCriteria: action.criteria,
     dataStatus: evidence.length ? 'complete' : 'partial',
     limitation: evidence.length ? undefined : 'У вывода нет перечисленных доказательств; персональная рекомендация ограничена.',

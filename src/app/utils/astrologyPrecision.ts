@@ -143,7 +143,7 @@ export function buildNatalPrecisionReport(
       zodiac: 'Sidereal zodiac.', ayanamsha: 'Mean Lahiri; nutation is not included.',
       nakshatra: '27 equal sectors (13°20′); pada is one of 108 equal sectors (3°20′).',
       ascendant: 'Intersection of the ecliptic and eastern horizon using local sidereal time and mean obliquity.',
-      combustion: 'Surya Siddhanta working orbs: Mercury 14°/12° retrograde, Venus 10°/8°, Mars 17°, Jupiter 11°, Saturn 15°; school-dependent.',
+      combustion: 'Surya Siddhanta working orbs: Mercury 14°/12° retrograde, Venus 10°/8°, Mars 17°, Jupiter 11°, Saturn 15°. Alternative modern tables use Mercury 12°/8° and sometimes Saturn 16°; school-dependent.',
       aspects: 'Ecliptic angular aspects: 0°/60°/90°/120°/180°; defaults 10°/6°/8°/8°/10°; orbs are configurable.',
       conjunction: 'Same-sign conjunction and degree conjunction within ' + conjunctionOrb + '° are independent flags.',
     },
