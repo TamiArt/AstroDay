@@ -1,20 +1,25 @@
 // [КОМПОНЕНТ] Модальное окно с детальным прогнозом для выбранного дня
 import { X, AlertCircle, Check, Clock, Sparkles } from 'lucide-react';
 import { DayForecast } from '../utils/indexedDB';
+import { buildSmartDayPlan, compareSmartPeriods } from '../utils/smartCalendar';
 import { UserProfile } from '../utils/storage';
 
 interface DayForecastModalProps {
   date: Date;
   forecast: DayForecast | null;
   profile: UserProfile;
+  comparisonForecast?: DayForecast | null;
   onClose: () => void;
 }
 
-export function DayForecastModal({ date, forecast, profile, onClose }: DayForecastModalProps) {
+export function DayForecastModal({ date, forecast, profile, comparisonForecast, onClose }: DayForecastModalProps) {
   if (!forecast) return null;
 
   const isToday = date.toDateString() === new Date().toDateString();
   const isPast = date < new Date();
+  const smartPlan = buildSmartDayPlan(forecast);
+  const comparison = comparisonForecast ? compareSmartPeriods(comparisonForecast, forecast) : null;
+  const factorLabels: Record<string, string> = { natal: 'Натальная карта', varga: 'Дробная карта', dasha: 'Даша', transit: 'Транзиты', panchang: 'Панчанга', energy: 'Ресурс дня', timing: 'Планетарный час', 'data-quality': 'Качество данных' };
 
   return (
     <div
@@ -140,6 +145,25 @@ export function DayForecastModal({ date, forecast, profile, onClose }: DayForeca
             </ul>
           </div>
         )}
+
+        <div className="rounded-2xl border border-border p-5 mb-6 space-y-3">
+          <div className="flex items-center justify-between gap-2"><p className="font-semibold">Почему эта рекомендация персональная</p><span className="text-xs rounded-full bg-secondary px-2 py-1">Уверенность данных: {smartPlan.confidence === 'high' ? 'выше' : smartPlan.confidence === 'medium' ? 'средняя' : 'ограниченная'}</span></div>
+          <p className="text-xs opacity-60">Каждый фактор показывает, из какого расчётного слоя взято основание. Это символические показатели, а не гарантия события.</p>
+          <div className="space-y-2">{smartPlan.factors.map((factor, index) => <details key={factor.source + ':' + index} className="rounded-xl bg-secondary/60 p-3"><summary className="cursor-pointer text-sm font-medium">{factor.title}<span className="ml-2 text-xs opacity-50">· {factorLabels[factor.source]}</span></summary><p className="mt-2 text-sm opacity-75">{factor.explanation}</p></details>)}</div>
+          {smartPlan.factors.length === 0 && <p className="text-sm opacity-60">Подробные основания для этого дня не сохранены в кэше.</p>}
+        </div>
+
+        {smartPlan.conflicts.length > 0 && <div className="rounded-2xl border border-amber-400/50 bg-amber-500/10 p-5 mb-6 space-y-3">
+          <p className="font-semibold">Проверка противоречий</p>
+          {smartPlan.conflicts.map((conflict, index) => <div key={conflict.title + index}><p className="text-sm font-medium">{conflict.title}</p><p className="mt-1 text-sm opacity-80">{conflict.explanation}</p><p className="mt-2 text-sm"><strong>Как согласовать:</strong> {conflict.resolution}</p></div>)}
+        </div>}
+
+        {comparison && <div className="rounded-2xl border border-border p-5 mb-6 space-y-3">
+          <div><p className="font-semibold">Сравнение с текущим днём</p><p className="text-xs opacity-60">Сегодня · {comparison.currentDate} → выбранная дата · {comparison.targetDate}</p></div>
+          <div className="grid grid-cols-2 gap-3"><div className="rounded-xl bg-secondary p-3"><p className="text-xs opacity-60">Сегодня</p><p className="text-2xl font-semibold">{comparison.currentEnergy}/100</p></div><div className="rounded-xl bg-secondary p-3"><p className="text-xs opacity-60">Выбранная дата</p><p className="text-2xl font-semibold">{comparison.targetEnergy}/100</p><p className="text-xs">{comparison.energyDelta > 0 ? '+' : ''}{comparison.energyDelta} пунктов</p></div></div>
+          <ul className="list-disc pl-4 space-y-1">{comparison.changes.map((item) => <li key={item} className="text-sm opacity-80">{item}</li>)}</ul>
+          <p className="text-xs opacity-50">{comparison.caveat}</p>
+        </div>}
 
         {/* Предупреждение */}
         {forecast.warning && (

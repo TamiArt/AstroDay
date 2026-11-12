@@ -1,5 +1,5 @@
 // [КОМПОНЕНТ] Календарь астрологических прогнозов в стиле "прогноз погоды"
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Loader2, WifiOff, Calendar as CalendarIcon } from 'lucide-react';
 import { UserProfile } from '../utils/storage';
 import { DayForecast, getForecastsInRange, isOnline } from '../utils/indexedDB';
@@ -7,6 +7,7 @@ import { FORECAST_CALC_VERSION, getForecastProfileKey, getOrCalculateForecast } 
 import { formatDateKey } from '../utils/dateUtils';
 import { GlassCard } from './common/GlassCard';
 import { DayForecastModal } from './DayForecastModal';
+import { SMART_CALENDAR_AREAS, compareSmartForecastPeriods, getForecastAreaIds, summarizeSmartMonth, type SmartCalendarAreaId } from '../utils/smartCalendar';
 
 interface ForecastCalendarProps {
   profile: UserProfile;
@@ -15,10 +16,13 @@ interface ForecastCalendarProps {
 export function ForecastCalendar({ profile }: ForecastCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [forecasts, setForecasts] = useState<Map<string, DayForecast>>(new Map());
+  const [currentPeriodForecasts, setCurrentPeriodForecasts] = useState<DayForecast[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [online, setOnline] = useState(isOnline());
+  const [areaFilter, setAreaFilter] = useState<SmartCalendarAreaId | 'all'>('all');
+  const [comparisonForecast, setComparisonForecast] = useState<DayForecast | null>(null);
 
   // Мониторинг онлайн/оффлайн статуса
   useEffect(() => {
@@ -57,10 +61,52 @@ export function ForecastCalendar({ profile }: ForecastCalendarProps) {
         .forEach(f => forecastMap.set(f.date, f));
 
       setForecasts(forecastMap);
+
+      const now = new Date();
+      const sameAsCurrentMonth = now.getFullYear() === currentMonth.getFullYear() && now.getMonth() === currentMonth.getMonth();
+      if (sameAsCurrentMonth) {
+        setCurrentPeriodForecasts([...forecastMap.values()]);
+      } else {
+        const currentStart = formatDateKey(new Date(now.getFullYear(), now.getMonth(), 1));
+        const currentEnd = formatDateKey(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+        const currentForecasts = await getForecastsInRange(currentStart, currentEnd);
+        setCurrentPeriodForecasts(currentForecasts.filter((item) => item.profileKey === profileKey && item.calcVersion === FORECAST_CALC_VERSION));
+      }
     } catch (error) {
       console.error('Ошибка загрузки прогнозов:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const monthDays = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
+  const monthForecastList = useMemo(() => [...forecasts.values()], [forecasts]);
+  const selectedMonthLabel = currentMonth.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+  const currentMonthLabel = new Date().toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+  const filteredTargetForecasts = areaFilter === 'all' ? monthForecastList : monthForecastList.filter((item) => getForecastAreaIds(item).includes(areaFilter));
+  const filteredCurrentForecasts = areaFilter === 'all' ? currentPeriodForecasts : currentPeriodForecasts.filter((item) => getForecastAreaIds(item).includes(areaFilter));
+  const periodComparison = useMemo(() => {
+    if (currentMonthLabel === selectedMonthLabel) return null;
+    return compareSmartForecastPeriods(filteredCurrentForecasts, filteredTargetForecasts, currentMonthLabel, selectedMonthLabel);
+  }, [filteredCurrentForecasts, filteredTargetForecasts, currentMonthLabel, selectedMonthLabel]);
+  const monthSummary = useMemo(() => summarizeSmartMonth(
+    areaFilter === 'all' ? monthForecastList : monthForecastList.filter((item) => getForecastAreaIds(item).includes(areaFilter)),
+    monthDays,
+  ), [monthForecastList, areaFilter, monthDays]);
+
+  const openDay = async (date: Date) => {
+    setSelectedDate(date);
+    setComparisonForecast(null);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(date);
+    target.setHours(0, 0, 0, 0);
+    if (target.getTime() === today.getTime()) return;
+    try {
+      const current = await getOrCalculateForecast(today, profile);
+      setComparisonForecast(current);
+    } catch {
+      // Comparison is optional; the selected day's forecast remains available.
     }
   };
 
@@ -70,7 +116,7 @@ export function ForecastCalendar({ profile }: ForecastCalendarProps) {
 
     if (forecast) {
       // Прогноз есть в кэше — показываем сразу
-      setSelectedDate(date);
+      await openDay(date);
     } else {
       // Прогноза нет — нужно рассчитать
       if (!online) {
@@ -82,7 +128,7 @@ export function ForecastCalendar({ profile }: ForecastCalendarProps) {
       try {
         const newForecast = await getOrCalculateForecast(date, profile);
         setForecasts(prev => new Map(prev).set(dateStr, newForecast));
-        setSelectedDate(date);
+        await openDay(date);
       } catch (error) {
         console.error('Ошибка расчёта прогноза:', error);
         alert('Не удалось рассчитать прогноз для этой даты');
@@ -114,16 +160,17 @@ export function ForecastCalendar({ profile }: ForecastCalendarProps) {
       const forecast = forecasts.get(dateStr);
       const isToday = date.getTime() === today.getTime();
       const isPast = date < today;
+      const hiddenByFilter = Boolean(forecast && areaFilter !== 'all' && !getForecastAreaIds(forecast).includes(areaFilter));
 
       days.push(
         <button
           key={day}
           onClick={() => handleDayClick(date)}
-          disabled={isCalculating}
+          disabled={isCalculating || hiddenByFilter}
           title={forecast?.reasoning?.[0] || forecast?.topRecommendation || 'Рассчитать прогноз'}
           className={`aspect-square rounded-2xl p-2 flex flex-col items-center justify-center gap-1 transition-all hover:scale-105 ${
             isToday ? 'ring-2 ring-primary' : ''
-          } ${isPast ? 'opacity-60' : ''}`}
+          } ${isPast ? 'opacity-60' : ''} ${hiddenByFilter ? 'opacity-15' : ''}`}
           style={{
             background: forecast ? `${forecast.color}20` : 'var(--secondary)',
             border: forecast ? `1px solid ${forecast.color}40` : '1px solid var(--border)'
@@ -210,6 +257,14 @@ export function ForecastCalendar({ profile }: ForecastCalendarProps) {
           </div>
         </div>
 
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium opacity-70">Показывать сферу:</span>
+          <button type="button" onClick={() => setAreaFilter('all')} className={`rounded-full px-3 py-1.5 text-xs border ${areaFilter === 'all' ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-secondary'}`}>Все сферы</button>
+          {SMART_CALENDAR_AREAS.map((area) => (
+            <button key={area.id} type="button" onClick={() => setAreaFilter(area.id)} aria-pressed={areaFilter === area.id} className={`rounded-full px-3 py-1.5 text-xs border ${areaFilter === area.id ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-secondary'}`}>{area.label}</button>
+          ))}
+        </div>
+        <p className="mb-3 text-xs opacity-50">Дни без найденного акцента по выбранной сфере приглушаются; даты без расчёта остаются доступными для открытия и расчёта.</p>
         {/* Дни недели */}
         <div className="grid grid-cols-7 gap-2 mb-2">
           {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(day => (
@@ -234,6 +289,35 @@ export function ForecastCalendar({ profile }: ForecastCalendarProps) {
             <span>Готовим прогноз...</span>
           </div>
         )}
+
+        <div className="mt-5 rounded-2xl border border-border p-4 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="font-semibold">Факторы месяца</h3>
+            <span className="text-xs opacity-60">Данные: {monthSummary.daysWithData} из {monthSummary.totalDays} дней</span>
+          </div>
+          {monthSummary.averageEnergy !== null ? (
+            <>
+              <div className="grid gap-2 sm:grid-cols-3">
+                <div className="rounded-xl bg-secondary p-3"><p className="text-xs opacity-60">Средняя энергия</p><p className="text-2xl font-semibold">{monthSummary.averageEnergy}/100</p></div>
+                <div className="rounded-xl bg-secondary p-3"><p className="text-xs opacity-60">Больше ресурсов</p><p className="text-sm font-semibold">{monthSummary.bestEnergyDates.join(', ') || '—'}</p></div>
+                <div className="rounded-xl bg-secondary p-3"><p className="text-xs opacity-60">Более спокойный темп</p><p className="text-sm font-semibold">{monthSummary.lowEnergyDates.join(', ') || '—'}</p></div>
+              </div>
+              <div><p className="text-xs font-semibold opacity-70 mb-2">Часто выделяемые сферы</p><div className="flex flex-wrap gap-2">{monthSummary.areaCounts.slice(0, 5).map((area) => <span key={area.id} className="rounded-full bg-secondary px-3 py-1 text-xs">{area.label}: {area.days} дн.</span>)}</div></div>
+              {monthSummary.recurringFactors.length > 0 && <div><p className="text-xs font-semibold opacity-70 mb-1">Повторяющиеся основания</p><ul className="list-disc pl-4 space-y-1">{monthSummary.recurringFactors.map((factor) => <li key={factor} className="text-xs opacity-75">{factor}</li>)}</ul></div>}
+            </>
+          ) : <p className="text-sm opacity-60">Для выбранного фильтра пока нет рассчитанных дней. Выберите дату, чтобы построить персональный прогноз.</p>}
+          <p className="text-xs opacity-50">Сводка строится по уже рассчитанным дням месяца; пропуски не интерпретируются как отсутствие влияния.</p>
+        </div>
+
+        {periodComparison && <div className="mt-4 rounded-2xl border border-border p-4 space-y-3">
+          <div><h3 className="font-semibold">Сравнение периодов</h3><p className="text-xs opacity-60">{periodComparison.currentLabel} → {periodComparison.targetLabel}{areaFilter !== 'all' ? ` · ${SMART_CALENDAR_AREAS.find((item) => item.id === areaFilter)?.label}` : ''}</p></div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="rounded-xl bg-secondary p-3"><p className="text-xs opacity-60">{periodComparison.currentLabel} · {periodComparison.currentDays} дней с данными</p><p className="text-xl font-semibold">{periodComparison.currentAverageEnergy === null ? '—' : `${periodComparison.currentAverageEnergy}/100`}</p></div>
+            <div className="rounded-xl bg-secondary p-3"><p className="text-xs opacity-60">{periodComparison.targetLabel} · {periodComparison.targetDays} дней с данными</p><p className="text-xl font-semibold">{periodComparison.targetAverageEnergy === null ? '—' : `${periodComparison.targetAverageEnergy}/100`}</p>{periodComparison.energyDelta !== null && <p className="text-xs">{periodComparison.energyDelta > 0 ? '+' : ''}{periodComparison.energyDelta} пунктов к текущему периоду</p>}</div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2"><div><p className="text-xs font-semibold opacity-70">Чаще выделены сейчас</p><p className="mt-1 text-sm">{periodComparison.currentTopAreas.join(', ') || 'Недостаточно данных'}</p></div><div><p className="text-xs font-semibold opacity-70">Чаще выделены в выбранном месяце</p><p className="mt-1 text-sm">{periodComparison.targetTopAreas.join(', ') || 'Недостаточно данных'}</p></div></div>
+          <p className="text-xs opacity-50">{periodComparison.caveat}</p>
+        </div>}
 
         {/* Легенда */}
         <div className="mt-6 p-4 rounded-2xl bg-secondary">
@@ -303,7 +387,8 @@ export function ForecastCalendar({ profile }: ForecastCalendarProps) {
           date={selectedDate}
           forecast={forecasts.get(formatDateKey(selectedDate)) || null}
           profile={profile}
-          onClose={() => setSelectedDate(null)}
+          comparisonForecast={comparisonForecast}
+          onClose={() => { setSelectedDate(null); setComparisonForecast(null); }}
         />
       )}
     </>

@@ -1,233 +1,163 @@
-import { AlertCircle, CheckCircle, Clock, Target, Zap } from 'lucide-react';
-import { calculateDasha, getCurrentAntardasha, getCurrentPratyantardasha, NatalChart as NatalChartType } from '../../utils/astrology';
-import { DASHA_SYSTEM_EXPLANATION, PLANET_DASHA_DESCRIPTIONS } from '../../utils/dashaDescriptions';
+import { CalendarClock, ChevronDown, Clock3, Layers3, ShieldAlert, Sparkles } from 'lucide-react';
+import type { NatalChart as NatalChartType } from '../../utils/astrology';
+import { analyzeVimshottariDasha, type DashaLayerAnalysis, type DashaVargaEvidence } from '../../utils/vimshottariDashaAnalysis';
 import { GlassCard } from '../common/GlassCard';
 import { TermTooltip } from '../common/TermTooltip';
 
-interface NatalDashaTabProps {
-  natalChart: NatalChartType;
+interface NatalDashaTabProps { natalChart: NatalChartType; }
+const formatDate = (date: Date) => date.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
+const layerNames = { mahadasha: 'Махадаша', antardasha: 'Антардаша', pratyantardasha: 'Пратьянтардаша' };
+const PLANET_NAMES_RU: Record<string, string> = { Sun: 'Солнце', Moon: 'Луна', Mars: 'Марс', Mercury: 'Меркурий', Jupiter: 'Юпитер', Venus: 'Венера', Saturn: 'Сатурн', Rahu: 'Раху', Ketu: 'Кету' };
+
+function VargaEvidence({ item }: { item: DashaVargaEvidence }) {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-gray-900">{item.name} · {item.topic}</p>
+        <span className={`rounded-full px-2 py-1 text-xs ${item.relevantHouseRelation === 'no-direct-house-link' ? 'bg-gray-100 text-gray-600' : 'bg-indigo-50 text-indigo-700'}`}>
+          {item.relevantHouseRelation === 'occupies-and-rules' ? 'Положение + управление' : item.relevantHouseRelation === 'occupies' ? 'Занимает дом' : item.relevantHouseRelation === 'rules' ? 'Управляет домом' : item.relevantHouseRelation === 'no-direct-house-link' ? 'Прямой связи нет' : 'Недоступно'}
+        </span>
+      </div>
+      <p className="mt-1 text-xs text-gray-700">{item.planetSign ? `${item.planetSign}, ${item.planetHouse}-й дом` : 'Положение не определено'}</p>
+      <p className="mt-1 text-xs text-gray-600">{item.explanation}</p>
+    </div>
+  );
 }
 
-function formatDate(date: Date): string {
-  return date.toLocaleDateString('ru-RU');
+function PlanetProfile({ analysis }: { analysis: DashaLayerAnalysis }) {
+  const { profile } = analysis;
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="rounded-xl border border-purple-100 bg-purple-50 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-purple-700">Планета периода в D1</p>
+          <p className="mt-1 text-lg font-bold text-gray-900">{profile.planetName}</p>
+          <p className="text-sm text-gray-700">{profile.sign}, {profile.degreeInSign.toFixed(2)}° · {profile.house ? `${profile.house}-й дом` : 'дом не определён'}</p>
+          <p className="mt-2 text-sm text-gray-700">Управляет домами: {profile.ruledHouses.length ? profile.ruledHouses.join(', ') : 'не определены'}</p>
+          <p className="mt-1 text-sm text-gray-700">Достоинство: {profile.dignity?.label ?? 'не определено'}</p>
+        </div>
+        <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Диспозитор</p>
+          {profile.dispositor ? <>
+            <p className="mt-1 text-lg font-bold text-gray-900">{PLANET_NAMES_RU[profile.dispositor.planet] ?? profile.dispositor.planet}</p>
+            <p className="text-sm text-gray-700">{profile.dispositor.sign} · {profile.dispositor.house ? `${profile.dispositor.house}-й дом` : 'дом не определён'}</p>
+            <p className="mt-1 text-sm text-gray-700">Достоинство: {profile.dispositor.dignity?.label ?? 'не определено'}</p>
+            <p className="mt-1 text-xs text-gray-600">Управляет домами: {profile.dispositor.ruledHouses.join(', ') || 'не определены'}</p>
+          </> : <p className="mt-2 text-sm text-gray-600">Диспозитор не удалось определить.</p>}
+        </div>
+      </div>
+
+      <section>
+        <h5 className="mb-2 text-sm font-semibold text-gray-900">Почему эта планета связана с темами карты</h5>
+        <ul className="space-y-2">{analysis.whyHighlighted.map((reason, index) => <li key={index} className="flex gap-2 text-sm leading-relaxed text-gray-700"><span className="font-bold text-indigo-600">•</span><span>{reason}</span></li>)}</ul>
+      </section>
+
+      <section className="grid gap-3 md:grid-cols-2">
+        <div className="rounded-lg border border-gray-200 p-3">
+          <h5 className="text-sm font-semibold text-gray-900">Аспекты от планеты</h5>
+          {profile.aspectsFromPlanet.length ? <ul className="mt-2 space-y-1">{profile.aspectsFromPlanet.map((item, i) => <li key={i} className="text-xs text-gray-700">{item.kind === 'conjunction' ? 'Соединение' : 'Граха-дришти'} с {PLANET_NAMES_RU[item.target] ?? item.target} ({item.targetHouse}-й дом)</li>)}</ul> : <p className="mt-2 text-xs text-gray-500">Не обнаружены по выбранной системе.</p>}
+        </div>
+        <div className="rounded-lg border border-gray-200 p-3">
+          <h5 className="text-sm font-semibold text-gray-900">Аспекты к планете</h5>
+          {profile.aspectsToPlanet.length ? <ul className="mt-2 space-y-1">{profile.aspectsToPlanet.map((item, i) => <li key={i} className="text-xs text-gray-700">{PLANET_NAMES_RU[item.source] ?? item.source} ({item.sourceHouse}-й дом)</li>)}</ul> : <p className="mt-2 text-xs text-gray-500">Не обнаружены по выбранной системе.</p>}
+        </div>
+      </section>
+
+      <section>
+        <h5 className="mb-2 text-sm font-semibold text-gray-900">Связь с жизненными сферами по D1</h5>
+        {profile.lifeAreaLinks.length ? <div className="grid gap-2 md:grid-cols-2">{profile.lifeAreaLinks.map((area) => <div key={area.area} className="rounded-lg border border-gray-200 bg-white p-3"><p className="text-sm font-semibold text-gray-900">{area.label}</p><p className="mt-1 text-xs text-gray-600">Дома: {area.relevantHouses.join(', ')}</p><ul className="mt-1 list-disc space-y-1 pl-4">{area.reasons.map((reason) => <li key={reason} className="text-xs text-gray-700">{reason}</li>)}</ul></div>)}</div> : <p className="rounded-lg bg-gray-50 p-3 text-sm text-gray-600">Прямые связи с настроенными жизненными сферами не найдены. Это не означает, что тема исключена из жизни.</p>}
+      </section>
+
+      <section>
+        <h5 className="mb-2 text-sm font-semibold text-gray-900">Сопоставление с профильными варгами</h5>
+        {profile.vargas.length ? <div className="grid gap-2 md:grid-cols-2">{profile.vargas.map((item, index) => <VargaEvidence key={`${item.division}-${index}`} item={item} />)}</div> : <p className="text-sm text-gray-600">Для выявленных связей нет соответствующей профильной варги.</p>}
+      </section>
+
+      <details className="rounded-lg border border-gray-200 p-3">
+        <summary className="cursor-pointer text-sm font-semibold text-gray-800">Основания и ограничения</summary>
+        <ul className="mt-2 list-disc space-y-1 pl-5">{profile.evidence.map((item) => <li key={item} className="text-xs text-gray-700">{item}</li>)}</ul>
+        <ul className="mt-2 list-disc space-y-1 pl-5">{profile.limitations.map((item) => <li key={item} className="text-xs text-gray-500">{item}</li>)}</ul>
+      </details>
+    </div>
+  );
+}
+
+function PeriodCard({ analysis, active = false }: { analysis: DashaLayerAnalysis; active?: boolean }) {
+  return (
+    <details className={`rounded-xl border bg-white p-4 ${active ? 'border-purple-300 shadow-sm' : 'border-gray-200'}`} open={active}>
+      <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-bold text-gray-900">{analysis.profile.planetName} · {layerNames[analysis.layer]}{active ? ' · действует сейчас' : ''}</p>
+          <p className="mt-1 text-xs text-gray-600">{formatDate(analysis.startDate)} — {formatDate(analysis.endDate)}</p>
+        </div>
+        <ChevronDown className="h-4 w-4 text-gray-500" />
+      </summary>
+      <div className="mt-4"><PlanetProfile analysis={analysis} /></div>
+    </details>
+  );
 }
 
 export function NatalDashaTab({ natalChart }: NatalDashaTabProps) {
-  const moonNakshatra = Math.floor(natalChart.planets.Moon.siderealLon / (360 / 27));
-  const currentDasha = calculateDasha(natalChart.date, moonNakshatra, new Date(), natalChart.planets.Moon.siderealLon);
-  const currentAntar = getCurrentAntardasha(currentDasha);
-  const currentPratyantar = getCurrentPratyantardasha(currentAntar);
-  const pratyantarDesc = currentPratyantar ? PLANET_DASHA_DESCRIPTIONS[currentPratyantar.planet] : null;
-  const dashaDesc = PLANET_DASHA_DESCRIPTIONS[currentDasha.planet];
-  const antarDesc = currentAntar ? PLANET_DASHA_DESCRIPTIONS[currentAntar.planet] : null;
-  const startDate = new Date(currentDasha.startDate);
-  const endDate = new Date(currentDasha.endDate);
-  const totalDuration = endDate.getTime() - startDate.getTime();
-  const elapsed = Date.now() - startDate.getTime();
-  const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
-
+  const report = analyzeVimshottariDasha(natalChart);
+  const current = report.current;
+  const now = new Date();
+  const duration = current.mahadasha.endDate.getTime() - current.mahadasha.startDate.getTime();
+  const progress = Math.max(0, Math.min(100, ((now.getTime() - current.mahadasha.startDate.getTime()) / duration) * 100));
   return (
     <div className="space-y-6">
       <GlassCard>
-        <div className="space-y-4">
-          <div className="flex items-center gap-3 pb-3 border-b border-orange-200">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-orange-600 to-red-600">
-              <Clock className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                Система Вимшоттари Даша
-                <TermTooltip term="dasha" />
-              </h3>
-              <p className="text-sm text-gray-600">Планетарные периоды вашей жизни</p>
-            </div>
-          </div>
-
-          <div className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border-l-4 border-orange-600">
-            <h4 className="font-semibold text-gray-900 mb-2">Что это такое?</h4>
-            <p className="text-sm text-gray-800 leading-relaxed mb-3">{DASHA_SYSTEM_EXPLANATION.whatItIs}</p>
-            <p className="text-sm text-gray-700 leading-relaxed">{DASHA_SYSTEM_EXPLANATION.howItWorks}</p>
-          </div>
+        <div className="flex items-center gap-3 border-b border-purple-100 pb-3">
+          <div className="rounded-lg bg-purple-100 p-2"><CalendarClock className="h-6 w-6 text-purple-700" /></div>
+          <div><h3 className="flex items-center gap-2 text-lg font-bold text-gray-900">Вимшоттари Даша <TermTooltip term="dasha" /></h3><p className="text-sm text-gray-600">Три уровня периода и их связь с вашей натальной картой</p></div>
+        </div>
+        <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50 p-4">
+          <p className="text-sm font-semibold text-blue-950">Как строится анализ</p>
+          <p className="mt-1 text-sm leading-relaxed text-blue-900">Махадаша задаёт общий временной фон, Антардаша добавляет второй управитель, Пратьянтардаша — более короткий слой. Каждый из трёх управителей отдельно проверяется по D1, а профильные варги используются только как дополнительное сопоставление.</p>
         </div>
       </GlassCard>
 
-      {dashaDesc && (
-        <GlassCard>
-          <div className="space-y-6">
-            <div className="p-5 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border-l-4 border-purple-600">
-              <p className="text-sm text-gray-600 mb-1">Сейчас действует период</p>
-              <h4 className="text-2xl font-bold text-purple-900">
-                {dashaDesc.planet} Махадаша
-                <span className="text-lg text-gray-600"> (главный период)</span>
-              </h4>
-
-              {currentAntar && antarDesc && (
-                <div className="pt-3 mt-3 border-t border-purple-200">
-                  <p className="text-sm text-gray-600 mb-1">Антардаша (под-период)</p>
-                  <h5 className="text-xl font-bold text-pink-900">{antarDesc.planet}</h5>
-                </div>
-              )}
-              {currentPratyantar && pratyantarDesc && (
-                <div className="pt-3 mt-3 border-t border-purple-200">
-                  <p className="text-sm text-gray-600 mb-1">Пратьянтардаша (под-подпериод)</p>
-                  <h5 className="text-lg font-bold text-indigo-900">{pratyantarDesc.planet}</h5>
-                  <p className="text-xs text-gray-600 mt-1">{formatDate(currentPratyantar.startDate)} — {formatDate(currentPratyantar.endDate)}</p>
-                </div>
-              )}
-
-              <div className="pt-3 mt-3 border-t border-purple-200 text-sm space-y-1">
-                <p className="text-gray-700">
-                  <strong>Махадаша:</strong> {formatDate(startDate)} - {formatDate(endDate)}
-                </p>
-                {currentAntar && (
-                  <p className="text-gray-700">
-                    <strong>Антардаша:</strong> {formatDate(currentAntar.startDate)} - {formatDate(currentAntar.endDate)}
-                  </p>
-                )}
-                {currentPratyantar && (
-                  <p className="text-gray-700">
-                    <strong>Пратьянтардаша:</strong> {formatDate(currentPratyantar.startDate)} - {formatDate(currentPratyantar.endDate)}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="p-4 bg-white rounded-lg border border-gray-200">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-gray-700">Прогресс периода</span>
-                <span className="text-sm font-medium text-purple-600">{Math.round(progress)}%</span>
-              </div>
-              <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-purple-600 to-pink-600 transition-all duration-500"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border border-purple-200">
-                <h5 className="font-semibold text-purple-900 mb-2 flex items-center gap-2">
-                  <Target className="w-4 h-4" />
-                  Основная тема
-                </h5>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {dashaDesc.themes.slice(0, 4).map((theme) => (
-                    <span key={theme} className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs font-medium">
-                      {theme}
-                    </span>
-                  ))}
-                </div>
-                <p className="text-sm text-gray-700 leading-relaxed">{dashaDesc.whatHappens}</p>
-              </div>
-
-              {currentAntar && antarDesc && (
-                <div className="p-4 bg-gradient-to-br from-pink-50 to-rose-50 rounded-lg border border-pink-200">
-                  <h5 className="font-semibold text-pink-900 mb-2 flex items-center gap-2">
-                    <Zap className="w-4 h-4" />
-                    Оттенок под-периода
-                  </h5>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {antarDesc.themes.slice(0, 3).map((theme) => (
-                      <span key={theme} className="px-2 py-1 bg-pink-100 text-pink-800 rounded text-xs font-medium">
-                        {theme}
-                      </span>
-                    ))}
-                  </div>
-                  <p className="text-sm text-gray-700 leading-relaxed">{antarDesc.whatHappens}</p>
-                </div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-5 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border-l-4 border-green-600">
-                <h5 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5" />
-                  Что делать
-                </h5>
-                <ul className="space-y-2.5">
-                  {(dashaDesc.practicalActions?.length ? dashaDesc.practicalActions : dashaDesc.positive).slice(0, 5).map((item) => (
-                    <li key={item} className="text-sm text-gray-800 flex items-start gap-2 leading-relaxed">
-                      <span className="text-green-600 font-bold mt-0.5">✓</span>
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                  <li className="text-sm text-gray-800 flex items-start gap-2 leading-relaxed">
-                    <span className="text-green-600 font-bold mt-0.5">✓</span>
-                    <span>{dashaDesc.advice}</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div className="p-5 bg-gradient-to-br from-orange-50 to-red-50 rounded-lg border-l-4 border-orange-600">
-                <h5 className="font-semibold text-orange-800 mb-3 flex items-center gap-2">
-                  <AlertCircle className="w-5 h-5" />
-                  Чего избегать
-                </h5>
-                <ul className="space-y-2.5">
-                  {dashaDesc.challenges.slice(0, 5).map((challenge) => (
-                    <li key={challenge} className="text-sm text-gray-800 flex items-start gap-2 leading-relaxed">
-                      <span className="text-orange-600 font-bold mt-0.5">!</span>
-                      <span>{challenge}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            {dashaDesc.weeklyChallenge && (
-              <div className="p-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg border-2 border-dashed border-pink-400">
-                <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-pink-600" />
-                  Фокус периода
-                </h4>
-                <p className="text-sm text-gray-700 leading-relaxed">{dashaDesc.weeklyChallenge}</p>
-              </div>
-            )}
-          </div>
-        </GlassCard>
-      )}
-
-      {currentAntar && (
-        <GlassCard>
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Пратьянтардаши текущей Антардаши</h3>
-          <p className="text-sm text-gray-600 mb-4">Каждый под-подпериод рассчитывается как доля полного периода Антардаши, а не как доля только оставшегося времени после рождения.</p>
-          <div className="space-y-2">
-            {currentAntar.pratyantardasha.map((period) => {
-              const description = PLANET_DASHA_DESCRIPTIONS[period.planet];
-              const active = currentPratyantar?.planet === period.planet &&
-                currentPratyantar.startDate.getTime() === period.startDate.getTime();
-              return (
-                <div key={period.planet} className={`flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3 ${active ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200 bg-white'}`}>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">{description?.planet ?? period.planet}{active ? ' · сейчас' : ''}</p>
-                    <p className="text-xs text-gray-600">{formatDate(period.startDate)} — {formatDate(period.endDate)}</p>
-                  </div>
-                  <span className="text-xs text-gray-500">{Math.max(1, Math.round((period.endDate.getTime() - period.startDate.getTime()) / 86400000))} дн.</span>
-                </div>
-              );
-            })}
-          </div>
-        </GlassCard>
-      )}
+      <GlassCard>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div><p className="text-xs font-semibold uppercase tracking-wide text-purple-700">Текущая комбинация</p><h3 className="mt-1 text-xl font-bold text-gray-900">{current.mahadasha.profile.planetName} / {current.antardasha?.profile.planetName ?? '—'} / {current.pratyantardasha?.profile.planetName ?? '—'}</h3><p className="mt-1 text-xs text-gray-600">Махадаша / Антардаша / Пратьянтардаша</p></div>
+          <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-800">Расчёт на текущую дату</span>
+        </div>
+        <div className="mt-4">
+          <div className="flex justify-between text-xs text-gray-600"><span>Ход Махадаши</span><span>{Math.round(progress)}%</span></div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100"><div className="h-full rounded-full bg-purple-600" style={{ width: `${progress}%` }} /></div>
+          <p className="mt-2 text-xs text-gray-600">{formatDate(current.mahadasha.startDate)} — {formatDate(current.mahadasha.endDate)}</p>
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <div className="rounded-lg border border-purple-200 bg-purple-50 p-3"><p className="text-xs font-semibold text-purple-800">Махадаша</p><p className="mt-1 font-bold text-gray-900">{current.mahadasha.profile.planetName}</p><p className="text-xs text-gray-600">{formatDate(current.mahadasha.startDate)} — {formatDate(current.mahadasha.endDate)}</p></div>
+          <div className="rounded-lg border border-pink-200 bg-pink-50 p-3"><p className="text-xs font-semibold text-pink-800">Антардаша</p><p className="mt-1 font-bold text-gray-900">{current.antardasha?.profile.planetName ?? 'Нет данных'}</p><p className="text-xs text-gray-600">{current.antardasha ? `${formatDate(current.antardasha.startDate)} — ${formatDate(current.antardasha.endDate)}` : '—'}</p></div>
+          <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-3"><p className="text-xs font-semibold text-indigo-800">Пратьянтардаша</p><p className="mt-1 font-bold text-gray-900">{current.pratyantardasha?.profile.planetName ?? 'Нет данных'}</p><p className="text-xs text-gray-600">{current.pratyantardasha ? `${formatDate(current.pratyantardasha.startDate)} — ${formatDate(current.pratyantardasha.endDate)}` : '—'}</p></div>
+        </div>
+      </GlassCard>
 
       <GlassCard>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Все планетарные периоды</h3>
-        <div className="space-y-3">
-          {Object.values(PLANET_DASHA_DESCRIPTIONS).map((desc) => (
-            <div key={desc.planet} className="p-4 bg-white rounded-lg border border-gray-200 hover:border-purple-300 transition-colors">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 text-white flex items-center justify-center font-bold text-sm">
-                  {desc.planet[0]}
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900">{desc.planet}</h4>
-                  <p className="text-xs text-gray-600">{desc.duration} лет</p>
-                </div>
-              </div>
-              <p className="text-sm text-gray-700 leading-relaxed">{desc.whatHappens}</p>
-            </div>
-          ))}
+        <div className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-purple-700" /><h3 className="text-lg font-semibold text-gray-900">Почему выделены именно эти темы</h3></div>
+        <p className="mt-2 mb-4 text-sm text-gray-600">Сначала читается D1: дом планеты, управляемые ею дома, достоинство, диспозитор и аспекты. Затем ищутся прямые тематические связи в варгах. Отсутствующие связи не заменяются общими описаниями планет.</p>
+        <PeriodCard analysis={current.mahadasha} active />
+        {current.antardasha && <PeriodCard analysis={current.antardasha} active />}
+        {current.pratyantardasha && <PeriodCard analysis={current.pratyantardasha} active />}
+      </GlassCard>
+
+      <GlassCard>
+        <div className="flex items-center gap-2"><Layers3 className="h-5 w-5 text-indigo-700" /><h3 className="text-lg font-semibold text-gray-900">Антардаши текущей Махадаши</h3></div>
+        <p className="mt-2 mb-3 text-sm text-gray-600">Раскрывайте подпериод, чтобы увидеть его собственного управителя, связи с домами D1 и профильными варгами.</p>
+        <div className="space-y-2">{report.mahadashaAntardashas.map((item, index) => <PeriodCard key={`${item.planet}-${index}`} analysis={item} active={item.planet === current.antardasha?.planet && item.startDate.getTime() === current.antardasha.startDate.getTime()} />)}</div>
+      </GlassCard>
+
+      {current.antardasha && <GlassCard>
+        <div className="flex items-center gap-2"><Clock3 className="h-5 w-5 text-indigo-700" /><h3 className="text-lg font-semibold text-gray-900">Пратьянтардаши текущей Антардаши</h3></div>
+        <p className="mt-2 mb-3 text-sm text-gray-600">Короткие подпериоды рассчитываются внутри полной Антардаши, а не только в её остатке после рождения.</p>
+        <div className="space-y-2">{report.antardashaPratyantardashas.map((item, index) => <PeriodCard key={`${item.planet}-${index}`} analysis={item} active={item.planet === current.pratyantardasha?.planet && item.startDate.getTime() === current.pratyantardasha.startDate.getTime()} />)}</div>
+      </GlassCard>}
+
+      <GlassCard>
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <div className="flex items-center gap-2"><ShieldAlert className="h-5 w-5 text-amber-700" /><h4 className="font-semibold text-amber-950">Методика и ограничения</h4></div>
+          <ul className="mt-2 list-disc space-y-1 pl-5">{report.methodology.map((item) => <li key={item} className="text-xs leading-relaxed text-amber-900">{item}</li>)}</ul>
+          <ul className="mt-3 list-disc space-y-1 pl-5">{report.warnings.map((item) => <li key={item} className="text-xs leading-relaxed text-amber-900">{item}</li>)}</ul>
         </div>
       </GlassCard>
     </div>
