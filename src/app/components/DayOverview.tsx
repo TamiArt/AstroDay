@@ -34,7 +34,7 @@ export function DayOverview({
     }
   }
 
-  // Рассчитываем благоприятность сфер (передаём Дашу)
+  // Рассчитываем условный сравнительный индекс по выбранным астрологическим правилам
   const areas = calculateDailyAreas(panchang, natalChart, currentChart, aspects, currentDasha);
 
   // Форматируем данные для RadialBarChart
@@ -46,7 +46,7 @@ export function DayOverview({
     index // Unique index to ensure no duplicate keys
   }));
 
-  // Топ-3 сферы
+  // Три сферы с наибольшим условным индексом модели
   const topAreas = areas.slice(0, 3);
 
   return (
@@ -264,7 +264,7 @@ export function DayOverview({
                         <div
                           className="h-full rounded-full transition-all"
                           style={{
-                            width: `${area.score}%`,
+                            width: `${area.score}/100`,
                             background: area.color
                           }}
                         />
@@ -279,7 +279,7 @@ export function DayOverview({
                 {/* Детали при раскрытии */}
                 {selectedArea?.id === area.id && (
                   <div className="mt-2 p-4 rounded-xl bg-background/50 border border-border animate-in fade-in duration-300 space-y-3">
-                    {/* Даша - глобальный фон жизни (50%) */}
+                    {/* Даша — символический фон периода */}
                     {area.dashaInfluence && (
                       <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/30">
                         <p className="text-xs font-medium text-indigo-600 mb-1">🌟 Период Даша — символический фон</p>
@@ -287,7 +287,7 @@ export function DayOverview({
                       </div>
                     )}
 
-                    {/* Транзиты - ежедневные триггеры (40%) */}
+                    {/* Транзиты — текущие астрологические положения */}
                     {area.todayInfluence && (
                       <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
                         <p className="text-xs font-medium text-blue-600 mb-1">⚡ Транзиты — текущие положения</p>
@@ -307,7 +307,7 @@ export function DayOverview({
                     {!area.natalPotential && !area.todayInfluence && !area.dashaInfluence && (
                       <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
                         <p className="text-sm text-yellow-600">
-                          ℹ️ Укажите точное время рождения в настройках для персонализированного прогноза
+                          ℹ️ Без точного времени рождения часть персональных расчётов может быть недоступна.
                         </p>
                       </div>
                     )}
