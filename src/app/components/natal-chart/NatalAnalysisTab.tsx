@@ -1,6 +1,7 @@
 import { buildNatalChartFacts } from '../../utils/natalChartFacts';
 import { NatalYogasSection } from './NatalYogasSection';
 import { NatalPrecisionSection } from './NatalPrecisionSection';
+import { NatalIntegratedSynthesisSection } from './NatalIntegratedSynthesisSection';
 import {
   AlertCircle,
   Briefcase,
@@ -147,6 +148,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
   return (
     <div className="space-y-6">
       <NatalPrecisionSection natalChart={natalChart} />
+      <NatalIntegratedSynthesisSection natalChart={natalChart} />
       <GlassCard>
         <section className="space-y-4">
           <div className="flex items-center justify-between gap-3 border-b border-gray-200 pb-3">
