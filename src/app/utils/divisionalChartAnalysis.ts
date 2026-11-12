@@ -114,9 +114,9 @@ function unique(values: number[]): number[] {
   return [...new Set(values)];
 }
 
-function boundarySensitivity(chart: DivisionalChart, division: number): VargaAnalysis['boundarySensitivity'] {
+function boundarySensitivity(chart: DivisionalChart, division: number, natalAscendantLongitude: number): VargaAnalysis['boundarySensitivity'] {
   const segmentWidthDegrees = 30 / division;
-  const degreeInSign = chart.ascendant.longitude % 30;
+  const degreeInSign = ((natalAscendantLongitude % 30) + 30) % 30;
   const offset = degreeInSign % segmentWidthDegrees;
   const distanceToNearestAscendantBoundary = Math.min(offset, segmentWidthDegrees - offset);
   return {
@@ -185,7 +185,7 @@ export function analyzeDivisionalCharts(chart: NatalChart): DivisionalAnalysisRe
       }
     }
 
-    const sensitivity = boundarySensitivity(varga, rule.division);
+    const sensitivity = boundarySensitivity(varga, rule.division, chart.ascendant.siderealLon);
     const limitations = [...rule.limitations];
     if (sensitivity.risk !== 'lower') {
       limitations.push('Асцендент дробной карты находится близко к границе сегмента; небольшая ошибка времени рождения может изменить Лагну и дома этой варги.');
