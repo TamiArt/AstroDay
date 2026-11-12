@@ -60,7 +60,7 @@ const AREAS: Array<{ id: IntegratedAreaId; title: string; houses: number[] }> = 
   { id: 'retreat', title: 'Восстановление и завершение циклов', houses: [12] },
 ];
 const PLANET_NAMES: Record<NatalPlanetKey, string> = { Sun: 'Солнце', Moon: 'Луна', Mars: 'Марс', Mercury: 'Меркурий', Jupiter: 'Юпитер', Venus: 'Венера', Saturn: 'Сатурн', Rahu: 'Раху', Ketu: 'Кету' };
-const VARGA_AREAS: Record<number, IntegratedAreaId[]> = {
+const DASHA_AREAS: Record<string, IntegratedAreaId> = { finances: 'resources', career: 'career', relationships: 'relationships', home: 'home', family: 'home', children: 'creativity', learning: 'wisdom', creativity: 'creativity', spirituality: 'retreat', health: 'work' };\nconst VARGA_AREAS: Record<number, IntegratedAreaId[]> = {
   2: ['resources'], 3: ['skills'], 4: ['home'], 7: ['creativity'],
   9: ['relationships', 'wisdom'], 10: ['career', 'work'], 12: ['home'],
   16: ['home', 'retreat'], 20: ['wisdom', 'retreat'], 24: ['skills', 'creativity'], 27: ['identity', 'work'],
@@ -146,7 +146,7 @@ export function buildIntegratedNatalAnalysis(chart: NatalChart, asOf: Date = new
   const activeLayers = [dasha.current.mahadasha, dasha.current.antardasha, dasha.current.pratyantardasha].filter((item): item is NonNullable<typeof item> => Boolean(item));
   for (const layer of activeLayers) {
     for (const link of layer.profile.lifeAreaLinks) {
-      const area = AREAS.find((item) => item.id === link.area) ?? AREAS.find((item) => item.houses.some((house) => link.relevantHouses.includes(house)));
+      const area = AREAS.find((item) => item.id === DASHA_AREAS[link.area]) ?? AREAS.find((item) => item.houses.some((house) => link.relevantHouses.includes(house)));
       if (!area) continue;
       addFactor(evidence, {
         factorId: `dasha:${layer.planet}:${area.id}`, source: 'dasha',
