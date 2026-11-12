@@ -55,6 +55,20 @@ export interface SmartPeriodComparison {
   changes: string[];
   caveat: string;
 }
+export interface SmartPeriodRangeComparison {
+  currentLabel: string;
+  targetLabel: string;
+  currentDays: number;
+  targetDays: number;
+  currentAverageEnergy: number | null;
+  targetAverageEnergy: number | null;
+  energyDelta: number | null;
+  currentTopAreas: string[];
+  targetTopAreas: string[];
+  newlyHighlighted: string[];
+  lessHighlighted: string[];
+  caveat: string;
+}
 export interface SmartMonthSummary {
   daysWithData: number;
   totalDays: number;
@@ -165,6 +179,38 @@ export function compareSmartPeriods(current: DayForecast, target: DayForecast): 
     currentEnergy: current.energyLevel, targetEnergy: target.energyLevel,
     currentAreas, targetAreas, newlyHighlighted, lessHighlighted, changes,
     caveat: 'Сравниваются символические показатели и тексты двух дневных расчётов. Это не оценка вероятности события и не замена фактического планирования.',
+  };
+}
+
+export function compareSmartForecastPeriods(
+  current: DayForecast[],
+  target: DayForecast[],
+  currentLabel: string,
+  targetLabel: string,
+): SmartPeriodRangeComparison {
+  const average = (items: DayForecast[]) => items.length
+    ? Math.round(items.reduce((sum, item) => sum + item.energyLevel, 0) / items.length)
+    : null;
+  const countAreas = (items: DayForecast[]) => SMART_CALENDAR_AREAS.map((area) => ({
+    label: area.label,
+    count: items.filter((item) => getForecastAreaIds(item).includes(area.id)).length,
+  })).filter((item) => item.count > 0).sort((a, b) => b.count - a.count).slice(0, 3).map((item) => item.label);
+  const currentTopAreas = countAreas(current);
+  const targetTopAreas = countAreas(target);
+  const currentSet = new Set(currentTopAreas);
+  const targetSet = new Set(targetTopAreas);
+  const currentAverageEnergy = average(current);
+  const targetAverageEnergy = average(target);
+  return {
+    currentLabel, targetLabel,
+    currentDays: current.length, targetDays: target.length,
+    currentAverageEnergy, targetAverageEnergy,
+    energyDelta: currentAverageEnergy === null || targetAverageEnergy === null
+      ? null : targetAverageEnergy - currentAverageEnergy,
+    currentTopAreas, targetTopAreas,
+    newlyHighlighted: targetTopAreas.filter((area) => !currentSet.has(area)),
+    lessHighlighted: currentTopAreas.filter((area) => !targetSet.has(area)),
+    caveat: 'Сравниваются только дни с рассчитанными прогнозами. Неполное покрытие месяца может смещать средние значения и частоту сфер; сравнение не является прогнозом вероятности событий.',
   };
 }
 
