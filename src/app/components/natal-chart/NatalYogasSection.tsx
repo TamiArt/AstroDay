@@ -4,6 +4,7 @@ import { buildNatalChartFacts } from '../../utils/natalChartFacts';
 import { analyzeNatalYogas } from '../../utils/natalYogaAnalysis';
 import type { NatalChart } from '../../utils/astrology';
 import { GlassCard } from '../common/GlassCard';
+import { TermTooltip } from '../common/TermTooltip';
 
 const PLANET_NAMES_RU: Record<string, string> = {
   Sun: 'Солнце', Moon: 'Луна', Mars: 'Марс', Mercury: 'Меркурий',
@@ -35,7 +36,7 @@ export function NatalYogasSection({ natalChart }: { natalChart: NatalChart }) {
           <div>
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-purple-600" />
-              <h3 className="text-lg font-bold text-gray-900">Йоги и специальные комбинации</h3>
+              <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900">Йоги и специальные комбинации <TermTooltip term="natalYoga" /></h3>
             </div>
             <p className="mt-1 text-sm text-gray-600">
               Формальные правила обнаружения с доказательствами из вашей карты
