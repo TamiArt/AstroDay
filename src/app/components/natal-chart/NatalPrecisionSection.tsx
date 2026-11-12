@@ -10,7 +10,6 @@ const LABELS = {
 
 export function NatalPrecisionSection({ natalChart }: { natalChart: NatalChart }) {
   const report = buildNatalPrecisionReport(natalChart);
-  const combust = report.planets.filter((p) => p.combustion.status === 'combust');
   const retrograde = report.planets.filter((p) => p.motion?.state === 'retrograde');
   return (
     <section className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4 space-y-4">
