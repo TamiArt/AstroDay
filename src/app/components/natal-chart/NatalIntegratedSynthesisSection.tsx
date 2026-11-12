@@ -69,7 +69,7 @@ function explainEvidence(item: IntegratedEvidence, area: IntegratedAreaSynthesis
   }
   if (item.source === 'dasha' && planetKey) {
     const name = PLANETS[planetKey] ?? planetKey;
-    return `Сейчас действует ${item.title}. В традиционной астрологии периоды этой планеты связывают с темами: ${PLANET_MEANINGS[planetKey] ?? 'её символикой'}. В этой карте период сопоставлен со сферой «${area.title.toLowerCase()}». Это описание символического фокуса времени, а не обещание конкретного события.`;
+    return `Сейчас действует период планеты ${name} (${item.title}). В традиционной астрологии периоды этой планеты связывают с темами: ${PLANET_MEANINGS[planetKey] ?? 'её символикой'}. В этой карте период сопоставлен со сферой «${area.title.toLowerCase()}». Это описание символического фокуса времени, а не обещание конкретного события.`;
   }
   if (item.source === 'transit') {
     const match = item.factorId.match(/transit:([A-Z][a-z]+):([A-Z][a-z]+):([^:]+):/);
