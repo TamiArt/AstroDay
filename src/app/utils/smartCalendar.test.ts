@@ -14,6 +14,7 @@ function fixture(overrides: Partial<DayForecast> = {}): DayForecast {
       'транзитный Юпитер касается натального Солнца: поддерживающий аспект, сила 82/100.',
       'Солнце в вашей карте связан с 10-м домом: карьера и статус.',
       'Сиддхи поддерживает созидательные шаги.',
+      'D24 помогает через самостоятельное обучение и ясную цель практики.',
       'энергии достаточно для видимого шага.',
     ],
     bestAreas: ['Карьера', 'Финансы', 'Обучение'],
@@ -28,6 +29,8 @@ assert.ok(plan.factors.some((item) => item.source === 'dasha'));
 assert.ok(plan.factors.some((item) => item.source === 'transit'));
 assert.ok(plan.factors.some((item) => item.source === 'natal'));
 assert.ok(plan.factors.some((item) => item.source === 'panchang'));
+assert.ok(plan.factors.some((item) => item.source === 'varga'));
+assert.equal(plan.confidence, 'high');
 assert.ok(plan.conflicts.some((item) => item.level === 'mixed'));
 assert.ok(plan.conflicts[0].resolution.includes('обратимых'));
 assert.ok(getForecastAreaIds(today).includes('career'));
@@ -42,6 +45,7 @@ const quiet = fixture({
 });
 const quietPlan = buildSmartDayPlan(quiet);
 assert.equal(quietPlan.conflicts[0]?.level, 'caution');
+assert.equal(buildSmartDayPlan(fixture({ precisionNotes: ['Время рождения указано с погрешностью ±15 мин.'] })).confidence, 'medium');
 assert.equal(quietPlan.areas.length, 1);
 
 const comparison = compareSmartPeriods(today, fixture({
