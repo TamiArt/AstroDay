@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertCircle, BarChart3, BookOpen, Clock, Eye, Layers, Orbit, Star, Users, Zap } from 'lucide-react';
+import { AlertCircle, BarChart3, BookOpen, Clock, Eye, Layers, Orbit, Sparkles, Star, Users, Zap } from 'lucide-react';
 import { NatalChart as NatalChartType } from '../utils/astrology';
 import { AspectsTableEnhanced } from './AspectsTableEnhanced';
 import { GlassCard } from './common/GlassCard';
@@ -7,6 +7,7 @@ import { DivisionalChartsTab } from './natal-chart/DivisionalChartsTab';
 import { NatalAnalysisTab } from './natal-chart/NatalAnalysisTab';
 import { NatalDashaTab } from './natal-chart/NatalDashaTab';
 import { NatalTransitsTab } from './natal-chart/NatalTransitsTab';
+import { NatalForecastTab } from './natal-chart/NatalForecastTab';
 import { NatalHousesTab } from './natal-chart/NatalHousesTab';
 import { NatalOverviewTab } from './natal-chart/NatalOverviewTab';
 import { LifePathAnalysisTab } from './natal-chart/LifePathAnalysisTab';
@@ -16,7 +17,7 @@ interface NatalChartDetailedProps {
   natalChart: NatalChartType;
 }
 
-type TabType = 'overview' | 'analysis' | 'life' | 'compatibility' | 'aspects' | 'houses' | 'dasha' | 'transits' | 'divisional';
+type TabType = 'overview' | 'analysis' | 'life' | 'compatibility' | 'aspects' | 'houses' | 'dasha' | 'transits' | 'forecast' | 'divisional';
 
 const TABS = [
   { id: 'overview', label: 'Обзор', icon: Eye },
@@ -27,6 +28,7 @@ const TABS = [
   { id: 'houses', label: 'Дома', icon: Layers },
   { id: 'dasha', label: 'Даша', icon: Clock },
   { id: 'transits', label: 'Транзиты', icon: Orbit },
+  { id: 'forecast', label: 'Единый прогноз', icon: Sparkles },
   { id: 'divisional', label: 'Дробные карты', icon: BarChart3 },
 ] as const;
 
@@ -79,6 +81,8 @@ export function NatalChartDetailed({ natalChart }: NatalChartDetailedProps) {
         return <NatalDashaTab natalChart={natalChart} />;
       case 'transits':
         return <NatalTransitsTab natalChart={natalChart} />;
+      case 'forecast':
+        return <NatalForecastTab natalChart={natalChart} />;
       case 'divisional':
         return <DivisionalChartsTab natalChart={natalChart} />;
       default:
