@@ -285,7 +285,7 @@ export function ForecastCalendar({ profile, natalChart }: ForecastCalendarProps)
               <article key={item.event.id} className="rounded-xl bg-background/70 border border-border p-3 space-y-2">
                 <div className="flex flex-wrap items-center justify-between gap-2"><h4 className="font-semibold">{item.event.title}</h4><span className="text-xs rounded-full bg-indigo-500/10 px-2 py-1">{item.event.date.split("-").reverse().join(".")} · {item.event.referenceTime}</span></div>
                 <p className="text-sm">{item.event.description}</p>
-                <p className="text-xs opacity-60">Планеты: {item.event.planets.join(", ")} · Наблюдение: {item.event.visibilityWindow}</p>
+                <p className="text-xs opacity-60">Планеты: {item.event.planets.join(", ")} · Наблюдение: {item.event.visibilityWindow}</p><p className="text-xs opacity-60">{item.event.referenceTimeNote}</p>
                 <div className="rounded-lg bg-indigo-500/10 p-3 space-y-1"><p className="text-xs font-semibold">Лично для вашей натальной карты</p><p className="text-sm font-medium">{item.personalSummary}</p><p className="text-sm">{item.personalMeaning}</p><p className="text-xs opacity-60">{item.planetaryPositions.map((position) => position.name + ": " + position.sign + " " + position.degree.toFixed(1) + "° · " + position.natalHouse + "-й дом").join(" · ")}</p></div>
                 <p className="text-xs opacity-60">{item.event.observationTip}</p><p className="text-xs opacity-60">{item.caveat}</p>
                 <a href={item.event.sourceUrl} target="_blank" rel="noreferrer" className="inline-block text-xs font-medium text-indigo-600 underline underline-offset-2">{item.event.sourceLabel}</a>
