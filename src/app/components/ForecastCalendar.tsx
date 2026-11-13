@@ -2,6 +2,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Loader2, WifiOff, Calendar as CalendarIcon } from 'lucide-react';
 import { UserProfile } from '../utils/storage';
+import type { NatalChart } from '../utils/astrology';
+import { getPersonalizedAstronomicalEvent, SIGNIFICANT_ASTRONOMICAL_EVENTS } from '../utils/significantAstronomicalEvents';
 import { DayForecast, getForecastsInRange, isOnline } from '../utils/indexedDB';
 import { FORECAST_CALC_VERSION, getForecastProfileKey, getOrCalculateForecast } from '../utils/forecastCalculations';
 import { formatDateKey } from '../utils/dateUtils';
@@ -11,9 +13,10 @@ import { SMART_CALENDAR_AREAS, compareSmartForecastPeriods, getForecastAreaIds, 
 
 interface ForecastCalendarProps {
   profile: UserProfile;
+  natalChart: NatalChart;
 }
 
-export function ForecastCalendar({ profile }: ForecastCalendarProps) {
+export function ForecastCalendar({ profile, natalChart }: ForecastCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [forecasts, setForecasts] = useState<Map<string, DayForecast>>(new Map());
   const [currentPeriodForecasts, setCurrentPeriodForecasts] = useState<DayForecast[]>([]);
@@ -80,6 +83,19 @@ export function ForecastCalendar({ profile }: ForecastCalendarProps) {
   };
 
   const monthDays = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
+  const monthAstronomicalEvents = useMemo(() => SIGNIFICANT_ASTRONOMICAL_EVENTS
+    .filter((event) => event.date.startsWith(currentMonth.getFullYear() + '-' + String(currentMonth.getMonth() + 1).padStart(2, '0')))
+    .map((event) => {
+      try {
+        return getPersonalizedAstronomicalEvent(event, natalChart);
+      } catch (error) {
+        console.error('Не удалось рассчитать персональную трактовку события ' + event.id + ':', error);
+        return null;
+      }
+    })
+    .filter((event): event is NonNullable<typeof event> => event !== null),
+  [currentMonth, natalChart]);
+  const eventDates = useMemo(() => new Set(monthAstronomicalEvents.map((item) => item.event.date)), [monthAstronomicalEvents]);
   const monthForecastList = useMemo(() => [...forecasts.values()], [forecasts]);
   const selectedMonthLabel = currentMonth.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
   const currentMonthLabel = new Date().toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
@@ -161,13 +177,14 @@ export function ForecastCalendar({ profile }: ForecastCalendarProps) {
       const isToday = date.getTime() === today.getTime();
       const isPast = date < today;
       const hiddenByFilter = Boolean(forecast && areaFilter !== 'all' && !getForecastAreaIds(forecast).includes(areaFilter));
+      const hasAstronomicalEvent = eventDates.has(dateStr);
 
       days.push(
         <button
           key={day}
           onClick={() => handleDayClick(date)}
           disabled={isCalculating || hiddenByFilter}
-          title={forecast?.reasoning?.[0] || forecast?.topRecommendation || 'Рассчитать прогноз'}
+          title={hasAstronomicalEvent ? 'Значимое астрономическое событие' : forecast?.reasoning?.[0] || forecast?.topRecommendation || 'Рассчитать прогноз'}
           className={`aspect-square rounded-2xl p-2 flex flex-col items-center justify-center gap-1 transition-all hover:scale-105 ${
             isToday ? 'ring-2 ring-primary' : ''
           } ${isPast ? 'opacity-60' : ''} ${hiddenByFilter ? 'opacity-15' : ''}`}
@@ -190,8 +207,9 @@ export function ForecastCalendar({ profile }: ForecastCalendarProps) {
               )}
             </>
           ) : (
-            <span className="text-xs opacity-40">?</span>
+            <span className="text-xs opacity-40">{hasAstronomicalEvent ? '🌌' : '?'}</span>
           )}
+          {hasAstronomicalEvent && <span className="text-[9px] font-semibold text-indigo-600">Событие</span>}
         </button>
       );
     }
@@ -257,6 +275,24 @@ export function ForecastCalendar({ profile }: ForecastCalendarProps) {
           </div>
         </div>
 
+        {monthAstronomicalEvents.length > 0 && (
+          <section className="mb-5 rounded-2xl border border-indigo-300/40 bg-indigo-500/5 p-4 space-y-3" aria-label="Значимые астрономические события">
+            <div className="flex items-center gap-2">
+              <span className="text-xl" aria-hidden="true">🌌</span>
+              <div><h3 className="font-semibold">Значимые события месяца</h3><p className="text-xs opacity-60">Астрономическое событие и его символическая трактовка по вашей натальной карте</p></div>
+            </div>
+            {monthAstronomicalEvents.map((item) => (
+              <article key={item.event.id} className="rounded-xl bg-background/70 border border-border p-3 space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2"><h4 className="font-semibold">{item.event.title}</h4><span className="text-xs rounded-full bg-indigo-500/10 px-2 py-1">{item.event.date.split("-").reverse().join(".")} · {item.event.referenceTime}</span></div>
+                <p className="text-sm">{item.event.description}</p>
+                <p className="text-xs opacity-60">Планеты: {item.event.planets.join(", ")} · Наблюдение: {item.event.visibilityWindow}</p><p className="text-xs opacity-60">{item.event.referenceTimeNote}</p>
+                <div className="rounded-lg bg-indigo-500/10 p-3 space-y-1"><p className="text-xs font-semibold">Лично для вашей натальной карты</p><p className="text-sm font-medium">{item.personalSummary}</p><p className="text-sm">{item.personalMeaning}</p><p className="text-xs opacity-60">{item.planetaryPositions.map((position) => position.name + ": " + position.sign + " " + position.degree.toFixed(1) + "° · " + position.natalHouse + "-й дом").join(" · ")}</p></div>
+                <p className="text-xs opacity-60">{item.event.observationTip}</p><p className="text-xs opacity-60">{item.caveat}</p>
+                <a href={item.event.sourceUrl} target="_blank" rel="noreferrer" className="inline-block text-xs font-medium text-indigo-600 underline underline-offset-2">{item.event.sourceLabel}</a>
+              </article>
+            ))}
+          </section>
+        )}
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <span className="text-sm font-medium opacity-70">Показывать сферу:</span>
           <button type="button" onClick={() => setAreaFilter('all')} className={`rounded-full px-3 py-1.5 text-xs border ${areaFilter === 'all' ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-secondary'}`}>Все сферы</button>

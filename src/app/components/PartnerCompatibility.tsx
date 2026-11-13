@@ -88,8 +88,7 @@ export function PartnerCompatibility({ natalChart }: PartnerCompatibilityProps) 
         <div className="mb-5">
           <h2 className="text-xl font-semibold">Ашта-Кута — Гуна-милан</h2>
           <p className="mt-2 text-sm text-gray-600">
-            Введите данные рождения второго человека. Для расчёта используются сидерические долготы Луны
-            по Лахири; время и часовой пояс важны для определения накшатры и пады.
+            Введите данные рождения второго человека. Этот расчёт сравнивает положение Луны в двух картах по традиционной системе Ашта-Кута. Он оценивает только восемь астрологических критериев, а не качество отношений, совместимость характеров или вероятность брака. Для определения накшатры и её четверти (пады) важны точные дата, время и часовой пояс рождения.
           </p>
         </div>
         <form onSubmit={calculate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -111,7 +110,7 @@ export function PartnerCompatibility({ natalChart }: PartnerCompatibilityProps) 
           <label className="text-sm">Долгота
             <input required type="number" step="any" value={Number.isFinite(profile.longitude) ? profile.longitude : ''} onChange={event => update('longitude', event.target.value === '' ? Number.NaN : Number(event.target.value))} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2" />
           </label>
-          <label className="text-sm md:col-span-2">Роль пользователя для направленных правил Варна, Вашьи и Ганы
+          <label className="text-sm md:col-span-2">Традиционная роль для трёх правил, где сравнение зависит от порядка участников
             <select value={varnaRoleA} required onChange={event => setVarnaRoleA(event.target.value as 'bride' | 'groom' | '')} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2">
               <option value="">Выберите роль</option>
               <option value="bride">Пользователь — невеста, партнёр — жених</option>
@@ -134,9 +133,10 @@ export function PartnerCompatibility({ natalChart }: PartnerCompatibilityProps) 
           <GlassCard>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm text-gray-600">Сумма по восьми составляющим</p>
+                <p className="text-sm text-gray-600">Баллы по восьми традиционным критериям</p>
                 <p className="text-4xl font-bold text-purple-700">{result.totalScore}<span className="text-xl text-gray-500"> / 36</span></p>
                 <p className="mt-1 font-medium">{CLASSIFICATION[result.classification]}</p>
+                <p className="mt-2 max-w-xl text-xs leading-relaxed text-gray-600">Категория показывает результат только внутри системы Ашта-Кута. Она не предсказывает, будут ли отношения счастливыми или долговечными: на это влияют реальные поступки, общение, ценности и обстоятельства пары.</p>
               </div>
               <div className="rounded-xl bg-purple-50 px-5 py-4 text-center">
                 <p className="text-2xl font-semibold text-purple-700">{result.percentage}%</p>

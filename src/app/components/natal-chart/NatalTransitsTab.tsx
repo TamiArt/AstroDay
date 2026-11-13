@@ -60,11 +60,11 @@ function AspectCard({ item }: { item: TransitNatalAspect }) {
   return <article className="rounded-lg border border-gray-200 bg-white p-3">
     <div className="flex flex-wrap items-center justify-between gap-2">
       <p className="text-sm font-semibold text-gray-900">{ru(item.transitPlanet)} → ваша натальная {ru(item.natalPlanet)}: {item.aspect}</p>
-      <span className="text-xs text-gray-600">Отклонение от точного угла: {item.orb.toFixed(2)}° · расчётный показатель: {item.strength}%</span>
+      <span className="text-xs text-gray-600">Отклонение от точного угла: {item.orb.toFixed(2)}° · близость к точному углу по шкале расчёта: {item.strength}%</span>
     </div>
     <p className="mt-2 text-sm leading-relaxed text-gray-700">Сейчас транзитная планета {ru(item.transitPlanet)} затрагивает качества вашей натальной планеты {ru(item.natalPlanet)}. {ru(item.transitPlanet)} отвечает за {PLANET_MEANINGS[item.transitPlanet] ?? 'текущие стремления'}, а {ru(item.natalPlanet)} — за {PLANET_MEANINGS[item.natalPlanet] ?? 'личные реакции'}.</p>
     <p className="mt-2 rounded-lg bg-indigo-50 p-3 text-sm leading-relaxed text-indigo-950"><strong>Что означает эта комбинация:</strong> {aspectMeaning} Транзит проходит по {item.transitHouse}-му дому ({houseMeaning(item.transitHouse)}); натальная планета находится в {item.natalHouse ? `${item.natalHouse}-м доме (${houseMeaning(item.natalHouse)})` : 'доме, который не удалось определить'}.</p>
-    <p className="mt-2 text-xs text-gray-500">{item.applying === null ? 'Сходится или расходится — данных для определения фазы нет.' : item.applying ? 'Аспект сходящийся: точка аспекта ещё приближается.' : 'Аспект расходящийся: точка точного аспекта уже пройдена.'} Это символическая интерпретация, а не указание на обязательное событие.</p>
+    <p className="mt-2 text-xs text-gray-500">{item.applying === null ? 'Сходится или расходится — данных для определения фазы нет.' : item.applying ? 'Аспект сходящийся: угол между планетами приближается к точному значению.' : 'Аспект расходящийся: точный угол уже пройден, расстояние от него увеличивается.'} Процент показывает только близость угла к точному значению в рамках выбранного расчёта. Он не измеряет силу влияния на жизнь. Это символическая интерпретация, а не указание на обязательное событие.</p>
   </article>;
 }
 function LordHitCard({ item }: { item: TransitHouseLordHit }) {
@@ -84,10 +84,10 @@ function AreaCard({ area }: { area: TransitLifeArea }) {
   return <article className="rounded-xl border border-gray-200 bg-white p-4">
     <div className="flex flex-wrap items-center justify-between gap-2"><h4 className="font-semibold text-gray-900">{area.label}</h4><span className={`rounded-full px-2 py-1 text-xs ${area.repeated ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{area.repeated ? 'Отмечена и в Даше, и в транзитах' : 'Есть один вид показателей'}</span></div>
     <p className="mt-2 text-sm leading-relaxed text-gray-700">{area.repeated
-      ? `Эта тема выделяется сразу двумя способами: её затрагивает текущий период Даши (${dashaNames.join(', ') || 'активные периоды'}) и одновременно транзитные положения или аспекты. В традиционной трактовке это делает тему более заметной для внимания.`
+      ? `Эта тема упоминается в двух видах расчёта: в текущем периоде Даши (${dashaNames.join(', ') || 'активные периоды'}) и в сравнении текущих положений планет с картой рождения. Это два разных способа прочитать одну астрологическую модель, а не независимое подтверждение будущего события.`
       : area.dashaEvidence.length
-        ? `Тема связана с текущими периодами Даши (${dashaNames.join(', ')}). Это символический фон периода; прямого транзитного совпадения по выбранным правилам не найдено.`
-        : 'Тема затронута текущими транзитными положениями или аспектами. Совпадения с активными периодами Даши по выбранным правилам не обнаружено.'}</p>
+        ? `Тема включена в символическое описание текущего периода Даши (${dashaNames.join(', ')}). По правилам этого расчёта отдельного совпадения с текущими положениями планет не найдено.`
+        : 'Тема включена в обзор из-за текущего положения планет или их геометрической связи с натальными планетами. Совпадения с активными периодами Даши по правилам расчёта не обнаружено.'}</p>
     <p className="mt-1 text-xs text-gray-500">Связанные дома: {area.houses.map((house) => `${house}-й дом — ${houseMeaning(house)}`).join('; ')}.</p>
     {(area.dashaEvidence.length + area.transitEvidence.length) > 0 && <button type="button" onClick={() => setShowEvidence((value) => !value)} className="mt-2 text-xs font-semibold text-indigo-700">{showEvidence ? 'Скрыть основания' : 'Посмотреть, какие расчёты это показывают'}</button>}
     {showEvidence && <div className="mt-2 space-y-2">{area.dashaEvidence.map((item, index) => <p key={`d-${index}`} className="rounded-lg bg-purple-50 p-2 text-xs text-gray-700">{item}</p>)}{area.transitEvidence.map((item, index) => <p key={`t-${index}`} className="rounded-lg bg-blue-50 p-2 text-xs text-gray-700">{item}</p>)}</div>}
@@ -104,7 +104,7 @@ function TransitReport({ report }: { report: TransitAnalysisReport }) {
     </div>
     <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-4">
       <h3 className="font-semibold text-gray-900">Как читать текущие периоды <TermTooltip term="dasha" /></h3>
-      <p className="mt-1 text-sm text-gray-700"><strong>Махадаша</strong> — большой жизненный период, задающий общий фон. <strong>Антардаша</strong> — более короткий этап внутри него. <strong>Пратьянтардаша</strong> — ещё более короткий подпериод, который уточняет текущий отрезок времени. Все три периода действуют одновременно, но не означают три отдельных события.</p>
+      <p className="mt-1 text-sm text-gray-700"><strong>Махадаша</strong> — большой жизненный период, задающий общий фон. <strong>Антардаша</strong> — более короткий этап внутри него. <strong>Пратьянтардаша</strong> — ещё более короткий подпериод, который уточняет текущий отрезок времени. Все три уровня перекрываются по времени и рассматриваются вместе. Они не означают три отдельных события.</p>
     </div>
     <div className="grid gap-3 md:grid-cols-3">
       <div className="rounded-xl border border-purple-100 bg-purple-50 p-4"><p className="text-xs font-semibold uppercase text-purple-700">Большой период — Махадаша</p><p className="mt-1 text-lg font-bold text-gray-900">{report.dasha.mahadasha}</p><p className="text-xs text-gray-600">До {formatDate(report.dasha.mahadashaEnd)}</p></div>
