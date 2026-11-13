@@ -70,7 +70,8 @@ export function getPersonalizedAstronomicalEvent(
 ): PersonalizedAstronomicalEvent {
   const transitMoment = new Date(event.momentUtc);
   const report = analyzeTransits(natalChart, transitMoment);
-  const relevant = report.positions.filter((position) => position.planet === 'Mars' || position.planet === 'Jupiter');
+  const relevant = report.positions.filter((position) => ['Mars', 'Jupiter'].includes(position.planet));
+  const alignmentPositions = report.positions.filter((position) => ['Mercury', 'Venus', 'Mars', 'Jupiter'].includes(position.planet));
   const sameHouse = relevant.length === 2 && relevant[0].natalHouse === relevant[1].natalHouse;
   const house = sameHouse ? relevant[0].natalHouse : null;
   const topic = house ? HOUSE_TOPICS[house] : null;
@@ -82,18 +83,22 @@ export function getPersonalizedAstronomicalEvent(
   const personalMeaning = house
     ? `В Джйотиш ${house}-й дом связывают с темами: ${topic}. Поэтому в символической трактовке именно эти вопросы становятся главным персональным акцентом этого события.`
     : relevant.map((position) => `${position.planetName} находится в ${position.natalHouse}-м доме (${HOUSE_TOPICS[position.natalHouse] ?? 'тема дома'}).`).join(' ');
+  const additionalPositions = alignmentPositions.filter((position) => position.planet !== 'Mars' && position.planet !== 'Jupiter');
+  const extendedMeaning = additionalPositions.length
+    ? personalMeaning + ' Дополнительно: ' + additionalPositions.map((position) => `${position.planetName} затрагивает ${position.natalHouse}-й дом — ${HOUSE_TOPICS[position.natalHouse] ?? 'эту жизненную сферу'}.`).join(' ')
+    : personalMeaning;
 
   return {
     event,
     transitMoment,
-    planetaryPositions: relevant.map((position) => ({
+    planetaryPositions: alignmentPositions.map((position) => ({
       name: position.planetName,
       sign: position.sign,
       degree: position.degree,
       natalHouse: position.natalHouse,
     })),
     personalSummary,
-    personalMeaning,
+    personalMeaning: extendedMeaning,
     caveat: 'Парад — астрономическое явление, а связь с жизненными темами — традиционная астрологическая интерпретация. Она не предсказывает и не гарантирует конкретных событий.',
   };
 }
