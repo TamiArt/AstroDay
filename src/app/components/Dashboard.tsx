@@ -334,7 +334,7 @@ export function Dashboard({ profile, onReset, onProfileUpdate }: DashboardProps)
               </div>
             )}
             <Suspense fallback={<ViewFallback />}>
-              <ForecastCalendar profile={profile} />
+              <ForecastCalendar profile={profile} natalChart={natalChart} />
             </Suspense>
           </>
         )}
