@@ -45,7 +45,7 @@ function VargaDetail({ analysis }: { analysis: VargaAnalysis }) {
         <p className="mt-2 text-sm leading-relaxed text-gray-700">Эта дополнительная карта рассматривает тему «{analysis.topic.toLowerCase()}». Основная карта рождения D1 <TermTooltip term="d1" /> показывает общий рисунок карты, а дополнительная варга <TermTooltip term="varga" /> помогает подробнее рассмотреть только указанную область. Её нельзя читать отдельно от D1.</p>
       </summary>
       <div className="mt-4 space-y-4">
-        <section className="rounded-lg bg-indigo-50/70 p-3"><h5 className="text-sm font-semibold text-indigo-900">Как понять результат</h5><p className="mt-1 text-sm leading-relaxed text-gray-800">Сравните, какие планеты и темы повторяются в основной карте D1 и в дополнительной карте. Если указания совпадают, трактовка темы становится более согласованной. Если различаются, это не ошибка: дополнительная карта показывает другой слой той же жизненной области.</p></section>
+        <section className="rounded-lg bg-indigo-50/70 p-3"><h5 className="text-sm font-semibold text-indigo-900">Как читать это сравнение</h5><p className="mt-1 text-sm leading-relaxed text-gray-800">Сначала посмотрите на основную карту D1: она задаёт общий контекст. Затем сравните с ней тематическую карту. Если в обеих картах повторяется одна и та же связь, внутри системы Джйотиш трактовки согласуются. Если положения отличаются, это не означает ошибку: дополнительная карта рассчитана по отдельному правилу и показывает другой срез темы. Само совпадение не доказывает событие и не повышает его вероятность.</p></section>
         <details className="rounded-lg border border-gray-200 p-3"><summary className="cursor-pointer text-sm font-semibold text-gray-700">Подробные технические основания</summary><p className="mt-2 text-xs text-gray-600">{analysis.interpretiveScope}</p>
         <section><h5 className="mb-2 text-sm font-semibold text-gray-900">D1 — исходные показатели <TermTooltip term="d1" /></h5><div className="grid gap-2 md:grid-cols-2">{analysis.d1Evidence.map((item) => <HouseEvidence key={item.house} item={item} />)}</div></section>
         <section><h5 className="mb-2 text-sm font-semibold text-gray-900">Показатели тематической варги <TermTooltip term="varga" /></h5><div className="grid gap-2 md:grid-cols-2">{analysis.vargaEvidence.map((item) => <HouseEvidence key={item.house} item={item} />)}</div></section>
@@ -94,7 +94,7 @@ export function DivisionalChartsTab({ natalChart }: DivisionalChartsTabProps) {
 
       <GlassCard>
         <div className="flex items-center gap-2"><BookOpen className="h-5 w-5 text-indigo-700" /><h3 className="text-lg font-semibold text-gray-900">Как читать дополнительные карты</h3></div>
-        <p className="mt-2 mb-4 text-sm text-gray-600">Откройте интересующую тему, чтобы увидеть, какие показатели повторяются в основной карте и дополнительной. Система не делит карты на «хорошие» и «плохие» — она показывает, где указания совпадают, а где различаются.</p>
+        <p className="mt-2 mb-4 text-sm text-gray-600">Выберите тему и сравните конкретные положения в основной карте рождения и в дополнительной. Ни одна карта сама по себе не означает «хороший» или «плохой» результат: важно, какие именно положения совпадают и какие различаются.</p>
         <div className="space-y-3">{report.analyses.map((analysis) => <VargaDetail key={analysis.division} analysis={analysis} />)}</div>
       </GlassCard>
 
