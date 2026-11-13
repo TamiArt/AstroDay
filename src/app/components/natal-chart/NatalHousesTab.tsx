@@ -15,6 +15,7 @@ import {
 import { HOUSES_DETAILED } from '../../utils/housesDescriptions';
 import { analyzeHouseLords, type HouseLordInsight } from '../../utils/natalHouseLordAnalysis';
 import { GlassCard } from '../common/GlassCard';
+import { TermTooltip } from '../common/TermTooltip';
 
 interface NatalHousesTabProps {
   natalChart: NatalChartType;
@@ -92,7 +93,7 @@ function TopicCard({ topic, natalChart }: { topic: LifeTopicInsight; natalChart:
         )}
 
         <p className="text-xs leading-relaxed text-gray-500">
-          Основные дома задают предмет анализа; дополнительные дома показывают связанные темы и не имеют автоматически равного веса. Поддержка оценивается здесь по достоинству управителей и их диспозиторов, а не по полной Shadbala.
+          Основные дома задают предмет анализа; дополнительные дома показывают связанные темы и не имеют автоматически равного веса. Поддержка оценивается здесь по достоинству управителей и их диспозиторов, а не по полной Shadbala <TermTooltip term="shadbala" />.
         </p>
 
         <div className="rounded-lg border border-green-200 bg-green-50 p-4">
@@ -191,7 +192,7 @@ function HouseLordCard({ insight }: { insight: HouseLordInsight }) {
 
         <div className="grid gap-3 md:grid-cols-2">
           <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-            <h5 className="mb-2 text-sm font-semibold text-gray-900">Положение и достоинство</h5>
+            <h5 className="mb-2 text-sm font-semibold text-gray-900">Положение и достоинство <TermTooltip term="dignity" /></h5>
             <p className="text-xs leading-relaxed text-gray-700">
               {insight.lordSign ?? 'Знак не определён'} · {insight.dignity}. {insight.dignityExplanation}
             </p>
@@ -204,7 +205,7 @@ function HouseLordCard({ insight }: { insight: HouseLordInsight }) {
           </div>
 
           <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-            <h5 className="mb-2 text-sm font-semibold text-gray-900">Цепочка диспозиторов</h5>
+            <h5 className="mb-2 text-sm font-semibold text-gray-900">Цепочка диспозиторов <TermTooltip term="dispositor" /></h5>
             {insight.dispositorChain.length ? (
               <ol className="space-y-1.5">
                 {insight.dispositorChain.map((step) => (
@@ -250,7 +251,7 @@ function HouseLordCard({ insight }: { insight: HouseLordInsight }) {
         </div>
 
         <details className="rounded-lg border border-gray-200 bg-white p-3">
-          <summary className="cursor-pointer text-sm font-semibold text-gray-800">Аспекты, соединения и исходные доказательства</summary>
+          <summary className="cursor-pointer text-sm font-semibold text-gray-800">Аспекты, соединения и исходные основания</summary>
           <div className="mt-3 space-y-3">
             <div>
               <h5 className="mb-1 text-xs font-semibold text-gray-800">Аспекты на положение управителя</h5>
@@ -261,7 +262,7 @@ function HouseLordCard({ insight }: { insight: HouseLordInsight }) {
               <EvidenceList items={insight.outgoingAspects.map((item) => `${item.kind} на ${item.targetHouse}-й дом`)} />
             </div>
             <div>
-              <h5 className="mb-1 text-xs font-semibold text-gray-800">Соединения по знаку</h5>
+              <h5 className="mb-1 text-xs font-semibold text-gray-800">Соединения по знаку <TermTooltip term="conjunction" /></h5>
               <EvidenceList items={insight.conjunctions.length ? insight.conjunctions : ['Других планет в том же знаке нет.']} />
               <p className="mt-1 text-xs text-gray-500">Соединение определяется по общему знаку; точный градусный орбис здесь не рассчитывается.</p>
             </div>
@@ -286,13 +287,11 @@ export function NatalHousesTab({ natalChart }: NatalHousesTabProps) {
           <div className="flex items-start gap-3">
             <Home className="mt-0.5 h-6 w-6 flex-shrink-0 text-purple-600" />
             <div>
-              <h3 className="mb-2 font-semibold text-gray-900">Дома твоей натальной карты — персональная интерпретация</h3>
+              <h3 className="mb-2 font-semibold text-gray-900">12 домов натальной карты: какие сферы они обозначают</h3>
               <p className="text-sm leading-relaxed text-gray-700">
-                Здесь учитываются знак дома, его управитель и достоинство, положение планет, их накшатры и граха-дришти.
-                В оценке достоинства 90/100 означает экзальтацию, 75/100 — собственный знак, 25/100 — падение,
-                50/100 — прочий знак. Это условная шкала достоинства, не полная Shadbala и не научная мера силы.
-                Для каждой жизненной сферы отдельно показана связь Махадаши и Антардаши с её домами и управителями.
-                Выводы остаются символическими гипотезами, а не неизбежным сценарием жизни.
+                Для каждого дома показано, какие жизненные темы он обозначает, где находится его управитель и какие планеты связаны с ним по выбранным правилам Джйотиш. Накшатра <TermTooltip term="nakshatra" /> и граха-дришти <TermTooltip term="grahaDrishti" /> — дополнительные астрологические показатели; их пояснения доступны по значку информации.
+                Числа 90/100, 75/100, 50/100 и 25/100 — условная шкала положения планеты в знаке: экзальтация, собственный знак, обычное положение и падение соответственно. Это не оценка вашей личности и не научное измерение силы планеты; полная Шадбала <TermTooltip term="shadbala" /> здесь не рассчитывается.
+                Связь периодов Даши с домами показывает, какие темы объединяет астрологическая модель. Все выводы — символическая интерпретация, а не неизбежный сценарий жизни.
               </p>
             </div>
           </div>
@@ -313,11 +312,9 @@ export function NatalHousesTab({ natalChart }: NatalHousesTabProps) {
 
       <section className="space-y-4">
         <div>
-          <h3 className="text-xl font-bold text-gray-900">Управители домов — углублённый анализ</h3>
+          <h3 className="text-xl font-bold text-gray-900">Почему дома связаны друг с другом: управители и планеты</h3>
           <p className="text-sm text-gray-600">
-            Для каждого дома показаны положение и достоинство управителя, управляемые им дома,
-            цепочка диспозиторов, аспекты, соединения и повторяющиеся связи. Цепочка ограничена
-            тремя переходами и останавливается при обнаружении цикла.
+            Здесь можно проследить цепочку связей. Управитель дома — планета, которая управляет знаком на его начале. Если эта планета находится в другом доме, темы двух домов связываются в астрологической трактовке. Диспозитор — управитель знака, в котором стоит планета; цепочка таких управителей помогает увидеть дополнительные связи. Расчёт показывает до трёх переходов и останавливается, если цепочка замыкается.
           </p>
         </div>
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
@@ -378,14 +375,14 @@ export function NatalHousesTab({ natalChart }: NatalHousesTabProps) {
                 <div className="space-y-5 border-t border-purple-100 px-4 pb-5 pt-5">
                   <div>
                     <h5 className="mb-2 flex items-center gap-2 font-semibold text-gray-900">
-                      <Sparkles className="h-4 w-4 text-purple-600" /> Что это означает именно в твоей карте
+                      <Sparkles className="h-4 w-4 text-purple-600" /> Что это означает именно в вашей карте
                     </h5>
                     <p className="text-sm leading-relaxed text-gray-700">{personal.interpretation}</p>
                   </div>
 
                   {personal.occupantInterpretations.length > 0 && (
                     <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4">
-                      <h5 className="mb-3 text-sm font-semibold text-indigo-900">Что конкретно означает планета в этом доме</h5>
+                      <h5 className="mb-3 text-sm font-semibold text-indigo-900">Как трактуется планета, расположенная в этом доме</h5>
                       <div className="space-y-3">
                         {personal.occupantInterpretations.map((item) => (
                           <p key={item} className="text-sm leading-relaxed text-gray-700">{item}</p>
@@ -395,10 +392,9 @@ export function NatalHousesTab({ natalChart }: NatalHousesTabProps) {
                   )}
 
                   <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-                    <h5 className="mb-2 text-sm font-semibold text-blue-900">Как планеты связаны между собой</h5>
+                    <h5 className="mb-2 text-sm font-semibold text-blue-900">Как планеты связаны по правилам аспектов</h5>
                     <p className="mb-3 text-xs leading-relaxed text-blue-800">
-                      Показаны соединения по общему знаку и классические граха-дришти Парашари на основе целых знаков/домов.
-                      Это не аспектная сетка с точными градусными орбисами и не полный набор техник всех астрологических школ; аспекты Раху и Кету здесь не включены из-за различий традиций.
+                      Здесь показаны два вида связей: планеты в одном знаке и аспекты по системе Парашари. Это не означает, что планеты обязательно стоят близко друг к другу по градусам: точное расстояние здесь не оценивается. Используется только выбранная схема Джйотиш; другие астрологические школы могут считать аспекты иначе. Аспекты Раху и Кету не включены.
                     </p>
                     {personal.planetaryConnections.length > 0 ? (
                       <ul className="space-y-2">

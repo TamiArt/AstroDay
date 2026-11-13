@@ -4,6 +4,12 @@ import { buildNatalChartFacts } from '../../utils/natalChartFacts';
 import { analyzeNatalYogas } from '../../utils/natalYogaAnalysis';
 import type { NatalChart } from '../../utils/astrology';
 import { GlassCard } from '../common/GlassCard';
+import { TermTooltip } from '../common/TermTooltip';
+
+const PLANET_NAMES_RU: Record<string, string> = {
+  Sun: 'Солнце', Moon: 'Луна', Mars: 'Марс', Mercury: 'Меркурий',
+  Jupiter: 'Юпитер', Venus: 'Венера', Saturn: 'Сатурн', Rahu: 'Раху', Ketu: 'Кету',
+};
 
 const CATEGORY_LABELS = {
   raja: 'Раджа-йоги',
@@ -30,7 +36,7 @@ export function NatalYogasSection({ natalChart }: { natalChart: NatalChart }) {
           <div>
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-purple-600" />
-              <h3 className="text-lg font-bold text-gray-900">Йоги и специальные комбинации</h3>
+              <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900">Йоги и специальные комбинации <TermTooltip term="natalYoga" /></h3>
             </div>
             <p className="mt-1 text-sm text-gray-600">
               Формальные правила обнаружения с доказательствами из вашей карты
@@ -43,7 +49,11 @@ export function NatalYogasSection({ natalChart }: { natalChart: NatalChart }) {
         </div>
 
         {detected ? (
-          <div className="space-y-3">
+          <>
+          <div className="rounded-lg bg-indigo-50/70 p-3 text-sm leading-relaxed text-indigo-950">
+          Йога — это сочетание нескольких показателей натальной карты, а не отдельная планета. Ниже показано, какие именно положения образуют комбинацию, какие темы она затрагивает и какие дополнительные условия могут усиливать или ослаблять её трактовку. Само наличие йоги не гарантирует конкретных событий.
+        </div>
+        <div className="space-y-3">
             {analysis.findings.map((finding) => (
               <details key={finding.id} className="rounded-xl border border-purple-200 bg-purple-50/40 p-3">
                 <summary className="cursor-pointer list-none">
@@ -63,7 +73,7 @@ export function NatalYogasSection({ natalChart }: { natalChart: NatalChart }) {
                   <ul className="list-disc space-y-1 pl-5">
                     {finding.evidence.map((item) => <li key={item} className="text-sm text-gray-700">{item}</li>)}
                   </ul>
-                  <p className="text-xs text-gray-500">Планеты: {finding.participants.join(', ')}. Дома: {finding.houses.length ? finding.houses.join(', ') : 'не определены'}.</p>
+                  <p className="text-xs text-gray-500">Участвуют планеты: {finding.participants.map((planet) => PLANET_NAMES_RU[planet] ?? planet).join(', ')}. Дома: {finding.houses.length ? finding.houses.join(', ') : 'не определены'}.</p>
                   {finding.assessment.supportingFactors.length > 0 && (
                     <div className="rounded-lg bg-emerald-50 p-2">
                       <p className="text-xs font-semibold text-emerald-900">Поддерживающие факторы</p>
@@ -87,6 +97,7 @@ export function NatalYogasSection({ natalChart }: { natalChart: NatalChart }) {
               </details>
             ))}
           </div>
+          </>
         ) : (
           <p className="text-sm text-gray-600">По проверенным правилам подтверждённых комбинаций пока не найдено.</p>
         )}

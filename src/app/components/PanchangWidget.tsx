@@ -22,8 +22,8 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
       title: 'Титхи',
       value: panchang.tithi.name,
       tooltip: 'Что это?',
-      description: panchang.tithi.meaning,
-      details: 'Титхи — это лунный день, который измеряет угол между Солнцем и Луной. Всего 30 титхи в лунном месяце. Каждая несёт свою энергию.'
+      description: `Традиционная трактовка: ${panchang.tithi.meaning.toLowerCase()}.`,
+      details: 'Титхи — это лунный день, который рассчитывают по угловому расстоянию между Солнцем и Луной. В лунном месяце 30 титхи. В традиции Джйотиш их используют как один из символических ориентиров календарного дня.'
     },
     {
       id: 'nakshatra',
@@ -32,8 +32,8 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
       title: 'Накшатра',
       value: nakshatra?.name || '',
       tooltip: 'Что это?',
-      description: `Управитель: ${nakshatra?.lord}. Божество: ${nakshatra?.deity}`,
-      details: 'Накшатра — это одно из 27 лунных созвездий. Луна проходит через каждую накшатру примерно за сутки. Накшатры влияют на качество времени и события.'
+      description: `Планета-управитель: ${nakshatra?.lord}. Связанное божество в традиции: ${nakshatra?.deity}.`,
+      details: 'Накшатра — один из 27 участков звёздного круга, через которые проходит Луна. Луна обычно находится в одном таком участке около суток. В Джйотиш накшатру используют для символического описания дня; она не предсказывает конкретные события.'
     },
     {
       id: 'yoga',
@@ -42,8 +42,8 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
       title: 'Йога',
       value: panchang.yoga.name,
       tooltip: 'Что это?',
-      description: panchang.yoga.meaning,
-      details: 'Йога рассчитывается из суммы долгот Солнца и Луны. Всего 27 йог, каждая влияет на результаты действий.'
+      description: `Традиционная трактовка: ${panchang.yoga.meaning.toLowerCase()}.`,
+      details: 'Йогу дня рассчитывают по сумме долгот Солнца и Луны. В панчанге выделяют 27 йог. Это традиционная характеристика календарного дня, а не гарантия успеха или неудачи дела.'
     },
     {
       id: 'karana',
@@ -52,8 +52,8 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
       title: 'Карана',
       value: panchang.karana.name,
       tooltip: 'Что это?',
-      description: panchang.karana.quality,
-      details: 'Карана — половина титхи. Всего 11 каран, которые повторяются циклически. Карана влияет на коммуникацию и краткосрочные дела.'
+      description: `Традиционная трактовка: ${panchang.karana.quality.toLowerCase()}.`,
+      details: 'Карана — половина лунного дня (титхи). В календаре используются 11 видов каран, часть из которых повторяется циклически. В традиции это дополнительный символический ориентир для оценки дня.'
     },
     {
       id: 'vara',
@@ -62,8 +62,8 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
       title: 'Вара (День недели)',
       value: panchang.vara.name,
       tooltip: 'Что это?',
-      description: `${panchang.vara.planet}: ${panchang.vara.quality}`,
-      details: 'Вара — день недели. Каждый день управляется планетой, которая окрашивает его своими качествами.'
+      description: `Планета дня — ${panchang.vara.planet}. Традиционная тема: ${panchang.vara.quality.toLowerCase()}.`,
+      details: 'Вара — день недели в индийском календаре. Каждому дню традиционно сопоставляют планету. Это общий календарный символ, а не описание характера конкретного человека.'
     }
   ];
 
@@ -77,9 +77,9 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
       }}
     >
       <div className="mb-6">
-        <h2 className="mb-2">Панчанг на сегодня</h2>
+        <h2 className="mb-2">Панчанг <TermTooltip term="panchang" /> на сегодня</h2>
         <p className="opacity-70">
-          Пять элементов ведического календаря, которые влияют на качество дня
+          Пять элементов индийского календаря. В Джйотиш их используют для традиционного символического описания дня.
         </p>
       </div>
 
@@ -99,13 +99,7 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h3>{item.title}</h3>
-                    <button
-                      className="p-1 rounded-lg hover:bg-secondary transition-colors"
-                      title={item.tooltip}
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <TermTooltip term={item.term} />
-                    </button>
+                    <TermTooltip term={item.term} label={item.tooltip} />
                   </div>
                   <p className="opacity-90 mb-2">{item.value}</p>
                   <p className="opacity-70">{item.description}</p>
@@ -132,8 +126,7 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
         <div className="flex gap-3">
           <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
           <p className="opacity-80 leading-relaxed">
-            Панчанг помогает выбрать благоприятное время для важных дел. Например, Пурнима (полнолуние)
-            хороша для завершения проектов, а Экадаши — для медитации и духовных практик.
+            Панчанг используют в традиции Джйотиш как один из ориентиров при выборе времени для дел. Например, Пурниму (полнолуние) связывают с завершением, а Экадаши — с постом и духовными практиками. Это культурная традиция, а не научно подтверждённый способ предсказать результат.
           </p>
         </div>
       </div>

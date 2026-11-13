@@ -1,33 +1,28 @@
 import { buildNatalChartFacts } from '../../utils/natalChartFacts';
 import { NatalYogasSection } from './NatalYogasSection';
 import { NatalPrecisionSection } from './NatalPrecisionSection';
+import { NatalIntegratedSynthesisSection } from './NatalIntegratedSynthesisSection';
 import {
   AlertCircle,
-  Briefcase,
   CheckCircle,
   Heart,
   Home as HomeIcon,
-  Layers,
   Moon,
   Sparkles,
   Star,
   Sun,
   Target,
-  Users,
   Zap,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { SIGNS_RU } from '../../utils/astrology';
 import type { NatalChart as NatalChartType } from '../../utils/astrology';
-import { analyzePersonalizedHouses } from '../../utils/personalizedHouseAnalysis';
 import { analyzeAllNatalHouses } from '../../utils/natalHousePersonalizedAnalysis';
 import { analyzeAllNatalPlanets } from '../../utils/natalPlanetPersonalizedAnalysis';
-import { synthesizeNatalChart } from '../../utils/natalChartSynthesis';
-import { buildConclusionUnifiedAdvice, buildHouseUnifiedAdvice, buildLifeAreaBridgeUnifiedAdvice, buildLifeAreaUnifiedAdvice, buildNarrativeUnifiedAdvice, buildPlanetUnifiedAdvice, buildSynthesisUnifiedAdvice } from '../../utils/unifiedNatalAdvice';
 import { getPlanetHouse } from '../../utils/natalStrengthAnalysis';
 import { getSunHouseFocus } from '../../utils/natalAnalysisGuidance';
-import { formatCoreLifeAreaEvidence, getAscendantChartFocus, getCoreChartSynthesis, getCoreInteractionsByLifeArea, getCoreLifeAreaBridges, getMoonHouseFocus, getPlanetChartFocus } from '../../utils/natalPersonalFocus';
+import { getMoonHouseFocus } from '../../utils/natalPersonalFocus';
 import { getAscendantDescription, getMoonDescription, getSunDescription } from '../../utils/natalChartDescriptions';
 import { GlassCard } from '../common/GlassCard';
 import { TermTooltip } from '../common/TermTooltip';
@@ -43,30 +38,6 @@ interface InsightCardProps {
   accent: string;
   children: ReactNode;
 }
-
-const LIFE_AREA_STYLES = {
-  purple: {
-    card: 'bg-purple-50 border-purple-200',
-    icon: 'text-purple-600',
-    meta: 'text-purple-700',
-  },
-  blue: {
-    card: 'bg-blue-50 border-blue-200',
-    icon: 'text-blue-600',
-    meta: 'text-blue-700',
-  },
-  pink: {
-    card: 'bg-pink-50 border-pink-200',
-    icon: 'text-pink-600',
-    meta: 'text-pink-700',
-  },
-  green: {
-    card: 'bg-green-50 border-green-200',
-    icon: 'text-green-600',
-    meta: 'text-green-700',
-  },
-} as const;
-
 
 function BulletList({ items, tone }: { items: string[]; tone: 'green' | 'orange' | 'blue' | 'yellow' }) {
   const toneClass = {
@@ -107,17 +78,102 @@ function InsightCard({ icon: Icon, title, subtitle, accent, children }: InsightC
   );
 }
 
-function UnifiedAdviceBlock({ advice }: { advice: ReturnType<typeof buildHouseUnifiedAdvice> }) {
+const HOUSE_PLAIN_NAMES: Record<number, string> = {
+  1: 'личность и самостоятельность', 2: 'личные деньги и накопления',
+  3: 'навыки и общение', 4: 'дом и семья', 5: 'творчество и дети',
+  6: 'работа и повседневные обязанности', 7: 'брак и партнёрство',
+  8: 'общие деньги и перемены', 9: 'обучение и мировоззрение',
+  10: 'профессия и карьера', 11: 'доходы, клиенты и окружение',
+  12: 'отдых, расходы и уединение',
+};
+
+const HOUSE_PLANET_NAMES: Record<string, string> = {
+  Sun: 'Солнце', Moon: 'Луна', Mars: 'Марс', Mercury: 'Меркурий',
+  Jupiter: 'Юпитер', Venus: 'Венера', Saturn: 'Сатурн', Rahu: 'Раху', Ketu: 'Кету',
+};
+
+function getHouseConnectionText(house: ReturnType<typeof analyzeAllNatalHouses>[number]): string {
+  if (!house.available || !house.lord || house.lordHouse === null) {
+    return 'Положение управителя не определено, поэтому связь с другими сферами пока нельзя описать.';
+  }
+  const destination = HOUSE_PLAIN_NAMES[house.lordHouse] ?? `${house.lordHouse}-й дом`;
+  if (house.lordHouse === house.house) {
+    return `Управитель находится в своём доме. Тема ${HOUSE_PLAIN_NAMES[house.house]} получает прямой акцент.`;
+  }
+  return `Управитель находится в ${house.lordHouse}-м доме. Поэтому тема ${HOUSE_PLAIN_NAMES[house.house]} связывается с темой «${destination}».`;
+}
+
+function HouseQuickMeaning({ house }: { house: ReturnType<typeof analyzeAllNatalHouses>[number] }) {
+  if (!house.available) {
+    return <p className="text-sm text-gray-600">Нет исходных данных, чтобы определить знак и управителя этого дома.</p>;
+  }
+  const occupants = house.occupants.map((planet) => HOUSE_PLANET_NAMES[planet] ?? planet);
   return (
-    <div className="rounded-lg border border-indigo-100 bg-indigo-50/60 p-3 space-y-2">
-      <p className="text-sm leading-relaxed text-gray-800">{advice.connection}</p>
-      <p className="text-sm leading-relaxed text-gray-800">{advice.combinedMeaning}</p>
-      <p className="text-sm leading-relaxed text-gray-700">{advice.tension}</p>
-      <p className="text-sm leading-relaxed text-indigo-900"><strong>Практический шаг:</strong> {advice.practicalStep}</p>
-      <p className="text-xs leading-relaxed text-indigo-800"><strong>Проверяемый результат:</strong> {advice.successCriteria}</p>
-      <p className="text-xs text-gray-600">Полнота основания: {advice.dataStatus === 'complete' ? 'достаточно для этого вывода' : advice.dataStatus === 'partial' ? 'часть показателей не подтверждена' : 'персональный вывод недоступен'}</p>
-      {advice.evidence.length ? <details className="text-xs text-gray-600"><summary className="cursor-pointer font-medium">Основания вывода ({advice.evidence.length})</summary><ul className="mt-1 list-disc pl-4 space-y-1">{advice.evidence.map((item) => <li key={item}>{item}</li>)}</ul></details> : null}
-      <p className="text-xs leading-relaxed text-gray-500">{advice.limitation}</p>
+    <div className="space-y-3">
+      <div>
+        <p className="text-xs font-semibold text-gray-500">О ЧЁМ ЭТОТ ДОМ</p>
+        <p className="mt-1 text-sm text-gray-800">{house.theme.charAt(0).toUpperCase() + house.theme.slice(1)}.</p>
+        <p className="mt-1 text-xs text-gray-600">Знак: {house.sign ?? 'не определён'}.</p>
+      </div>
+      <div>
+        <p className="text-xs font-semibold text-gray-500">ПЛАНЕТЫ В ДОМЕ</p>
+        <p className="mt-1 text-sm text-gray-800">{occupants.length ? occupants.join(', ') : 'Планет нет — основное внимание уделяем управителю дома.'}</p>
+      </div>
+      <div>
+        <p className="text-xs font-semibold text-gray-500">УПРАВИТЕЛЬ</p>
+        <p className="mt-1 text-sm text-gray-800">{house.lordName ?? 'Не определён'}{house.lordSign ? ` находится в знаке ${house.lordSign}` : ''}{house.lordHouse ? `, в ${house.lordHouse}-м доме` : ''}{house.lordDignity ? `. Положение: ${house.lordDignity}` : ''}.</p>
+      </div>
+      <div className="rounded-lg bg-indigo-50/70 p-3">
+        <p className="text-xs font-semibold text-indigo-800">ЧТО ЭТО ЗНАЧИТ ПРОСТЫМИ СЛОВАМИ</p>
+        <p className="mt-1 text-sm leading-relaxed text-indigo-950">{getHouseConnectionText(house)}</p>
+        {house.ruledHouses.filter((item) => item !== house.house).length > 0 && (
+          <p className="mt-2 text-xs text-indigo-800">Этот же управитель отвечает также за {house.ruledHouses.filter((item) => item !== house.house).map((item) => `${item}-й дом (${HOUSE_PLAIN_NAMES[item]})`).join(', ')}.</p>
+        )}
+      </div>
+      <details className="rounded-lg border border-gray-100 p-3">
+        <summary className="cursor-pointer text-sm font-medium text-gray-700">Дополнительные показатели</summary>
+        <div className="mt-2 space-y-2 text-xs text-gray-600">
+          <p><strong>Знак дома:</strong> {house.sign ?? 'не определён'}</p>
+          <p><strong>Аспекты на дом:</strong> {house.aspects.length ? house.aspects.map((item) => HOUSE_PLANET_NAMES[item] ?? item).join(', ') : 'не обнаружены по выбранной схеме'}</p>
+          <p><strong>Связанные дома:</strong> {house.connectedHouses.length ? house.connectedHouses.join(', ') : 'отдельная связь не выявлена'}</p>
+          {house.dispositorChain.length > 0 && <p><strong>Цепочка диспозиторов:</strong> <TermTooltip term="dispositor" /> {house.dispositorChain.map((item) => `${HOUSE_PLANET_NAMES[item.planet] ?? item.planet} — ${item.sign}${item.house === null ? '' : `, ${item.house}-й дом`}`).join(' → ')}</p>}
+          {house.supportingFactors.length > 0 && <p><strong>Поддержка:</strong> {house.supportingFactors.join(' ')}</p>}
+          {house.attentionFactors.length > 0 && <p><strong>Что требует внимания:</strong> {house.attentionFactors.join(' ')}</p>}
+          {house.evidence.length > 0 && <details><summary className="cursor-pointer font-medium">Технические основания</summary><ul className="mt-1 list-disc space-y-1 pl-4">{house.evidence.map((item) => <li key={item}>{item}</li>)}</ul></details>}
+          {house.limitations.length > 0 && <p className="text-gray-500">{house.limitations[0]}</p>}
+        </div>
+      </details>
+    </div>
+  );
+}
+
+const PLANET_PLAIN_MEANINGS: Record<string, string> = {
+  Sun: 'личная воля, уверенность, цели и самостоятельность',
+  Moon: 'эмоции, привычки, потребность в безопасности и забота',
+  Mars: 'инициатива, решительность, действия и защита своих интересов',
+  Mercury: 'мышление, обучение, общение, анализ и информация',
+  Jupiter: 'знания, развитие, наставничество и жизненные ориентиры',
+  Venus: 'отношения, симпатии, творчество, удовольствие и ценности',
+  Saturn: 'ответственность, дисциплина, терпение и долгосрочные задачи',
+  Rahu: 'амбиции, новый опыт и стремление попробовать непривычное',
+  Ketu: 'исследование, концентрация и умение отделять главное от лишнего',
+};
+const PLANET_RU_NAMES: Record<string, string> = {
+  Sun: 'Солнце', Moon: 'Луна', Mars: 'Марс', Mercury: 'Меркурий',
+  Jupiter: 'Юпитер', Venus: 'Венера', Saturn: 'Сатурн', Rahu: 'Раху', Ketu: 'Кету',
+};
+function PlanetQuickMeaning({ planet }: { planet: ReturnType<typeof analyzeAllNatalPlanets>[number] }) {
+  if (!planet.available) return <p className="text-sm text-gray-600">Недостаточно данных, чтобы объяснить положение этой планеты.</p>;
+  const name = PLANET_RU_NAMES[planet.planet] ?? planet.name;
+  const meaning = PLANET_PLAIN_MEANINGS[planet.planet] ?? 'своя символическая функция';
+  const houseName = HOUSE_PLAIN_NAMES[planet.house ?? 0] ?? 'неопределённая жизненная сфера';
+  const ruled = planet.ruledHouses.map((house) => `${house}-й дом — ${HOUSE_PLAIN_NAMES[house]}`).join('; ');
+  return (
+    <div className="rounded-lg bg-indigo-50/70 p-3 space-y-2">
+      <p className="text-xs font-semibold text-indigo-800">ЧТО ЭТА ПЛАНЕТА ОЗНАЧАЕТ В ВАШЕЙ КАРТЕ</p>
+      <p className="text-sm leading-relaxed text-gray-800"><strong>{name}</strong> символизирует {meaning}. В вашей карте она находится в знаке {planet.sign}{planet.house ? `, в ${planet.house}-м доме — сфере «${houseName}»` : ''}.</p>
+      <p className="text-sm leading-relaxed text-gray-800">{planet.house ? `Это связывает качества планеты с темами «${houseName}».` : 'Дом, через который проявляются качества планеты, пока не определён.'} {ruled ? `Кроме того, она управляет: ${ruled}.` : 'Управляемые ею дома в расчёте не определены.'}</p>
+      <p className="text-xs text-gray-600">Это символическое описание роли планеты, а не характеристика человека по одному показателю.</p>
     </div>
   );
 }
@@ -125,19 +181,11 @@ function UnifiedAdviceBlock({ advice }: { advice: ReturnType<typeof buildHouseUn
 export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
   const sunHouse = getPlanetHouse(natalChart, 'Sun');
   const moonHouse = getPlanetHouse(natalChart, 'Moon');
-  const personalizedHouses = analyzePersonalizedHouses(natalChart);
   const sunFocus = getSunHouseFocus(natalChart, sunHouse);
   const chartFacts = buildNatalChartFacts(natalChart);
   const allHouseAnalyses = analyzeAllNatalHouses(chartFacts);
   const allPlanetAnalyses = analyzeAllNatalPlanets(chartFacts);
-  const wholeChartSynthesis = synthesizeNatalChart(chartFacts);
-  const ascendantChartFocus = getAscendantChartFocus(natalChart, chartFacts);
-  const sunChartFocus = getPlanetChartFocus(natalChart, 'Sun', chartFacts);
-  const moonChartFocus = getPlanetChartFocus(natalChart, 'Moon', chartFacts);
   const moonHouseFocus = getMoonHouseFocus(natalChart, moonHouse);
-  const coreChartSynthesis = getCoreChartSynthesis(natalChart);
-  const coreLifeAreaInteractions = getCoreInteractionsByLifeArea(natalChart);
-  const coreLifeAreaBridges = getCoreLifeAreaBridges(natalChart);
   const ascDesc = getAscendantDescription(natalChart.ascendant.signName);
   const sunSignRu = SIGNS_RU[natalChart.planets.Sun.sign] ?? natalChart.planets.Sun.signName;
   const moonSignRu = SIGNS_RU[natalChart.planets.Moon.sign] ?? natalChart.planets.Moon.signName;
@@ -147,70 +195,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
   return (
     <div className="space-y-6">
       <NatalPrecisionSection natalChart={natalChart} />
-      <GlassCard>
-        <section className="space-y-4">
-          <div className="flex items-center justify-between gap-3 border-b border-gray-200 pb-3">
-            <div>
-              <h3 className="text-lg font-bold text-gray-900">Целостный синтез натальной карты</h3>
-              <p className="text-sm text-gray-600">Связи между домами, планетами и повторяющимися показателями</p>
-            </div>
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">Полнота данных: {wholeChartSynthesis.dataQuality.completeness}%</span>
-          </div>
-          <div className="rounded-xl border border-indigo-100 bg-indigo-50/70 p-4 space-y-2">
-            <h4 className="font-semibold text-indigo-950">{wholeChartSynthesis.headline}</h4>
-            <p className="text-sm leading-relaxed text-indigo-900">{wholeChartSynthesis.overview}</p>
-          <UnifiedAdviceBlock advice={buildSynthesisUnifiedAdvice(wholeChartSynthesis)} />
-          </div>
-          {wholeChartSynthesis.dominantThemes.length ? (
-            <div>
-              <h4 className="text-sm font-semibold text-gray-800 mb-2">Повторяющиеся тематические акценты</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {wholeChartSynthesis.dominantThemes.map((theme) => (
-                  <div key={theme.house} className="rounded-lg border border-gray-200 p-3">
-                    <p className="text-sm font-semibold text-gray-900">{theme.house}-й дом — {theme.theme}</p>
-                    <p className="text-xs text-gray-600 mt-1">Условный вес: {theme.score}</p>
-                    <ul className="mt-2 list-disc pl-4 space-y-1">{theme.evidence.slice(0, 4).map((item) => <li key={item} className="text-xs text-gray-600">{item}</li>)}</ul>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : null}
-          {wholeChartSynthesis.conclusions.length ? (
-            <div>
-              <h4 className="text-sm font-semibold text-gray-800 mb-2">Связанные выводы</h4>
-              <div className="space-y-2">
-                {wholeChartSynthesis.conclusions.map((item) => (
-                  <details key={item.id} className="rounded-lg border border-gray-200 p-3">
-                    <summary className="cursor-pointer text-sm font-medium text-gray-800">{item.title}</summary>
-                    <UnifiedAdviceBlock advice={buildConclusionUnifiedAdvice(item, wholeChartSynthesis.tensions)} />
-                    <p className="mt-2 text-xs text-gray-500">Дома: {item.relatedHouses.length ? item.relatedHouses.join(', ') : 'не определены'}; планеты: {item.relatedPlanets.length ? item.relatedPlanets.join(', ') : 'не определены'}.</p>
-                    <ul className="mt-2 list-disc pl-4 space-y-1">{item.evidence.map((evidence) => <li key={evidence} className="text-xs text-gray-600">{evidence}</li>)}</ul>
-                  </details>
-                ))}
-              </div>
-            </div>
-          ) : null}
-          {wholeChartSynthesis.dispositorPatterns.length ? (
-            <div className="rounded-lg bg-violet-50 p-3">
-              <h4 className="text-sm font-semibold text-violet-900">Повторяющиеся диспозиторы</h4>
-              {wholeChartSynthesis.dispositorPatterns.map((item) => <p key={item.planet} className="text-sm text-violet-900 mt-1">{item.evidence}</p>)}
-            </div>
-          ) : null}
-          {wholeChartSynthesis.tensions.length ? (
-            <div className="rounded-lg bg-amber-50 p-3 space-y-1">
-              <h4 className="text-sm font-semibold text-amber-900">Неоднородность и ограничения выводов</h4>
-              {wholeChartSynthesis.tensions.map((item) => <p key={item} className="text-sm text-amber-900">{item}</p>)}
-            </div>
-          ) : null}
-          <details className="rounded-lg border border-gray-200 p-3">
-            <summary className="cursor-pointer text-sm font-medium text-gray-700">Методика и качество исходных данных</summary>
-            <ul className="mt-2 list-disc pl-4 space-y-1">
-              {wholeChartSynthesis.methodology.map((item) => <li key={item} className="text-xs text-gray-600">{item}</li>)}
-              {wholeChartSynthesis.dataQuality.caveats.map((item) => <li key={item} className="text-xs text-gray-500">{item}</li>)}
-            </ul>
-          </details>
-        </section>
-      </GlassCard>
+      <NatalIntegratedSynthesisSection natalChart={natalChart} />
       <NatalYogasSection natalChart={natalChart} />
       <InsightCard
         icon={Star}
@@ -228,8 +213,8 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
         </div>
 
         <div className="p-4 bg-white rounded-lg border border-purple-200">
-          <h4 className="text-sm font-semibold text-purple-700 uppercase mb-2">Управитель Лагны — куда направлена энергия личности</h4>
-          <UnifiedAdviceBlock advice={buildHouseUnifiedAdvice(allHouseAnalyses[0])} />
+          <h4 className="text-sm font-semibold text-purple-700 uppercase mb-2">Управитель Лагны <TermTooltip term="lagna" /> — куда направлена энергия личности</h4>
+          <HouseQuickMeaning house={allHouseAnalyses[0]} />
         </div>
 
         <div className="p-4 bg-white rounded-lg border border-purple-200">
@@ -291,7 +276,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
             <h4 className="text-sm font-semibold text-orange-700 uppercase mb-2">Где светить</h4>
             <p className="text-sm text-gray-700 leading-relaxed">{sunFocus}</p>
             <div className="mt-3 border-t border-orange-100 pt-3">
-              <UnifiedAdviceBlock advice={buildPlanetUnifiedAdvice(allPlanetAnalyses.find((item) => item.planet === 'Sun')!)} />
+              <PlanetQuickMeaning planet={allPlanetAnalyses.find((item) => item.planet === 'Sun')!} />
             </div>
           </div>
         </div>
@@ -318,7 +303,7 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
           <h4 className="text-sm font-semibold text-blue-700 uppercase mb-2">Конкретная жизненная сфера Луны</h4>
           <p className="text-sm text-gray-700 leading-relaxed">{moonHouseFocus}</p>
           <div className="mt-3 border-t border-blue-100 pt-3">
-            <UnifiedAdviceBlock advice={buildPlanetUnifiedAdvice(allPlanetAnalyses.find((item) => item.planet === 'Moon')!)} />
+            <PlanetQuickMeaning planet={allPlanetAnalyses.find((item) => item.planet === 'Moon')!} />
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -340,77 +325,26 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
         </div>
       </InsightCard>
 
-      {coreLifeAreaInteractions.length > 0 ? (
-        <GlassCard>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 pb-3 border-b border-gray-200">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-600 to-blue-600">
-                <Target className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Где взаимодействия показателей затрагивают жизненные сферы</h3>
-                <p className="text-sm text-gray-600">Только связи, подтверждённые положением планет или управлением домами</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {coreLifeAreaInteractions.map((area) => (
-                <section key={area.id} className="rounded-lg border border-cyan-100 bg-cyan-50/60 p-4 space-y-2">
-                  <h4 className="font-semibold text-gray-900">{area.title}</h4>
-                  <UnifiedAdviceBlock advice={buildLifeAreaUnifiedAdvice(area.title, area.connections)} />
-                </section>
-              ))}
-            </div>
-            {coreLifeAreaBridges.length > 0 ? (
-              <section className="rounded-lg border border-indigo-100 bg-indigo-50/60 p-4 space-y-3">
-                <h4 className="font-semibold text-gray-900">Как несколько жизненных сфер связаны между собой</h4>
-                {coreLifeAreaBridges.map((bridge) => (
-                  <div key={bridge.id} className="space-y-1">
-                    <p className="text-sm font-medium text-gray-800">{bridge.connection}</p>
-                    <p className="text-sm text-gray-700">Подтверждённые сферы: {bridge.areas.join(', ')}.</p>
-                    <ul className="space-y-2 pl-3 border-l border-indigo-200">
-                      {bridge.evidenceByArea.map((item) => (
-                        <li key={item.areaId} className="text-xs leading-relaxed text-gray-600">
-                          <span className="font-semibold">{item.areaTitle}:</span> {item.evidence.map(formatCoreLifeAreaEvidence).join('; ')}.
-                        </li>
-                      ))}
-                    </ul>
-                    <UnifiedAdviceBlock advice={buildLifeAreaBridgeUnifiedAdvice({
-                      connection: bridge.connection,
-                      areas: bridge.areas,
-                      explanation: bridge.explanation,
-                      evidence: bridge.evidenceByArea.map((item) => `${item.areaTitle}: ${item.evidence.map(formatCoreLifeAreaEvidence).join('; ')}`),
-                    })} />
-                  </div>
-                ))}
-              </section>
-            ) : null}
-            <p className="text-xs leading-relaxed text-gray-500">Если связь планет не имеет опоры в домах конкретной сферы, она здесь не показывается. Это традиционная символическая интерпретация, а не прогноз событий.</p>
-          </div>
-        </GlassCard>
-      ) : null}
-
       <GlassCard>
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 pb-3 border-b border-gray-200">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600">
-              <Sparkles className="w-6 h-6 text-white" />
+        <section className="space-y-3">
+          <h3 className="text-lg font-bold text-gray-900">Как складываются три главных показателя</h3>
+          <p className="text-sm text-gray-600">Лагна, Солнце и Луна описывают разные стороны личности. Их не нужно смешивать в одну характеристику.</p>
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-lg border border-purple-100 bg-purple-50/60 p-3">
+              <h4 className="font-semibold text-gray-900">Лагна — ваш способ действовать</h4>
+              <p className="mt-1 text-sm text-gray-700">{ascDesc.meaning}</p>
             </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900">Как три главных показателя складываются вместе</h3>
-              <p className="text-sm text-gray-600">Лагна, Солнце и Луна: общий акцент и разные функции</p>
+            <div className="rounded-lg border border-amber-100 bg-amber-50/60 p-3">
+              <h4 className="font-semibold text-gray-900">Солнце — цели и воля</h4>
+              <p className="mt-1 text-sm text-gray-700">{sunDesc.essence} {sunDesc.lifePurpose}</p>
+            </div>
+            <div className="rounded-lg border border-blue-100 bg-blue-50/60 p-3">
+              <h4 className="font-semibold text-gray-900">Луна — чувства и потребности</h4>
+              <p className="mt-1 text-sm text-gray-700">{moonDesc.essence} {moonDesc.emotionalNeeds}</p>
             </div>
           </div>
-          <UnifiedAdviceBlock advice={buildNarrativeUnifiedAdvice({
-            connection: [ascendantChartFocus, sunChartFocus, moonChartFocus].join(' '),
-            combinedMeaning: coreChartSynthesis,
-            practicalStep: 'Сопоставьте цель, потребность и способ действия; выберите одно изменение на ближайшие семь дней.',
-            successCriteria: 'Через семь дней зафиксированы выполненные действия и наблюдаемое изменение; отдельно отмечено, какой из трёх факторов учтён.',
-            evidence: [ascendantChartFocus, sunChartFocus, moonChartFocus],
-            tensions: wholeChartSynthesis.tensions,
-            dataStatus: wholeChartSynthesis.dataQuality.completeness === 100 ? 'complete' : 'partial',
-            limitation: wholeChartSynthesis.dataQuality.caveats.join(' '),
-          })} />
-        </div>
+          <p className="text-sm text-gray-700">Практически это можно читать так: Лагна показывает, как вы обычно действуете; Солнце — к чему стремитесь; Луна — что помогает чувствовать себя спокойно и устойчиво.</p>
+        </section>
       </GlassCard>
 
       <GlassCard>
@@ -420,83 +354,16 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
               <HomeIcon className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900">Подробный персональный анализ всех 12 домов</h3>
-              <p className="text-sm text-gray-600">Знак, управитель, его положение и диспозиторная цепочка, планеты в доме, аспекты и связанные сферы</p>
+              <h3 className="text-lg font-bold text-gray-900">Все 12 домов простыми словами</h3>
+              <p className="text-sm text-gray-600">Для каждого дома: его тема, планеты, управитель и простое объяснение связи с другой сферой жизни.</p>
+              <p className="mt-1 text-xs text-indigo-700">Восходящий знак (Асцендент): {natalChart.ascendant.signName}. Используется система Джйотиш с айанамшей Лахири и методом целых знаков: каждый знак считается отдельным домом.</p>
             </div>
           </div>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             {allHouseAnalyses.map((house) => (
               <section key={house.house} className="rounded-xl border border-gray-200 bg-white/80 p-4 space-y-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h4 className="font-semibold text-gray-900">{house.house}-й дом — {house.theme}</h4>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {house.available
-                        ? `Знак: ${house.sign}; управитель: ${house.lordName ?? 'не определён'}${house.lordSign ? ` в ${house.lordSign}` : ''}; положение: ${house.lordHouse ? `${house.lordHouse}-й дом` : 'не определено'}${house.lordDignity ? `; достоинство: ${house.lordDignity}` : ''}`
-                        : 'Исходные данные дома отсутствуют'}
-                    </p>
-                  </div>
-                  <span className={`shrink-0 rounded-full px-2 py-1 text-xs font-medium ${
-                    house.synthesis === 'supportive' ? 'bg-green-100 text-green-700'
-                      : house.synthesis === 'challenging' ? 'bg-amber-100 text-amber-800'
-                        : house.synthesis === 'mixed' ? 'bg-blue-100 text-blue-700'
-                          : house.synthesis === 'incomplete' ? 'bg-gray-100 text-gray-600'
-                            : 'bg-slate-100 text-slate-700'
-                  }`}>
-                    {house.synthesis === 'supportive' ? 'Есть поддержка'
-                      : house.synthesis === 'challenging' ? 'Требует внимания'
-                        : house.synthesis === 'mixed' ? 'Смешанные факторы'
-                          : house.synthesis === 'incomplete' ? 'Недостаточно данных' : 'Нейтрально'}
-                  </span>
-                </div>
-                <UnifiedAdviceBlock advice={buildHouseUnifiedAdvice(house)} />
-                {house.dispositorChain.length ? (
-                  <div className="rounded-lg bg-indigo-50 p-3">
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-indigo-800 mb-1">Цепочка диспозиторов</h5>
-                    <p className="text-sm text-indigo-900">
-                      {house.dispositorChain.map((item) => `${item.planet} — ${item.sign}${item.house === null ? '' : `, ${item.house}-й дом`}${item.dignity ? `, ${item.dignity}` : ''}${item.aspectedBy.length ? `, аспекты от: ${item.aspectedBy.join(', ')}` : ''}`).join(' → ')}
-                    </p>
-                  </div>
-                ) : null}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Планеты в доме</h5>
-                    <p className="text-sm text-gray-700">{house.occupants.length ? house.occupants.join(', ') : 'Нет планет'}</p>
-                  </div>
-                  <div>
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Аспекты на дом</h5>
-                    <p className="text-sm text-gray-700">{house.aspects.length ? house.aspects.join(', ') : 'Не обнаружены по выбранной схеме'}</p>
-                  </div>
-                  <div>
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Управляемые дома</h5>
-                    <p className="text-sm text-gray-700">{house.ruledHouses.length ? house.ruledHouses.join(', ') : 'Не определены'}</p>
-                  </div>
-                  <div>
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Связанные дома</h5>
-                    <p className="text-sm text-gray-700">{house.connectedHouses.length ? house.connectedHouses.join(', ') : 'Нет отдельной связи по положению управителя'}</p>
-                  </div>
-                </div>
-                {house.supportingFactors.length ? (
-                  <div className="rounded-lg bg-green-50 p-3 space-y-1">
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-green-800">Поддерживающие показатели</h5>
-                    {house.supportingFactors.map((item) => <p key={item} className="text-sm text-green-900">{item}</p>)}
-                  </div>
-                ) : null}
-                {house.attentionFactors.length ? (
-                  <div className="rounded-lg bg-amber-50 p-3 space-y-1">
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-amber-800">Факторы, требующие внимания</h5>
-                    {house.attentionFactors.map((item) => <p key={item} className="text-sm text-amber-900">{item}</p>)}
-                  </div>
-                ) : null}
-                <details className="rounded-lg border border-gray-100 p-3">
-                  <summary className="cursor-pointer text-sm font-medium text-gray-700">Показать доказательства и ограничения</summary>
-                  <ul className="mt-2 space-y-1 list-disc pl-5">
-                    {house.evidence.map((item) => <li key={item} className="text-xs leading-relaxed text-gray-600">{item}</li>)}
-                  </ul>
-                  <ul className="mt-2 space-y-1 list-disc pl-5">
-                    {house.limitations.map((item) => <li key={item} className="text-xs leading-relaxed text-gray-500">{item}</li>)}
-                  </ul>
-                </details>
+                <h4 className="font-semibold text-gray-900">{house.house}-й дом — {house.theme}</h4>
+                <HouseQuickMeaning house={house} />
               </section>
             ))}
           </div>
@@ -510,8 +377,8 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
               <Star className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900">Полный персональный анализ 9 планет</h3>
-              <p className="text-sm text-gray-600">Положение, достоинство, управление домами, соединения, аспекты и цепочки диспозиторов</p>
+              <h3 className="text-lg font-bold text-gray-900">Разбор девяти планет и лунных узлов</h3>
+              <p className="text-sm text-gray-600">Где находится планета, с какими жизненными сферами её связывает карта и какие дополнительные связи учитываются в трактовке.</p>
             </div>
           </div>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -522,8 +389,8 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                     <h4 className="font-semibold text-gray-900">{planet.name}</h4>
                     <p className="text-xs text-gray-500 mt-1">
                       {planet.available
-                        ? `${planet.sign}, ${planet.degreeInSign?.toFixed(2)}°; ${planet.house ? `${planet.house}-й дом` : 'дом не определён'}; ${planet.nakshatra ?? 'накшатра не определена'}${planet.pada ? `, пада ${planet.pada}` : ''}`
-                        : 'Позиция отсутствует в исходных данных'}
+                        ? `${planet.sign}; ${planet.house ? `${planet.house}-й дом — ${HOUSE_PLAIN_NAMES[planet.house]}` : 'дом не определён'}`
+                        : 'Положение планеты не рассчитано'}
                     </p>
                   </div>
                   <span className={`shrink-0 rounded-full px-2 py-1 text-xs font-medium ${
@@ -539,36 +406,44 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                           : planet.synthesis === 'incomplete' ? 'Недостаточно данных' : 'Нейтрально'}
                   </span>
                 </div>
-                <UnifiedAdviceBlock advice={buildPlanetUnifiedAdvice(planet)} />
+                <PlanetQuickMeaning planet={planet} />
+                <details className="rounded-lg border border-gray-100 p-3">
+                  <summary className="cursor-pointer text-sm font-medium text-gray-700">Дополнительные астрологические показатели</summary>
+                  <div className="mt-3 space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Управляемые дома</h5>
-                    <p className="text-sm text-gray-700">{planet.ruledHouses.length ? planet.ruledHouses.join(', ') : 'Не определены'}</p>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Градус и накшатра <TermTooltip term="nakshatra" /></h5>
+                    <p className="text-sm text-gray-700">{planet.degreeInSign?.toFixed(2) ?? '—'}° · {planet.nakshatra ?? 'накшатра не определена'}{planet.pada ? `, пада ${planet.pada}` : ''}</p>
                   </div>
                   <div>
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Достоинство</h5>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Какими сферами управляет планета</h5>
+                    <p className="text-sm text-gray-700">{planet.ruledHouses.length ? planet.ruledHouses.map((house) => `${house}-й дом — ${HOUSE_PLAIN_NAMES[house]}`).join('; ') : 'Не определены'}</p>
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Достоинство <TermTooltip term="dignity" /></h5>
                     <p className="text-sm text-gray-700">{planet.dignity?.label ?? 'Не определено'}</p>
                   </div>
                   <div>
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Соединения по знаку</h5>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Соединения по знаку <TermTooltip term="conjunction" /></h5>
                     <p className="text-sm text-gray-700">{planet.conjunctions.length ? planet.conjunctions.join(', ') : 'Не обнаружены'}</p>
                   </div>
                   <div>
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Исходящие аспекты</h5>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Исходящие аспекты <TermTooltip term="aspect" /></h5>
                     <p className="text-sm text-gray-700">{planet.aspectsToPlanets.length ? planet.aspectsToPlanets.join(', ') : 'Не обнаружены'}</p>
                   </div>
                   <div>
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Входящие аспекты</h5>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Входящие аспекты <TermTooltip term="aspect" /></h5>
                     <p className="text-sm text-gray-700">{planet.receivesAspectsFrom.length ? planet.receivesAspectsFrom.join(', ') : 'Не обнаружены'}</p>
                   </div>
                   <div>
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Аспекты на дома</h5>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Аспекты на дома <TermTooltip term="aspect" /></h5>
                     <p className="text-sm text-gray-700">{planet.aspectsToHouses.length ? planet.aspectsToHouses.join(', ') : 'Не обнаружены'}</p>
                   </div>
                 </div>
                 {planet.outgoingAspectDetails.length || planet.incomingAspectDetails.length || planet.houseAspectDetails.length ? (
                   <div className="rounded-lg bg-sky-50 p-3 space-y-1">
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-sky-800">Геометрия аспектов</h5>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-sky-800">Как планеты связаны аспектами</h5>
+                    <p className="text-xs text-sky-800">Аспект — это связь между планетами или домами по определённому угловому правилу. Здесь указано, из какого дома идёт связь и какой тип аспекта использован.</p>
                     {planet.outgoingAspectDetails.map((aspect) => <p key={`out-${aspect.planet}`} className="text-xs text-sky-900">Из {aspect.sourceHouse}-го дома к {aspect.planet} в {aspect.targetHouse}-м доме: {aspect.offset}-й Parashari аспект.</p>)}
                     {planet.incomingAspectDetails.map((aspect) => <p key={`in-${aspect.planet}`} className="text-xs text-sky-900">От {aspect.planet} из {aspect.sourceHouse}-го дома к этой планете в {aspect.targetHouse}-м доме: {aspect.offset}-й Parashari аспект.</p>)}
                     {planet.houseAspectDetails.map((aspect) => <p key={`house-${aspect.house}`} className="text-xs text-sky-900">Аспект на {aspect.house}-й дом: {aspect.kind}.</p>)}
@@ -576,7 +451,8 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                 ) : null}
                 {planet.dispositorChain.length ? (
                   <div className="rounded-lg bg-violet-50 p-3 space-y-1">
-                    <h5 className="text-xs font-semibold uppercase tracking-wide text-violet-800">Цепочка диспозиторов</h5>
+                    <h5 className="text-xs font-semibold uppercase tracking-wide text-violet-800">Цепочка управителей знаков <TermTooltip term="dispositor" /></h5>
+                    <p className="text-xs text-violet-800">Каждая планета находится в определённом знаке. У этого знака есть своя управляющая планета; её положение образует следующее звено цепочки. Так приложение показывает дополнительные связи между планетами.</p>
                     <p className="text-sm text-violet-900">
                       {planet.dispositorChain.map((step) => `${step.planet} — ${step.sign}${step.house === null ? '' : `, ${step.house}-й дом`}${step.dignity ? `, ${step.dignity}` : ''}`).join(' → ')}
                     </p>
@@ -609,57 +485,10 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
                     {planet.limitations.map((item) => <li key={item} className="text-xs leading-relaxed text-gray-500">{item}</li>)}
                   </ul>
                 </details>
+                  </div>
+                </details>
               </section>
             ))}
-          </div>
-        </div>
-      </GlassCard>
-
-      <GlassCard>
-        <div className="space-y-4">
-          <div className="flex items-center gap-3 pb-3 border-b border-gray-200">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600">
-              <Layers className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900">Ключевые сферы карты</h3>
-              <p className="text-sm text-gray-600">Быстрый ориентир для практической работы с картой</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              { icon: Users, title: 'Личность', house: 1, text: 'Как вы входите в жизнь и принимаете решения.', tone: 'purple' },
-              { icon: Briefcase, title: 'Карьера', house: 10, text: 'Как строится реализация, статус и профессиональный рост.', tone: 'blue' },
-              { icon: Heart, title: 'Отношения', house: 7, text: 'Партнерство, близость и баланс в обмене с другими.', tone: 'pink' },
-              { icon: HomeIcon, title: 'Дом и семья', house: 4, text: 'Внутренняя опора, род, пространство и чувство безопасности.', tone: 'green' },
-            ].map((area) => {
-              const Icon = area.icon;
-              const house = natalChart.houses?.find((item) => item.house === area.house);
-              const personal = personalizedHouses.find((item) => item.house === area.house);
-              const styles = LIFE_AREA_STYLES[area.tone as keyof typeof LIFE_AREA_STYLES];
-
-              return (
-                <div key={area.house} className={`p-4 rounded-lg border ${styles.card}`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Icon className={`w-5 h-5 ${styles.icon}`} />
-                    <h4 className="font-semibold text-gray-900">{area.title} ({area.house}-й дом)</h4>
-                  </div>
-                  <p className="text-sm text-gray-600 leading-relaxed mb-2">{area.text}</p>
-                  <p className={`text-xs ${styles.meta} font-medium mb-2`}>
-                    {personal ? `${personal.sign}, управитель ${personal.lord}` : house ? 'Знак и управитель дома определены, подробности недоступны' : 'Данные дома недоступны'}
-                  </p>
-                  {personal ? (
-                    <div className="space-y-2 border-t border-white/70 pt-3">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-600">Что это означает именно в вашей карте</p>
-                      <p className="text-sm leading-relaxed text-gray-800">
-                        {personal.interpretation}
-                      </p>
-                    </div>
-                  ) : null}
-                </div>
-              );
-            })}
           </div>
         </div>
       </GlassCard>

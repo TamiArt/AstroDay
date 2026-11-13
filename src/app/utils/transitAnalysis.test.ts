@@ -11,6 +11,9 @@ assert.equal(report.positions.length, 9, 'all seven classical planets and both n
 assert.ok(report.positions.every((item) => item.natalHouse >= 1 && item.natalHouse <= 12));
 assert.ok(report.positions.every((item) => Number.isFinite(item.longitude) && Number.isFinite(item.degree)));
 assert.equal(report.dasha.mahadasha.length > 0, true);
+assert.ok(report.dasha.mahadashaEnd instanceof Date, 'mahadasha end date belongs to the major period');
+assert.ok(report.dasha.antardashaEnd === null || report.dasha.antardashaEnd instanceof Date);
+assert.ok(report.dasha.pratyantardashaEnd === null || report.dasha.pratyantardashaEnd instanceof Date);
 assert.ok(report.aspects.every((item) => item.orb >= 0 && item.strength >= 0 && item.strength <= 100));
 assert.ok(report.aspects.every((item) => item.transitHouse >= 1 && item.transitHouse <= 12));
 assert.ok(report.houseLordHits.every((item) => item.house >= 1 && item.house <= 12));

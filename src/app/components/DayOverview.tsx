@@ -34,7 +34,7 @@ export function DayOverview({
     }
   }
 
-  // Рассчитываем благоприятность сфер (передаём Дашу)
+  // Рассчитываем условный сравнительный индекс по выбранным астрологическим правилам
   const areas = calculateDailyAreas(panchang, natalChart, currentChart, aspects, currentDasha);
 
   // Форматируем данные для RadialBarChart
@@ -46,7 +46,7 @@ export function DayOverview({
     index // Unique index to ensure no duplicate keys
   }));
 
-  // Топ-3 сферы
+  // Три сферы с наибольшим условным индексом модели
   const topAreas = areas.slice(0, 3);
 
   return (
@@ -66,7 +66,7 @@ export function DayOverview({
           <div className="flex-1">
             <h2 className="mb-2">Обзор дня по сферам жизни</h2>
             <p className="opacity-70">
-              Анализ благоприятности разных сфер на основе астрологических данных
+              Сопоставление традиционных астрологических показателей по разным сферам. Баллы ниже — условный индекс модели, а не прогноз вероятности событий.
             </p>
           </div>
         </div>
@@ -97,12 +97,12 @@ export function DayOverview({
               )}
             </div>
             <p className="text-xs opacity-70 mt-3">
-              💡 Период {currentDasha.planet} указывает на главную жизненную тему в настоящее время
+              💡 В традиции Джйотиш период {currentDasha.planet} связывают с определёнными темами. Это символическая трактовка, а не обещание событий.
             </p>
           </div>
         )}
 
-        {/* Топ-3 сферы */}
+        {/* Три сферы с наибольшим условным индексом модели */}
         <div className="grid grid-cols-3 gap-4 mb-6">
           {topAreas.map((area, index) => (
             <div
@@ -134,7 +134,7 @@ export function DayOverview({
                   />
                 </div>
                 <span className="text-sm font-bold" style={{ color: area.color }}>
-                  {area.score}
+                  {area.score}/100
                 </span>
               </div>
             </div>
@@ -143,7 +143,7 @@ export function DayOverview({
 
         {/* Круговая диаграмма */}
         <div className="mb-6">
-          <h3 className="mb-4 text-center">Диаграмма благоприятности</h3>
+          <h3 className="mb-4 text-center">Сравнительный индекс астрологической модели</h3>
           <div className="relative">
             <ResponsiveContainer width="100%" height={500}>
               <PieChart>
@@ -218,7 +218,7 @@ export function DayOverview({
                           }}
                         >
                           <p className="font-medium mb-1">{data.name}</p>
-                          <p className="text-sm opacity-80">Благоприятность: {data.value}%</p>
+                          <p className="text-sm opacity-80">Условный балл модели: {data.value}/100</p>
                         </div>
                       );
                     }
@@ -235,7 +235,7 @@ export function DayOverview({
                   {Math.round(areas.reduce((sum, a) => sum + a.score, 0) / areas.length)}
                 </div>
                 <div className="text-sm opacity-60">/100</div>
-                <div className="text-xs opacity-50 mt-1">Средний балл</div>
+                <div className="text-xs opacity-50 mt-1">Средний балл модели</div>
               </div>
             </div>
           </div>
@@ -270,7 +270,7 @@ export function DayOverview({
                         />
                       </div>
                       <span className="text-sm font-bold" style={{ color: area.color }}>
-                        {area.score}%
+                        {area.score}/100
                       </span>
                     </div>
                   </div>
@@ -279,18 +279,18 @@ export function DayOverview({
                 {/* Детали при раскрытии */}
                 {selectedArea?.id === area.id && (
                   <div className="mt-2 p-4 rounded-xl bg-background/50 border border-border animate-in fade-in duration-300 space-y-3">
-                    {/* Даша - глобальный фон жизни (50%) */}
+                    {/* Даша — символический фон периода */}
                     {area.dashaInfluence && (
                       <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/30">
-                        <p className="text-xs font-medium text-indigo-600 mb-1">🌟 Период Даша (50%)</p>
+                        <p className="text-xs font-medium text-indigo-600 mb-1">🌟 Период Даша — символический фон</p>
                         <p className="text-sm opacity-80">{area.dashaInfluence}</p>
                       </div>
                     )}
 
-                    {/* Транзиты - ежедневные триггеры (40%) */}
+                    {/* Транзиты — текущие астрологические положения */}
                     {area.todayInfluence && (
                       <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
-                        <p className="text-xs font-medium text-blue-600 mb-1">⚡ Транзиты сегодня (40%)</p>
+                        <p className="text-xs font-medium text-blue-600 mb-1">⚡ Транзиты — текущие положения</p>
                         <p className="text-sm opacity-80">{area.todayInfluence}</p>
                       </div>
                     )}
@@ -298,7 +298,7 @@ export function DayOverview({
                     {/* Ваша карта - управители домов */}
                     {area.natalPotential && (
                       <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/30">
-                        <p className="text-xs font-medium text-purple-600 mb-1">🔮 Управители домов</p>
+                        <p className="text-xs font-medium text-purple-600 mb-1">🔮 Связи управителей домов</p>
                         <p className="text-sm opacity-80">{area.natalPotential}</p>
                       </div>
                     )}
@@ -307,7 +307,7 @@ export function DayOverview({
                     {!area.natalPotential && !area.todayInfluence && !area.dashaInfluence && (
                       <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
                         <p className="text-sm text-yellow-600">
-                          ℹ️ Укажите точное время рождения в настройках для персонализированного прогноза
+                          ℹ️ Без точного времени рождения часть персональных расчётов может быть недоступна.
                         </p>
                       </div>
                     )}
@@ -324,21 +324,7 @@ export function DayOverview({
                       </div>
                     </div>
 
-                    {area.score >= 70 && (
-                      <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
-                        <p className="text-sm text-green-600">
-                          ✨ Отличный день для этой сферы! Используйте высокую благоприятность.
-                        </p>
-                      </div>
-                    )}
 
-                    {area.score < 40 && (
-                      <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
-                        <p className="text-sm text-yellow-600">
-                          ⚠️ Низкая благоприятность. Лучше отложить важные дела на другой день.
-                        </p>
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
@@ -351,9 +337,7 @@ export function DayOverview({
           <div className="flex gap-3">
             <Info className="w-5 h-5 flex-shrink-0 mt-0.5 opacity-70" />
             <p className="text-sm opacity-80 leading-relaxed">
-              💡 <strong>Как читать диаграмму:</strong> Каждый сегмент круга представляет одну сферу жизни.
-              Сферы с баллом 70+ особенно благоприятны для активных действий. Ниже 40 — лучше отложить на другой день.
-              В центре — средний балл благоприятности дня.
+              💡 <strong>Как читать диаграмму:</strong> Каждый сегмент представляет одну сферу жизни. Баллы 0–100 — условные значения внутренней модели, построенные на выбранных астрологических правилах. Они нужны только для сравнения сфер внутри приложения: это не вероятность успеха, не оценка реального состояния дел и не основание откладывать важные решения. В центре показан средний балл модели.
             </p>
           </div>
         </div>

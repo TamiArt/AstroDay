@@ -73,7 +73,9 @@ export interface TransitDashaContext {
   mahadasha: string;
   antardasha: string | null;
   pratyantardasha: string | null;
-  periodEnd: Date;
+  mahadashaEnd: Date;
+  antardashaEnd: Date | null;
+  pratyantardashaEnd: Date | null;
   activeThemes: string[];
   transitActivations: string[];
 }
@@ -110,9 +112,22 @@ function getAspectLabel(type: string): string {
   };
   return labels[type] ?? type;
 }
+const HOUSE_TOPICS: Record<number, string> = {
+  1: 'личность, самоощущение и самостоятельные действия',
+  2: 'личные деньги, накопления, речь и семейные ценности',
+  3: 'общение, навыки, обучение и собственные инициативы',
+  4: 'дом, семья, жильё и внутренняя опора',
+  5: 'творчество, увлечения, романтика и дети',
+  6: 'повседневная работа, обязанности, режим и решение проблем',
+  7: 'брак, близкие отношения, партнёрство и договорённости',
+  8: 'общие деньги, доверие, кризисы и глубокие перемены',
+  9: 'образование, мировоззрение, наставники и дальние горизонты',
+  10: 'профессия, карьера, ответственность и репутация',
+  11: 'доходы, клиенты, друзья, сообщества и результаты усилий',
+  12: 'отдых, восстановление, расходы, уединение и завершение циклов',
+};
 function getHouseTopic(house: number): string {
-  const match = LIFE_AREAS.find((area) => area.houses.includes(house));
-  return match?.label ?? `Тема ${house}-го дома`;
+  return HOUSE_TOPICS[house] ?? `Тема ${house}-го дома`;
 }
 
 /** Evidence-first transit report. Houses are counted from the natal whole-sign Lagna. */
@@ -267,7 +282,9 @@ export function analyzeTransits(
     mahadasha: dashaReport.current.mahadasha.profile.planetName,
     antardasha: dashaReport.current.antardasha?.profile.planetName ?? null,
     pratyantardasha: dashaReport.current.pratyantardasha?.profile.planetName ?? null,
-    periodEnd: dashaReport.current.pratyantardasha?.endDate ?? dashaReport.current.antardasha?.endDate ?? dashaReport.current.mahadasha.endDate,
+    mahadashaEnd: dashaReport.current.mahadasha.endDate,
+    antardashaEnd: dashaReport.current.antardasha?.endDate ?? null,
+    pratyantardashaEnd: dashaReport.current.pratyantardasha?.endDate ?? null,
     activeThemes: [...dashaAreas.keys()],
     transitActivations: aspects.filter((aspect) =>
       activeLayers.some((layer) => layer.planet === aspect.natalPlanet),

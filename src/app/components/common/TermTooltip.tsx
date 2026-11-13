@@ -1,5 +1,6 @@
+import { useId } from 'react';
 import { Info } from 'lucide-react';
-import { ASTROLOGY_TERMS, AstrologyTermId } from '../../utils/astrologyTerms';
+import { ASTROLOGY_TERMS, type AstrologyTermId } from '../../utils/astrologyTerms';
 
 interface TermTooltipProps {
   term: AstrologyTermId;
@@ -8,13 +9,27 @@ interface TermTooltipProps {
 
 export function TermTooltip({ term, label }: TermTooltipProps) {
   const info = ASTROLOGY_TERMS[term];
+  const tooltipId = useId();
 
   return (
-    <span className="relative inline-flex items-center gap-1 group align-middle">
-      {label && <span>{label}</span>}
-      <Info className="w-4 h-4 opacity-60" aria-label={info.title} />
-      <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-64 -translate-x-1/2 rounded-xl border border-border bg-background p-3 text-xs leading-relaxed shadow-xl group-hover:block">
-        <strong className="block mb-1">{info.title}</strong>
+    <span className="group relative inline-flex align-middle">
+      <button
+        type="button"
+        className="inline-flex cursor-pointer items-center gap-1 rounded-sm text-inherit outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600"
+        aria-label={`Пояснение: ${info.title}`}
+        aria-describedby={tooltipId}
+        title={`Пояснение: ${info.title}`}
+        onClick={(event) => event.stopPropagation()}
+      >
+        {label && <span>{label}</span>}
+        <Info className="h-4 w-4 shrink-0 opacity-60" aria-hidden="true" />
+      </button>
+      <span
+        id={tooltipId}
+        role="tooltip"
+        className="pointer-events-none absolute left-1/2 top-full z-30 mt-2 hidden w-72 -translate-x-1/2 rounded-xl border border-border bg-background p-3 text-xs leading-relaxed text-foreground shadow-xl group-hover:block group-focus-within:block"
+      >
+        <strong className="mb-1 block">{info.title}</strong>
         {info.short}
       </span>
     </span>

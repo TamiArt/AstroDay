@@ -1,4 +1,4 @@
-// [УТИЛИТА] Стабильный расчёт и отображение энергии на основе астрологических факторов
+// [УТИЛИТА] Условный индекс астрологической модели дня
 
 export interface EnergyInfo {
   level: number; // 0-100
@@ -18,11 +18,11 @@ export interface PersonalEnergyFactors {
 }
 
 /**
- * Детерминированный расчёт уровня энергии на основе астрологических факторов
+ * Расчёт условного индекса по выбранным астрологическим правилам; он не измеряет физическую или эмоциональную энергию человека
  * @param date - Дата для расчёта
  * @param moonLon - Долгота Луны (опционально, для более точного расчёта)
  * @param tithiIndex - Индекс титхи (опционально)
- * @returns Уровень энергии от 0 до 100
+ * @returns Условный индекс модели от 0 до 100
  */
 export function calculateEnergyLevel(
   date: Date,
@@ -120,17 +120,17 @@ export function getEnergyInfo(level: number): EnergyInfo {
   if (level >= 70) {
     category = 'high';
     color = '#10b981'; // var(--neon-green)
-    label = 'Высокий потенциал';
+    label = 'Выше среднего по модели';
     icon = '🔥';
   } else if (level >= 40) {
     category = 'medium';
     color = '#fbbf24'; // var(--neon-yellow)
-    label = 'Умеренная энергия';
+    label = 'Средний индекс модели';
     icon = '✨';
   } else {
     category = 'low';
     color = '#ef4444'; // red/pink
-    label = 'Время для отдыха';
+    label = 'Ниже среднего по модели';
     icon = '🌙';
   }
 
@@ -150,7 +150,7 @@ export function getEnergyColor(level: number): string {
  * Получить лейбл по уровню энергии
  */
 export function getEnergyLabel(level: number): string {
-  if (level >= 70) return 'Высокий потенциал';
-  if (level >= 40) return 'Умеренная энергия';
-  return 'Время для отдыха';
+  if (level >= 70) return 'Выше среднего по модели';
+  if (level >= 40) return 'Средний индекс модели';
+  return 'Ниже среднего по модели';
 }

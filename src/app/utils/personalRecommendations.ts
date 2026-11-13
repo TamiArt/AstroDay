@@ -216,12 +216,12 @@ function getVargaHints(planet: string, chart: NatalChart): string[] {
 }
 
 function getPanchangFocus(panchang: PanchangData, signal: PanchangSignal): string {
-  if (signal === 'purnima') return 'полнолуние поддерживает завершение и ясное подведение итогов';
-  if (signal === 'amavasya') return 'новолуние лучше использовать для очищения и намерения';
-  if (signal === 'ekadashi') return 'Экадаши усиливает практики дисциплины и внутренней чистоты';
-  if (signal === 'supportive-yoga') return `${panchang.yoga.name} поддерживает созидательные шаги`;
-  if (signal === 'difficult-yoga') return `${panchang.yoga.name} требует аккуратности и меньшего давления`;
-  return `${panchang.tithi.name}: ${panchang.tithi.meaning.toLowerCase()}`;
+  if (signal === 'purnima') return 'в традиции Пурниму (полнолуние) связывают с завершением и подведением итогов';
+  if (signal === 'amavasya') return 'новолуние в традиции связывают с обновлением намерений и началом цикла';
+  if (signal === 'ekadashi') return 'Экадаши традиционно связывают с постом, дисциплиной и духовными практиками';
+  if (signal === 'supportive-yoga') return `${panchang.yoga.name} в традиции связывают с созидательным настроем; это не гарантия результата`;
+  if (signal === 'difficult-yoga') return `${panchang.yoga.name} традиционно трактуют как повод действовать осмотрительно; это не предсказание неудачи`;
+  return `${panchang.tithi.name}: традиционное значение — ${panchang.tithi.meaning.toLowerCase()}`;
 }
 
 export function generatePersonalRecommendations(
