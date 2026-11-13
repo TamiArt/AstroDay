@@ -39,7 +39,7 @@ export function NatalYogasSection({ natalChart }: { natalChart: NatalChart }) {
               <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900">Йоги и специальные комбинации <TermTooltip term="natalYoga" /></h3>
             </div>
             <p className="mt-1 text-sm text-gray-600">
-              Формальные правила обнаружения с доказательствами из вашей карты
+              Сочетания показателей, которые приложение распознало по заданным правилам
             </p>
           </div>
           <div className="shrink-0 rounded-lg bg-purple-50 px-3 py-2 text-center">
@@ -67,13 +67,13 @@ export function NatalYogasSection({ natalChart }: { natalChart: NatalChart }) {
                   <p className="mt-2 text-sm leading-relaxed text-gray-700">{finding.description}</p>
                 </summary>
                 <div className="mt-3 space-y-2 border-t border-purple-100 pt-3">
-                  <p className="text-sm font-semibold text-gray-800">Формальное правило</p>
+                  <p className="text-sm font-semibold text-gray-800">Условия, по которым распознано сочетание</p>
                   <p className="text-sm text-gray-700">{finding.formalRule}</p>
-                  <p className="text-sm font-semibold text-gray-800">Что подтверждает комбинацию</p>
+                  <p className="text-sm font-semibold text-gray-800">Какие положения карты соответствуют этим условиям</p>
                   <ul className="list-disc space-y-1 pl-5">
                     {finding.evidence.map((item) => <li key={item} className="text-sm text-gray-700">{item}</li>)}
                   </ul>
-                  <p className="text-xs text-gray-500">Участвуют планеты: {finding.participants.map((planet) => PLANET_NAMES_RU[planet] ?? planet).join(', ')}. Дома: {finding.houses.length ? finding.houses.join(', ') : 'не определены'}.</p>
+                  <p className="text-xs text-gray-500">В сочетании участвуют планеты: {finding.participants.map((planet) => PLANET_NAMES_RU[planet] ?? planet).join(', ')}. Дома: {finding.houses.length ? finding.houses.join(', ') : 'не определены'}.</p>
                   {finding.assessment.supportingFactors.length > 0 && (
                     <div className="rounded-lg bg-emerald-50 p-2">
                       <p className="text-xs font-semibold text-emerald-900">Поддерживающие факторы</p>
@@ -99,7 +99,7 @@ export function NatalYogasSection({ natalChart }: { natalChart: NatalChart }) {
           </div>
           </>
         ) : (
-          <p className="text-sm text-gray-600">По проверенным правилам подтверждённых комбинаций пока не найдено.</p>
+          <p className="text-sm text-gray-600">По заданным правилам приложение не обнаружило комбинаций, для которых выполнены все необходимые условия. Это не оценка вашей личности или будущего.</p>
         )}
 
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -122,7 +122,7 @@ export function NatalYogasSection({ natalChart }: { natalChart: NatalChart }) {
         </div>
 
         <details className="rounded-lg border border-gray-200 p-3">
-          <summary className="cursor-pointer text-sm font-semibold text-gray-700">Какие правила проверены и что не удалось проверить</summary>
+          <summary className="cursor-pointer text-sm font-semibold text-gray-700">Какие сочетания проверены и каких данных не хватило</summary>
           <ul className="mt-2 space-y-2">
             {analysis.checks.map((item) => (
               <li key={item.id} className="text-xs leading-relaxed text-gray-600">
