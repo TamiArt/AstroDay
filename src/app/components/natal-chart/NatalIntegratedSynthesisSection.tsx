@@ -47,7 +47,7 @@ const houseTopic = (house: number) => ({
   1: 'личность и самостоятельность', 2: 'деньги и накопления', 3: 'навыки и общение',
   4: 'дом и семья', 5: 'творчество и дети', 6: 'работа и повседневные обязанности',
   7: 'брак и партнёрство', 8: 'общие деньги и перемены', 9: 'обучение и мировоззрение',
-  10: 'профессия и карьера', 11: 'доходы и окружение', 12: 'отдых и уединение',
+  10: 'профессия и карьера', 11: 'доходы и окружение', 12: 'отдых, расходы и дела в уединении',
 }[house] ?? `${house}-й дом`);
 
 function explainEvidence(item: IntegratedEvidence, area: IntegratedAreaSynthesis): string {
@@ -143,7 +143,7 @@ function AreaCard({ area }: { area: IntegratedAreaSynthesis }) {
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div><h4 className="font-semibold text-gray-900">{area.title}</h4><p className="mt-1 text-xs text-gray-500">{AREA_MEANINGS[area.id]}</p></div>
         <span className={`rounded-full px-2 py-1 text-xs ${area.dataStatus === 'complete' ? 'bg-emerald-50 text-emerald-700' : area.dataStatus === 'partial' ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-600'}`}>
-          {area.dataStatus === 'complete' ? 'Есть показатели' : area.dataStatus === 'partial' ? 'Часть данных отсутствует' : 'Показателей нет'}
+          {area.dataStatus === 'complete' ? 'Есть расчётные основания' : area.dataStatus === 'partial' ? 'Часть данных отсутствует' : 'Оснований для вывода нет'}
         </span>
       </div>
       {area.evidence.length ? <>
@@ -165,14 +165,14 @@ export function NatalIntegratedSynthesisSection({ natalChart }: Props) {
       <section className="space-y-4">
         <div className="flex items-start gap-3 border-b border-gray-200 pb-3">
           <div className="rounded-xl bg-indigo-50 p-2"><GitMerge className="h-5 w-5 text-indigo-700" /></div>
-          <div><h3 className="text-lg font-bold text-gray-900">Главные темы натальной карты</h3><p className="mt-1 text-sm text-gray-600">Объяснение того, какие жизненные сферы выделяются и какие показатели на это указывают.</p></div>
+          <div><h3 className="text-lg font-bold text-gray-900">Какие темы чаще встречаются в расчётах карты</h3><p className="mt-1 text-sm text-gray-600">Сравнение расчётных оснований по разным жизненным сферам. Число оснований не определяет важность темы и не предсказывает события.</p></div>
         </div>
         <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-4">
           <p className="font-semibold text-gray-900">{prominentAreas.length ? `Чаще всего расчёты выделяют сферу «${prominentAreas[0].title.toLowerCase()}».` : 'Пока недостаточно данных для выделения главной темы.'}</p>
           <p className="mt-1 text-sm text-gray-700">{prominentAreas.length ? `В этой сфере найдено больше отдельных расчётных оснований, чем в других. Поэтому она чаще упоминается в астрологическом разборе. Это не означает, что она важнее остальных сфер или обязательно станет главным событием жизни.` : 'Проверьте дату, время и место рождения, а также полноту рассчитанных положений.'}</p>
           <p className="mt-2 text-xs text-gray-600">В расчёт включены {9 - report.dataQuality.missingPlanets.length} из 9 планет и {12 - report.dataQuality.missingHouses.length} из 12 домов.</p>
         </div>
-        {prominentAreas.length > 1 && <section className="space-y-2"><h4 className="text-sm font-semibold text-gray-800">Другие заметные темы</h4><div className="grid gap-2 md:grid-cols-2">{prominentAreas.slice(1).map((area) => <div key={area.id} className="rounded-lg border border-gray-200 p-3"><p className="text-sm font-semibold text-gray-900">{area.title}</p><p className="mt-1 text-sm text-gray-600">{AREA_MEANINGS[area.id]}</p></div>)}</div></section>}
+        {prominentAreas.length > 1 && <section className="space-y-2"><h4 className="text-sm font-semibold text-gray-800">Следующие темы по числу расчётных оснований</h4><div className="grid gap-2 md:grid-cols-2">{prominentAreas.slice(1).map((area) => <div key={area.id} className="rounded-lg border border-gray-200 p-3"><p className="text-sm font-semibold text-gray-900">{area.title}</p><p className="mt-1 text-sm text-gray-600">{AREA_MEANINGS[area.id]}</p></div>)}</div></section>}
         {report.repeatedThemes.length > 0 && <section className="space-y-2"><h4 className="text-sm font-semibold text-gray-800">Темы, которые повторяются в разных разделах анализа</h4>{report.repeatedThemes.map((item) => <p key={item.area} className="rounded-lg border border-indigo-100 p-3 text-sm text-gray-700"><strong>{item.title}:</strong> эта тема встречается в нескольких разделах: {item.sourceFamilies.map(sourceFamilyName).join(', ')}. Разделы используют одну и ту же астрологическую модель, поэтому повторение не является независимым доказательством и не гарантирует событие.</p>)}</section>}
         {report.contradictions.length > 0 && <section className="space-y-2"><h4 className="flex items-center gap-2 text-sm font-semibold text-amber-800"><AlertTriangle className="h-4 w-4" />Где показатели неоднозначны</h4>{report.contradictions.map((item, index) => <div key={item.area + index} className="rounded-lg bg-amber-50 p-3"><p className="text-sm font-medium text-amber-900">{item.title}</p><p className="mt-1 text-sm text-amber-800">В этой сфере есть как поддерживающие, так и требующие внимания показатели. Поэтому её нельзя описать только как лёгкую или только как сложную.</p></div>)}</section>}
         <section className="space-y-2"><h4 className="text-sm font-semibold text-gray-800">Объяснение по всем жизненным сферам</h4><div className="grid gap-3 lg:grid-cols-2">{report.areas.map((area) => <AreaCard key={area.id} area={area} />)}</div></section>
