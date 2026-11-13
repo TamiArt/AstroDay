@@ -33,7 +33,7 @@ const AREA_MEANINGS: Record<string, string> = {
   wisdom: 'образование, мировоззрение, наставники и расширение кругозора',
   career: 'профессия, ответственность, репутация и карьерное направление',
   gains: 'доходы от деятельности, клиенты, друзья и результаты усилий',
-  retreat: 'отдых, восстановление, уединение и завершение дел',
+  retreat: 'отдых, личное пространство, расходы и дела, которые человек выполняет в одиночестве',
 };
 const ASPECT_MEANINGS: Record<string, string> = {
   соединение: 'две темы тесно переплетаются и действуют одновременно',
@@ -53,8 +53,8 @@ const houseTopic = (house: number) => ({
 function explainEvidence(item: IntegratedEvidence, area: IntegratedAreaSynthesis): string {
   const planetKey = item.factorId.match(/(?:planet|dasha|transit):([A-Z][a-z]+)/)?.[1];
   if (item.source === 'house') {
-    const number = Number(item.factorId.match(/house:(\\d+)/)?.[1]);
-    const lordHouse = item.references.map((ref) => ref.match(/расположен в (\\d+)-м доме/)?.[1]).find(Boolean);
+    const number = Number(item.factorId.match(/house:(\d+)/)?.[1]);
+    const lordHouse = item.references.map((ref) => ref.match(/расположен в (\d+)-м доме/)?.[1]).find(Boolean);
     const occupants = item.references.find((ref) => ref.startsWith('Планеты в доме:'));
     const lordReference = item.references.find((ref) => ref.includes('управитель —'));
     const lordName = lordReference?.split('управитель —')[1]?.replace(/[.]/g, '').trim();
@@ -88,7 +88,7 @@ function explainEvidence(item: IntegratedEvidence, area: IntegratedAreaSynthesis
     return `Расчёт сравнивает сегодняшнее положение ${transitName} с положением ${natalName} в момент рождения. Он обнаружил аспект «${aspect}» — геометрическую связь между двумя положениями планет. В традиционной трактовке ${transitName} связывают с темами «${PLANET_MEANINGS[transit] ?? 'текущего периода'}», а ${natalName} — с темами «${PLANET_MEANINGS[natal] ?? 'натальной карты'}». ${aspectMeaning.charAt(0).toUpperCase() + aspectMeaning.slice(1)} Поэтому сфера «${area.title.toLowerCase()}» включена в обзор. Это символическая трактовка, а не прогноз неизбежного события.`;
   }
   if (item.source === 'varga') {
-    const division = item.factorId.match(/D(\\d+)/)?.[1] ?? '';
+    const division = item.factorId.match(/D(\d+)/)?.[1] ?? '';
     const d1 = item.references.find((ref) => ref.startsWith('D1 дом'));
     const projected = item.references.find((ref) => ref.startsWith(`D${division}, дом`));
     return `Для дополнительной проверки темы «${area.title.toLowerCase()}» приложение сопоставляет основную карту рождения D1 и тематическую карту D${division}. D1 показывает общий рисунок карты, а D${division} рассматривает отдельную область по специальному правилу деления знаков. ${d1 ? `В основной карте: ${d1}` : ''} ${projected ? `В дополнительной карте: ${projected}` : 'Отдельные показатели тематической карты приведены в технических данных.'} Совпадение трактовок может сделать их согласованнее внутри этой системы, но дополнительная карта не является независимым подтверждением и не заменяет D1.`;
