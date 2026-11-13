@@ -311,7 +311,7 @@ export function analyzePersonalizedHouses(chart: NatalChart): PersonalizedHouseI
       `Знак дома: ${sign}`,
       ...(houseSignStyle ? [`Стиль знака дома: ${houseSignStyle}`] : []),
       `Управитель: ${PLANET_RU[lordKey] ?? lordKey}${lordEvidence ? ` — ${formatPlanetEvidence(lordEvidence)}` : ''}`,
-      lordCondition ? `Положение управителя в знаке: ${lordCondition.label}; условная оценка ${lordCondition.score}/100. Это упрощённая оценка одного признака, а не полная система Шадбала и не измерение реальной силы человека.` : 'Достоинство управителя: нет данных.',
+      lordCondition ? `Достоинство управителя (положение в знаке): ${lordCondition.label}; условная оценка ${lordCondition.score}/100. Это упрощённая оценка одного признака, а не полная система Шадбала и не измерение реальной силы человека.` : 'Достоинство управителя: нет данных.',
       ...occupantInterpretations.map((item) => `Планета в доме: ${item}`),
       ...planetaryConnections.map((item) => `Связь планет: ${item}`),
       ...houseAspects,
