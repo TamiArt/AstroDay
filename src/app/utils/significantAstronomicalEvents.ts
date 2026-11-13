@@ -5,6 +5,7 @@ export interface SignificantAstronomicalEvent {
   id: string;
   date: string;
   referenceTime: string;
+  referenceTimeNote: string;
   momentUtc: string;
   title: string;
   category: 'planetary-alignment';
@@ -35,12 +36,13 @@ export const SIGNIFICANT_ASTRONOMICAL_EVENTS: SignificantAstronomicalEvent[] = [
     id: 'four-planet-alignment-2026-11',
     date: '2026-11-14',
     referenceTime: '05:25 МСК',
+    referenceTimeNote: 'Это выбранное время персонального астрологического расчёта, а не точный момент выравнивания и не рекомендуемое время наблюдения.',
     momentUtc: '2026-11-14T02:25:00.000Z',
     title: 'Парад четырёх планет',
     category: 'planetary-alignment',
     planets: ['Меркурий', 'Венера', 'Марс', 'Юпитер'],
     visibilityWindow: '13–22 ноября 2026 года, перед восходом Солнца',
-    description: 'Меркурий, Венера, Марс и Юпитер будут видны в одной области утреннего неба. Это видимое с Земли сближение по направлению, а не физическое выстраивание планет в одну линию.',
+    description: 'Меркурий, Венера, Марс и Юпитер видны в одной области утреннего неба. Это видимое с Земли сближение по направлению, а не физическое выстраивание планет в одну линию.',
     observationTip: 'Ищите планеты низко над восточно-юго-восточным горизонтом до рассвета. Меркурий будет сложнее всего заметить; точное окно зависит от места и погоды.',
     sourceUrl: 'https://starwalk.space/ru/news/astronomy-calendar-2026',
     sourceLabel: 'Star Walk — календарь астрономических событий 2026',
