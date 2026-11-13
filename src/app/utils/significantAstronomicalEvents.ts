@@ -71,7 +71,9 @@ export function getPersonalizedAstronomicalEvent(
   const transitMoment = new Date(event.momentUtc);
   const report = analyzeTransits(natalChart, transitMoment);
   const relevant = report.positions.filter((position) => ['Mars', 'Jupiter'].includes(position.planet));
-  const alignmentPositions = report.positions.filter((position) => ['Mercury', 'Venus', 'Mars', 'Jupiter'].includes(position.planet));
+  const alignmentPositions = report.positions
+    .filter((position) => ['Mercury', 'Venus', 'Mars', 'Jupiter'].includes(position.planet))
+    .sort((left, right) => event.planets.indexOf(left.planetName) - event.planets.indexOf(right.planetName));
   const sameHouse = relevant.length === 2 && relevant[0].natalHouse === relevant[1].natalHouse;
   const house = sameHouse ? relevant[0].natalHouse : null;
   const topic = house ? HOUSE_TOPICS[house] : null;
