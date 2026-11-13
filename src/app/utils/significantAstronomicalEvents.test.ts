@@ -6,6 +6,7 @@ const event = SIGNIFICANT_ASTRONOMICAL_EVENTS.find((item) => item.id === 'four-p
 assert.ok(event, 'November 2026 four-planet alignment is included in the calendar');
 assert.equal(event.date, '2026-11-14');
 assert.equal(event.referenceTime, '05:25 МСК');
+assert.match(event.referenceTimeNote, /не точный момент выравнивания/);
 assert.deepEqual(event.planets, ['Меркурий', 'Венера', 'Марс', 'Юпитер']);
 assert.match(event.visibilityWindow, /13–22 ноября/);
 assert.match(event.description, /видимое с Земли/);
