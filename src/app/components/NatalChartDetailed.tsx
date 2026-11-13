@@ -8,7 +8,7 @@ import { NatalAnalysisTab } from './natal-chart/NatalAnalysisTab';
 import { NatalDashaTab } from './natal-chart/NatalDashaTab';
 import { NatalTransitsTab } from './natal-chart/NatalTransitsTab';
 import { NatalForecastTab } from './natal-chart/NatalForecastTab';
-import { NatalHousesTab } from './natal-chart/NatalHousesTab';
+import { NatalHousesTab } from './natal-chart/NatalHousesClearTab';
 import { NatalOverviewTab } from './natal-chart/NatalOverviewTab';
 import { LifePathAnalysisTab } from './natal-chart/LifePathAnalysisTab';
 import { PartnerCompatibility } from './PartnerCompatibility';
