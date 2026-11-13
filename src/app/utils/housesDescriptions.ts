@@ -5,9 +5,9 @@ export interface HouseDescription {
   sanskritName: string;
   englishName: string;
   russianName: string;
-    whatItIs: undefined,
+  whatItIs: string;
   areas: string[];
-    detailedExplanation: undefined,
+  detailedExplanation: string;
   positiveManifestations: string[];
   challenges: string[];
   questions: string[];
