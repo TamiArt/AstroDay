@@ -62,7 +62,7 @@ function explainEvidence(item: IntegratedEvidence, area: IntegratedAreaSynthesis
     return [
       `Дом ${number} в этой астрологической системе связан с темой «${houseTopic(number)}».`,
       lordName ? `У каждого дома есть планета-управитель: это планета, которая управляет знаком этого дома. Здесь управитель — ${lordName}.` : 'Планета-управитель этого дома по доступным данным не определена.',
-      lordHouse && lordName ? `${lordName} находится в ${lordHouse}-м доме, который связан с темой «${destination}». Поэтому в традиционной трактовке две области — «${houseTopic(number)}» и «${destination}» — рассматриваются вместе. Например, тема ${area.title.toLowerCase()} может рассматриваться через вопросы ${destination}.` : 'Поскольку положение управителя неизвестно, приложение не делает вывод о связи этой темы с другими домами.',
+      lordHouse && lordName ? `${lordName} находится в ${lordHouse}-м доме, который связан с темой «${destination}». Поэтому в традиционной трактовке две области — «${houseTopic(number)}» и «${destination}» — рассматриваются вместе.` : 'Поскольку положение управителя неизвестно, приложение не делает вывод о связи этой темы с другими домами.',
       occupants ? occupants.replace('Планеты в доме:', 'Планеты, расположенные в этом доме:') : '',
     ].filter(Boolean).join(' ');
   }
@@ -168,7 +168,7 @@ export function NatalIntegratedSynthesisSection({ natalChart }: Props) {
           <div><h3 className="text-lg font-bold text-gray-900">Какие темы чаще встречаются в расчётах карты</h3><p className="mt-1 text-sm text-gray-600">Сравнение расчётных оснований по разным жизненным сферам. Число оснований не определяет важность темы и не предсказывает события.</p></div>
         </div>
         <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-4">
-          <p className="font-semibold text-gray-900">{prominentAreas.length ? `Чаще всего расчёты выделяют сферу «${prominentAreas[0].title.toLowerCase()}».` : 'Пока недостаточно данных для выделения главной темы.'}</p>
+          <p className="font-semibold text-gray-900">{prominentAreas.length ? `Чаще всего расчёты выделяют сферу «${prominentAreas[0].title.toLowerCase()}».` : 'Пока недостаточно расчётных данных, чтобы сравнить темы между собой.'}</p>
           <p className="mt-1 text-sm text-gray-700">{prominentAreas.length ? `В этой сфере найдено больше отдельных расчётных оснований, чем в других. Поэтому она чаще упоминается в астрологическом разборе. Это не означает, что она важнее остальных сфер или обязательно станет главным событием жизни.` : 'Проверьте дату, время и место рождения, а также полноту рассчитанных положений.'}</p>
           <p className="mt-2 text-xs text-gray-600">В расчёт включены {9 - report.dataQuality.missingPlanets.length} из 9 планет и {12 - report.dataQuality.missingHouses.length} из 12 домов.</p>
         </div>
