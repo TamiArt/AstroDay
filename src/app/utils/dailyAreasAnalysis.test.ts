@@ -28,6 +28,7 @@ for (const area of areas) {
   assert.ok(area.recommendations.length > 0, `${area.id} must include practical next steps`);
   assert.ok(area.recommendations.every((item) => !item.includes('Астрологические основания')));
   assert.ok(area.whyToday.length > 0, `${area.id} must explain the calculation in plain language`);
+  assert.ok(area.recommendationReason.trim().length > 0, `${area.id} must explain why the action is useful`);
   assert.ok(area.scoreBreakdown.panchang >= 0);
   assert.ok(area.scoreBreakdown.panchang <= 10 || (area.scoreBreakdown.dasha === undefined && area.scoreBreakdown.transits === undefined));
 }
