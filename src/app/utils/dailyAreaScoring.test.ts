@@ -24,6 +24,10 @@ assert.equal(getAspectWeight('unknown', 100), 0);
 assert.equal(calculateDailyAreaScore({ panchangScore: 7 }), 70);
 assert.equal(calculateDailyAreaScore({ dashaScore: 50, transitScore: 40, panchangScore: 10 }), 100);
 assert.equal(calculateDailyAreaScore({ dashaScore: 0, transitScore: 0, panchangScore: 0 }), 0);
+assert.equal(calculateDailyAreaScore({ transitScore: 20, panchangScore: 5 }), 50);
+assert.equal(calculateDailyAreaScore({ dashaScore: 25, panchangScore: 5 }), 50);
+assert.equal(calculateDailyAreaScore({ dashaScore: 25 }), 50);
+assert.equal(calculateDailyAreaScore({}), 0);
 
 const panchang = calculatePanchang(new Date('2026-08-19T12:00:00.000Z'), { timezone: 'Europe/London' });
 for (const areaId of ['career', 'relationships', 'health', 'finances', 'learning', 'creativity', 'spirituality', 'family'] as const) {
