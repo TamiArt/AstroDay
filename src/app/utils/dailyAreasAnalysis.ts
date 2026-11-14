@@ -43,7 +43,7 @@ interface AreaState {
   whyToday: string[];
 }
 
-const AREA_META: Record<LifeAreaId, Omit<LifeArea, 'score' | 'recommendations' | 'whyToday' | 'scoreBreakdown'>> = {
+const AREA_META: Record<LifeAreaId, Omit<LifeArea, 'score' | 'recommendations' | 'recommendationReason' | 'whyToday' | 'scoreBreakdown'>> = {
   career: { id: 'career', name: 'Карьера и достижения', color: '#6b4ce6', icon: '💼', description: 'Профессиональный рост, успех в делах, достижение целей' },
   relationships: { id: 'relationships', name: 'Отношения и любовь', color: '#ec4899', icon: '💕', description: 'Романтические отношения, социальные связи, партнёрство' },
   health: { id: 'health', name: 'Самочувствие и режим', color: '#10b981', icon: '💪', description: 'Режим, восстановление и повседневная забота о себе' },
