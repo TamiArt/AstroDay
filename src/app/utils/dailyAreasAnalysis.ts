@@ -24,6 +24,12 @@ export interface LifeArea {
   natalPotential?: string;
   todayInfluence?: string;
   dashaInfluence?: string;
+  whyToday: string[];
+  scoreBreakdown: {
+    dasha?: number;
+    transits?: number;
+    panchang: number;
+  };
 }
 
 interface AreaState {
@@ -33,6 +39,7 @@ interface AreaState {
   natalPotential?: string;
   todayInfluence?: string;
   dashaInfluence?: string;
+  whyToday: string[];
 }
 
 const AREA_META: Record<LifeAreaId, Omit<LifeArea, 'score' | 'recommendations'>> = {
@@ -62,13 +69,7 @@ function getRecommendations(areaId: LifeAreaId, area: AreaState): string[] {
   const reasons = [area.dashaInfluence, area.todayInfluence, area.natalPotential]
     .filter((value): value is string => Boolean(value));
 
-  if (reasons.length === 0) return base;
-
-  return [
-    base[0],
-    `Астрологические основания, которые учтены моделью: ${reasons[0]}`,
-    base[1],
-  ];
+  return base;
 }
 
 
@@ -79,7 +80,7 @@ export function calculateDailyAreas(
   aspects: Aspect[],
   dasha?: DashaPeriod | null
 ): LifeArea[] {
-  const areas = Object.fromEntries(LIFE_AREA_IDS.map((id) => [id, {}])) as Record<LifeAreaId, AreaState>;
+  const areas = Object.fromEntries(LIFE_AREA_IDS.map((id) => [id, { whyToday: [] }])) as Record<LifeAreaId, AreaState>;
 
   if (dasha) {
     const influenceMap = getDashaPlanetInfluence(dasha.planet);
@@ -87,7 +88,8 @@ export function calculateDailyAreas(
       const influence = influenceMap[areaId] ?? 0;
       areas[areaId].dashaScore = influence * 5;
       if (influence > 0) {
-        areas[areaId].dashaInfluence = `Махадаша ${getPlanetName(dasha.planet)}: в традиционной трактовке её связывают с темами этой сферы; это общий символический фон, а не прогноз события.`;
+        areas[areaId].dashaInfluence = `Сейчас идёт большой период ${getPlanetName(dasha.planet)}. В правилах этой модели он связан с темой «${AREA_META[areaId].name}». Это общий фон периода, а не обещание события.`;
+        areas[areaId].whyToday.push(areas[areaId].dashaInfluence);
       }
     }
   }
@@ -125,7 +127,8 @@ export function calculateDailyAreas(
 
       areas[areaId].transitScore = Math.min(40, Math.max(0, transitInfluence));
       if (houseLords.length > 0) {
-        areas[areaId].natalPotential = `Дома ${relevantHouses.join(', ')} управляются ${houseLords.join(', ')}`;
+        areas[areaId].natalPotential = `В натальной карте эта сфера связана с домами ${relevantHouses.join(', ')}. Ими управляют планеты: ${houseLords.map(getPlanetName).join(', ')}.`;
+        areas[areaId].whyToday.push(`${areas[areaId].natalPotential} Это постоянная особенность карты, а не прогноз на сегодня.`);
       }
 
       if (transitingPlanets.length > 0) {
@@ -134,15 +137,20 @@ export function calculateDailyAreas(
           && (houseLords.includes(aspect.planet1) || houseLords.includes(aspect.planet2))
         ).length;
         const planetNames = Array.from(new Set(transitingPlanets)).map(getPlanetName).join(', ');
-        areas[areaId].todayInfluence = `Текущие положения: ${planetNames} проходят по домам ${relevantHouses.join(', ')}${aspectInfo > 0 ? `; найдено аспектных связей с управителями: ${aspectInfo}` : ''}. Это описание расчёта, а не оценка вероятности события.`;
+        areas[areaId].todayInfluence = `Сегодня ${planetNames} находятся в домах ${relevantHouses.join(', ')}, которые модель связывает с этой сферой.${aspectInfo > 0 ? ` Также расчёт учитывает ${aspectInfo} аспектных связей с планетами-управителями.` : ''}`;
+        areas[areaId].whyToday.push(`${areas[areaId].todayInfluence} Это астрологические положения, а не указание на то, что событие обязательно произойдёт.`);
       } else {
-        areas[areaId].todayInfluence = `По выбранным правилам не найдено транзитных планет через дома ${relevantHouses.join(', ')}`;
+        areas[areaId].todayInfluence = `Сегодня модель не обнаружила планет, проходящих по домам ${relevantHouses.join(', ')}.`;
+        areas[areaId].whyToday.push(`${areas[areaId].todayInfluence} Это не означает, что в этой сфере ничего не произойдёт: просто данный признак не добавил баллы.`);
       }
     }
   }
 
   for (const areaId of LIFE_AREA_IDS) {
     areas[areaId].panchangScore = getPanchangInfluence(areaId, panchang);
+    areas[areaId].whyToday.push(
+      `В дневной части расчёта учтены лунный день «${panchang.tithi.name}» (${panchang.tithi.meaning}), день недели «${panchang.vara.name}» (${panchang.vara.quality}) и йога «${panchang.yoga.name}» (${panchang.yoga.meaning}).`
+    );
   }
 
   return LIFE_AREA_IDS.map((areaId) => {
@@ -155,6 +163,14 @@ export function calculateDailyAreas(
       natalPotential: state.natalPotential,
       todayInfluence: state.todayInfluence,
       dashaInfluence: state.dashaInfluence,
+      whyToday: state.whyToday,
+      scoreBreakdown: {
+        dasha: state.dashaScore,
+        transits: state.transitScore,
+        panchang: state.dashaScore === undefined && state.transitScore === undefined
+          ? (state.panchangScore ?? 0) * 10
+          : state.panchangScore ?? 0,
+      },
     };
   }).sort((a, b) => b.score - a.score);
 }
