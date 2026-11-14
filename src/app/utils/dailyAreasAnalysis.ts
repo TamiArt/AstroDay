@@ -21,6 +21,7 @@ export interface LifeArea {
   icon: string;
   description: string;
   recommendations: string[];
+  recommendationReason: string;
   natalPotential?: string;
   todayInfluence?: string;
   dashaInfluence?: string;
@@ -51,6 +52,17 @@ const AREA_META: Record<LifeAreaId, Omit<LifeArea, 'score' | 'recommendations' |
   creativity: { id: 'creativity', name: 'Творчество и самовыражение', color: '#a78bfa', icon: '🎨', description: 'Искусство, креативность, самовыражение' },
   spirituality: { id: 'spirituality', name: 'Духовность и медитация', color: '#8b5cf6', icon: '🧘', description: 'Духовные практики, медитация, внутренний рост' },
   family: { id: 'family', name: 'Семья и дом', color: '#14b8a6', icon: '🏡', description: 'Семейные отношения, дом, уют' },
+};
+
+const RECOMMENDATION_REASONS: Record<LifeAreaId, string> = {
+  career: 'Одна понятная задача помогает не распыляться и увидеть конкретный результат.',
+  relationships: 'Спокойный разговор с ясными вопросами помогает понять ожидания друг друга, а не додумывать за другого человека.',
+  health: 'Режим и отдых стоит выбирать по самочувствию и реальной нагрузке, а не по астрологическому баллу.',
+  finances: 'Проверка бюджета и условий помогает принимать решения на реальных цифрах, а не на предположениях.',
+  learning: 'Небольшие шаги легче выполнить и проверить, действительно ли вы поняли материал.',
+  creativity: 'Небольшой эксперимент помогает начать работу и понять, какую идею стоит развивать дальше.',
+  spirituality: 'Короткая добровольная практика помогает выделить время на спокойствие и размышления.',
+  family: 'Обсуждение обязанностей заранее помогает уменьшить недопонимание и распределить нагрузку.',
 };
 
 const RECOMMENDATIONS: Record<LifeAreaId, string[]> = {
@@ -156,6 +168,7 @@ export function calculateDailyAreas(
       ...AREA_META[areaId],
       score,
       recommendations: getRecommendations(areaId),
+      recommendationReason: RECOMMENDATION_REASONS[areaId],
       natalPotential: state.natalPotential,
       todayInfluence: state.todayInfluence,
       dashaInfluence: state.dashaInfluence,
