@@ -27,7 +27,7 @@ function getScoreExplanation(score: number): string {
 function ScoreBreakdown({ area }: { area: LifeArea }) {
   const parts = [
     { label: 'Большой период Даша', value: area.scoreBreakdown.dasha, max: 50 },
-    { label: 'Положения планет сегодня', value: area.scoreBreakdown.transits, max: 40 },
+    { label: 'Текущие планеты и связи', value: area.scoreBreakdown.transits, max: 40 },
     {
       label: 'Лунный день и календарь',
       value: area.scoreBreakdown.panchang,
@@ -165,7 +165,7 @@ export function DayOverview({
           <div className="mt-5 rounded-2xl border border-border bg-gradient-to-r from-purple-500/10 to-pink-500/10 p-4">
             <div className="mb-3 flex items-center gap-2">
               <Clock className="h-4 w-4 text-purple-600" />
-              <h3 className="text-sm font-semibold">Какой период Даша сейчас идёт</h3>
+              <h3 className="text-sm font-semibold">Периоды в Джйотиш</h3>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="rounded-xl bg-background/60 p-3">
@@ -186,8 +186,8 @@ export function DayOverview({
               )}
             </div>
             <p className="mt-3 text-xs leading-relaxed opacity-70">
-              В традиции Джйотиш большой период и подпериод используют как общий символический
-              фон. Они не означают, что определённое событие обязательно произойдёт.
+              Даша — это система больших и малых астрологических периодов. В приложении они
+              используются как общий символический фон, а не как обещание конкретного события.
             </p>
           </div>
         )}
@@ -199,31 +199,38 @@ export function DayOverview({
               Это три наибольших расчётных балла, а не рейтинг «лучших» сфер дня.
             </p>
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {topAreas.map((area) => (
-              <div
-                key={area.id}
-                className="rounded-2xl border p-3"
-                style={{ background: `${area.color}12`, borderColor: `${area.color}45` }}
-              >
-                <div className="mb-2 flex items-center gap-2">
-                  <span className="text-2xl">{area.icon}</span>
-                  <span className="text-sm font-semibold">{area.name}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-secondary">
-                    <div
-                      className="h-full rounded-full"
-                      style={{ width: `${area.score}%`, background: area.color }}
-                    />
+          {topAreas[0]?.score > 0 ? (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {topAreas.map((area) => (
+                <div
+                  key={area.id}
+                  className="rounded-2xl border p-3"
+                  style={{ background: `${area.color}12`, borderColor: `${area.color}45` }}
+                >
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="text-2xl">{area.icon}</span>
+                    <span className="text-sm font-semibold">{area.name}</span>
                   </div>
-                  <strong className="text-sm tabular-nums" style={{ color: area.color }}>
-                    {area.score}/100
-                  </strong>
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-secondary">
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${area.score}%`, background: area.color }}
+                      />
+                    </div>
+                    <strong className="text-sm tabular-nums" style={{ color: area.color }}>
+                      {area.score}/100
+                    </strong>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <p className="rounded-xl bg-secondary/60 p-4 text-sm leading-relaxed">
+              По выбранным правилам сегодня ни одна сфера не получила расчётных баллов.
+              Это не означает, что день будет плохим или что нужно отложить планы.
+            </p>
+          )}
         </section>
       </GlassCard>
 
