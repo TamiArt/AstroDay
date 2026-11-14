@@ -64,12 +64,8 @@ const RECOMMENDATIONS: Record<LifeAreaId, string[]> = {
   family: ['Обсудите бытовые задачи и распределение обязанностей', 'Запланируйте время для близких', 'Уточните, какая помощь или поддержка сейчас нужна'],
 };
 
-function getRecommendations(areaId: LifeAreaId, area: AreaState): string[] {
-  const base = RECOMMENDATIONS[areaId];
-  const reasons = [area.dashaInfluence, area.todayInfluence, area.natalPotential]
-    .filter((value): value is string => Boolean(value));
-
-  return base;
+function getRecommendations(areaId: LifeAreaId): string[] {
+  return RECOMMENDATIONS[areaId];
 }
 
 
@@ -159,7 +155,7 @@ export function calculateDailyAreas(
     return {
       ...AREA_META[areaId],
       score,
-      recommendations: getRecommendations(areaId, state),
+      recommendations: getRecommendations(areaId),
       natalPotential: state.natalPotential,
       todayInfluence: state.todayInfluence,
       dashaInfluence: state.dashaInfluence,
