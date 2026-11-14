@@ -145,7 +145,7 @@ export function calculateDailyAreas(
           && (houseLords.includes(aspect.planet1) || houseLords.includes(aspect.planet2))
         ).length;
         const planetNames = Array.from(new Set(transitingPlanets)).map(getPlanetName).join(', ');
-        areas[areaId].todayInfluence = `Сегодня ${planetNames} находятся в домах ${relevantHouses.join(', ')}, которые модель связывает с этой сферой.${aspectInfo > 0 ? ` Также расчёт учитывает ${aspectInfo} аспектных связей с планетами-управителями.` : ''}`;
+        areas[areaId].todayInfluence = `Сегодня ${planetNames} находятся в домах ${relevantHouses.join(', ')}, которые модель связывает с этой сферой.${aspectInfo > 0 ? ` Также расчёт учитывает ${aspectInfo} дополнительных связей с планетами, связанными с этими домами.` : ''}`;
         areas[areaId].whyToday.push(`${areas[areaId].todayInfluence} Это астрологические положения, а не указание на то, что событие обязательно произойдёт.`);
       } else {
         areas[areaId].todayInfluence = `Сегодня модель не обнаружила планет, проходящих по домам ${relevantHouses.join(', ')}.`;
@@ -157,7 +157,7 @@ export function calculateDailyAreas(
   for (const areaId of LIFE_AREA_IDS) {
     areas[areaId].panchangScore = getPanchangInfluence(areaId, panchang);
     areas[areaId].whyToday.push(
-      `В дневной части расчёта учтены лунный день «${panchang.tithi.name}» (${panchang.tithi.meaning}), день недели «${panchang.vara.name}» (${panchang.vara.quality}) и йога «${panchang.yoga.name}» (${panchang.yoga.meaning}).`
+      `В дневной части расчёта учтены лунный день «${panchang.tithi.name}» (${panchang.tithi.meaning}), день недели «${panchang.vara.name}» (${panchang.vara.quality}) и календарное сочетание (йога) «${panchang.yoga.name}» (${panchang.yoga.meaning}).`
     );
   }
 
