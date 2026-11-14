@@ -66,6 +66,9 @@ function LifeAreaDetails({ area }: { area: LifeArea }) {
             <li key={index}>{recommendation}</li>
           ))}
         </ol>
+        <p className="mt-2 rounded-lg bg-secondary/60 p-3 text-sm leading-relaxed">
+          <strong>Почему это полезно:</strong> {area.recommendationReason}
+        </p>
         <p className="mt-2 text-xs opacity-60">
           Это обычные практические идеи. Выбирайте только то, что подходит вашей реальной ситуации.
         </p>
