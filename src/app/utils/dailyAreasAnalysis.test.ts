@@ -30,7 +30,7 @@ for (const area of areas) {
   assert.ok(area.whyToday.length > 0, `${area.id} must explain the calculation in plain language`);
   assert.ok(area.recommendationReason.trim().length > 0, `${area.id} must explain why the action is useful`);
   assert.ok(area.scoreBreakdown.panchang >= 0);
-  assert.ok(area.scoreBreakdown.panchang <= 10 || (area.scoreBreakdown.dasha === undefined && area.scoreBreakdown.transits === undefined));
+  assert.ok(area.scoreBreakdown.panchang <= 10);
 }
 
 const sortedScores = [...areas].sort((a, b) => b.score - a.score).map((area) => area.score);
