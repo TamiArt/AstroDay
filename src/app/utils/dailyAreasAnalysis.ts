@@ -88,7 +88,16 @@ export function calculateDailyAreas(
   aspects: Aspect[],
   dasha?: DashaPeriod | null
 ): LifeArea[] {
-  const areas = Object.fromEntries(LIFE_AREA_IDS.map((id) => [id, { whyToday: [] }])) as Record<LifeAreaId, AreaState>;
+  const areas: Record<LifeAreaId, AreaState> = {
+    career: { whyToday: [] },
+    relationships: { whyToday: [] },
+    health: { whyToday: [] },
+    finances: { whyToday: [] },
+    learning: { whyToday: [] },
+    creativity: { whyToday: [] },
+    spirituality: { whyToday: [] },
+    family: { whyToday: [] },
+  };
 
   if (dasha) {
     const influenceMap = getDashaPlanetInfluence(dasha.planet);
