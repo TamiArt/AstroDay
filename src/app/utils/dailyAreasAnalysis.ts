@@ -176,9 +176,7 @@ export function calculateDailyAreas(
       scoreBreakdown: {
         dasha: state.dashaScore,
         transits: state.transitScore,
-        panchang: state.dashaScore === undefined && state.transitScore === undefined
-          ? (state.panchangScore ?? 0) * 10
-          : state.panchangScore ?? 0,
+        panchang: state.panchangScore ?? 0,
       },
     };
   }).sort((a, b) => b.score - a.score);
