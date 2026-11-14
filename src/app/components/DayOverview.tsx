@@ -31,7 +31,7 @@ function ScoreBreakdown({ area }: { area: LifeArea }) {
     {
       label: 'Лунный день и календарь',
       value: area.scoreBreakdown.panchang,
-      max: area.scoreBreakdown.dasha === undefined && area.scoreBreakdown.transits === undefined ? 100 : 10
+      max: 10
     },
   ].filter((part): part is { label: string; value: number; max: number } => part.value !== undefined);
 
@@ -47,7 +47,7 @@ function ScoreBreakdown({ area }: { area: LifeArea }) {
         ))}
       </ul>
       <p className="mt-2 text-xs opacity-60">
-        Числа показывают вклад каждого блока в общий индекс. Это не проценты и не вероятность события.
+        Итоговый индекс пересчитывается на шкалу 0–100 по тем блокам, для которых есть данные. Поэтому, если один блок недоступен, оставшиеся не теряют вес. Это не проценты и не вероятность события.
       </p>
     </div>
   );
