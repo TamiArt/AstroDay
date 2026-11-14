@@ -25,10 +25,14 @@ function getScoreExplanation(score: number): string {
 
 function ScoreBreakdown({ area }: { area: LifeArea }) {
   const parts = [
-    { label: 'Большой период Даша', value: area.scoreBreakdown.dasha },
-    { label: 'Положения планет сегодня', value: area.scoreBreakdown.transits },
-    { label: 'Лунный день и календарь', value: area.scoreBreakdown.panchang },
-  ].filter((part): part is { label: string; value: number } => part.value !== undefined);
+    { label: 'Большой период Даша', value: area.scoreBreakdown.dasha, max: 50 },
+    { label: 'Положения планет сегодня', value: area.scoreBreakdown.transits, max: 40 },
+    {
+      label: 'Лунный день и календарь',
+      value: area.scoreBreakdown.panchang,
+      max: area.scoreBreakdown.dasha === undefined && area.scoreBreakdown.transits === undefined ? 100 : 10
+    },
+  ].filter((part): part is { label: string; value: number; max: number } => part.value !== undefined);
 
   return (
     <div className="rounded-xl border border-border p-3">
@@ -37,12 +41,12 @@ function ScoreBreakdown({ area }: { area: LifeArea }) {
         {parts.map((part) => (
           <li key={part.label} className="flex items-center justify-between gap-3 text-sm">
             <span className="opacity-80">{part.label}</span>
-            <strong className="tabular-nums">{part.value} баллов</strong>
+            <strong className="tabular-nums">{part.value}/{part.max}</strong>
           </li>
         ))}
       </ul>
       <p className="mt-2 text-xs opacity-60">
-        Это внутренние баллы модели, а не проценты и не вероятность события.
+        Числа показывают вклад каждого блока в общий индекс. Это не проценты и не вероятность события.
       </p>
     </div>
   );
