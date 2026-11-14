@@ -109,6 +109,14 @@ export function calculateDailyAreas(
       let transitInfluence = 0;
       const transitingPlanets: string[] = [];
       const houseLords = relevantHouses.map((houseNumber) => natalChart.houses![houseNumber - 1].lord);
+      const relevantAspects = aspects.filter((aspect) =>
+        (aspect.context === 'transit' || aspect.isTransit || aspect.context === undefined)
+        && (houseLords.includes(aspect.planet1) || houseLords.includes(aspect.planet2))
+      );
+      const favorableLords = houseLords.filter((lord) => {
+        const lordPosition = natalChart.planets[lord as keyof typeof natalChart.planets];
+        return Boolean(lordPosition && FAVORABLE_NAKSHATRAS.has(lordPosition.nakshatraName));
+      });
 
       for (const houseNumber of relevantHouses) {
         for (const [planetName, planetPosition] of Object.entries(currentChart.planets)) {
@@ -119,19 +127,11 @@ export function calculateDailyAreas(
         }
       }
 
-      for (const aspect of aspects) {
-        const isTransitAspect = aspect.context === 'transit' || aspect.isTransit || aspect.context === undefined;
-        if (isTransitAspect && (houseLords.includes(aspect.planet1) || houseLords.includes(aspect.planet2))) {
-          transitInfluence += getAspectWeight(aspect.type, aspect.strength);
-        }
+      for (const aspect of relevantAspects) {
+        transitInfluence += getAspectWeight(aspect.type, aspect.strength);
       }
 
-      for (const lord of houseLords) {
-        const lordPosition = natalChart.planets[lord as keyof typeof natalChart.planets];
-        if (lordPosition && FAVORABLE_NAKSHATRAS.has(lordPosition.nakshatraName)) {
-          transitInfluence += 3;
-        }
-      }
+      transitInfluence += favorableLords.length * 3;
 
       areas[areaId].transitScore = Math.min(40, Math.max(0, transitInfluence));
       if (houseLords.length > 0) {
@@ -140,16 +140,20 @@ export function calculateDailyAreas(
       }
 
       if (transitingPlanets.length > 0) {
-        const aspectInfo = aspects.filter((aspect) =>
-          (aspect.context === 'transit' || aspect.isTransit || aspect.context === undefined)
-          && (houseLords.includes(aspect.planet1) || houseLords.includes(aspect.planet2))
-        ).length;
         const planetNames = Array.from(new Set(transitingPlanets)).map(getPlanetName).join(', ');
-        areas[areaId].todayInfluence = `Сегодня ${planetNames} находятся в домах ${relevantHouses.join(', ')}, которые модель связывает с этой сферой.${aspectInfo > 0 ? ` Также расчёт учитывает ${aspectInfo} дополнительных связей с планетами, связанными с этими домами.` : ''}`;
+        areas[areaId].todayInfluence = `Сегодня ${planetNames} находятся в домах ${relevantHouses.join(', ')}, которые модель связывает с этой сферой.`;
         areas[areaId].whyToday.push(`${areas[areaId].todayInfluence} Это астрологические положения, а не указание на то, что событие обязательно произойдёт.`);
       } else {
         areas[areaId].todayInfluence = `Сегодня модель не обнаружила планет, проходящих по домам ${relevantHouses.join(', ')}.`;
-        areas[areaId].whyToday.push(`${areas[areaId].todayInfluence} Это не означает, что в этой сфере ничего не произойдёт: просто данный признак не добавил баллы.`);
+        areas[areaId].whyToday.push(`${areas[areaId].todayInfluence} Само по себе это не означает, что в сфере ничего не произойдёт.`);
+      }
+
+      if (relevantAspects.length > 0) {
+        areas[areaId].whyToday.push(`Дополнительно модель учитывает ${relevantAspects.length} связей между планетами, одна из которых связана с этой сферой. В астрологии такую связь называют аспектом.`);
+      }
+
+      if (favorableLords.length > 0) {
+        areas[areaId].whyToday.push(`Управители домов ${favorableLords.map(getPlanetName).join(', ')} находятся в определённых участках зодиакального круга — накшатрах. По правилам модели это добавляет сфере дополнительные баллы.`);
       }
     }
   }
