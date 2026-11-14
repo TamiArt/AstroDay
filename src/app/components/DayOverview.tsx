@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ChevronDown, ChevronUp, Clock, Info, Sparkles } from 'lucide-react';
 import { NatalChart, Aspect, calculateDasha, getCurrentAntardasha } from '../utils/astrology';
 import { PanchangData } from '../utils/panchang';
+import { getPlanetName } from '../utils/planetUtils';
 import { calculateDailyAreas, LifeArea } from '../utils/dailyAreasAnalysis';
 import { GlassCard } from './common/GlassCard';
 
@@ -169,7 +170,7 @@ export function DayOverview({
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="rounded-xl bg-background/60 p-3">
                 <p className="mb-1 text-xs opacity-70">Большой период</p>
-                <p className="font-semibold text-purple-600">{currentDasha.planet}</p>
+                <p className="font-semibold text-purple-600">{getPlanetName(currentDasha.planet)}</p>
                 <p className="mt-1 text-xs opacity-60">
                   {currentDasha.startDate.toLocaleDateString('ru')} — {currentDasha.endDate.toLocaleDateString('ru')}
                 </p>
@@ -177,7 +178,7 @@ export function DayOverview({
               {currentAntar && (
                 <div className="rounded-xl bg-background/60 p-3">
                   <p className="mb-1 text-xs opacity-70">Подпериод</p>
-                  <p className="font-semibold text-pink-600">{currentAntar.planet}</p>
+                  <p className="font-semibold text-pink-600">{getPlanetName(currentAntar.planet)}</p>
                   <p className="mt-1 text-xs opacity-60">
                     {currentAntar.startDate.toLocaleDateString('ru')} — {currentAntar.endDate.toLocaleDateString('ru')}
                   </p>
