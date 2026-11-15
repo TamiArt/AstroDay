@@ -33,7 +33,13 @@ export function DayHeadline({ tithi, moonSign, energyLevel }: DayHeadlineProps) 
     Pisces: 'интуиции, отдыху и творческому потоку'
   };
 
-  const title = 'Астрологический фон дня';
+  const title = 'Коротко о сегодняшнем дне';
+  const moonSignNames: Record<string, string> = {
+    Aries: 'Овен', Taurus: 'Телец', Gemini: 'Близнецы', Cancer: 'Рак',
+    Leo: 'Лев', Virgo: 'Дева', Libra: 'Весы', Scorpio: 'Скорпион',
+    Sagittarius: 'Стрелец', Capricorn: 'Козерог', Aquarius: 'Водолей', Pisces: 'Рыбы',
+  };
+  const moonSignName = moonSignNames[moonSign] || moonSign;
   const moonSignQuality = moonSignQualities[moonSign] || 'бережному выбору дел';
 
   return (
@@ -58,7 +64,7 @@ export function DayHeadline({ tithi, moonSign, energyLevel }: DayHeadlineProps) 
         <div className="flex-1">
           <h2 className="mb-2">{title}</h2>
           <p className="opacity-80 leading-relaxed">
-            Сегодня {tithi.name}. В традиции Джйотиш этот лунный день связывают с темой «{tithi.meaning.toLowerCase()}». Положение Луны в {moonSign} символически связывают с темами: {moonSignQuality}. Это не предсказание фактического хода дня.
+            Сегодняшний лунный день — {tithi.name}; в традиции его связывают с темой «{tithi.meaning.toLowerCase()}». Луна находится в знаке {moonSignName}, который символически связывают с темами {moonSignQuality}. Это общий ориентир для размышления, а не предсказание событий.
           </p>
         </div>
       </div>
@@ -68,8 +74,8 @@ export function DayHeadline({ tithi, moonSign, energyLevel }: DayHeadlineProps) 
         style={{ background: 'var(--secondary)' }}
       >
         <div className="flex-1">
-          <p className="mb-1 opacity-70">Условный индекс модели</p>
-          <p>{energy.label} · {energyLevel}/100</p>
+          <p className="mb-1 opacity-70">Показатель астрологической модели</p>
+          <p>{energy.label} · {energyLevel} из 100</p>
         </div>
         <div
           className="w-16 h-16 rounded-full flex items-center justify-center"
