@@ -106,8 +106,8 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
           а день недели ({panchang.vara.name}) традиционно связывают с темой «{panchang.vara.quality.toLowerCase()}».
         </p>
         <p className="mt-2 text-sm opacity-75">
-          Накшатра {nakshatra?.name ?? panchang.nakshatra.name} и карана {panchang.karana.name}
-          дополняют это описание: первая показывает символический лунный фон, вторая — дополнительный оттенок лунного дня.
+          Накшатра {activeNakshatraName} (управитель — {nakshatra?.lord ? getPlanetName(nakshatra.lord) : 'не определён'}) и карана {panchang.karana.name}
+          дополняют это описание: накшатра задаёт символический лунный фон, а карана — дополнительный оттенок лунного дня.
         </p>
         <p className="mt-3 text-sm">
           Как использовать: выберите одно-два посильных дела, учитывайте реальные обстоятельства и не воспринимайте это описание как обещание события или запрет на действия.
