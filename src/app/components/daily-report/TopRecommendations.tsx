@@ -1,5 +1,5 @@
-// [КОМПОНЕНТ] Топ-3 рекомендации дня
-import { Check, AlertCircle, Sparkles } from 'lucide-react';
+// [КОМПОНЕНТ] Понятные практические ориентиры на день
+import { Check, AlertCircle, Ear, Eye, Sparkles } from 'lucide-react';
 import { PanchangData } from '../../utils/panchang';
 import { Aspect } from '../../utils/astrology';
 import { PersonalRecommendationResult } from '../../utils/personalRecommendations';
@@ -14,130 +14,60 @@ interface TopRecommendationsProps {
   personalRecommendation: PersonalRecommendationResult;
 }
 
-const difficultYogas = ['Атиганда', 'Шула', 'Ганда', 'Вьягхата', 'Вьятипата', 'Вайдхрити'];
-const supportiveYogas = ['Прити', 'Саубхагья', 'Шобхана', 'Сиддхи', 'Сиддха', 'Шубха'];
-
-function getAspectRecommendation(aspect: Aspect | null) {
-  if (!aspect) {
-    return {
-      title: 'Опирайтесь на ритм лунного дня',
-      text: 'Сегодня лучше выбирать задачи по титхи и текущему уровню энергии, без лишнего давления на себя.'
-    };
-  }
-
-  if (aspect.type === 'trine' || aspect.type === 'sextile') {
-    return {
-      title: `Символическая связь ${aspect.planet1} и ${aspect.planet2}`,
-      text: `${aspect.description}. В традиционной трактовке такой аспект связывают с более согласованным взаимодействием тем. Это повод обдумать подход, а не обещание лёгкого результата.`
-    };
-  }
-
-  if (aspect.type === 'square' || aspect.type === 'opposition') {
-    return {
-      title: `Возможное напряжение между ${aspect.planet1} и ${aspect.planet2}`,
-      text: `${aspect.description}. В традиционной трактовке аспект связывают с необходимостью согласовать разные интересы. Ориентируйтесь на реальные обстоятельства и проверяйте факты.`
-    };
-  }
-
-  return {
-    title: `Связь ${aspect.planet1} и ${aspect.planet2}`,
-    text: `${aspect.description}. Эту символическую трактовку можно использовать как повод выбрать один понятный приоритет.`
-  };
-}
-
-function getYogaRecommendation(yoga: PanchangData['yoga'], tithi: PanchangData['tithi'], planetaryHour: string) {
-  if (difficultYogas.includes(yoga.name)) {
-    return {
-      title: 'Традиционная трактовка йоги дня',
-      text: `${yoga.name} традиционно связывают с темой "${yoga.meaning.toLowerCase()}". Планетарный час ${planetaryHour} — дополнительный календарный ориентир, а не оценка исхода решения.`
-    };
-  }
-
-  if (supportiveYogas.includes(yoga.name)) {
-    return {
-      title: 'Традиционная трактовка йоги дня',
-      text: `${yoga.name} в традиции связывают с более созидательным настроем; это не гарантирует результат. ${tithi.name} добавляет тему: ${tithi.meaning.toLowerCase()}. Сделайте один конкретный шаг.`
-    };
-  }
-
-  return {
-    title: 'Держите день простым и последовательным',
-    text: `${tithi.name}: ${tithi.meaning.toLowerCase()}. Час ${planetaryHour} указывает на планетарный час в традиционной системе; он не определяет, как вам следует поступать.`
-  };
-}
-
-export function TopRecommendations({
-  tithi,
-  yoga,
-  planetaryHour,
-  topAspect,
-  personalRecommendation
-}: TopRecommendationsProps) {
-  const aspectRecommendation = getAspectRecommendation(topAspect);
-  const yogaRecommendation = getYogaRecommendation(yoga, tithi, planetaryHour);
-
+export function TopRecommendations({ personalRecommendation }: TopRecommendationsProps) {
   return (
     <GlassCard>
-      <h3 className="mb-2">Идеи для внимания на сегодня</h3><p className="mb-6 text-sm text-gray-600">Это подсказки на основе традиционной астрологической модели, а не обязательные указания. Проверяйте их по своим обстоятельствам.</p>
+      <h3 className="mb-2">Подсказки на сегодня</h3>
+      <p className="mb-5 text-sm opacity-65">Не строгие правила, а идеи. Сверяйте их со своими планами и реальными обстоятельствами.</p>
 
-      <div className="space-y-4">
-        <div className="flex items-start gap-4 p-4 rounded-2xl bg-green-500/10 border border-green-500/30">
-          <div
-            className="p-2 rounded-xl bg-green-500/20"
-            style={{ color: 'var(--neon-green)' }}
-          >
-            <Check className="w-5 h-5" />
-          </div>
-          <div className="flex-1">
-            <p className="mb-1">{personalRecommendation.mainRecommendation}</p>
-            <p className="opacity-70">
-              {personalRecommendation.reasoning.slice(0, 2).join(' ')} {aspectRecommendation.text}
-            </p>
+      <div className="space-y-3">
+        <div className="flex items-start gap-3 rounded-2xl border border-green-500/30 bg-green-500/10 p-4">
+          <Check className="mt-0.5 h-5 w-5 shrink-0" />
+          <div>
+            <p className="font-semibold mb-1">Что можно сделать</p>
+            <p className="text-sm leading-relaxed">{personalRecommendation.mainRecommendation}</p>
           </div>
         </div>
 
-        <div className="flex items-start gap-4 p-4 rounded-2xl bg-yellow-500/10 border border-yellow-500/30">
-          <div
-            className="p-2 rounded-xl bg-yellow-500/20"
-            style={{ color: 'var(--neon-yellow)' }}
-          >
-            <AlertCircle className="w-5 h-5" />
-          </div>
-          <div className="flex-1">
-            <p className="mb-1">{yogaRecommendation.title}</p>
-            <p className="opacity-70">{personalRecommendation.avoidRecommendation}</p>
+        <div className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+          <div>
+            <p className="font-semibold mb-1">Чего лучше не делать поспешно</p>
+            <p className="text-sm leading-relaxed">{personalRecommendation.avoidRecommendation}</p>
           </div>
         </div>
 
-        <div className="flex items-start gap-4 p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30">
-          <div
-            className="p-2 rounded-xl bg-purple-500/20"
-            style={{ color: 'var(--neon-purple)' }}
-          >
-            <Sparkles className="w-5 h-5" />
-          </div>
-          <div className="flex-1">
-            <p className="mb-1">Микро-упайя <TermTooltip term="upaya" />: {personalRecommendation.microUpaya.title}</p>
-            <p className="opacity-70">{personalRecommendation.microUpaya.action}</p>
+        <div className="flex items-start gap-3 rounded-2xl border border-blue-500/30 bg-blue-500/10 p-4">
+          <Eye className="mt-0.5 h-5 w-5 shrink-0" />
+          <div>
+            <p className="font-semibold mb-1">На что обратить внимание</p>
+            <p className="text-sm leading-relaxed">Проверьте сроки, детали и договорённости. Если решение важное, не опирайтесь только на первое впечатление — соберите факты и спокойно сравните варианты.</p>
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/30">
-          <p className="mb-2">Почему именно так:</p>
-          <ul className="space-y-1.5 opacity-75">
-            {personalRecommendation.reasoning.slice(0, 4).map((reason) => (
-              <li key={reason} className="text-sm">• {reason}</li>
-            ))}
-          </ul>
+        <div className="flex items-start gap-3 rounded-2xl border border-purple-500/30 bg-purple-500/10 p-4">
+          <Ear className="mt-0.5 h-5 w-5 shrink-0" />
+          <div>
+            <p className="font-semibold mb-1">К чему прислушаться</p>
+            <p className="text-sm leading-relaxed">Замечайте своё самочувствие и уровень усталости. Если чувствуете напряжение, сделайте паузу и при необходимости уменьшите нагрузку — не нужно заставлять себя следовать прогнозу.</p>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-3 rounded-2xl border border-border p-4">
+          <Sparkles className="mt-0.5 h-5 w-5 shrink-0" />
+          <div>
+            <p className="font-semibold mb-1">Небольшая практика</p>
+            <p className="text-sm">{personalRecommendation.microUpaya.title}</p>
+            <p className="mt-1 text-sm opacity-70">{personalRecommendation.microUpaya.action}</p>
+            <p className="mt-2 text-xs opacity-60">Необязательная символическая практика — выполняйте её только если она вам подходит.</p>
+          </div>
         </div>
 
         {personalRecommendation.precision.level !== 'high' && (
-          <div className="p-4 rounded-2xl bg-yellow-500/10 border border-yellow-500/30">
-            <p className="mb-2">Точность данных:</p>
-            <ul className="space-y-1.5 opacity-75">
-              {personalRecommendation.precision.notes.map((note) => (
-                <li key={note} className="text-sm">• {note}</li>
-              ))}
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+            <p className="font-semibold mb-1">Насколько точны исходные данные</p>
+            <ul className="space-y-1 text-sm opacity-75">
+              {personalRecommendation.precision.notes.map((note) => <li key={note}>• {note}</li>)}
             </ul>
           </div>
         )}
