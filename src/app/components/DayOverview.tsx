@@ -379,6 +379,30 @@ export function DayOverview({ natalChart, panchang }: DayOverviewProps) {
             </div>
           </GlassCard>
 
+          <GlassCard>
+            <h3 className="font-semibold">Поддерживающие факторы и зоны внимания</h3>
+            <p className="mt-1 text-sm opacity-65">Здесь разделены типы точных аспектов. Это описание геометрии аспектов в выбранной астрологической модели, а не оценка вероятности события.</p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-border p-3">
+                <strong>Гармоничные типы аспектов</strong>
+                <p className="mt-1 text-xs opacity-65">Трины и секстили — традиционно трактуемые как более плавные связи.</p>
+                <ul className="mt-2 space-y-2 text-sm">
+                  {report.aspects.filter((aspect) => ['трин', 'секстиль'].includes(aspect.aspect)).map((aspect, index) => <li key={index}>{aspect.evidence} <span className="text-xs opacity-60">(орбис {aspect.orb.toFixed(2)}°)</span></li>)}
+                </ul>
+                {report.aspects.every((aspect) => !['трин', 'секстиль'].includes(aspect.aspect)) && <p className="mt-2 text-sm opacity-65">Такие аспекты не обнаружены.</p>}
+              </div>
+              <div className="rounded-xl border border-border p-3">
+                <strong>Аспекты, требующие отдельного осмысления</strong>
+                <p className="mt-1 text-xs opacity-65">Квадратуры и оппозиции традиционно трактуются как более напряжённые связи; соединение рассматривается отдельно, поскольку его смысл зависит от участвующих планет.</p>
+                <ul className="mt-2 space-y-2 text-sm">
+                  {report.aspects.filter((aspect) => ['квадратура', 'оппозиция', 'соединение'].includes(aspect.aspect)).map((aspect, index) => <li key={index}>{aspect.evidence} <span className="text-xs opacity-60">(орбис {aspect.orb.toFixed(2)}°)</span></li>)}
+                </ul>
+                {report.aspects.every((aspect) => !['квадратура', 'оппозиция', 'соединение'].includes(aspect.aspect)) && <p className="mt-2 text-sm opacity-65">Такие аспекты не обнаружены.</p>}
+              </div>
+            </div>
+            <p className="mt-3 text-xs opacity-60">Для индивидуальной трактовки нужно учитывать натальную функцию планет, управляемые дома, достоинства и контекст карты. Сам по себе тип аспекта не делает день хорошим или плохим.</p>
+          </GlassCard>
+
           <PlanetaryInfluences report={report} />
 
           <GlassCard>
