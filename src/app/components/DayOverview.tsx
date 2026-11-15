@@ -1,10 +1,11 @@
-// Обзор дня: простые рекомендации и понятные основания расчёта.
-import { useState } from 'react';
-import { ChevronDown, ChevronUp, Clock, Info, Sparkles } from 'lucide-react';
-import { NatalChart, Aspect, calculateDasha, getCurrentAntardasha } from '../utils/astrology';
-import { PanchangData } from '../utils/panchang';
+import { useMemo, useState } from 'react';
+import { ChevronDown, ChevronUp, Info, Sparkles, CalendarDays } from 'lucide-react';
+import type { NatalChart } from '../utils/astrology';
+import { getNakshatra, getNakshatraPada, NAKSHATRAS } from '../utils/astrology';
+import type { Aspect } from '../utils/astrology';
+import type { PanchangData } from '../utils/panchang';
 import { getPlanetName } from '../utils/planetUtils';
-import { calculateDailyAreas, LifeArea } from '../utils/dailyAreasAnalysis';
+import { analyzeTransits, type TransitAnalysisReport, type TransitLifeArea } from '../utils/transitAnalysis';
 import { GlassCard } from './common/GlassCard';
 
 interface DayOverviewProps {
@@ -14,276 +15,395 @@ interface DayOverviewProps {
   panchang: PanchangData;
 }
 
-function getScoreExplanation(score: number): string {
-  if (score >= 70) {
-    return 'По правилам модели у этой темы сегодня набралось много расчётных баллов. Это повод обратить на неё внимание, а не обещание успеха.';
-  }
-  if (score >= 40) {
-    return 'По правилам модели у этой темы есть несколько заметных расчётных показателей. Можно спокойно заниматься обычными делами.';
-  }
-  return 'Сегодня модель набрала для этой темы немного баллов. Это не плохой знак и не запрет на действия — только результат выбранных правил расчёта.';
+interface LifeAreaDefinition {
+  id: string;
+  title: string;
+  icon: string;
+  houses: number[];
+  description: string;
+  dailyFocus: string;
+  recommendations: string[];
+  caution: string;
 }
 
-function ScoreBreakdown({ area }: { area: LifeArea }) {
-  const parts = [
-    { label: 'Большой период Даша', value: area.scoreBreakdown.dasha, max: 50 },
-    { label: 'Текущие планеты и связи', value: area.scoreBreakdown.transits, max: 40 },
-    {
-      label: 'Лунный день и календарь',
-      value: area.scoreBreakdown.panchang,
-      max: 10
-    },
-  ].filter((part): part is { label: string; value: number; max: number } => part.value !== undefined);
+const LIFE_AREAS: LifeAreaDefinition[] = [
+  {
+    id: 'finances', title: 'Финансы и личный заработок', icon: '💰', houses: [1, 2, 10, 11],
+    description: 'Личные деньги, накопления, профессиональный заработок, клиенты и результаты работы.',
+    dailyFocus: 'Оценивайте финансовые идеи через реальные цифры, условия и ресурсы.',
+    recommendations: ['Проверьте текущие расходы и обязательства', 'Оцените, какие навыки или проекты можно развивать', 'Перед покупкой или договорённостью сравните условия'],
+    caution: 'Не принимайте инвестиционные и другие значимые финансовые решения на основании астрологического прогноза.',
+  },
+  {
+    id: 'career', title: 'Работа, карьера и развитие', icon: '💼', houses: [1, 6, 10, 11],
+    description: 'Профессиональные навыки, ежедневные задачи, карьера, ответственность и результаты.',
+    dailyFocus: 'Выберите приоритет и доведите один конкретный рабочий шаг до результата.',
+    recommendations: ['Разбейте крупную задачу на ближайшие действия', 'Уточните сроки и критерии готовности', 'Важные договорённости зафиксируйте письменно'],
+    caution: 'Астрологические показатели не гарантируют трудоустройство, повышение или профессиональный успех.',
+  },
+  {
+    id: 'creativity', title: 'Творчество и самореализация', icon: '🎨', houses: [3, 5, 10, 11],
+    description: 'Практические навыки, авторские идеи, создание работ, аудитория и реализация проектов.',
+    dailyFocus: 'Переведите идею в небольшой законченный результат.',
+    recommendations: ['Создайте или доработайте один фрагмент проекта', 'Попробуйте один новый творческий приём', 'Сохраните результат и отметьте следующий шаг'],
+    caution: 'Творческая продуктивность зависит также от времени, условий, навыков и вашего самочувствия.',
+  },
+  {
+    id: 'relationships', title: 'Любовь и отношения', icon: '💕', houses: [2, 7, 8, 11],
+    description: 'Брак, партнёрство, семейные ценности, доверие, общие ресурсы и совместные планы.',
+    dailyFocus: 'Проясняйте ожидания и обсуждайте совместные решения без поспешных выводов.',
+    recommendations: ['Выделите время на спокойный разговор', 'Уточните ожидания и распределение обязанностей', 'Обсудите общий план, если он требует согласования'],
+    caution: 'Транзиты не определяют чувства другого человека и не предсказывают расставание или брак.',
+  },
+  {
+    id: 'family', title: 'Семья и дом', icon: '🏡', houses: [4, 2, 5, 12],
+    description: 'Дом, жильё, близкие, семейные ценности, личное пространство и отдых.',
+    dailyFocus: 'Поддерживайте устойчивость быта и распределяйте домашние задачи реалистично.',
+    recommendations: ['Выберите одну важную домашнюю задачу', 'Обсудите распределение бытовых обязанностей', 'Оставьте время на комфорт и восстановление'],
+    caution: 'Астрологическая трактовка не заменяет юридическую, финансовую или техническую проверку вопросов жилья.',
+  },
+  {
+    id: 'children', title: 'Дети, родительство и будущее семьи', icon: '🌱', houses: [5, 9, 2, 7],
+    description: 'Тема детей, родительства, семейных планов, совместной поддержки и долгосрочных ценностей.',
+    dailyFocus: 'Можно спокойно обсуждать семейные планы и практическую поддержку друг друга.',
+    recommendations: ['Обсудите долгосрочные семейные планы', 'Подумайте, какая поддержка нужна каждому', 'Запишите вопросы, которые важно обсудить вместе'],
+    caution: 'Астрология не оценивает возможность зачатия, фертильность, течение беременности или необходимость лечения. Медицинские вопросы решаются с врачом.',
+  },
+  {
+    id: 'health', title: 'Здоровье, энергия и режим', icon: '🌿', houses: [1, 6, 8, 12],
+    description: 'Повседневная нагрузка, режим, сон, отдых и восстановление.',
+    dailyFocus: 'Соотносите планы с реальным самочувствием и не перегружайте расписание.',
+    recommendations: ['Распределите нагрузку с учётом самочувствия', 'Сохраните привычный режим сна и отдыха', 'При необходимости перенесите необязательные дела'],
+    caution: 'Этот раздел не диагностирует заболевания, не предсказывает осложнения и не заменяет медицинские рекомендации.',
+  },
+  {
+    id: 'communication', title: 'Общение, друзья и окружение', icon: '💬', houses: [3, 7, 9, 11],
+    description: 'Общение, контакты, партнёрские взаимодействия, обучение у других и сообщества.',
+    dailyFocus: 'Поддерживайте полезные контакты и формулируйте мысли ясно.',
+    recommendations: ['Ответьте на важные сообщения', 'Обменяйтесь опытом с человеком из вашей сферы', 'При обсуждении задачи уточните, одинаково ли вы поняли договорённости'],
+    caution: 'Наличие астрологических факторов не означает, что встреча или знакомство обязательно состоится.',
+  },
+];
 
-  return (
-    <div className="rounded-xl border border-border p-3">
-      <h4 className="text-sm font-semibold mb-2">Из чего сложился балл</h4>
-      <ul className="space-y-2">
-        {parts.map((part) => (
-          <li key={part.label} className="flex items-center justify-between gap-3 text-sm">
-            <span className="opacity-80">{part.label}</span>
-            <strong className="tabular-nums">{part.value}/{part.max}</strong>
-          </li>
-        ))}
-      </ul>
-      <p className="mt-2 text-xs opacity-60">
-        Итоговый индекс пересчитывается на шкалу 0–100 по тем блокам, для которых есть данные. Поэтому, если один блок недоступен, оставшиеся не теряют вес. Это не проценты и не вероятность события.
-      </p>
-    </div>
+function localDateKey(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function formatLongDate(dateKey: string): string {
+  const date = new Date(`${dateKey}T12:00:00`);
+  return date.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function getAreaEvidence(area: LifeAreaDefinition, report: TransitAnalysisReport): {
+  positions: TransitAnalysisReport['positions'];
+  aspects: TransitAnalysisReport['aspects'];
+  lordHits: TransitAnalysisReport['houseLordHits'];
+  dasha: string[];
+} {
+  const positions = report.positions.filter((position) => area.houses.includes(position.natalHouse));
+  const aspects = report.aspects.filter((aspect) =>
+    area.houses.includes(aspect.transitHouse)
+    || (aspect.natalHouse !== null && area.houses.includes(aspect.natalHouse))
   );
+  const lordHits = report.houseLordHits.filter((hit) => area.houses.includes(hit.house));
+  const dasha = report.lifeAreas
+    .filter((item) => item.transitEvidence.length > 0 || item.dashaEvidence.length > 0)
+    .filter((item) => item.houses.some((house) => area.houses.includes(house)))
+    .flatMap((item) => item.dashaEvidence);
+  return { positions, aspects, lordHits, dasha: [...new Set(dasha)] };
 }
 
-function LifeAreaDetails({ area }: { area: LifeArea }) {
-  return (
-    <div className="mt-2 rounded-2xl border border-border bg-background/60 p-4 space-y-4">
-      <section>
-        <h4 className="font-semibold mb-1">Что это значит сегодня</h4>
-        <p className="text-sm leading-relaxed opacity-80">{getScoreExplanation(area.score)}</p>
-      </section>
+function AreaStatus({ evidenceCount }: { evidenceCount: number }) {
+  const label = evidenceCount >= 4 ? 'Несколько факторов' : evidenceCount > 0 ? 'Есть факторы' : 'Нет выделенных факторов';
+  return <span className="rounded-full border border-border px-3 py-1 text-xs opacity-75">{label}</span>;
+}
 
-      <section>
-        <div className="flex items-center gap-2 mb-2">
-          <Sparkles className="h-4 w-4" style={{ color: area.color }} />
-          <h4 className="font-semibold">Что можно сделать</h4>
+function AreaCard({
+  area, natalChart, report,
+}: {
+  area: LifeAreaDefinition;
+  natalChart: NatalChart;
+  report: TransitAnalysisReport;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const evidence = getAreaEvidence(area, report);
+  const houses = (natalChart.houses ?? []).filter((house) => area.houses.includes(house.house));
+  const lords = [...new Set(houses.map((house) => house.lord))];
+  const evidenceCount = evidence.positions.length + evidence.aspects.length + evidence.lordHits.length + evidence.dasha.length;
+  const transitPlanets = [...new Set(evidence.positions.map((position) => position.planetName))];
+
+  return (
+    <section className="rounded-2xl border border-border overflow-hidden">
+      <button
+        type="button"
+        aria-expanded={expanded}
+        onClick={() => setExpanded(!expanded)}
+        className="flex w-full items-center gap-3 p-4 text-left hover:bg-secondary/50 transition-colors"
+      >
+        <span className="text-2xl" aria-hidden="true">{area.icon}</span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-semibold">{area.title}</span>
+          <span className="mt-1 block text-sm opacity-65">{area.description}</span>
+          <span className="mt-2 block"><AreaStatus evidenceCount={evidenceCount} /></span>
+        </span>
+        {expanded ? <ChevronUp className="h-5 w-5 shrink-0 opacity-60" /> : <ChevronDown className="h-5 w-5 shrink-0 opacity-60" />}
+      </button>
+
+      {expanded && (
+        <div className="space-y-5 border-t border-border bg-background/50 p-4">
+          <div>
+            <h4 className="mb-2 font-semibold">Натальная основа — постоянные показатели карты</h4>
+            <p className="mb-2 text-sm opacity-75">В этом направлении учитываются дома: {area.houses.join(', ')}.</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {houses.map((house) => {
+                const lordPosition = natalChart.planets[house.lord as keyof NatalChart['planets']];
+                return (
+                  <div key={house.house} className="rounded-xl bg-secondary/60 p-3 text-sm">
+                    <strong>{house.house}-й дом</strong> · {house.signName}
+                    <p className="mt-1">Управитель: {getPlanetName(house.lord)}</p>
+                    {lordPosition && <p className="mt-1 opacity-70">Натальное положение: {lordPosition.signName}, {lordPosition.degree.toFixed(2)}°, {lordPosition.nakshatraName} · пада {lordPosition.pada}; {natalChart.houses?.find((item) => item.sign === lordPosition.sign)?.house ?? 'дом не определён'}-й дом</p>}
+                  </div>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-xs opacity-60">Управители задействованных домов: {lords.map(getPlanetName).join(', ') || 'данные недоступны'}. Это описание натальной карты, оно не меняется ежедневно.</p>
+          </div>
+
+          <div>
+            <h4 className="mb-2 font-semibold">Что активировано выбранными транзитами</h4>
+            {evidenceCount > 0 ? (
+              <div className="space-y-2 text-sm">
+                {evidence.positions.map((position) => {
+                  const nakshatraIndex = getNakshatra(position.longitude);
+                  return (
+                    <div key={position.planet} className="rounded-xl bg-secondary/60 p-3">
+                      <strong>{position.planetName}</strong>: {position.sign}, {position.degree.toFixed(2)}° · транзит проходит по натальному {position.natalHouse}-му дому
+                      <p className="mt-1 text-xs opacity-70">Накшатра {NAKSHATRAS[nakshatraIndex]?.name ?? 'не определена'}, пада {getNakshatraPada(position.longitude)}.</p>
+                    </div>
+                  );
+                })}
+                {evidence.aspects.map((aspect, index) => (
+                  <div key={`${aspect.transitPlanet}-${aspect.natalPlanet}-${index}`} className="rounded-xl bg-secondary/60 p-3">
+                    {aspect.evidence}
+                    <p className="mt-1 text-xs opacity-65">Орбис {aspect.orb.toFixed(2)}° · сила по модели {aspect.strength.toFixed(0)}/100</p>
+                  </div>
+                ))}
+                {evidence.lordHits.map((hit, index) => (
+                  <div key={`${hit.house}-${hit.transitPlanet}-${index}`} className="rounded-xl bg-secondary/60 p-3">{hit.detail}</div>
+                ))}
+                {evidence.dasha.map((item, index) => (
+                  <div key={index} className="rounded-xl bg-secondary/60 p-3">{item}</div>
+                ))}
+                {transitPlanets.length === 0 && evidence.aspects.length === 0 && evidence.lordHits.length === 0 && (
+                  <p className="text-sm opacity-70">По этой сфере нет отдельных транзитных подтверждений. Отсутствие активации не означает отсутствие событий.</p>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm opacity-70">На выбранную дату анализатор не обнаружил факторов по заданным критериям. Это не оценка сферы как плохой и не запрет на действия.</p>
+            )}
+          </div>
+
+          <div>
+            <h4 className="mb-2 font-semibold">Как это можно понимать в повседневной жизни</h4>
+            <p className="text-sm leading-relaxed opacity-80">{area.dailyFocus}</p>
+          </div>
+
+          <div>
+            <h4 className="mb-2 font-semibold">Практические ориентиры</h4>
+            <ul className="list-disc space-y-1 pl-5 text-sm">
+              {area.recommendations.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          </div>
+
+          <p className="rounded-xl border border-border p-3 text-xs leading-relaxed opacity-75"><strong>Ограничения:</strong> {area.caution}</p>
         </div>
-        <ol className="list-decimal pl-5 space-y-2 text-sm leading-relaxed">
-          {area.recommendations.map((recommendation, index) => (
-            <li key={index}>{recommendation}</li>
-          ))}
-        </ol>
-        <p className="mt-2 rounded-lg bg-secondary/60 p-3 text-sm leading-relaxed">
-          <strong>Почему это полезно:</strong> {area.recommendationReason}
-        </p>
-        <p className="mt-2 text-xs opacity-60">
-          Это обычные практические идеи. Выбирайте только то, что подходит вашей реальной ситуации.
-        </p>
-      </section>
-
-      <section>
-        <h4 className="font-semibold mb-2">Почему модель выделила эту сферу</h4>
-        {area.whyToday.length > 0 ? (
-          <ul className="space-y-2">
-            {area.whyToday.map((reason, index) => (
-              <li key={index} className="rounded-lg bg-secondary/60 p-3 text-sm leading-relaxed">
-                {reason}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm opacity-70">
-            Для этой сферы не найдено дополнительных персональных оснований. Поэтому не будем придумывать объяснение.
-          </p>
-        )}
-      </section>
-
-      <ScoreBreakdown area={area} />
-    </div>
+      )}
+    </section>
   );
 }
 
-export function DayOverview({
-  natalChart,
-  currentChart,
-  aspects,
-  panchang
-}: DayOverviewProps) {
-  const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
+function PlanetaryInfluences({ report }: { report: TransitAnalysisReport }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <GlassCard>
+      <button type="button" className="flex w-full items-center justify-between gap-3 text-left" onClick={() => setExpanded(!expanded)} aria-expanded={expanded}>
+        <span>
+          <h3 className="font-semibold">Планетарные влияния дня</h3>
+          <span className="text-sm opacity-65">Положения, дома, накшатры и аспекты к натальным планетам</span>
+        </span>
+        {expanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+      </button>
+      {expanded && (
+        <div className="mt-4 space-y-3">
+          {report.positions.map((position) => {
+            const nakshatraIndex = getNakshatra(position.longitude);
+            const natalPosition = report.aspects.filter((aspect) => aspect.transitPlanet === position.planet);
+            return (
+              <div key={position.planet} className="rounded-xl border border-border p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <strong>{position.planetName}</strong>
+                  <span className="text-sm opacity-70">{position.sign}, {position.degree.toFixed(2)}°</span>
+                </div>
+                <p className="mt-1 text-sm">Проходит по натальному {position.natalHouse}-му дому · {NAKSHATRAS[nakshatraIndex]?.name ?? 'накшатра не определена'}, пада {getNakshatraPada(position.longitude)}</p>
+                <p className="mt-1 text-xs opacity-65">Ретроградность: {position.retrograde === null ? 'не рассчитывается в текущей версии' : position.retrograde ? 'ретроградная' : 'прямое движение'}</p>
+                {natalPosition.length > 0 && <ul className="mt-2 list-disc pl-5 text-sm">{natalPosition.map((aspect, index) => <li key={index}>{aspect.evidence}</li>)}</ul>}
+              </div>
+            );
+          })}
+          <div className="rounded-xl bg-secondary/50 p-3 text-sm">
+            <strong>Активные периоды Вимшоттари-Даша</strong>
+            <p className="mt-1">Махадаша: {report.dasha.mahadasha}; антардаша: {report.dasha.antardasha ?? 'не определена'}; пратьянтардаша: {report.dasha.pratyantardasha ?? 'не определена'}.</p>
+            <p className="mt-1 text-xs opacity-65">Окончание махадаши: {report.dasha.mahadashaEnd.toLocaleDateString('ru-RU')}.</p>
+          </div>
+        </div>
+      )}
+    </GlassCard>
+  );
+}
 
-  let currentDasha: ReturnType<typeof calculateDasha> | null = null;
-  let currentAntar: ReturnType<typeof getCurrentAntardasha> | null = null;
+function Methodology({ report }: { report: TransitAnalysisReport }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <GlassCard>
+      <button type="button" className="flex w-full items-center justify-between gap-3 text-left" onClick={() => setExpanded(!expanded)} aria-expanded={expanded}>
+        <span>
+          <h3 className="font-semibold">Почему приложение сделало такой вывод</h3>
+          <span className="text-sm opacity-65">Методика, расчётные основания и ограничения</span>
+        </span>
+        {expanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+      </button>
+      {expanded && (
+        <div className="mt-4 space-y-3">
+          <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed">
+            {report.methodology.map((item) => <li key={item}>{item}</li>)}
+          </ul>
+          <div className="rounded-xl border border-border p-3">
+            <h4 className="mb-2 font-semibold text-sm">Ограничения текущего расчёта</h4>
+            <ul className="list-disc space-y-1 pl-5 text-xs opacity-75">{report.warnings.map((item) => <li key={item}>{item}</li>)}</ul>
+          </div>
+        </div>
+      )}
+    </GlassCard>
+  );
+}
 
-  if (natalChart.houses && natalChart.planets.Moon) {
-    const moonNakshatra = Math.floor(natalChart.planets.Moon.siderealLon / (360 / 27));
-    currentDasha = calculateDasha(
-      natalChart.date,
-      moonNakshatra,
-      new Date(),
-      natalChart.planets.Moon.siderealLon
-    );
-    if (currentDasha) currentAntar = getCurrentAntardasha(currentDasha);
-  }
+export function DayOverview({ natalChart, panchang }: DayOverviewProps) {
+  const [selectedDate, setSelectedDate] = useState(() => localDateKey(new Date()));
+  const [showAllAspects, setShowAllAspects] = useState(false);
+  const calculation = useMemo(() => {
+    try {
+      const moment = new Date(`${selectedDate}T12:00:00`);
+      if (!Number.isFinite(moment.getTime())) throw new Error('Выберите корректную дату.');
+      if (moment < natalChart.date) throw new Error('Выбранная дата не может быть раньше даты рождения.');
+      return { report: analyzeTransits(natalChart, moment), error: null as string | null };
+    } catch (error) {
+      return { report: null, error: error instanceof Error ? error.message : 'Не удалось рассчитать транзиты.' };
+    }
+  }, [selectedDate, natalChart]);
 
-  const areas = calculateDailyAreas(panchang, natalChart, currentChart, aspects, currentDasha);
-  const topAreas = areas.slice(0, 3);
+  const report = calculation.report;
+  const rankedAreas = report
+    ? LIFE_AREAS.map((area) => ({ area, evidence: getAreaEvidence(area, report) }))
+        .sort((a, b) => (b.evidence.positions.length + b.evidence.aspects.length + b.evidence.lordHits.length + b.evidence.dasha.length) - (a.evidence.positions.length + a.evidence.aspects.length + a.evidence.lordHits.length + a.evidence.dasha.length))
+    : [];
+  const mainArea = rankedAreas[0];
+  const activeCount = rankedAreas.filter(({ evidence }) => evidence.positions.length + evidence.aspects.length + evidence.lordHits.length + evidence.dasha.length > 0).length;
 
   return (
     <div className="space-y-6">
       <GlassCard>
-        <div className="flex items-start gap-4">
-          <div
-            className="rounded-2xl p-3"
-            style={{
-              background: 'linear-gradient(135deg, var(--neon-purple), var(--neon-pink))',
-              boxShadow: '0 4px 16px rgba(107, 76, 230, 0.3)'
-            }}
-          >
-            <Sparkles className="h-6 w-6 text-white" />
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="rounded-2xl bg-primary/15 p-3"><Sparkles className="h-6 w-6 text-primary" /></div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider opacity-60">Персональный прогноз · Джйотиш</p>
+              <h2 className="mt-1 text-2xl font-semibold">Твой день</h2>
+              <p className="mt-1 text-sm opacity-70">{formatLongDate(selectedDate)}</p>
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <h2 className="mb-2">Обзор дня по сферам жизни</h2>
-            <p className="text-sm leading-relaxed opacity-75">
-              Здесь собраны подсказки для работы, денег, отношений, дома, здоровья и других тем.
-              Сначала посмотрите, что можно сделать, а затем — почему модель предлагает обратить
-              внимание именно на эту сферу.
-            </p>
-          </div>
+          <label className="flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm">
+            <CalendarDays className="h-4 w-4 opacity-60" />
+            <span className="sr-only">Дата прогноза</span>
+            <input type="date" value={selectedDate} onChange={(event) => setSelectedDate(event.target.value)} className="min-w-0 bg-transparent outline-none" />
+          </label>
         </div>
-
-        <div className="mt-4 rounded-xl border border-accent/30 bg-accent/10 p-4">
-          <div className="flex items-start gap-2">
-            <Info className="mt-0.5 h-5 w-5 shrink-0 opacity-70" />
-            <div className="text-sm leading-relaxed">
-              <strong>Как понимать баллы:</strong> 0–100 — условный индекс внутренних правил
-              приложения. Он помогает сравнить сферы между собой. Высокий балл не гарантирует
-              успех, низкий не означает неудачу и не запрещает действовать. Это не вероятность
-              событий и не оценка вашей реальной жизни.
-            </div>
-          </div>
-        </div>
-
-        {currentDasha && (
-          <div className="mt-5 rounded-2xl border border-border bg-gradient-to-r from-purple-500/10 to-pink-500/10 p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <Clock className="h-4 w-4 text-purple-600" />
-              <h3 className="text-sm font-semibold">Периоды в Джйотиш</h3>
-            </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="rounded-xl bg-background/60 p-3">
-                <p className="mb-1 text-xs opacity-70">Большой период</p>
-                <p className="font-semibold text-purple-600">{getPlanetName(currentDasha.planet)}</p>
-                <p className="mt-1 text-xs opacity-60">
-                  {currentDasha.startDate.toLocaleDateString('ru')} — {currentDasha.endDate.toLocaleDateString('ru')}
-                </p>
-              </div>
-              {currentAntar && (
-                <div className="rounded-xl bg-background/60 p-3">
-                  <p className="mb-1 text-xs opacity-70">Подпериод</p>
-                  <p className="font-semibold text-pink-600">{getPlanetName(currentAntar.planet)}</p>
-                  <p className="mt-1 text-xs opacity-60">
-                    {currentAntar.startDate.toLocaleDateString('ru')} — {currentAntar.endDate.toLocaleDateString('ru')}
-                  </p>
-                </div>
-              )}
-            </div>
-            <p className="mt-3 text-xs leading-relaxed opacity-70">
-              Даша — это система больших и малых астрологических периодов. В приложении они
-              используются как общий символический фон, а не как обещание конкретного события.
-            </p>
-          </div>
-        )}
-
-        <section className="mt-6 space-y-3">
-          <div>
-            <h3 className="font-semibold">На какие темы модель обращает больше внимания</h3>
-            <p className="mt-1 text-xs opacity-65">
-              Это три наибольших расчётных балла, а не рейтинг «лучших» сфер дня.
-            </p>
-          </div>
-          {topAreas[0]?.score > 0 ? (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {topAreas.map((area) => (
-                <div
-                  key={area.id}
-                  className="rounded-2xl border p-3"
-                  style={{ background: `${area.color}12`, borderColor: `${area.color}45` }}
-                >
-                  <div className="mb-2 flex items-center gap-2">
-                    <span className="text-2xl">{area.icon}</span>
-                    <span className="text-sm font-semibold">{area.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-secondary">
-                      <div
-                        className="h-full rounded-full"
-                        style={{ width: `${area.score}%`, background: area.color }}
-                      />
-                    </div>
-                    <strong className="text-sm tabular-nums" style={{ color: area.color }}>
-                      {area.score}/100
-                    </strong>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="rounded-xl bg-secondary/60 p-4 text-sm leading-relaxed">
-              По выбранным правилам сегодня ни одна сфера не получила расчётных баллов.
-              Это не означает, что день будет плохим или что нужно отложить планы.
-            </p>
-          )}
-        </section>
-      </GlassCard>
-
-      <GlassCard>
-        <div className="mb-4">
-          <h3 className="font-semibold">Все сферы жизни</h3>
-          <p className="mt-1 text-sm opacity-70">
-            Нажмите на сферу, чтобы увидеть конкретные действия и объяснение расчёта.
-          </p>
-        </div>
-        <div className="space-y-3">
-          {areas.map((area) => {
-            const expanded = selectedAreaId === area.id;
-            return (
-              <div key={area.id}>
-                <button
-                  type="button"
-                  aria-expanded={expanded}
-                  onClick={() => setSelectedAreaId(expanded ? null : area.id)}
-                  className="flex w-full items-center gap-3 rounded-xl border border-border p-3 text-left transition-colors hover:bg-secondary/70"
-                  style={{ background: expanded ? `${area.color}12` : 'var(--secondary)' }}
-                >
-                  <span
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-2xl"
-                    style={{ background: `${area.color}20` }}
-                  >
-                    {area.icon}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block font-medium">{area.name}</span>
-                    <span className="mt-1 block text-xs opacity-65">{area.description}</span>
-                    <span className="mt-2 flex items-center gap-2">
-                      <span className="h-2 flex-1 overflow-hidden rounded-full bg-background">
-                        <span
-                          className="block h-full rounded-full"
-                          style={{ width: `${area.score}%`, background: area.color }}
-                        />
-                      </span>
-                      <strong className="text-sm tabular-nums" style={{ color: area.color }}>
-                        {area.score}/100
-                      </strong>
-                    </span>
-                  </span>
-                  {expanded
-                    ? <ChevronUp className="h-5 w-5 shrink-0 opacity-60" />
-                    : <ChevronDown className="h-5 w-5 shrink-0 opacity-60" />}
-                </button>
-                {expanded && <LifeAreaDetails area={area} />}
-              </div>
-            );
-          })}
+        <p className="mt-4 text-sm leading-relaxed opacity-75">Обзор показывает, какие темы натальной карты получают транзитную активацию на выбранную дату. Натальные показатели — постоянная основа; транзиты и их связи меняются со временем.</p>
+        <div className="mt-4 rounded-xl border border-accent/30 bg-accent/10 p-3 text-sm leading-relaxed">
+          <div className="flex gap-2"><Info className="h-4 w-4 shrink-0 mt-0.5" /><p>Астрологическая интерпретация — символическая система, а не научно подтверждённое предсказание. Здесь нет процентов вероятности, обещаний событий или медицинских оценок.</p></div>
         </div>
       </GlassCard>
+
+      {calculation.error && (
+        <GlassCard><p className="text-sm">{calculation.error}</p></GlassCard>
+      )}
+
+      {report && (
+        <>
+          <GlassCard>
+            <h3 className="font-semibold">Главная тема дня</h3>
+            {mainArea && activeCount > 0 ? (
+              <>
+                <p className="mt-2 text-lg font-medium">{mainArea.area.icon} {mainArea.area.title}</p>
+                <p className="mt-2 text-sm leading-relaxed opacity-80">Среди восьми направлений у этой темы больше всего найденных связей по используемым критериям. Это означает, что её астрологические основания стоит изучить подробнее, но не обещает конкретного события.</p>
+                <p className="mt-3 text-sm"><strong>Связанные натальные дома:</strong> {mainArea.area.houses.join(', ')}.</p>
+              </>
+            ) : (
+              <p className="mt-2 text-sm opacity-75">На выбранную дату анализатор не выделил одну ведущую тему по заданным критериям. Это не означает, что день пустой или неблагоприятный.</p>
+            )}
+          </GlassCard>
+
+          <GlassCard>
+            <div className="mb-4">
+              <h3 className="font-semibold">Сферы жизни</h3>
+              <p className="mt-1 text-sm opacity-65">Все восемь направлений доступны для просмотра. Откройте карточку, чтобы увидеть натальную основу, транзитные факторы и практические ориентиры.</p>
+            </div>
+            <div className="space-y-3">
+              {LIFE_AREAS.map((area) => <AreaCard key={area.id} area={area} natalChart={natalChart} report={report} />)}
+            </div>
+          </GlassCard>
+
+          <GlassCard>
+            <h3 className="font-semibold">Что сегодня особенно активировано в твоей карте</h3>
+            <p className="mt-1 text-sm opacity-65">Ниже показаны фактические положения транзитных планет в натальных домах и найденные связи с управителями.</p>
+            <div className="mt-3 space-y-2">
+              {report.lifeAreas.length > 0 ? report.lifeAreas.map((area) => (
+                <div key={area.id} className="rounded-xl bg-secondary/50 p-3">
+                  <strong>{area.label}</strong>
+                  <p className="mt-1 text-sm opacity-75">{area.explanation}</p>
+                  <p className="mt-1 text-xs opacity-60">Дома: {area.houses.join(', ')} · транзитных оснований: {area.transitEvidence.length} · связей Даши: {area.dashaEvidence.length}</p>
+                </div>
+              )) : <p className="text-sm opacity-70">Нет отдельных совпадений по текущим критериям анализа.</p>}
+            </div>
+          </GlassCard>
+
+          <PlanetaryInfluences report={report} />
+
+          <GlassCard>
+            <button type="button" className="flex w-full items-center justify-between gap-3 text-left" onClick={() => setShowAllAspects(!showAllAspects)} aria-expanded={showAllAspects}>
+              <span><h3 className="font-semibold">Все точные аспекты к натальным планетам</h3><span className="text-sm opacity-65">{report.aspects.length} найдено на выбранную дату</span></span>
+              {showAllAspects ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+            </button>
+            {showAllAspects && <div className="mt-3 space-y-2">{report.aspects.length ? report.aspects.map((aspect, index) => <div key={index} className="rounded-xl bg-secondary/50 p-3 text-sm">{aspect.evidence}<p className="mt-1 text-xs opacity-65">Транзитный дом: {aspect.transitHouse} · натальный дом: {aspect.natalHouse ?? 'не определён'} · орбис: {aspect.orb.toFixed(2)}° · {aspect.applying === null ? 'сближение не определено' : aspect.applying ? 'сходящийся аспект' : 'расходящийся аспект'}</p></div>) : <p className="text-sm opacity-70">Точные аспекты не найдены.</p>}</div>}
+          </GlassCard>
+
+          <GlassCard>
+            <h3 className="font-semibold">Рекомендации на сегодня</h3>
+            <p className="mt-1 text-sm opacity-65">Практические идеи, которые можно адаптировать к своим обстоятельствам.</p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {LIFE_AREAS.map((area) => <div key={area.id} className="rounded-xl border border-border p-3"><strong>{area.icon} {area.title}</strong><p className="mt-1 text-sm opacity-75">{area.dailyFocus}</p><p className="mt-2 text-xs opacity-65">{area.recommendations[0]}</p></div>)}
+            </div>
+            <div className="mt-4 rounded-xl bg-primary/10 p-4">
+              <strong>Главный ориентир</strong>
+              <p className="mt-1 text-sm">{mainArea && activeCount > 0 ? `Сначала удели внимание теме «${mainArea.area.title.toLowerCase()}»: изучи её основания и выбери один реалистичный шаг. Остальные решения принимай с учётом фактических обстоятельств.` : 'Не обязательно искать одну главную тему. Выбери задачу, которая действительно важна сегодня, и опирайся на реальные обстоятельства.'}</p>
+            </div>
+          </GlassCard>
+
+          <Methodology report={report} />
+        </>
+      )}
     </div>
   );
 }
