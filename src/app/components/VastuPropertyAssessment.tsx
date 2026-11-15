@@ -255,7 +255,7 @@ export function VastuPropertyAssessment() {
           <div className="grid gap-2 sm:grid-cols-3">
             <div className="rounded-xl bg-secondary p-3"><p className="text-xs opacity-65">Заполнено секторов</p><p className="text-xl font-semibold">{analysis.assessedSectors} / 9</p></div>
             <div className="rounded-xl bg-secondary p-3"><p className="text-xs opacity-65">Совпадение со справочной схемой</p><p className="text-xl font-semibold">{analysis.traditionalAlignmentScore === null ? '—' : `${analysis.traditionalAlignmentScore}%`}</p></div>
-            <div className="rounded-xl bg-secondary p-3"><p className="text-xs opacity-65">Положение входа</p><p className="text-xl font-semibold">{analysis.entrancePada ? `Пада ${analysis.entrancePada}/8` : 'Не указано'}</p></div>
+            <div className="rounded-xl bg-secondary p-3"><p className="text-xs opacity-65">Положение входа</p><p className="text-xl font-semibold">{analysis.entrancePada && assessment.entranceWall ? `Пада ${analysis.entrancePada}/8` : 'Не указано'}</p></div>
           </div>
           <div className="space-y-2">
             {analysis.findings.map((finding) => (
