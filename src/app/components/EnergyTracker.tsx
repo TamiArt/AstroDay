@@ -120,12 +120,12 @@ export function EnergyTracker({ profile, days = 7 }: EnergyTrackerProps) {
         <div>
           <h3 className="mb-1">Трекер энергии</h3>
           <p className="opacity-70">
-            {hasPersonalHistory ? 'Персональный расчёт на ближайшие 7 дней' : 'Ориентир на 7 дней по общей модели'}
+            {hasPersonalHistory ? 'Персональные данные за последние 7 дней' : 'Общий ориентир за последние 7 дней'}
           </p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary">
           <TrendingUp className="w-4 h-4" style={{ color: 'var(--neon-green)' }} />
-          <span className="opacity-70">Средняя: {avgEnergy.toFixed(0)}%</span>
+          <span className="opacity-70">Средний индекс: {avgEnergy.toFixed(0)} из 100</span>
         </div>
       </div>
 
@@ -162,6 +162,7 @@ export function EnergyTracker({ profile, days = 7 }: EnergyTrackerProps) {
                   )}
                 </div>
                 <span className="text-xs opacity-60">{item.label}</span>
+                <span className="text-[10px] opacity-55">{item.energy >= 70 ? 'Активный' : item.energy >= 40 ? 'Ровный' : 'Спокойный'}</span>
               </div>
             );
           })}
