@@ -4,7 +4,6 @@ import { PanchangData } from '../../utils/panchang';
 import { Aspect } from '../../utils/astrology';
 import { PersonalRecommendationResult } from '../../utils/personalRecommendations';
 import { GlassCard } from '../common/GlassCard';
-import { TermTooltip } from '../common/TermTooltip';
 
 interface TopRecommendationsProps {
   tithi: PanchangData['tithi'];
