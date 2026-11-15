@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
-import { ChevronDown, ChevronUp, Info, Sparkles, CalendarDays } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, CalendarDays, SlidersHorizontal } from 'lucide-react';
 import type { NatalChart } from '../utils/astrology';
 import { getNakshatra, getNakshatraPada, NAKSHATRAS } from '../utils/astrology';
 import type { Aspect } from '../utils/astrology';
 import type { PanchangData } from '../utils/panchang';
 import { getPlanetName } from '../utils/planetUtils';
-import { analyzeTransits, type TransitAnalysisReport, type TransitLifeArea } from '../utils/transitAnalysis';
+import { analyzeTransits, type TransitAnalysisReport } from '../utils/transitAnalysis';
 import { GlassCard } from './common/GlassCard';
 
 interface DayOverviewProps {
@@ -121,7 +121,7 @@ function AreaStatus({ evidenceCount }: { evidenceCount: number }) {
   return <span className="rounded-full border border-border px-3 py-1 text-xs opacity-75">{label}</span>;
 }
 
-function AreaCard({
+function TechnicalAreaCard({
   area, natalChart, report,
 }: {
   area: LifeAreaDefinition;
@@ -225,6 +225,24 @@ function AreaCard({
   );
 }
 
+function AreaCard({ area }: { area: LifeAreaDefinition }) {
+  return (
+    <article className="rounded-2xl border border-border p-4">
+      <div className="flex items-start gap-3">
+        <span className="text-2xl" aria-hidden="true">{area.icon}</span>
+        <div className="min-w-0 flex-1">
+          <h4 className="font-semibold">{area.title}</h4>
+          <p className="mt-1 text-sm leading-relaxed opacity-70">{area.description}</p>
+          <p className="mt-3 text-sm leading-relaxed">{area.dailyFocus}</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm opacity-80">
+            {area.recommendations.slice(0, 2).map((item) => <li key={item}>{item}</li>)}
+          </ul>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 function PlanetaryInfluences({ report }: { report: TransitAnalysisReport }) {
   const [expanded, setExpanded] = useState(false);
   return (
@@ -319,8 +337,8 @@ export function DayOverview({ natalChart, panchang }: DayOverviewProps) {
           <div className="flex items-start gap-3">
             <div className="rounded-2xl bg-primary/15 p-3"><Sparkles className="h-6 w-6 text-primary" /></div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider opacity-60">Персональный прогноз · Джйотиш</p>
-              <h2 className="mt-1 text-2xl font-semibold">Твой день</h2>
+              <p className="text-xs font-semibold uppercase tracking-wider opacity-60">Персональный прогноз</p>
+              <h2 className="mt-1 text-2xl font-semibold">Обзор дня</h2>
               <p className="mt-1 text-sm opacity-70">{formatLongDate(selectedDate)}</p>
             </div>
           </div>
@@ -330,10 +348,7 @@ export function DayOverview({ natalChart, panchang }: DayOverviewProps) {
             <input type="date" value={selectedDate} onChange={(event) => setSelectedDate(event.target.value)} className="min-w-0 bg-transparent outline-none" />
           </label>
         </div>
-        <p className="mt-4 text-sm leading-relaxed opacity-75">Обзор показывает, какие темы натальной карты получают транзитную активацию на выбранную дату. Натальные показатели — постоянная основа; транзиты и их связи меняются со временем.</p>
-        <div className="mt-4 rounded-xl border border-accent/30 bg-accent/10 p-3 text-sm leading-relaxed">
-          <div className="flex gap-2"><Info className="h-4 w-4 shrink-0 mt-0.5" /><p>Астрологическая интерпретация — символическая система, а не научно подтверждённое предсказание. Здесь нет процентов вероятности, обещаний событий или медицинских оценок.</p></div>
-        </div>
+        <p className="mt-4 text-sm leading-relaxed opacity-75">Коротко о том, на что можно обратить внимание сегодня, и несколько простых идей на день. Выбирайте только то, что подходит вашей ситуации.</p>
       </GlassCard>
 
       {calculation.error && (
@@ -343,25 +358,40 @@ export function DayOverview({ natalChart, panchang }: DayOverviewProps) {
       {report && (
         <>
           <GlassCard>
-            <h3 className="font-semibold">Главная тема дня</h3>
+            <h3 className="font-semibold">На что обратить внимание сегодня</h3>
             {mainArea && activeCount > 0 ? (
               <>
                 <p className="mt-2 text-lg font-medium">{mainArea.area.icon} {mainArea.area.title}</p>
-                <p className="mt-2 text-sm leading-relaxed opacity-80">Среди восьми направлений у этой темы больше всего найденных связей по используемым критериям. Это означает, что её астрологические основания стоит изучить подробнее, но не обещает конкретного события.</p>
-                <p className="mt-3 text-sm"><strong>Связанные натальные дома:</strong> {mainArea.area.houses.join(', ')}.</p>
+                <p className="mt-2 text-sm leading-relaxed opacity-80">Сегодня можно уделить этой теме немного больше внимания. Это лишь подсказка для размышления, а не предсказание обязательного события.</p>
+                <p className="mt-3 text-sm">{mainArea.area.dailyFocus}</p>
               </>
             ) : (
-              <p className="mt-2 text-sm opacity-75">На выбранную дату анализатор не выделил одну ведущую тему по заданным критериям. Это не означает, что день пустой или неблагоприятный.</p>
+              <p className="mt-2 text-sm opacity-75">Нет одной темы, которой обязательно нужно уделить особое внимание. Выберите то, что сейчас важнее именно вам.</p>
             )}
           </GlassCard>
 
           <GlassCard>
             <div className="mb-4">
               <h3 className="font-semibold">Сферы жизни</h3>
-              <p className="mt-1 text-sm opacity-65">Все восемь направлений доступны для просмотра. Откройте карточку, чтобы увидеть натальную основу, транзитные факторы и практические ориентиры.</p>
+              <p className="mt-1 text-sm opacity-65">Небольшие подсказки для повседневных дел, общения, отдыха и планов.</p>
             </div>
             <div className="space-y-3">
-              {LIFE_AREAS.map((area) => <AreaCard key={area.id} area={area} natalChart={natalChart} report={report} />)}
+              {LIFE_AREAS.map((area) => <AreaCard key={area.id} area={area} />)}
+            </div>
+          </GlassCard>
+
+          <details className="group rounded-2xl border border-border bg-card/40">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-semibold">
+              <span className="flex items-center gap-2"><SlidersHorizontal className="h-4 w-4 opacity-65" />Астрологический разбор и расчёты</span>
+              <ChevronDown className="h-5 w-5 shrink-0 transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="space-y-4 border-t border-border p-4">
+              <p className="text-sm leading-relaxed opacity-70">Этот раздел можно не открывать. Здесь собраны технические подробности для тех, кому интересно, как получены подсказки.</p>
+          <GlassCard>
+            <h3 className="font-semibold">Подробный разбор каждой сферы</h3>
+            <p className="mt-1 text-sm opacity-65">Натальные дома, управители и найденные транзитные связи.</p>
+            <div className="mt-3 space-y-3">
+              {LIFE_AREAS.map((area) => <TechnicalAreaCard key={area.id} area={area} natalChart={natalChart} report={report} />)}
             </div>
           </GlassCard>
 
@@ -413,19 +443,11 @@ export function DayOverview({ natalChart, panchang }: DayOverviewProps) {
             {showAllAspects && <div className="mt-3 space-y-2">{report.aspects.length ? report.aspects.map((aspect, index) => <div key={index} className="rounded-xl bg-secondary/50 p-3 text-sm">{aspect.evidence}<p className="mt-1 text-xs opacity-65">Транзитный дом: {aspect.transitHouse} · натальный дом: {aspect.natalHouse ?? 'не определён'} · орбис: {aspect.orb.toFixed(2)}° · {aspect.applying === null ? 'сближение не определено' : aspect.applying ? 'сходящийся аспект' : 'расходящийся аспект'}</p></div>) : <p className="text-sm opacity-70">Точные аспекты не найдены.</p>}</div>}
           </GlassCard>
 
-          <GlassCard>
-            <h3 className="font-semibold">Рекомендации на сегодня</h3>
-            <p className="mt-1 text-sm opacity-65">Практические идеи, которые можно адаптировать к своим обстоятельствам.</p>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {LIFE_AREAS.map((area) => <div key={area.id} className="rounded-xl border border-border p-3"><strong>{area.icon} {area.title}</strong><p className="mt-1 text-sm opacity-75">{area.dailyFocus}</p><p className="mt-2 text-xs opacity-65">{area.recommendations[0]}</p></div>)}
-            </div>
-            <div className="mt-4 rounded-xl bg-primary/10 p-4">
-              <strong>Главный ориентир</strong>
-              <p className="mt-1 text-sm">{mainArea && activeCount > 0 ? `Сначала удели внимание теме «${mainArea.area.title.toLowerCase()}»: изучи её основания и выбери один реалистичный шаг. Остальные решения принимай с учётом фактических обстоятельств.` : 'Не обязательно искать одну главную тему. Выбери задачу, которая действительно важна сегодня, и опирайся на реальные обстоятельства.'}</p>
-            </div>
-          </GlassCard>
 
-          <Methodology report={report} />
+            </div>
+          </details>
+
+
         </>
       )}
     </div>
