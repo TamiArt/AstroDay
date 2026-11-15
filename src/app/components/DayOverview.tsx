@@ -308,7 +308,7 @@ function Methodology({ report }: { report: TransitAnalysisReport }) {
   );
 }
 
-export function DayOverview({ natalChart, panchang }: DayOverviewProps) {
+export function DayOverview({ natalChart }: DayOverviewProps) {
   const [selectedDate, setSelectedDate] = useState(() => localDateKey(new Date()));
   const [showAllAspects, setShowAllAspects] = useState(false);
   const calculation = useMemo(() => {
