@@ -162,18 +162,18 @@ export function VastuPropertyAssessment() {
             <p className="text-sm opacity-70 mt-1">
               Север определяйте по компасу или плану с обозначенными сторонами света, а не по верхнему краю фотографии.
               {assessment.propertyType === 'apartment'
-                ? ' Если у вас обычная квартира, земельный участок не нужен: отметьте север на плане квартиры и укажите направление входной двери.'
+                ? ' Если у вас обычная квартира, земельный участок не нужен: отметьте север на плане, укажите сторону основных окон и отдельно отметьте стену, где находится входная дверь.'
                 : ' Для частного дома или участка дополнительно заполните сведения о форме, уклоне, дорогах и водоёмах.'}
             </p>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
-            <Field label={assessment.propertyType === 'apartment' ? "В какую сторону обращена входная дверь квартиры" : "Куда обращён главный фасад / вход"}>
+            <Field label={assessment.propertyType === 'apartment' ? "В какую сторону выходят основные окна квартиры" : "Куда обращён главный фасад / вход"}>
               <select className={selectClass} value={assessment.facingDirection} onChange={(event) => update('facingDirection', event.target.value as VastuPropertyAssessmentData['facingDirection'])}>
                 <option value="">Не определено</option>
                 {DIRECTIONS.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
               </select>
             </Field>
-            <Field label={assessment.propertyType === 'apartment' ? "На какой стене плана находится входная дверь" : "На какой стороне расположен главный вход"}>
+            <Field label={assessment.propertyType === 'apartment' ? "На какой стороне плана находится входная дверь" : "На какой стороне расположен главный вход"}>
               <select className={selectClass} value={assessment.entranceWall} onChange={(event) => update('entranceWall', event.target.value as VastuPropertyAssessmentData['entranceWall'])}>
                 <option value="">Не определено</option>
                 {(['north', 'east', 'south', 'west'] as const).map((side) => <option key={side} value={side}>{SECTOR_LABELS[side]}</option>)}
