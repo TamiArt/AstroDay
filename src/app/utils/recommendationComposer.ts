@@ -55,10 +55,6 @@ const PRECISION_TONES: Record<RecommendationPrecisionLevel, RecommendationTone> 
   },
 };
 
-function finishSentence(text: string): string {
-  return text.endsWith('.') ? text : `${text}.`;
-}
-
 function energyAction(level: number): string {
   if (level >= 75) return 'условный индекс астрологической модели выше среднего; это не измерение вашей физической или эмоциональной энергии';
   if (level >= 55) return 'условный индекс модели находится в среднем диапазоне и не оценивает реальную продуктивность';
