@@ -24,7 +24,7 @@ assert.equal(emptyAnalysis.conditionFindings.length, PROPERTY_CONDITION_ITEMS.le
 assert.ok(emptyAnalysis.siteFindings.some((item) => item.id === 'facing-missing'));
 assert.ok(!emptyAnalysis.siteFindings.some((item) => item.id === 'slope-missing'));
 assert.ok(!emptyAnalysis.siteFindings.some((item) => item.id === 'shape-missing'));
-assert.ok(emptyAnalysis.siteFindings.some((item) => item.id === 'facing-missing' && item.title.includes('входа в квартиру')));
+assert.ok(emptyAnalysis.siteFindings.some((item) => item.id === 'facing-missing' && item.title.includes('ориентацию квартиры')));
 assert.ok(emptyAnalysis.conditionFindings.every((item) => item.status === 'unknown'));
 
 const apartment = createEmptyVastuPropertyAssessment();
