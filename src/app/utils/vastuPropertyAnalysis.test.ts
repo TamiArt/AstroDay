@@ -22,10 +22,20 @@ assert.equal(emptyAnalysis.traditionalAlignmentScore, null);
 assert.equal(emptyAnalysis.highPriorityCount, 0);
 assert.equal(emptyAnalysis.conditionFindings.length, PROPERTY_CONDITION_ITEMS.length);
 assert.ok(emptyAnalysis.siteFindings.some((item) => item.id === 'facing-missing'));
-assert.ok(emptyAnalysis.siteFindings.some((item) => item.id === 'slope-missing'));
+assert.ok(!emptyAnalysis.siteFindings.some((item) => item.id === 'slope-missing'));
+assert.ok(!emptyAnalysis.siteFindings.some((item) => item.id === 'shape-missing'));
+assert.ok(emptyAnalysis.siteFindings.some((item) => item.id === 'facing-missing' && item.title.includes('входа в квартиру')));
 assert.ok(emptyAnalysis.conditionFindings.every((item) => item.status === 'unknown'));
 
+const apartment = createEmptyVastuPropertyAssessment();
+apartment.propertyType = 'apartment';
+apartment.facingDirection = 'northeast';
+const apartmentAnalysis = analyzeVastuProperty(apartment);
+assert.ok(apartmentAnalysis.siteFindings.some((item) => item.id === 'facing'));
+assert.ok(!apartmentAnalysis.siteFindings.some((item) => ['shape-missing', 'slope-missing', 'roads', 'water'].includes(item.id)));
+
 const property = createEmptyVastuPropertyAssessment();
+property.propertyType = 'house';
 property.facingDirection = 'east';
 property.plotShape = 'irregular';
 property.plotSlope = 'southwest';
@@ -49,6 +59,8 @@ assert.equal(analysis.assessedSectors, 3);
 assert.equal(analysis.traditionalAlignmentScore, 67);
 assert.equal(analysis.highPriorityCount, 2);
 assert.equal(analysis.findings.find((item) => item.sector === 'northeast')?.level, 'note');
+assert.ok(analysis.findings.find((item) => item.sector === 'northeast')?.title.includes('северо-восток'));
+assert.ok(!analysis.findings.find((item) => item.sector === 'northeast')?.title.includes('northeast'));
 assert.equal(analysis.findings.find((item) => item.sector === 'southeast')?.level, 'note');
 assert.equal(analysis.findings.find((item) => item.sector === 'center')?.level, 'review');
 
