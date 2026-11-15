@@ -65,51 +65,17 @@ function energyAction(level: number): string {
   return 'условный индекс модели ниже среднего; он не говорит о вашем самочувствии и не предписывает снижать активность';
 }
 
-function buildContextSentence(input: RecommendationTextInput): string {
-  const factors = [
-    `планетарный час ${getPlanetName(input.hourPlanet)} в традиции связывают с определёнными темами`,
-    `период ${getPlanetName(input.dashaPlanet)} рассматривают как общий символический фон`,
-  ];
-
-  if (input.antardashaPlanet) {
-    factors.push(`под-период ${getPlanetName(input.antardashaPlanet)} уточняет тему`);
-  }
-
-  return `В расчёте учтены следующие традиционные астрологические связи: ${factors.join(', ')}`;
-}
-
 function buildMainRecommendation(input: RecommendationTextInput): string {
-  const tone = PRECISION_TONES[input.precisionLevel];
-  const parts = [
-    `${tone.lead}: ${input.hourAction}. Сопоставьте эту идею со своими реальными задачами и предпочтениями.`,
-    buildContextSentence(input),
-    input.moonTransitText || `текущая Луна идёт через знак ${input.currentMoonSign}`,
-    input.panchangFocus,
-    input.aspectAdvice ? `Практический ход: ${input.aspectAdvice}` : energyAction(input.energyLevel),
-  ];
-
-  return parts.map(finishSentence).join(' ');
+  const action = input.hourAction.trim().replace(/[.!?]+$/, '');
+  const confidence = input.precisionLevel === 'low'
+    ? 'Из-за неточности исходных данных воспринимайте это только как общую идею.'
+    : 'Это необязательная подсказка: соотнесите её со своими планами и обстоятельствами.';
+  return `Сегодня можно: ${action}. ${confidence}`;
 }
 
 function buildAvoidRecommendation(input: RecommendationTextInput): string {
-  const tone = PRECISION_TONES[input.precisionLevel];
-  const avoidParts = [
-    `${tone.avoidLead}: ${input.hourAvoid}. Это не запрет и не прогноз; ориентируйтесь на факты и собственные решения.`,
-  ];
-
-  if (input.difficultYogaName) {
-    avoidParts.push(`Йогу дня ${input.difficultYogaName} в традиции связывают с осторожностью; это символическая трактовка, а не указание на неблагоприятное событие`);
-  }
-
-  if (input.tenseAspectText) {
-    avoidParts.push(input.tenseAspectText);
-  }
-
-  if (tone.confidenceNote) {
-    avoidParts.push(tone.confidenceNote);
-  }
-
-  return avoidParts.map(finishSentence).join(' ');
+  const caution = input.hourAvoid.trim().replace(/[.!?]+$/, '');
+  return `Не торопитесь: ${caution}. Это не запрет — если обстоятельства требуют другого решения, ориентируйтесь на факты и здравый смысл.`;
 }
 
 function buildReasoning(input: RecommendationTextInput): string[] {
