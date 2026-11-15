@@ -281,7 +281,7 @@ export function Dashboard({ profile, onReset, onProfileUpdate }: DashboardProps)
 
         {selectedView === 'natalchart' && (
           <Suspense fallback={<ViewFallback />}>
-            <NatalChartDetailed natalChart={natalChart} />
+            <NatalChartDetailed natalChart={natalChart} profile={profile} />
           </Suspense>
         )}
 
