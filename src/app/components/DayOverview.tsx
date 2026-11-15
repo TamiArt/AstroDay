@@ -444,6 +444,8 @@ export function DayOverview({ natalChart, panchang }: DayOverviewProps) {
           </GlassCard>
 
 
+              <Methodology report={report} />
+
             </div>
           </details>
 
