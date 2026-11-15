@@ -3,6 +3,7 @@ import { Info, ChevronDown, ChevronUp } from 'lucide-react';
 import { PanchangData } from '../utils/panchang';
 import { NAKSHATRAS } from '../utils/astrology';
 import { TermTooltip } from './common/TermTooltip';
+import { getPlanetName } from '../utils/planetUtils';
 import type { AstrologyTermId } from '../utils/astrologyTerms';
 
 interface PanchangWidgetProps {
@@ -13,6 +14,20 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const nakshatra = NAKSHATRAS[panchang.nakshatra.index];
+  const nakshatraNameRu: Record<string, string> = {
+    Ashwini: 'Ашвини', Bharani: 'Бхарани', Krittika: 'Криттика',
+    Rohini: 'Рохини', Mrigashira: 'Мригашира', Ardra: 'Ардра',
+    Punarvasu: 'Пунарвасу', Pushya: 'Пушья', Ashlesha: 'Ашлеша',
+    Magha: 'Магха', 'Purva Phalguni': 'Пурва-Пхалгуни',
+    'Uttara Phalguni': 'Уттара-Пхалгуни', Hasta: 'Хаста',
+    Chitra: 'Читра', Swati: 'Свати', Vishakha: 'Вишакха',
+    Anuradha: 'Анурадха', Jyeshtha: 'Джйештха', Mula: 'Мула',
+    'Purva Ashadha': 'Пурва-Ашадха', 'Uttara Ashadha': 'Уттара-Ашадха',
+    Shravana: 'Шравана', Dhanishta: 'Дхаништха', Shatabhisha: 'Шатабхиша',
+    'Purva Bhadrapada': 'Пурва-Бхадрапада',
+    'Uttara Bhadrapada': 'Уттара-Бхадрапада', Revati: 'Ревати',
+  };
+  const activeNakshatraName = nakshatra ? nakshatraNameRu[nakshatra.name] ?? nakshatra.name : panchang.nakshatra.name;
 
   const items = [
     {
@@ -30,10 +45,10 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
       term: 'nakshatra' as AstrologyTermId,
       icon: '🐎',
       title: 'Накшатра',
-      value: nakshatra?.name || '',
+      value: activeNakshatraName,
       tooltip: 'Что это?',
-      description: `Планета-управитель: ${nakshatra?.lord}. Связанное божество в традиции: ${nakshatra?.deity}.`,
-      details: 'Накшатра — один из 27 участков звёздного круга, через которые проходит Луна. Луна обычно находится в одном таком участке около суток. В Джйотиш накшатру используют для символического описания дня; она не предсказывает конкретные события.'
+      description: `Накшатра — один из 27 участков лунного пути. В традиции её символический фон связывают с планетой-управителем: ${nakshatra?.lord ? getPlanetName(nakshatra.lord) : 'не определена'}.`,
+      details: 'Накшатра — один из 27 участков лунного пути, через которые проходит Луна. Луна обычно находится в одном таком участке около суток. В Джйотиш накшатру используют для символического описания дня; она не предсказывает конкретные события.'
     },
     {
       id: 'yoga',
