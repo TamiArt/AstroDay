@@ -149,6 +149,25 @@ function getPlanetPlacement(item: IntegratedEvidence): string {
   ].filter(Boolean).join(' ');
 }
 
+function buildHouseSummary(item: IntegratedEvidence): string {
+  const houseNumber = Number(item.factorId.match(/house:(\\d+)/)?.[1]);
+  const sign = item.references.find((reference) => reference.startsWith(`Дом ${houseNumber}:`))?.match(/знак ([^;]+)/)?.[1];
+  const lord = item.references.find((reference) => reference.startsWith('Для этого дома управитель —'))?.split('управитель —')[1]?.replace(/[.]/g, '').trim();
+  const lordPlacement = lord
+    ? item.references.find((reference) => reference.startsWith(`${lord} расположен в`))
+    : undefined;
+  const occupants = item.references.find((reference) => reference.startsWith('Планеты в доме:'));
+  const parts = [
+    `${item.title.replace(':', ' связан с темой')}. ${sign ? `Дом находится в знаке ${sign}.` : ''}`,
+    lord ? `Управитель этой сферы — ${lord}.` : 'Управитель дома не определён.',
+    lordPlacement ?? '',
+    occupants && !occupants.includes('Планет в доме нет')
+      ? occupants.replace('Планеты в доме:', 'В доме также расположены планеты:')
+      : 'Планет в доме нет; основное внимание уделяется его знаку и управителю.',
+  ];
+  return parts.filter(Boolean).join(' ');
+}
+
 function buildPersonalSummary(area: IntegratedAreaSynthesis): string {
   const planetItems = area.evidence.filter((item) => item.source === 'planet');
   const houseItems = area.evidence.filter((item) => item.source === 'house');
@@ -168,7 +187,7 @@ function buildPersonalSummary(area: IntegratedAreaSynthesis): string {
   }
 
   for (const item of houseItems) {
-    if (item.statement) parts.push(item.statement);
+    parts.push(buildHouseSummary(item));
   }
 
   for (const item of yogaItems.slice(0, 3)) {
