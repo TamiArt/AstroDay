@@ -71,6 +71,18 @@ const PLANET_EXAMPLES: Record<string, string[]> = {
   Ketu: ['исследование сложных тем', 'сосредоточенная самостоятельная работа', 'отделение главного от второстепенного'],
 };
 
+const PLANET_PRACTICAL_STEPS: Record<string, string> = {
+  Sun: 'сформулируйте личную цель и выберите следующий самостоятельный шаг',
+  Moon: 'отметьте, какие условия помогают вам сохранять эмоциональную устойчивость',
+  Mars: 'выберите одну задачу и превратите намерение в конкретное действие',
+  Mercury: 'сформулируйте вопрос, сравните варианты, проверьте данные и запишите вывод',
+  Jupiter: 'составьте план обучения и проверьте новые знания на практике',
+  Venus: 'найдите решение, которое учитывает ваши ценности и интересы других людей',
+  Saturn: 'разбейте долгосрочную цель на небольшие регулярные этапы',
+  Rahu: 'проверьте новый подход в небольшом масштабе до серьёзных обязательств',
+  Ketu: 'уберите второстепенное и сосредоточьтесь на одной действительно важной задаче',
+};
+
 const PLANET_WATCHOUTS: Record<string, string> = {
   Sun: 'не превращать самостоятельность в нежелание учитывать чужую точку зрения',
   Moon: 'не принимать решения только под влиянием сиюминутного настроения',
@@ -261,6 +273,8 @@ function AreaCard({ area }: { area: IntegratedAreaSynthesis }) {
   const planetKey = planet ? getPlanetKey(planet) : null;
   const examples = planetKey ? PLANET_EXAMPLES[planetKey] : [];
   const watchout = planetKey ? PLANET_WATCHOUTS[planetKey] : null;
+  const planetStep = planetKey ? PLANET_PRACTICAL_STEPS[planetKey] : null;
+  const practicalStep = [AREA_EXAMPLES[area.id], planetStep].filter(Boolean).join('. ');
   const hasEvidence = area.evidence.length > 0;
 
   return (
@@ -281,7 +295,7 @@ function AreaCard({ area }: { area: IntegratedAreaSynthesis }) {
           )}
           <section className="rounded-lg bg-blue-50 p-3 space-y-1">
             <h5 className="text-sm font-semibold text-blue-900">Практический шаг</h5>
-            <p className="text-sm leading-relaxed text-gray-800">{AREA_EXAMPLES[area.id]}</p>
+            <p className="text-sm leading-relaxed text-gray-800">{practicalStep}.</p>
           </section>
           {watchout && (
             <p className="text-xs leading-relaxed text-gray-600"><strong>На что обратить внимание:</strong> {watchout}.</p>
