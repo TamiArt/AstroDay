@@ -176,7 +176,16 @@ export function buildIntegratedNatalAnalysis(chart: NatalChart, asOf: Date = new
     const polarities = new Set(items.map((item) => item.polarity).filter((item) => item === 'supportive' || item === 'tension'));
     const contradictions = polarities.size > 1 ? ['Одновременно присутствуют поддерживающие и напряжённые натальные факторы; однозначная оценка была бы некорректна.'] : [];
     const repeatedTheme = families.length >= 2 && unique(items.map((item) => item.factorId)).length >= 2;
-    const dataStatus = items.length === 0 ? 'unavailable' : missingPlanets.length || missingHouses.length ? 'partial' : 'complete';
+    const areaHouses = facts.houses.filter((house) => definition.houses.includes(house.number));
+    const missingAreaHouses = definition.houses.filter((houseNumber) => !areaHouses.some((house) => house.number === houseNumber));
+    const missingAreaLords = areaHouses
+      .map((house) => house.lord)
+      .filter((lord): lord is NatalPlanetKey => Boolean(lord) && !facts.planets[lord]);
+    const dataStatus = items.length === 0
+      ? 'unavailable'
+      : missingAreaHouses.length || missingAreaLords.length
+        ? 'partial'
+        : 'complete';
     return {
       id: definition.id, title: definition.title, houses: definition.houses, evidence: items,
       uniqueFactorCount: unique(items.map((item) => item.factorId)).length, sourceFamilies: families,
