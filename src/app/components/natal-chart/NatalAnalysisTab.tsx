@@ -177,9 +177,12 @@ function HouseQuickMeaning({ house }: { house: ReturnType<typeof analyzeAllNatal
       : house.lordHouse === house.house
         ? `${house.lordName} находится в собственном доме. В традиционной трактовке это усиливает прямую связь планеты с темой дома.`
         : `${house.lordName} — управитель этого дома — находится в ${house.lordHouse}-м доме (${destination ?? 'другая жизненная сфера'}). Поэтому темы этих двух домов связываются через одну планету.`;
-  const dignityText = house.lordDignity
-    ? `Управитель имеет оценку достоинства «${house.lordDignity}». Это качественный показатель принятой модели, а не измерение объективной силы.`
-    : 'Оценка достоинства управителя недоступна.';
+  const mercuryVirgoLord = house.lordName === 'Меркурий' && house.lordSign === 'Дева';
+  const dignityText = mercuryVirgoLord
+    ? 'Меркурий находится в Деве — собственном знаке и знаке экзальтации. В традиции Джйотиш оба достоинства учитываются одновременно.'
+    : house.lordDignity
+      ? `Управитель имеет оценку достоинства «${house.lordDignity}». Это качественный показатель принятой модели, а не измерение объективной силы.`
+      : 'Оценка достоинства управителя недоступна.';
   const statusText = house.synthesis === 'supportive'
     ? 'По выбранным критериям есть поддерживающие факторы; они не гарантируют конкретный результат.'
     : house.synthesis === 'challenging'
@@ -283,7 +286,10 @@ function PlanetQuickMeaning({ planet }: { planet: ReturnType<typeof analyzeAllNa
   const ruled = planet.ruledHouses.map((house) => `${house}-й дом — ${HOUSE_PLAIN_NAMES[house] ?? 'сфера не определена'}`);
   const signStyle = planet.sign ? SIGN_STYLES[planet.sign] : null;
   const dignityKind = planet.dignity?.dignity;
-  const dignityText = dignityKind === 'exalted'
+  const mercuryVirgo = planet.planet === 'Mercury' && planet.sign === 'Дева';
+  const dignityText = mercuryVirgo
+    ? 'Меркурий находится в Деве — собственном знаке и знаке экзальтации. Это сочетание традиционно связывают с выраженными качествами анализа, обучения, точности и работы с информацией.'
+    : dignityKind === 'exalted'
     ? 'В традиции Джйотиш это положение называют экзальтацией — знаком, где качества планеты считаются особенно выраженными.'
     : dignityKind === 'own'
       ? 'Планета находится в собственном знаке: знак находится под её управлением.'
