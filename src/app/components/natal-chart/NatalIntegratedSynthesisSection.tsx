@@ -83,7 +83,7 @@ const PLANET_WATCHOUTS: Record<string, string> = {
   Ketu: 'не уходить в чрезмерную отстранённость от повседневных задач',
 };
 
-const HOUSE_TOPICS = (house: number) => ({
+const HOUSE_TOPICS: Record<number, string> = {
   1: 'личность и самостоятельность',
   2: 'деньги и личные ресурсы',
   3: 'навыки и коммуникация',
@@ -96,7 +96,11 @@ const HOUSE_TOPICS = (house: number) => ({
   10: 'профессия и реализация',
   11: 'доходы и окружение',
   12: 'восстановление и завершение циклов',
-}[house] ?? `${house}-й дом`);
+};
+
+function getHouseTopic(house: number): string {
+  return HOUSE_TOPICS[house] ?? `${house}-й дом`;
+}
 
 function getPlanetKey(item: IntegratedEvidence): string | null {
   return item.factorId.match(/(?:planet|dasha|transit):([A-Z][a-z]+)/)?.[1] ?? null;
@@ -155,9 +159,9 @@ function explainEvidence(item: IntegratedEvidence, area: IntegratedAreaSynthesis
     const lord = item.references.find((ref) => ref.includes('управитель —'))?.split('управитель —')[1]?.replace(/[.]/g, '').trim();
     const occupants = item.references.find((ref) => ref.startsWith('Планеты в доме:'));
     return [
-      `${house}-й дом связан с темой «${HOUSE_TOPICS(house)}».`,
+      `${house}-й дом связан с темой «${getHouseTopic(house)}».`,
       lord ? `Управитель этого дома — ${lord}.` : '',
-      lordHouse && lord ? `${lord} находится в ${lordHouse}-м доме, поэтому темы «${HOUSE_TOPICS(house)}» и «${HOUSE_TOPICS(Number(lordHouse))}» рассматриваются вместе.` : '',
+      lordHouse && lord ? `${lord} находится в ${lordHouse}-м доме, поэтому темы «${getHouseTopic(house)}» и «${getHouseTopic(Number(lordHouse))}» рассматриваются вместе.` : '',
       occupants ? occupants.replace('Планеты в доме:', 'В этом доме расположены планеты:') : '',
     ].filter(Boolean).join(' ');
   }
