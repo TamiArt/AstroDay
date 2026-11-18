@@ -268,18 +268,31 @@ export function analyzeNatalYogas(facts: NatalChartFacts): NatalYogaAnalysis {
   }
 
   // Pancha Mahapurusha: own/exalted planet in a kendra from the Ascendant.
-  const mahapurushaRules: Array<{ planet: NatalPlanetKey; name: string; sanskrit: string; signs: number[]; ownSigns: number[] }> = [
-    { planet: 'Mars', name: 'Ручака-йога', sanskrit: 'Ruchaka Yoga', signs: [0, 7, 9], ownSigns: [0, 7] },
-    { planet: 'Mercury', name: 'Бхадра-йога', sanskrit: 'Bhadra Yoga', signs: [2, 5], ownSigns: [2, 5] },
-    { planet: 'Jupiter', name: 'Хамса-йога', sanskrit: 'Hamsa Yoga', signs: [8, 11, 3], ownSigns: [8, 11] },
-    { planet: 'Venus', name: 'Малавья-йога', sanskrit: 'Malavya Yoga', signs: [1, 6, 11], ownSigns: [1, 6] },
-    { planet: 'Saturn', name: 'Шаша-йога', sanskrit: 'Shasha Yoga', signs: [9, 10, 6], ownSigns: [9, 10] },
+  const mahapurushaRules: Array<{
+    planet: NatalPlanetKey;
+    name: string;
+    sanskrit: string;
+    signs: number[];
+    ownSigns: number[];
+    exaltationSigns: number[];
+  }> = [
+    { planet: 'Mars', name: 'Ручака-йога', sanskrit: 'Ruchaka Yoga', signs: [0, 7, 9], ownSigns: [0, 7], exaltationSigns: [9] },
+    { planet: 'Mercury', name: 'Бхадра-йога', sanskrit: 'Bhadra Yoga', signs: [2, 5], ownSigns: [2, 5], exaltationSigns: [5] },
+    { planet: 'Jupiter', name: 'Хамса-йога', sanskrit: 'Hamsa Yoga', signs: [8, 11, 3], ownSigns: [8, 11], exaltationSigns: [3] },
+    { planet: 'Venus', name: 'Малавья-йога', sanskrit: 'Malavya Yoga', signs: [1, 6, 11], ownSigns: [1, 6], exaltationSigns: [11] },
+    { planet: 'Saturn', name: 'Шаша-йога', sanskrit: 'Shasha Yoga', signs: [9, 10, 6], ownSigns: [9, 10], exaltationSigns: [6] },
   ];
   for (const rule of mahapurushaRules) {
     const planet = facts.planets[rule.planet];
     const missing = [!planet ? PLANET_NAMES[rule.planet] : '', !hasAscendant ? 'знак Асцендента' : '', !planet?.house ? `дом ${PLANET_NAMES[rule.planet]}` : ''].filter(Boolean);
     const detected = Boolean(planet && planet.house && hasAscendant && KENDRA_HOUSES.includes(planet.house) && rule.signs.includes(planet.signIndex));
-    const dignityLabel = planet && rule.ownSigns.includes(planet.signIndex) ? 'в собственном знаке' : 'в экзальтации';
+    const isOwnSign = Boolean(planet && rule.ownSigns.includes(planet.signIndex));
+    const isExalted = Boolean(planet && rule.exaltationSigns.includes(planet.signIndex));
+    const dignityLabel = isOwnSign && isExalted
+      ? 'в собственном знаке и экзальтации'
+      : isOwnSign
+        ? 'в собственном знаке'
+        : 'в экзальтации';
     const finding = detected && planet
       ? createFinding({
         id: `mahapurusha-${rule.planet.toLowerCase()}`, name: rule.name, sanskritName: rule.sanskrit,
