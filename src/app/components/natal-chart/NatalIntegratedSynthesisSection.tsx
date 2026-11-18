@@ -150,7 +150,7 @@ function getPlanetPlacement(item: IntegratedEvidence): string {
 }
 
 function buildHouseSummary(item: IntegratedEvidence): string {
-  const houseNumber = Number(item.factorId.match(/house:(\\d+)/)?.[1]);
+  const houseNumber = Number(item.factorId.match(/house:(\d+)/)?.[1]);
   const sign = item.references.find((reference) => reference.startsWith(`Дом ${houseNumber}:`))?.match(/знак ([^;]+)/)?.[1];
   const lord = item.references.find((reference) => reference.startsWith('Для этого дома управитель —'))?.split('управитель —')[1]?.replace(/[.]/g, '').trim();
   const lordPlacement = lord
