@@ -115,7 +115,8 @@ function getPlanetPlacement(item: IntegratedEvidence): string {
   const ruled = item.references.find((reference) => reference.startsWith('Управляет домами:'));
   const signName = sign?.match(/в знаке ([^,]+)/)?.[1];
   const dignityCategory = dignity?.match(/категория: ([^;]+)/)?.[1];
-  const dignityText = key === 'Mercury' && signName === 'Дева'
+  const isVirgo = signName === 'Дева' || signName === 'Virgo';
+  const dignityText = key === 'Mercury' && isVirgo
     ? 'В Деве Меркурий находится в собственном знаке и в экзальтации.'
     : dignityCategory === 'exalted'
       ? 'В традиции Джйотиш это положение считают экзальтацией.'
