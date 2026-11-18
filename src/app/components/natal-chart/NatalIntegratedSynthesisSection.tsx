@@ -157,7 +157,7 @@ function buildHouseSummary(item: IntegratedEvidence): string {
     ? item.references.find((reference) => reference.startsWith(`${lord} расположен в`))
     : undefined;
   const occupants = item.references.find((reference) => reference.startsWith('Планеты в доме:'));
-  const titleParts = item.title.match(/^(\\d+-й дом):\\s*(.+)$/);
+  const titleParts = item.title.match(/^(\d+-й дом):\s*(.+)$/);
   const houseTitle = titleParts
     ? `${titleParts[1]} связан с темой «${titleParts[2]}».`
     : item.title;
