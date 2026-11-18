@@ -137,7 +137,7 @@ function getPlanetPlacement(item: IntegratedEvidence): string {
         : dignityCategory === 'debilitated'
           ? 'В традиции Джйотиш это положение считают знаком падения планеты.'
           : '';
-  const ruledHouses = ruled?.match(/\\d+/g)?.map(Number) ?? [];
+  const ruledHouses = ruled?.match(/\d+/g)?.map(Number) ?? [];
   const ruledText = ruledHouses.length && key
     ? `${name} также управляет: ${ruledHouses.map((number) => `${number}-м домом — ${getHouseTopic(number)}`).join('; ')}.`
     : '';
