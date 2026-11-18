@@ -61,6 +61,23 @@ assert.ok(lunarAnalysis.findings.some((item) => item.id === 'budha-aditya'));
 assert.ok(lunarAnalysis.findings.find((item) => item.id === 'budha-aditya')?.evidence.some((item) => item.includes('Угловое расстояние')), 'Budha-Aditya evidence must expose the actual Sun–Mercury separation');
 assert.ok(lunarAnalysis.findings.some((item) => item.id === 'mahapurusha-jupiter'));
 
+const virgoAscendantChart = chartWith({
+  Sun: 0, Moon: 1, Mars: 2, Mercury: 5, Jupiter: 6,
+  Venus: 7, Saturn: 8, Rahu: 9, Ketu: 3,
+});
+virgoAscendantChart.ascendant = position('Ascendant', 5);
+virgoAscendantChart.houses = (virgoAscendantChart.houses ?? []).map((house, index) => {
+  const sign = (5 + index) % 12;
+  return { ...house, sign, signName: signNames[sign], lord: signLords[sign] };
+});
+const virgoBhadra = analyzeNatalYogas(buildNatalChartFacts(virgoAscendantChart));
+const bhadraFinding = virgoBhadra.findings.find((item) => item.id === 'mahapurusha-mercury');
+assert.ok(bhadraFinding, 'Mercury in Virgo in the first house must form Bhadra Mahapurusha Yoga');
+assert.ok(
+  bhadraFinding.description.includes('в собственном знаке и экзальтации'),
+  'Mercury in Virgo must be described as both its own sign and exaltation',
+);
+
 const signOnlyLunarFacts = buildNatalChartFacts({ ...lunarChart, houses: [] } as unknown as NatalChart);
 const signOnlyLunarAnalysis = analyzeNatalYogas(signOnlyLunarFacts);
 assert.equal(signOnlyLunarAnalysis.checks.find((item) => item.id === 'gaja-kesari')?.status, 'detected', 'Gaja-Kesari is determined by sign distance from the Moon');
