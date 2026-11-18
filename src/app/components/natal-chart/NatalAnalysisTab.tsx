@@ -92,6 +92,75 @@ const HOUSE_PLANET_NAMES: Record<string, string> = {
   Jupiter: 'Юпитер', Venus: 'Венера', Saturn: 'Сатурн', Rahu: 'Раху', Ketu: 'Кету',
 };
 
+const SIGN_STYLES: Record<string, string> = {
+  Овен: 'инициатива, прямота и стремление действовать быстро',
+  Телец: 'устойчивость, практичность и постепенное развитие',
+  Близнецы: 'обмен информацией, гибкость и разнообразие интересов',
+  Рак: 'забота, эмоциональная вовлечённость и потребность в безопасности',
+  Лев: 'самовыражение, творчество и желание проявить индивидуальность',
+  Дева: 'анализ, точность, порядок и внимание к деталям',
+  Весы: 'сотрудничество, баланс интересов и поиск договорённостей',
+  Скорпион: 'глубина, исследование, приватность и работа со сложными темами',
+  Стрелец: 'обучение, расширение кругозора и поиск смысла',
+  Козерог: 'структура, ответственность и движение к долгосрочному результату',
+  Водолей: 'независимый взгляд, коллективные идеи и нестандартные решения',
+  Рыбы: 'воображение, восприимчивость и работа с тонкими нюансами',
+};
+
+const HOUSE_LIFE_EXAMPLES: Record<number, string> = {
+  1: 'как человек начинает дела, принимает самостоятельные решения и предъявляет себя миру',
+  2: 'как человек обращается с личными деньгами, формирует накопления и выражает свои ценности',
+  3: 'как человек учится на практике, общается, осваивает инструменты и запускает небольшие проекты',
+  4: 'как человек организует быт, выстраивает личное пространство и ищет чувство опоры',
+  5: 'как человек выражает творческие идеи, развивает увлечения и взаимодействует с темой детей',
+  6: 'как человек выстраивает рабочие процессы, справляется с регулярными задачами и поддерживает режим',
+  7: 'как человек договаривается, строит партнёрство и взаимодействует с клиентами',
+  8: 'как человек обсуждает общие деньги, распределяет обязательства и проходит периоды перемен',
+  9: 'как человек получает образование, формирует убеждения и выбирает наставников',
+  10: 'как человек строит профессиональную траекторию, принимает ответственность и показывает результат',
+  11: 'как человек получает отдачу от усилий, взаимодействует с сообществами и расширяет круг контактов',
+  12: 'как человек восстанавливается, планирует расходы и организует время вне публичных обязанностей',
+};
+
+const HOUSE_PRACTICAL_STEPS: Record<number, string> = {
+  1: 'Выберите одну личную цель и определите действие, которое можете выполнить самостоятельно.',
+  2: 'Запишите регулярные доходы и расходы, затем выберите один реалистичный финансовый ориентир.',
+  3: 'Освойте небольшой практический навык и закрепите его конкретным заданием.',
+  4: 'Определите, что сделает домашнее пространство удобнее, и начните с одного изменения.',
+  5: 'Выделите регулярное время на творчество, увлечение или совместное занятие с ребёнком.',
+  6: 'Разделите повторяющуюся задачу на этапы и уберите один источник лишней нагрузки.',
+  7: 'Обсудите ожидания, границы и ответственность сторон до принятия общего решения.',
+  8: 'Проверьте условия общих финансовых и юридических обязательств, включая возможные риски.',
+  9: 'Составьте план обучения и заранее определите, как будете проверять качество источников.',
+  10: 'Выберите профессиональный навык и зафиксируйте измеримый результат его применения.',
+  11: 'Определите, какие контакты и сообщества действительно помогают вашим целям.',
+  12: 'Запланируйте время на восстановление и проверьте, какие расходы можно сделать осознаннее.',
+};
+
+const PLANET_LIFE_EXAMPLES: Record<string, string> = {
+  Sun: 'например, самостоятельно определить цель проекта и взять ответственность за итог',
+  Moon: 'например, заметить, в каком режиме и окружении вам легче сохранять спокойствие и работоспособность',
+  Mars: 'например, начать сложную задачу, отстоять рабочие границы или быстро устранить препятствие',
+  Mercury: 'например, изучить новую программу, проверить данные, найти ошибку и объяснить решение',
+  Jupiter: 'например, освоить новую область, систематизировать знания или поделиться опытом',
+  Venus: 'например, согласовать интересы участников, улучшить визуальную часть проекта или найти комфортный формат сотрудничества',
+  Saturn: 'например, выстроить устойчивый процесс, соблюдать сроки и постепенно развивать профессиональное мастерство',
+  Rahu: 'например, исследовать новую технологию или попробовать непривычный подход, предварительно оценив риски',
+  Ketu: 'например, глубоко изучить узкую тему, убрать лишнее и сосредоточиться на главной задаче',
+};
+
+const PLANET_WATCHOUTS_UI: Record<string, string> = {
+  Sun: 'не путать самостоятельность с необходимостью всё контролировать',
+  Moon: 'не принимать каждое эмоциональное колебание за окончательный сигнал к действию',
+  Mars: 'не торопиться с решением конфликта, не оценив последствия',
+  Mercury: 'не откладывать действие из-за бесконечного анализа и перепроверок',
+  Jupiter: 'не считать убеждение доказанным фактом без проверки источников',
+  Venus: 'не отказываться от собственных потребностей ради внешнего одобрения',
+  Saturn: 'не превращать ответственность в чрезмерную строгость к себе',
+  Rahu: 'не выбирать новизну только ради новизны, не проверив её пользу',
+  Ketu: 'не уходить в изоляцию и не терять связь с практическими задачами',
+};
+
 function getHouseConnectionText(house: ReturnType<typeof analyzeAllNatalHouses>[number]): string {
   if (!house.available || !house.lord || house.lordHouse === null) {
     return 'Положение управителя не определено, поэтому связь с другими сферами пока нельзя описать.';
@@ -105,42 +174,96 @@ function getHouseConnectionText(house: ReturnType<typeof analyzeAllNatalHouses>[
 
 function HouseQuickMeaning({ house }: { house: ReturnType<typeof analyzeAllNatalHouses>[number] }) {
   if (!house.available) {
-    return <p className="text-sm text-gray-600">Нет исходных данных, чтобы определить знак и управителя этого дома.</p>;
+    return <p className="text-sm text-gray-600">Нет исходных данных, чтобы определить знак, управителя и связи этого дома. Персональная трактовка не подменяется догадками.</p>;
   }
+
   const occupants = house.occupants.map((planet) => HOUSE_PLANET_NAMES[planet] ?? planet);
+  const signStyle = house.sign ? SIGN_STYLES[house.sign] : null;
+  const destination = house.lordHouse ? HOUSE_PLAIN_NAMES[house.lordHouse] : null;
+  const ruledElsewhere = house.ruledHouses.filter((item) => item !== house.house);
+  const lordSentence = !house.lordName
+    ? 'Управитель дома не определён в исходных данных.'
+    : house.lordHouse === null
+      ? `${house.lordName} — управитель этого дома, но его положение в домах не определено.`
+      : house.lordHouse === house.house
+        ? `${house.lordName} находится в собственном доме. В традиционной трактовке это усиливает прямую связь планеты с темой дома.`
+        : `${house.lordName} — управитель этого дома — находится в ${house.lordHouse}-м доме (${destination ?? 'другая жизненная сфера'}). Поэтому темы этих двух домов связываются через одну планету.`;
+  const dignityText = house.lordDignity
+    ? `Управитель имеет оценку достоинства «${house.lordDignity}». Это качественный показатель принятой модели, а не измерение объективной силы.`
+    : 'Оценка достоинства управителя недоступна.';
+  const statusText = house.synthesis === 'supportive'
+    ? 'По выбранным критериям есть поддерживающие факторы; они не гарантируют конкретный результат.'
+    : house.synthesis === 'challenging'
+      ? 'Есть показатели, которым стоит уделить внимание; они не означают неизбежных трудностей.'
+      : house.synthesis === 'mixed'
+        ? 'Картина неоднородная: присутствуют и поддерживающие факторы, и факторы, требующие внимания.'
+        : house.synthesis === 'incomplete'
+          ? 'Для целостного вывода не хватает части исходных данных.'
+          : 'По выбранным критериям нет явного перевеса поддерживающих или напряжённых факторов.';
+
   return (
     <div className="space-y-3">
-      <div>
-        <p className="text-xs font-semibold text-gray-500">О ЧЁМ ЭТОТ ДОМ</p>
-        <p className="mt-1 text-sm text-gray-800">{house.theme.charAt(0).toUpperCase() + house.theme.slice(1)}.</p>
-        <p className="mt-1 text-xs text-gray-600">Знак: {house.sign ?? 'не определён'}.</p>
-      </div>
-      <div>
-        <p className="text-xs font-semibold text-gray-500">ПЛАНЕТЫ В ДОМЕ</p>
-        <p className="mt-1 text-sm text-gray-800">{occupants.length ? occupants.join(', ') : 'Планет нет — основное внимание уделяем управителю дома.'}</p>
-      </div>
-      <div>
-        <p className="text-xs font-semibold text-gray-500">УПРАВИТЕЛЬ</p>
-        <p className="mt-1 text-sm text-gray-800">{house.lordName ?? 'Не определён'}{house.lordSign ? ` находится в знаке ${house.lordSign}` : ''}{house.lordHouse ? `, в ${house.lordHouse}-м доме` : ''}{house.lordDignity ? `. Положение: ${house.lordDignity}` : ''}.</p>
-      </div>
-      <div className="rounded-lg bg-indigo-50/70 p-3">
-        <p className="text-xs font-semibold text-indigo-800">ЧТО ЭТО ЗНАЧИТ ПРОСТЫМИ СЛОВАМИ</p>
-        <p className="mt-1 text-sm leading-relaxed text-indigo-950">{getHouseConnectionText(house)}</p>
-        {house.ruledHouses.filter((item) => item !== house.house).length > 0 && (
-          <p className="mt-2 text-xs text-indigo-800">Этот же управитель отвечает также за {house.ruledHouses.filter((item) => item !== house.house).map((item) => `${item}-й дом (${HOUSE_PLAIN_NAMES[item]})`).join(', ')}.</p>
+      <section>
+        <p className="text-xs font-semibold text-gray-500">1. О ЧЁМ ЭТОТ ДОМ</p>
+        <p className="mt-1 text-sm leading-relaxed text-gray-800">{house.theme}.</p>
+        <p className="mt-1 text-sm leading-relaxed text-gray-700">
+          В практической жизни это может относиться к тому, {HOUSE_LIFE_EXAMPLES[house.house] ?? 'как человек проживает соответствующую сферу'}.
+        </p>
+      </section>
+
+      <section className="rounded-lg bg-indigo-50/70 p-3">
+        <p className="text-xs font-semibold text-indigo-800">2. ЗНАК ДОМА — КАК ПРОЯВЛЯЕТСЯ ТЕМА</p>
+        <p className="mt-1 text-sm leading-relaxed text-indigo-950">
+          {house.sign ? `Дом находится в знаке ${house.sign}.` : 'Знак дома не определён.'}
+          {signStyle ? ` В символическом прочтении этот знак связан с такими способами действовать: ${signStyle}.` : ''}
+        </p>
+      </section>
+
+      <section>
+        <p className="text-xs font-semibold text-gray-500">3. УПРАВИТЕЛЬ ДОМА — С ЧЕМ СВЯЗАНА ЭТА СФЕРА</p>
+        <p className="mt-1 text-sm leading-relaxed text-gray-800">{lordSentence}</p>
+        <p className="mt-1 text-xs leading-relaxed text-gray-600">{dignityText}</p>
+        {ruledElsewhere.length > 0 && (
+          <p className="mt-1 text-sm leading-relaxed text-gray-700">
+            Эта же планета управляет также {ruledElsewhere.map((item) => `${item}-м домом — ${HOUSE_PLAIN_NAMES[item] ?? 'дополнительной сферой'}`).join('; ')}. Поэтому темы этих домов рассматриваются совместно, а не как независимые показатели.
+          </p>
         )}
-      </div>
+      </section>
+
+      <section>
+        <p className="text-xs font-semibold text-gray-500">4. ПЛАНЕТЫ В ДОМЕ</p>
+        <p className="mt-1 text-sm leading-relaxed text-gray-800">
+          {occupants.length
+            ? `В доме расположены: ${occupants.join(', ')}. Их символические функции добавляют дополнительные оттенки к теме дома.`
+            : 'Планет в доме нет. Это не означает, что сфера не важна: её основным ориентиром остаются знак и положение управителя.'}
+        </p>
+      </section>
+
+      <section className="rounded-lg border border-gray-200 p-3">
+        <p className="text-xs font-semibold text-gray-700">КАК ЭТО МОЖЕТ ПРОЯВЛЯТЬСЯ В ЖИЗНИ</p>
+        <p className="mt-1 text-sm leading-relaxed text-gray-700">
+          Например, можно наблюдать, как вы решаете задачи этой сферы, какие привычные способы помогают, а какие требуют пересмотра. Само положение дома не предсказывает конкретное событие.
+        </p>
+        <p className="mt-2 text-xs font-semibold text-indigo-800">ПРАКТИЧЕСКИЙ ШАГ</p>
+        <p className="mt-1 text-sm leading-relaxed text-gray-800">{HOUSE_PRACTICAL_STEPS[house.house]}</p>
+      </section>
+
+      <p className="text-xs leading-relaxed text-gray-600">{statusText}</p>
+
       <details className="rounded-lg border border-gray-100 p-3">
-        <summary className="cursor-pointer text-sm font-medium text-gray-700">Дополнительные показатели</summary>
+        <summary className="cursor-pointer text-sm font-medium text-gray-700">Расчётные данные и ограничения</summary>
         <div className="mt-2 space-y-2 text-xs text-gray-600">
           <p><strong>Знак дома:</strong> {house.sign ?? 'не определён'}</p>
+          <p><strong>Управитель:</strong> {house.lordName ?? 'не определён'}; знак {house.lordSign ?? 'не определён'}; дом {house.lordHouse ?? 'не определён'}.</p>
+          <p><strong>Достоинство управителя:</strong> {house.lordDignity ?? 'не определено'}</p>
+          <p><strong>Планеты в доме:</strong> {occupants.length ? occupants.join(', ') : 'нет'}</p>
           <p><strong>Аспекты на дом:</strong> {house.aspects.length ? house.aspects.map((item) => HOUSE_PLANET_NAMES[item] ?? item).join(', ') : 'не обнаружены по выбранной схеме'}</p>
-          <p><strong>Связанные дома:</strong> {house.connectedHouses.length ? house.connectedHouses.join(', ') : 'отдельная связь не выявлена'}</p>
-          {house.dispositorChain.length > 0 && <p><strong>Цепочка диспозиторов:</strong> <TermTooltip term="dispositor" /> {house.dispositorChain.map((item) => `${HOUSE_PLANET_NAMES[item.planet] ?? item.planet} — ${item.sign}${item.house === null ? '' : `, ${item.house}-й дом`}`).join(' → ')}</p>}
-          {house.supportingFactors.length > 0 && <p><strong>Поддержка:</strong> {house.supportingFactors.join(' ')}</p>}
-          {house.attentionFactors.length > 0 && <p><strong>Что требует внимания:</strong> {house.attentionFactors.join(' ')}</p>}
-          {house.evidence.length > 0 && <details><summary className="cursor-pointer font-medium">Технические основания</summary><ul className="mt-1 list-disc space-y-1 pl-4">{house.evidence.map((item) => <li key={item}>{item}</li>)}</ul></details>}
-          {house.limitations.length > 0 && <p className="text-gray-500">{house.limitations[0]}</p>}
+          <p><strong>Связанные дома:</strong> {house.connectedHouses.length ? house.connectedHouses.join(', ') : 'не выявлены'}</p>
+          {house.dispositorChain.length > 0 && <p><strong>Цепочка диспозиторов:</strong> {house.dispositorChain.map((item) => `${HOUSE_PLANET_NAMES[item.planet] ?? item.planet} — ${item.sign}${item.house === null ? '' : `, ${item.house}-й дом`}`).join(' → ')}</p>}
+          {house.supportingFactors.length > 0 && <p><strong>Поддерживающие факторы:</strong> {house.supportingFactors.join(' ')}</p>}
+          {house.attentionFactors.length > 0 && <p><strong>Факторы внимания:</strong> {house.attentionFactors.join(' ')}</p>}
+          {house.evidence.length > 0 && <details><summary className="cursor-pointer font-medium">Полные технические основания</summary><ul className="mt-1 list-disc space-y-1 pl-4">{house.evidence.map((item) => <li key={item}>{item}</li>)}</ul></details>}
+          {house.limitations.map((item) => <p key={item} className="text-gray-500">{item}</p>)}
         </div>
       </details>
     </div>
@@ -163,17 +286,57 @@ const PLANET_RU_NAMES: Record<string, string> = {
   Jupiter: 'Юпитер', Venus: 'Венера', Saturn: 'Сатурн', Rahu: 'Раху', Ketu: 'Кету',
 };
 function PlanetQuickMeaning({ planet }: { planet: ReturnType<typeof analyzeAllNatalPlanets>[number] }) {
-  if (!planet.available) return <p className="text-sm text-gray-600">Недостаточно данных, чтобы объяснить положение этой планеты.</p>;
+  if (!planet.available) return <p className="text-sm text-gray-600">Недостаточно исходных данных, чтобы объяснить положение этой планеты.</p>;
+
   const name = PLANET_RU_NAMES[planet.planet] ?? planet.name;
   const meaning = PLANET_PLAIN_MEANINGS[planet.planet] ?? 'своя символическая функция';
-  const houseName = HOUSE_PLAIN_NAMES[planet.house ?? 0] ?? 'неопределённая жизненная сфера';
-  const ruled = planet.ruledHouses.map((house) => `${house}-й дом — ${HOUSE_PLAIN_NAMES[house]}`).join('; ');
+  const houseName = planet.house ? HOUSE_PLAIN_NAMES[planet.house] : null;
+  const ruled = planet.ruledHouses.map((house) => `${house}-й дом — ${HOUSE_PLAIN_NAMES[house] ?? 'сфера не определена'}`);
+  const signStyle = planet.sign ? SIGN_STYLES[planet.sign] : null;
+  const dignityKind = planet.dignity?.dignity;
+  const dignityText = dignityKind === 'exalted'
+    ? 'В традиции Джйотиш это положение называют экзальтацией — знаком, где качества планеты считаются особенно выраженными.'
+    : dignityKind === 'own'
+      ? 'Планета находится в собственном знаке: знак находится под её управлением.'
+      : dignityKind === 'debilitated'
+        ? 'В традиции Джйотиш это положение называют падением. Его рассматривают как фактор для дополнительного анализа, а не как приговор.'
+        : dignityKind === 'not_applicable'
+          ? 'Для этой точки отдельная оценка достоинства в выбранной модели не применяется.'
+          : 'Особое достоинство по принятой модели не отмечено или не определено.';
+  const example = PLANET_LIFE_EXAMPLES[planet.planet] ?? 'наблюдать, как символическая функция планеты проявляется в конкретных задачах';
+  const watchout = PLANET_WATCHOUTS_UI[planet.planet];
+
   return (
-    <div className="rounded-lg bg-indigo-50/70 p-3 space-y-2">
-      <p className="text-xs font-semibold text-indigo-800">ЧТО ЭТА ПЛАНЕТА ОЗНАЧАЕТ В ВАШЕЙ КАРТЕ</p>
-      <p className="text-sm leading-relaxed text-gray-800"><strong>{name}</strong> символизирует {meaning}. В вашей карте она находится в знаке {planet.sign}{planet.house ? `, в ${planet.house}-м доме — сфере «${houseName}»` : ''}.</p>
-      <p className="text-sm leading-relaxed text-gray-800">{planet.house ? `Это связывает качества планеты с темами «${houseName}».` : 'Дом, через который проявляются качества планеты, пока не определён.'} {ruled ? `Кроме того, она управляет: ${ruled}.` : 'Управляемые ею дома в расчёте не определены.'}</p>
-      <p className="text-xs text-gray-600">Это символическое описание роли планеты, а не характеристика человека по одному показателю.</p>
+    <div className="rounded-lg bg-indigo-50/70 p-3 space-y-3">
+      <section>
+        <p className="text-xs font-semibold text-indigo-800">1. ЗА ЧТО ОТВЕЧАЕТ {name.toUpperCase()}</p>
+        <p className="mt-1 text-sm leading-relaxed text-gray-800">{name} в традиции Джйотиш символизирует {meaning}.</p>
+      </section>
+
+      <section>
+        <p className="text-xs font-semibold text-indigo-800">2. ГДЕ ЭТИ КАЧЕСТВА ПРОЯВЛЯЮТСЯ В КАРТЕ</p>
+        <p className="mt-1 text-sm leading-relaxed text-gray-800">
+          {planet.sign ? `Планета находится в знаке ${planet.sign}` : 'Знак планеты не определён'}
+          {signStyle ? `. Символически этот знак задаёт стиль: ${signStyle}` : ''}.
+          {planet.house && houseName ? ` Она расположена в ${planet.house}-м доме, который связан с темой «${houseName}».` : ' Дом планеты не определён, поэтому связать её функцию с конкретной сферой пока нельзя.'}
+        </p>
+        <p className="mt-1 text-sm leading-relaxed text-gray-700">{dignityText}</p>
+        {planet.dignity?.explanation && <p className="mt-1 text-xs leading-relaxed text-gray-600">{planet.dignity.explanation}</p>}
+      </section>
+
+      <section>
+        <p className="text-xs font-semibold text-indigo-800">3. КАКИЕ СФЕРЫ ЖИЗНИ ОНА СВЯЗЫВАЕТ</p>
+        <p className="mt-1 text-sm leading-relaxed text-gray-800">
+          {ruled.length ? `${name} управляет ${ruled.join('; ')}. Поэтому темы этих домов в традиционной модели связываются с положением этой планеты.` : 'В доступных расчётных данных управляемые этой планетой дома не определены.'}
+        </p>
+      </section>
+
+      <section className="rounded-lg border border-indigo-100 bg-white/80 p-3">
+        <p className="text-xs font-semibold text-gray-700">ПОНЯТНЫЙ ПРИМЕР</p>
+        <p className="mt-1 text-sm leading-relaxed text-gray-700">{example}. Это иллюстрация символики, а не утверждение, что человек обязательно ведёт себя именно так.</p>
+        {watchout && <p className="mt-2 text-xs leading-relaxed text-gray-600"><strong>На что обратить внимание:</strong> {watchout}.</p>}
+      </section>
+      <p className="text-xs leading-relaxed text-gray-600">Одна планета не описывает человека целиком. Её значение читают вместе с домом, управлением, достоинством, аспектами и остальными показателями карты.</p>
     </div>
   );
 }
