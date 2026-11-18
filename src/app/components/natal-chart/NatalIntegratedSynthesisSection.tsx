@@ -150,33 +150,40 @@ function getPlanetPlacement(item: IntegratedEvidence): string {
 }
 
 function buildPersonalSummary(area: IntegratedAreaSynthesis): string {
-  const planet = area.evidence.find((item) => item.source === 'planet');
-  const house = area.evidence.find((item) => item.source === 'house');
-  const yoga = area.evidence.find((item) => item.source === 'yoga');
+  const planetItems = area.evidence.filter((item) => item.source === 'planet');
+  const houseItems = area.evidence.filter((item) => item.source === 'house');
+  const yogaItems = area.evidence.filter((item) => item.source === 'yoga');
   const parts: string[] = [];
 
-  if (planet) {
-    const key = getPlanetKey(planet);
-    const placement = getPlanetPlacement(planet);
+  for (const item of planetItems) {
+    const key = getPlanetKey(item);
+    const placement = getPlanetPlacement(item);
     const meaning = key ? PLANET_MEANINGS[key] : '';
-    if (placement) parts.push(placement);
-    if (meaning) parts.push(`${PLANETS[key!]} в традиции Джйотиш связывают с темами: ${meaning}.`);
-  } else if (house) {
-    parts.push(house.statement);
+    const name = key ? PLANETS[key] : item.title;
+    const detail = [
+      placement,
+      meaning ? `${name} в традиции Джйотиш связывают с темами: ${meaning}.` : '',
+    ].filter(Boolean).join(' ');
+    if (detail) parts.push(detail);
   }
 
-  if (yoga) {
-    const yogaName = yoga.factorId.includes('mahapurusha-mercury')
+  for (const item of houseItems) {
+    if (item.statement) parts.push(item.statement);
+  }
+
+  for (const item of yogaItems.slice(0, 3)) {
+    const yogaName = item.factorId.includes('mahapurusha-mercury')
       ? 'Бхадра-махапуруша-йога (Бхадра-йога)'
-      : yoga.title;
-    parts.push(`Дополнительно обнаружена комбинация «${yogaName}»: ${yoga.statement}`);
+      : item.title;
+    parts.push(`Дополнительная комбинация «${yogaName}»: ${item.statement}`);
   }
 
-  if (!parts.length) {
-    return 'В доступных расчётах пока недостаточно персональных показателей для содержательного вывода по этой сфере. Приложение не будет заменять отсутствующие данные предположениями.';
+  const uniqueParts = [...new Set(parts)];
+  if (!uniqueParts.length) {
+    return 'В натальных показателях этой сферы пока недостаточно данных для персонального вывода. Если доступны только Даша, транзиты или дополнительные карты, они показываются как отдельный временной или тематический контекст и не подменяют базовый разбор D1.';
   }
 
-  return parts.join(' ');
+  return uniqueParts.join(' ');
 }
 
 function explainEvidence(item: IntegratedEvidence, area: IntegratedAreaSynthesis): string {
@@ -269,12 +276,14 @@ function EvidenceDetails({ area }: { area: IntegratedAreaSynthesis }) {
 }
 
 function AreaCard({ area }: { area: IntegratedAreaSynthesis }) {
-  const planet = area.evidence.find((item) => item.source === 'planet');
-  const planetKey = planet ? getPlanetKey(planet) : null;
-  const examples = planetKey ? PLANET_EXAMPLES[planetKey] : [];
-  const watchout = planetKey ? PLANET_WATCHOUTS[planetKey] : null;
-  const planetStep = planetKey ? PLANET_PRACTICAL_STEPS[planetKey] : null;
-  const practicalStep = [AREA_EXAMPLES[area.id], planetStep].filter(Boolean).join('. ');
+  const planetKeys = [...new Set(area.evidence
+    .filter((item) => item.source === 'planet')
+    .map(getPlanetKey)
+    .filter((key): key is string => Boolean(key)))];
+  const examples = [...new Set(planetKeys.flatMap((key) => PLANET_EXAMPLES[key] ?? []))];
+  const watchouts = [...new Set(planetKeys.map((key) => PLANET_WATCHOUTS[key]).filter(Boolean))];
+  const planetSteps = [...new Set(planetKeys.map((key) => PLANET_PRACTICAL_STEPS[key]).filter(Boolean))];
+  const practicalStep = [AREA_EXAMPLES[area.id], ...planetSteps].filter(Boolean).join('. ');
   const hasEvidence = area.evidence.length > 0;
 
   return (
@@ -297,8 +306,8 @@ function AreaCard({ area }: { area: IntegratedAreaSynthesis }) {
             <h5 className="text-sm font-semibold text-blue-900">Практический шаг</h5>
             <p className="text-sm leading-relaxed text-gray-800">{practicalStep}.</p>
           </section>
-          {watchout && (
-            <p className="text-xs leading-relaxed text-gray-600"><strong>На что обратить внимание:</strong> {watchout}.</p>
+          {watchouts.length > 0 && (
+            <p className="text-xs leading-relaxed text-gray-600"><strong>На что обратить внимание:</strong> {watchouts.join('; ')}.</p>
           )}
           <EvidenceDetails area={area} />
         </>
