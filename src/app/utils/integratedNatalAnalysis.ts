@@ -178,12 +178,10 @@ export function buildIntegratedNatalAnalysis(chart: NatalChart, asOf: Date = new
     const repeatedTheme = families.length >= 2 && unique(items.map((item) => item.factorId)).length >= 2;
     const areaHouses = facts.houses.filter((house) => definition.houses.includes(house.number));
     const missingAreaHouses = definition.houses.filter((houseNumber) => !areaHouses.some((house) => house.number === houseNumber));
-    const missingAreaLords = areaHouses
-      .map((house) => house.lord)
-      .filter((lord): lord is NatalPlanetKey => Boolean(lord) && !facts.planets[lord]);
+    const hasMissingAreaLord = areaHouses.some((house) => !house.lord || !facts.planets[house.lord]);
     const dataStatus = items.length === 0
       ? 'unavailable'
-      : missingAreaHouses.length || missingAreaLords.length
+      : missingAreaHouses.length || hasMissingAreaLord
         ? 'partial'
         : 'complete';
     return {
