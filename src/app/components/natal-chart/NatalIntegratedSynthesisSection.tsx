@@ -291,6 +291,13 @@ function AreaCard({ area }: { area: IntegratedAreaSynthesis }) {
       <div>
         <h4 className="font-semibold text-gray-900">{area.title}</h4>
         <p className="mt-1 text-xs text-gray-500">{AREA_MEANINGS[area.id]}</p>
+        <p className="mt-1 text-xs text-gray-500">
+          {area.dataStatus === 'complete'
+            ? 'Основные данные этой сферы доступны.'
+            : area.dataStatus === 'partial'
+              ? 'Часть расчётных данных этой сферы отсутствует; вывод ограничен.'
+              : 'Персональные натальные основания для этой сферы не найдены.'}
+        </p>
       </div>
 
       {hasEvidence ? (
