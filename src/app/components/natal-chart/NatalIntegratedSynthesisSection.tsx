@@ -113,11 +113,26 @@ function getPlanetPlacement(item: IntegratedEvidence): string {
   const house = item.references.find((reference) => reference.startsWith('Планета расположена в'));
   const dignity = item.references.find((reference) => reference.startsWith('Оценка достоинства:'));
   const ruled = item.references.find((reference) => reference.startsWith('Управляет домами:'));
+  const signName = sign?.match(/в знаке ([^,]+)/)?.[1];
+  const dignityCategory = dignity?.match(/категория: ([^;]+)/)?.[1];
+  const dignityText = key === 'Mercury' && signName === 'Дева'
+    ? 'В Деве Меркурий находится в собственном знаке и в экзальтации.'
+    : dignityCategory === 'exalted'
+      ? 'В традиции Джйотиш это положение считают экзальтацией.'
+      : dignityCategory === 'own'
+        ? 'В традиции Джйотиш это положение считают собственным знаком планеты.'
+        : dignityCategory === 'debilitated'
+          ? 'В традиции Джйотиш это положение считают знаком падения планеты.'
+          : '';
+  const ruledHouses = ruled?.match(/\\d+/g)?.map(Number) ?? [];
+  const ruledText = ruledHouses.length && key
+    ? `${name} также управляет: ${ruledHouses.map((number) => `${number}-м домом — ${getHouseTopic(number)}`).join('; ')}.`
+    : '';
   return [
     sign?.replace(/, на [\d.]+° знака\./, '.'),
     house?.replace('Планета расположена', 'Она расположена'),
-    dignity,
-    ruled,
+    dignityText,
+    ruledText,
   ].filter(Boolean).join(' ');
 }
 
