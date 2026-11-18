@@ -89,6 +89,15 @@ assert.ok(report.methodology.some((item) => item.includes('не суммирую
 assert.ok(report.methodology.some((item) => item.includes('Йоги')));
 assert.ok(report.overview.includes('диспозиторы'));
 
+const missingJupiterChart = {
+  ...chart,
+  planets: { ...chart.planets, Jupiter: undefined },
+} as unknown as NatalChart;
+const partialReport = buildIntegratedNatalAnalysis(missingJupiterChart, asOf);
+assert.equal(partialReport.areas.find((area) => area.id === 'identity')?.dataStatus, 'complete', 'unrelated missing planets must not downgrade every area');
+assert.equal(partialReport.areas.find((area) => area.id === 'wisdom')?.dataStatus, 'partial', 'an area must be marked partial when its house lord is missing');
+assert.equal(partialReport.areas.find((area) => area.id === 'retreat')?.dataStatus, 'partial', 'all areas ruled by the missing planet must be marked partial');
+
 const invalidDate = new Date(Number.NaN);
 assert.throws(() => buildIntegratedNatalAnalysis(chart, invalidDate), /Некорректная дата/);
 assert.throws(() => buildIntegratedNatalAnalysis(chart, new Date('1989-01-01T00:00:00Z')), /раньше даты рождения/);
