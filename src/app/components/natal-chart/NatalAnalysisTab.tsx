@@ -161,17 +161,6 @@ const PLANET_WATCHOUTS_UI: Record<string, string> = {
   Ketu: 'не уходить в изоляцию и не терять связь с практическими задачами',
 };
 
-function getHouseConnectionText(house: ReturnType<typeof analyzeAllNatalHouses>[number]): string {
-  if (!house.available || !house.lord || house.lordHouse === null) {
-    return 'Положение управителя не определено, поэтому связь с другими сферами пока нельзя описать.';
-  }
-  const destination = HOUSE_PLAIN_NAMES[house.lordHouse] ?? `${house.lordHouse}-й дом`;
-  if (house.lordHouse === house.house) {
-    return `Управитель находится в своём доме. Тема ${HOUSE_PLAIN_NAMES[house.house]} получает прямой акцент.`;
-  }
-  return `Управитель находится в ${house.lordHouse}-м доме. Поэтому тема ${HOUSE_PLAIN_NAMES[house.house]} связывается с темой «${destination}».`;
-}
-
 function HouseQuickMeaning({ house }: { house: ReturnType<typeof analyzeAllNatalHouses>[number] }) {
   if (!house.available) {
     return <p className="text-sm text-gray-600">Нет исходных данных, чтобы определить знак, управителя и связи этого дома. Персональная трактовка не подменяется догадками.</p>;
