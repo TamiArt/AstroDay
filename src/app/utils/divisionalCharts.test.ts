@@ -115,11 +115,11 @@ for (const varga of partialVargaCharts) {
   assert.deepEqual(Object.keys(varga.planets), ['Sun'],
     'only finite planet positions should be included in every varga');
 }
-assert.throws(
-  () => calculateAllDivisionalCharts({ Sun: { siderealLon: Number.NaN } }, 0).forEach((varga) => {
-    assert.equal(Object.keys(varga.planets).length, 0);
-  }),
-  undefined,
+const allInvalidVargaCharts = calculateAllDivisionalCharts(
+  { Sun: { siderealLon: Number.NaN } },
+  0,
 );
+assert.ok(allInvalidVargaCharts.every((varga) => Object.keys(varga.planets).length === 0),
+  'an all-invalid input should produce valid empty-planet varga charts without throwing');
 
 console.log('Divisional chart accuracy regression tests passed.');
