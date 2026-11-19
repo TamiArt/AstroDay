@@ -45,7 +45,7 @@ function toAspect(
 }
 
 function isUsablePosition(position: PlanetPosition | null | undefined): position is PlanetPosition {
-  return Boolean(position)
+  return position != null
     && Number.isFinite(position.siderealLon)
     && Number.isFinite(position.tropicalLon);
 }
