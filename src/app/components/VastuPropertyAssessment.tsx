@@ -158,50 +158,61 @@ export function VastuPropertyAssessment() {
       <GlassCard>
         <div className="space-y-4">
           <div>
-            <h3 className="text-xl font-semibold">1. Ориентация и участок</h3>
-            <p className="text-sm opacity-70 mt-1">Север нужно определить по компасу/геодезическому плану, а не по верхней стороне фотографии. Учитывайте магнитное склонение и возможные помехи компаса.</p>
+            <h3 className="text-xl font-semibold">1. Ориентация квартиры или участка</h3>
+            <p className="text-sm opacity-70 mt-1">
+              Север определяйте по компасу или плану с обозначенными сторонами света, а не по верхнему краю фотографии.
+              {assessment.propertyType === 'apartment'
+                ? ' Если у вас обычная квартира, земельный участок не нужен: отметьте север на плане, укажите сторону основных окон и отдельно отметьте стену, где находится входная дверь.'
+                : ' Для частного дома или участка дополнительно заполните сведения о форме, уклоне, дорогах и водоёмах.'}
+            </p>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
-            <Field label="Куда обращён главный фасад / вход">
+            <Field label={assessment.propertyType === 'apartment' ? "В какую сторону выходят основные окна квартиры" : "Куда обращён главный фасад / вход"}>
               <select className={selectClass} value={assessment.facingDirection} onChange={(event) => update('facingDirection', event.target.value as VastuPropertyAssessmentData['facingDirection'])}>
                 <option value="">Не определено</option>
                 {DIRECTIONS.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
               </select>
             </Field>
-            <Field label="На какой стороне расположен главный вход">
+            <Field label={assessment.propertyType === 'apartment' ? "На какой стороне плана находится входная дверь" : "На какой стороне расположен главный вход"}>
               <select className={selectClass} value={assessment.entranceWall} onChange={(event) => update('entranceWall', event.target.value as VastuPropertyAssessmentData['entranceWall'])}>
                 <option value="">Не определено</option>
                 {(['north', 'east', 'south', 'west'] as const).map((side) => <option key={side} value={side}>{SECTOR_LABELS[side]}</option>)}
               </select>
             </Field>
             <NumberField label="Положение двери вдоль выбранной стены" value={assessment.entrancePosition} min={0} max={100} suffix="%" onChange={(value) => update('entrancePosition', value)} hint="0% — один край стены, 100% — противоположный. Укажите положение относительно плана." />
-            <Field label="Форма участка / контура">
-              <select className={selectClass} value={assessment.plotShape} onChange={(event) => update('plotShape', event.target.value as VastuPropertyAssessmentData['plotShape'])}>
-                <option value="unknown">Неизвестно</option><option value="square">Квадрат</option><option value="rectangle">Прямоугольник</option><option value="irregular">Неправильная</option><option value="triangular">Треугольная</option><option value="narrow">Узкая / вытянутая</option>
-              </select>
-            </Field>
-            <Field label="Общее направление уклона участка">
-              <select className={selectClass} value={assessment.plotSlope} onChange={(event) => update('plotSlope', event.target.value as VastuPropertyAssessmentData['plotSlope'])}>
-                <option value="unknown">Неизвестно</option><option value="flat">Почти ровный</option>
-                {DIRECTIONS.map((item) => <option key={item.id} value={item.id}>В сторону: {item.label.toLowerCase()}</option>)}
-              </select>
-            </Field>
+            {assessment.propertyType !== 'apartment' && (
+              <>
+              <Field label="Форма участка / контура">
+                <select className={selectClass} value={assessment.plotShape} onChange={(event) => update('plotShape', event.target.value as VastuPropertyAssessmentData['plotShape'])}>
+                  <option value="unknown">Неизвестно</option><option value="square">Квадрат</option><option value="rectangle">Прямоугольник</option><option value="irregular">Неправильная</option><option value="triangular">Треугольная</option><option value="narrow">Узкая / вытянутая</option>
+                </select>
+              </Field>
+              <Field label="Общее направление уклона участка">
+                <select className={selectClass} value={assessment.plotSlope} onChange={(event) => update('plotSlope', event.target.value as VastuPropertyAssessmentData['plotSlope'])}>
+                  <option value="unknown">Неизвестно</option><option value="flat">Почти ровный</option>
+                  {DIRECTIONS.map((item) => <option key={item.id} value={item.id}>В сторону: {item.label.toLowerCase()}</option>)}
+                </select>
+              </Field>
+              </>
+            )}
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            {(['roadSides', 'waterSides'] as const).map((key) => (
-              <fieldset key={key} className="rounded-2xl border border-border p-4">
-                <legend className="px-1 text-sm font-semibold">{key === 'roadSides' ? 'Стороны с дорогой / подъездом' : 'Стороны с водоёмом / водным объектом'}</legend>
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  {DIRECTIONS.map((item) => (
-                    <label key={item.id} className="flex items-center gap-2 text-sm">
-                      <input type="checkbox" checked={assessment[key].includes(item.id)} onChange={() => toggleDirection(key, item.id)} />
-                      {item.label}
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-            ))}
-          </div>
+          {assessment.propertyType !== 'apartment' && (
+            <div className="grid gap-4 md:grid-cols-2">
+              {(['roadSides', 'waterSides'] as const).map((key) => (
+                <fieldset key={key} className="rounded-2xl border border-border p-4">
+                  <legend className="px-1 text-sm font-semibold">{key === 'roadSides' ? 'Стороны с дорогой / подъездом' : 'Стороны с водоёмом / водным объектом'}</legend>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    {DIRECTIONS.map((item) => (
+                      <label key={item.id} className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={assessment[key].includes(item.id)} onChange={() => toggleDirection(key, item.id)} />
+                        {item.label}
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              ))}
+            </div>
+          )}
           <div className="rounded-xl bg-secondary p-3 text-sm">
             {assessment.entranceWall
               ? <>Вход: стена «{SECTOR_LABELS[assessment.entranceWall]}», сегмент {calculateEntrancePada(assessment.entrancePosition) ?? '—'} из 8 по выбранной стороне.</>
@@ -244,7 +255,7 @@ export function VastuPropertyAssessment() {
           <div className="grid gap-2 sm:grid-cols-3">
             <div className="rounded-xl bg-secondary p-3"><p className="text-xs opacity-65">Заполнено секторов</p><p className="text-xl font-semibold">{analysis.assessedSectors} / 9</p></div>
             <div className="rounded-xl bg-secondary p-3"><p className="text-xs opacity-65">Совпадение со справочной схемой</p><p className="text-xl font-semibold">{analysis.traditionalAlignmentScore === null ? '—' : `${analysis.traditionalAlignmentScore}%`}</p></div>
-            <div className="rounded-xl bg-secondary p-3"><p className="text-xs opacity-65">Положение входа</p><p className="text-xl font-semibold">{analysis.entrancePada ? `Пада ${analysis.entrancePada}/8` : 'Не указано'}</p></div>
+            <div className="rounded-xl bg-secondary p-3"><p className="text-xs opacity-65">Положение входа</p><p className="text-xl font-semibold">{analysis.entrancePada && assessment.entranceWall ? `Пада ${analysis.entrancePada}/8` : 'Не указано'}</p></div>
           </div>
           <div className="space-y-2">
             {analysis.findings.map((finding) => (

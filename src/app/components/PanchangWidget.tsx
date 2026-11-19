@@ -3,6 +3,7 @@ import { Info, ChevronDown, ChevronUp } from 'lucide-react';
 import { PanchangData } from '../utils/panchang';
 import { NAKSHATRAS } from '../utils/astrology';
 import { TermTooltip } from './common/TermTooltip';
+import { getPlanetName } from '../utils/planetUtils';
 import type { AstrologyTermId } from '../utils/astrologyTerms';
 
 interface PanchangWidgetProps {
@@ -13,6 +14,20 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const nakshatra = NAKSHATRAS[panchang.nakshatra.index];
+  const nakshatraNameRu: Record<string, string> = {
+    Ashwini: 'Ашвини', Bharani: 'Бхарани', Krittika: 'Криттика',
+    Rohini: 'Рохини', Mrigashira: 'Мригашира', Ardra: 'Ардра',
+    Punarvasu: 'Пунарвасу', Pushya: 'Пушья', Ashlesha: 'Ашлеша',
+    Magha: 'Магха', 'Purva Phalguni': 'Пурва-Пхалгуни',
+    'Uttara Phalguni': 'Уттара-Пхалгуни', Hasta: 'Хаста',
+    Chitra: 'Читра', Swati: 'Свати', Vishakha: 'Вишакха',
+    Anuradha: 'Анурадха', Jyeshtha: 'Джйештха', Mula: 'Мула',
+    'Purva Ashadha': 'Пурва-Ашадха', 'Uttara Ashadha': 'Уттара-Ашадха',
+    Shravana: 'Шравана', Dhanishta: 'Дхаништха', Shatabhisha: 'Шатабхиша',
+    'Purva Bhadrapada': 'Пурва-Бхадрапада',
+    'Uttara Bhadrapada': 'Уттара-Бхадрапада', Revati: 'Ревати',
+  };
+  const activeNakshatraName = nakshatra ? nakshatraNameRu[nakshatra.name] ?? nakshatra.name : panchang.nakshatra.name;
 
   const items = [
     {
@@ -22,7 +37,7 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
       title: 'Титхи',
       value: panchang.tithi.name,
       tooltip: 'Что это?',
-      description: `Традиционная трактовка: ${panchang.tithi.meaning.toLowerCase()}.`,
+      description: `Лунный день: ${panchang.tithi.meaning.toLowerCase()}.`,
       details: 'Титхи — это лунный день, который рассчитывают по угловому расстоянию между Солнцем и Луной. В лунном месяце 30 титхи. В традиции Джйотиш их используют как один из символических ориентиров календарного дня.'
     },
     {
@@ -30,10 +45,10 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
       term: 'nakshatra' as AstrologyTermId,
       icon: '🐎',
       title: 'Накшатра',
-      value: nakshatra?.name || '',
+      value: activeNakshatraName,
       tooltip: 'Что это?',
-      description: `Планета-управитель: ${nakshatra?.lord}. Связанное божество в традиции: ${nakshatra?.deity}.`,
-      details: 'Накшатра — один из 27 участков звёздного круга, через которые проходит Луна. Луна обычно находится в одном таком участке около суток. В Джйотиш накшатру используют для символического описания дня; она не предсказывает конкретные события.'
+      description: `Накшатра — один из 27 участков лунного пути. В традиции её символический фон связывают с планетой-управителем: ${nakshatra?.lord ? getPlanetName(nakshatra.lord) : 'не определена'}.`,
+      details: 'Накшатра — один из 27 участков лунного пути, через которые проходит Луна. Луна обычно находится в одном таком участке около суток. В Джйотиш накшатру используют для символического описания дня; она не предсказывает конкретные события.'
     },
     {
       id: 'yoga',
@@ -42,7 +57,7 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
       title: 'Йога',
       value: panchang.yoga.name,
       tooltip: 'Что это?',
-      description: `Традиционная трактовка: ${panchang.yoga.meaning.toLowerCase()}.`,
+      description: `Общий символический фон: ${panchang.yoga.meaning.toLowerCase()}.`,
       details: 'Йогу дня рассчитывают по сумме долгот Солнца и Луны. В панчанге выделяют 27 йог. Это традиционная характеристика календарного дня, а не гарантия успеха или неудачи дела.'
     },
     {
@@ -52,7 +67,7 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
       title: 'Карана',
       value: panchang.karana.name,
       tooltip: 'Что это?',
-      description: `Традиционная трактовка: ${panchang.karana.quality.toLowerCase()}.`,
+      description: `Дополнительный ориентир: ${panchang.karana.quality.toLowerCase()}.`,
       details: 'Карана — половина лунного дня (титхи). В календаре используются 11 видов каран, часть из которых повторяется циклически. В традиции это дополнительный символический ориентир для оценки дня.'
     },
     {
@@ -79,10 +94,27 @@ export function PanchangWidget({ panchang }: PanchangWidgetProps) {
       <div className="mb-6">
         <h2 className="mb-2">Панчанг <TermTooltip term="panchang" /> на сегодня</h2>
         <p className="opacity-70">
-          Пять элементов индийского календаря. В Джйотиш их используют для традиционного символического описания дня.
+          Пять частей традиционного индийского календаря. Сначала — общий смысл дня, ниже — каждый показатель простыми словами.
         </p>
       </div>
 
+      <div className="mb-5 rounded-2xl border border-primary/20 bg-primary/5 p-5">
+        <h3 className="font-semibold text-lg">Общий смысл дня</h3>
+        <p className="mt-2 leading-relaxed">
+          В символике Панчанга сегодняшний день связан с темой «{panchang.tithi.meaning.toLowerCase()}».
+          Дополнительный оттенок задаёт йога «{panchang.yoga.name}» — {panchang.yoga.meaning.toLowerCase()},
+          а день недели ({panchang.vara.name}) традиционно связывают с темой «{panchang.vara.quality.toLowerCase()}».
+        </p>
+        <p className="mt-2 text-sm opacity-75">
+          Накшатра {activeNakshatraName} (управитель — {nakshatra?.lord ? getPlanetName(nakshatra.lord) : 'не определён'}) и карана {panchang.karana.name}
+          дополняют это описание: накшатра задаёт символический лунный фон, а карана — дополнительный оттенок лунного дня.
+        </p>
+        <p className="mt-3 text-sm">
+          Как использовать: выберите одно-два посильных дела, учитывайте реальные обстоятельства и не воспринимайте это описание как обещание события или запрет на действия.
+        </p>
+      </div>
+
+      <h3 className="mb-3 font-semibold">Из чего складывается Панчанга</h3>
       <div className="space-y-4">
         {items.map((item) => (
           <div

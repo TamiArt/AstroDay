@@ -1,26 +1,34 @@
 import { useMemo, useState } from 'react';
 import { AlertTriangle, GitMerge, ShieldCheck } from 'lucide-react';
 import type { NatalChart } from '../../utils/astrology';
-import { buildIntegratedNatalAnalysis, type IntegratedAreaSynthesis, type IntegratedEvidence } from '../../utils/integratedNatalAnalysis';
+import {
+  buildIntegratedNatalAnalysis,
+  type IntegratedAreaSynthesis,
+  type IntegratedEvidence,
+} from '../../utils/integratedNatalAnalysis';
 import { GlassCard } from '../common/GlassCard';
 
-interface Props { natalChart: NatalChart; }
+interface Props {
+  natalChart: NatalChart;
+}
 
 const PLANETS: Record<string, string> = {
   Sun: 'Солнце', Moon: 'Луна', Mars: 'Марс', Mercury: 'Меркурий',
   Jupiter: 'Юпитер', Venus: 'Венера', Saturn: 'Сатурн', Rahu: 'Раху', Ketu: 'Кету',
 };
+
 const PLANET_MEANINGS: Record<string, string> = {
-  Sun: 'самостоятельность, уверенность, цели и желание проявить себя',
+  Sun: 'воля, самостоятельность, цели и желание проявить себя',
   Moon: 'эмоции, привычки, чувство безопасности и повседневные потребности',
-  Mars: 'инициатива, решительность, действия и умение отстаивать своё',
+  Mars: 'инициатива, решительность, действия и защита своих интересов',
   Mercury: 'мышление, обучение, речь, анализ и работа с информацией',
   Jupiter: 'знания, развитие, наставничество и жизненные ориентиры',
-  Venus: 'отношения, симпатии, творчество, удовольствие и личные ценности',
+  Venus: 'отношения, творчество, удовольствие и личные ценности',
   Saturn: 'ответственность, дисциплина, терпение и долгосрочные задачи',
-  Rahu: 'сильное стремление к новому опыту и необычным целям',
-  Ketu: 'углубление, самостоятельное исследование и желание отделить главное от лишнего',
+  Rahu: 'новый опыт, амбиции и нестандартные подходы',
+  Ketu: 'исследование, концентрация и умение отделять главное от лишнего',
 };
+
 const AREA_MEANINGS: Record<string, string> = {
   identity: 'характер, самостоятельность и то, как человек проявляет себя',
   resources: 'личные деньги, заработок, накопления и материальная устойчивость',
@@ -29,159 +37,380 @@ const AREA_MEANINGS: Record<string, string> = {
   creativity: 'творчество, увлечения, самовыражение и тема детей',
   work: 'повседневная работа, обязанности, привычки и забота о себе',
   relationships: 'близкие отношения, брак, партнёрство и договорённости',
-  transformation: 'общие деньги, доверие, кризисы и большие перемены',
+  transformation: 'общие деньги, доверие и большие перемены',
   wisdom: 'образование, мировоззрение, наставники и расширение кругозора',
   career: 'профессия, ответственность, репутация и карьерное направление',
   gains: 'доходы от деятельности, клиенты, друзья и результаты усилий',
-  retreat: 'отдых, личное пространство, расходы и дела, которые человек выполняет в одиночестве',
+  retreat: 'отдых, личное пространство, расходы и завершение дел',
 };
-const ASPECT_MEANINGS: Record<string, string> = {
-  соединение: 'две темы тесно переплетаются и действуют одновременно',
-  оппозиция: 'две темы могут тянуть в разные стороны; важно искать равновесие',
-  квадратура: 'между темами может ощущаться напряжение, которое требует действий и пересмотра привычного подхода',
-  трин: 'две темы легче находят общий язык и могут поддерживать друг друга',
-  секстиль: 'между темами есть возможность для сотрудничества, если человек сам ею пользуется',
-  'специальный аспект': 'планеты связаны особым аспектом в принятой системе расчёта',
+
+const AREA_EXAMPLES: Record<string, string> = {
+  identity: 'замечать свои привычные способы принимать решения и выбирать, какие из них действительно помогают',
+  resources: 'сравнивать варианты заработка, планировать расходы и опираться на проверяемые данные',
+  skills: 'осваивать новые инструменты, тренировать навыки и яснее формулировать свои мысли',
+  home: 'создавать удобное личное пространство и заранее обсуждать бытовые ожидания с близкими',
+  creativity: 'выделять время на собственные проекты, обучение и занятия, которые приносят интерес',
+  work: 'разбивать большие задачи на понятные шаги и выстраивать устойчивый распорядок',
+  relationships: 'обсуждать ожидания, границы и договорённости до того, как возникнет недопонимание',
+  transformation: 'внимательно разбирать общие обязательства, риски и условия важных договорённостей',
+  wisdom: 'составлять план обучения, проверять источники и сопоставлять разные точки зрения',
+  career: 'развивать профессиональные навыки, фиксировать результаты и собирать портфолио',
+  gains: 'поддерживать полезные профессиональные связи и переводить долгосрочные цели в конкретные шаги',
+  retreat: 'заранее планировать отдых, пересматривать лишние расходы и оставлять время на восстановление',
 };
-const houseTopic = (house: number) => ({
-  1: 'личность и самостоятельность', 2: 'деньги и накопления', 3: 'навыки и общение',
-  4: 'дом и семья', 5: 'творчество и дети', 6: 'работа и повседневные обязанности',
-  7: 'брак и партнёрство', 8: 'общие деньги и перемены', 9: 'обучение и мировоззрение',
-  10: 'профессия и карьера', 11: 'доходы и окружение', 12: 'отдых, расходы и дела в уединении',
-}[house] ?? `${house}-й дом`);
+
+const PLANET_EXAMPLES: Record<string, string[]> = {
+  Sun: ['самостоятельные решения', 'постановка целей', 'ответственность за результат'],
+  Moon: ['понимание своих потребностей', 'забота и поддержка', 'создание устойчивого ритма'],
+  Mars: ['решение сложных задач', 'инициатива', 'защита личных границ'],
+  Mercury: ['анализ информации', 'поиск ошибок и несоответствий', 'обучение и объяснение сложных вещей'],
+  Jupiter: ['обучение и наставничество', 'работа со знаниями', 'расширение профессионального кругозора'],
+  Venus: ['творческие проекты', 'поиск компромиссов', 'работа с эстетикой и ценностями'],
+  Saturn: ['долгосрочное планирование', 'системная работа', 'последовательное развитие мастерства'],
+  Rahu: ['изучение новых технологий', 'эксперименты', 'нестандартные решения с проверкой рисков'],
+  Ketu: ['исследование сложных тем', 'сосредоточенная самостоятельная работа', 'отделение главного от второстепенного'],
+};
+
+const PLANET_PRACTICAL_STEPS: Record<string, string> = {
+  Sun: 'сформулируйте личную цель и выберите следующий самостоятельный шаг',
+  Moon: 'отметьте, какие условия помогают вам сохранять эмоциональную устойчивость',
+  Mars: 'выберите одну задачу и превратите намерение в конкретное действие',
+  Mercury: 'сформулируйте вопрос, сравните варианты, проверьте данные и запишите вывод',
+  Jupiter: 'составьте план обучения и проверьте новые знания на практике',
+  Venus: 'найдите решение, которое учитывает ваши ценности и интересы других людей',
+  Saturn: 'разбейте долгосрочную цель на небольшие регулярные этапы',
+  Rahu: 'проверьте новый подход в небольшом масштабе до серьёзных обязательств',
+  Ketu: 'уберите второстепенное и сосредоточьтесь на одной действительно важной задаче',
+};
+
+const PLANET_WATCHOUTS: Record<string, string> = {
+  Sun: 'не превращать самостоятельность в нежелание учитывать чужую точку зрения',
+  Moon: 'не принимать решения только под влиянием сиюминутного настроения',
+  Mars: 'не торопиться с действиями, когда сначала полезнее оценить последствия',
+  Mercury: 'не застревать в бесконечном анализе и перепроверках',
+  Jupiter: 'не подменять проверку фактов уверенностью в собственной правоте',
+  Venus: 'не жертвовать своими потребностями ради одобрения или комфорта',
+  Saturn: 'не требовать от себя идеального результата и не откладывать отдых',
+  Rahu: 'не гнаться за новизной без оценки практической пользы и рисков',
+  Ketu: 'не уходить в чрезмерную отстранённость от повседневных задач',
+};
+
+const HOUSE_TOPICS: Record<number, string> = {
+  1: 'личность и самостоятельность',
+  2: 'деньги и личные ресурсы',
+  3: 'навыки и коммуникация',
+  4: 'дом и внутренняя опора',
+  5: 'творчество и дети',
+  6: 'работа и повседневные задачи',
+  7: 'отношения и партнёрство',
+  8: 'общие ресурсы и перемены',
+  9: 'обучение и мировоззрение',
+  10: 'профессия и реализация',
+  11: 'доходы и окружение',
+  12: 'восстановление и завершение циклов',
+};
+
+function getHouseTopic(house: number): string {
+  return HOUSE_TOPICS[house] ?? `${house}-й дом`;
+}
+
+function getPlanetKey(item: IntegratedEvidence): string | null {
+  return item.factorId.match(/(?:planet|dasha|transit):([A-Z][a-z]+)/)?.[1] ?? null;
+}
+
+function getPlanetPlacement(item: IntegratedEvidence): string {
+  const key = getPlanetKey(item);
+  const name = key ? PLANETS[key] : null;
+  const sign = item.references.find((reference) => name && reference.startsWith(`${name} находится в знаке`));
+  const house = item.references.find((reference) => reference.startsWith('Планета расположена в'));
+  const dignity = item.references.find((reference) => reference.startsWith('Оценка достоинства:'));
+  const ruled = item.references.find((reference) => reference.startsWith('Управляет домами:'));
+  const signName = sign?.match(/в знаке ([^,]+)/)?.[1];
+  const dignityCategory = dignity?.match(/категория: ([^;]+)/)?.[1];
+  const isVirgo = signName === 'Дева' || signName === 'Virgo';
+  const dignityText = key === 'Mercury' && isVirgo
+    ? 'В Деве Меркурий находится в собственном знаке и в экзальтации.'
+    : dignityCategory === 'exalted'
+      ? 'В традиции Джйотиш это положение считают экзальтацией.'
+      : dignityCategory === 'own'
+        ? 'В традиции Джйотиш это положение считают собственным знаком планеты.'
+        : dignityCategory === 'debilitated'
+          ? 'В традиции Джйотиш это положение считают знаком падения планеты.'
+          : '';
+  const ruledHouses = ruled?.match(/\d+/g)?.map(Number) ?? [];
+  const ruledText = ruledHouses.length && key
+    ? `${name} также управляет: ${ruledHouses.map((number) => `${number}-м домом — ${getHouseTopic(number)}`).join('; ')}.`
+    : '';
+  return [
+    sign?.replace(/, на [\d.]+° знака\./, '.'),
+    house?.replace('Планета расположена', 'Она расположена'),
+    dignityText,
+    ruledText,
+  ].filter(Boolean).join(' ');
+}
+
+function buildHouseSummary(item: IntegratedEvidence): string {
+  const houseNumber = Number(item.factorId.match(/house:(\d+)/)?.[1]);
+  const sign = item.references.find((reference) => reference.startsWith(`Дом ${houseNumber}:`))?.match(/знак ([^;]+)/)?.[1];
+  const lord = item.references.find((reference) => reference.startsWith('Для этого дома управитель —'))?.split('управитель —')[1]?.replace(/[.]/g, '').trim();
+  const lordPlacement = lord
+    ? item.references.find((reference) => reference.startsWith(`${lord} расположен в`))
+    : undefined;
+  const occupants = item.references.find((reference) => reference.startsWith('Планеты в доме:'));
+  const titleParts = item.title.match(/^(\d+-й дом):\s*(.+)$/);
+  const houseTitle = titleParts
+    ? `${titleParts[1]} связан с темой «${titleParts[2]}».`
+    : item.title;
+  const parts = [
+    `${houseTitle} ${sign ? `Дом находится в знаке ${sign}.` : ''}`,
+    lord ? `Управитель этой сферы — ${lord}.` : 'Управитель дома не определён.',
+    lordPlacement ?? '',
+    occupants && !occupants.includes('Планет в доме нет')
+      ? occupants.replace('Планеты в доме:', 'В доме также расположены планеты:')
+      : 'Планет в доме нет; основное внимание уделяется его знаку и управителю.',
+  ];
+  return parts.filter(Boolean).join(' ');
+}
+
+function buildPersonalSummary(area: IntegratedAreaSynthesis): string {
+  const planetItems = area.evidence.filter((item) => item.source === 'planet');
+  const houseItems = area.evidence.filter((item) => item.source === 'house');
+  const yogaItems = area.evidence.filter((item) => item.source === 'yoga');
+  const parts: string[] = [];
+
+  for (const item of planetItems) {
+    const key = getPlanetKey(item);
+    const placement = getPlanetPlacement(item);
+    const meaning = key ? PLANET_MEANINGS[key] : '';
+    const name = key ? PLANETS[key] : item.title;
+    const detail = [
+      placement,
+      meaning ? `${name} в традиции Джйотиш связывают с темами: ${meaning}.` : '',
+    ].filter(Boolean).join(' ');
+    if (detail) parts.push(detail);
+  }
+
+  for (const item of houseItems) {
+    parts.push(buildHouseSummary(item));
+  }
+
+  for (const item of yogaItems.slice(0, 3)) {
+    const yogaName = item.factorId.includes('mahapurusha-mercury')
+      ? 'Бхадра-махапуруша-йога (Бхадра-йога)'
+      : item.title;
+    parts.push(`Дополнительная комбинация «${yogaName}»: ${item.statement}`);
+  }
+
+  const uniqueParts = [...new Set(parts)];
+  if (!uniqueParts.length) {
+    return 'В натальных показателях этой сферы пока недостаточно данных для персонального вывода. Если доступны только Даша, транзиты или дополнительные карты, они показываются как отдельный временной или тематический контекст и не подменяют базовый разбор D1.';
+  }
+
+  return uniqueParts.join(' ');
+}
 
 function explainEvidence(item: IntegratedEvidence, area: IntegratedAreaSynthesis): string {
-  const planetKey = item.factorId.match(/(?:planet|dasha|transit):([A-Z][a-z]+)/)?.[1];
+  const key = getPlanetKey(item);
   if (item.source === 'house') {
-    const number = Number(item.factorId.match(/house:(\d+)/)?.[1]);
+    const house = Number(item.factorId.match(/house:(\d+)/)?.[1]);
     const lordHouse = item.references.map((ref) => ref.match(/расположен в (\d+)-м доме/)?.[1]).find(Boolean);
+    const lord = item.references.find((ref) => ref.includes('управитель —'))?.split('управитель —')[1]?.replace(/[.]/g, '').trim();
     const occupants = item.references.find((ref) => ref.startsWith('Планеты в доме:'));
-    const lordReference = item.references.find((ref) => ref.includes('управитель —'));
-    const lordName = lordReference?.split('управитель —')[1]?.replace(/[.]/g, '').trim();
-    const destination = lordHouse ? houseTopic(Number(lordHouse)) : '';
     return [
-      `Дом ${number} в этой астрологической системе связан с темой «${houseTopic(number)}».`,
-      lordName ? `У каждого дома есть планета-управитель: это планета, которая управляет знаком этого дома. Здесь управитель — ${lordName}.` : 'Планета-управитель этого дома по доступным данным не определена.',
-      lordHouse && lordName ? `${lordName} находится в ${lordHouse}-м доме, который связан с темой «${destination}». Поэтому в традиционной трактовке две области — «${houseTopic(number)}» и «${destination}» — рассматриваются вместе.` : 'Поскольку положение управителя неизвестно, приложение не делает вывод о связи этой темы с другими домами.',
-      occupants ? occupants.replace('Планеты в доме:', 'Планеты, расположенные в этом доме:') : '',
+      `${house}-й дом связан с темой «${getHouseTopic(house)}».`,
+      lord ? `Управитель этого дома — ${lord}.` : '',
+      lordHouse && lord ? `${lord} находится в ${lordHouse}-м доме, поэтому темы «${getHouseTopic(house)}» и «${getHouseTopic(Number(lordHouse))}» рассматриваются вместе.` : '',
+      occupants ? occupants.replace('Планеты в доме:', 'В этом доме расположены планеты:') : '',
     ].filter(Boolean).join(' ');
   }
-  if (item.source === 'planet' && planetKey) {
-    const name = PLANETS[planetKey] ?? planetKey;
-    const meaning = PLANET_MEANINGS[planetKey] ?? 'свою символическую функцию';
-    const placement = item.references.find((ref) => ref.startsWith(name + ':')) ?? item.references.find((ref) => ref.includes('расположен'));
-    const ruled = item.references.find((ref) => ref.includes('управляет домами'));
-    return `В традиции Джйотиш ${name} связывают с темами «${meaning}». Чтобы понять, почему она включена в разбор сферы «${area.title.toLowerCase()}», смотрим не только на символику планеты, но и на её фактическое положение и дома, которыми она управляет. ${placement ?? 'Положение планеты указано в технических данных.'} ${ruled ?? 'Список домов, которыми управляет планета, в этом расчёте не указан.'} Это объясняет астрологическую связь, но не доказывает, что соответствующее событие произойдёт.`;
+
+  if (item.source === 'planet' && key) {
+    const placement = getPlanetPlacement(item);
+    return `${PLANETS[key]} символически связывают с темами «${PLANET_MEANINGS[key] ?? 'своей функцией в традиции'}». ${placement} Это объясняет, почему показатель включён в разбор, но не доказывает событие или неизменную черту характера.`;
   }
-  if (item.source === 'dasha' && planetKey) {
-    const name = PLANETS[planetKey] ?? planetKey;
-    return `Сейчас идёт ${item.title.toLowerCase()}. В системе Вимшоттари Даша каждому отрезку времени соответствует определённая планета. Её символику и положение в вашей карте используют как тему для размышления о периоде. Здесь расчёт связывает планету ${name} со сферой «${area.title.toLowerCase()}». Это не означает, что планета физически вызывает события или что конкретное событие обязательно произойдёт в эти даты.`;
+
+  if (item.source === 'yoga') {
+    const evidence = item.references.filter((ref) => !/не проверено|не удалось|ограничен/i.test(ref)).slice(0, 2);
+    const caveat = item.references.find((ref) => /не провер|не оцени|не учитыв|ограничен/i.test(ref));
+    return `«${item.title}» — традиционное название сочетания астрологических условий. ${item.statement} ${evidence.join(' ')} ${caveat ?? 'Полный перечень условий и ограничений доступен в исходных данных расчёта.'}`;
   }
-  if (item.source === 'transit') {
-    const match = item.factorId.match(/transit:([A-Z][a-z]+):([A-Z][a-z]+):([^:]+):/);
-    const transit = match?.[1] ?? '';
-    const natal = match?.[2] ?? '';
-    const transitName = PLANETS[transit] ?? transit;
-    const natalName = PLANETS[natal] ?? natal;
-    const aspect = item.statement.split(';')[0].toLowerCase();
-    const aspectMeaning = ASPECT_MEANINGS[aspect] ?? 'между планетами отмечена связь по выбранным правилам';
-    return `Расчёт сравнивает сегодняшнее положение ${transitName} с положением ${natalName} в момент рождения. Он обнаружил аспект «${aspect}» — геометрическую связь между двумя положениями планет. В традиционной трактовке ${transitName} связывают с темами «${PLANET_MEANINGS[transit] ?? 'текущего периода'}», а ${natalName} — с темами «${PLANET_MEANINGS[natal] ?? 'натальной карты'}». ${aspectMeaning.charAt(0).toUpperCase() + aspectMeaning.slice(1)} Поэтому сфера «${area.title.toLowerCase()}» включена в обзор. Это символическая трактовка, а не прогноз неизбежного события.`;
-  }
+
   if (item.source === 'varga') {
     const division = item.factorId.match(/D(\d+)/)?.[1] ?? '';
-    const d1 = item.references.find((ref) => ref.startsWith('D1 дом'));
-    const projected = item.references.find((ref) => ref.startsWith(`D${division}, дом`));
-    return `Для дополнительной проверки темы «${area.title.toLowerCase()}» приложение сопоставляет основную карту рождения D1 и тематическую карту D${division}. D1 показывает общий рисунок карты, а D${division} рассматривает отдельную область по специальному правилу деления знаков. ${d1 ? `В основной карте: ${d1}` : ''} ${projected ? `В дополнительной карте: ${projected}` : 'Отдельные показатели тематической карты приведены в технических данных.'} Совпадение трактовок может сделать их согласованнее внутри этой системы, но дополнительная карта не является независимым подтверждением и не заменяет D1.`;
+    return `Дополнительная карта D${division} используется как тематическое уточнение основной карты D1. Она не является независимым подтверждением и не заменяет натальную карту.`;
   }
-  if (item.source === 'yoga') {
-    const evidence = item.references.filter((ref) => !/не проверено|не удалось|ограничен/i.test(ref)).slice(0, 3);
-    return `В карте отмечено сочетание «${item.title}». Йога — это название набора условий, которые должны одновременно выполняться для определённых планет и домов. Приложение включило её в тему «${area.title.toLowerCase()}», потому что среди домов, участвующих в комбинации, есть дом этой сферы. ${evidence.length ? `Что именно обнаружено: ${evidence.join('; ')}.` : 'Состав комбинации можно посмотреть в технических основаниях.'} Само название йоги не означает, что результат обязательно будет положительным или что событие произойдёт.`;
+
+  if (item.source === 'dasha') {
+    return `${item.title}: в традиции Вимшоттари Даша этот период рассматривают через символику планеты и её положение в натальной карте. Это временной контекст для размышления, а не обещание события.`;
   }
+
+  if (item.source === 'transit') {
+    return `Транзит сопоставляет текущее положение планет с натальной картой. Он добавляет временной контекст к теме «${area.title.toLowerCase()}», но не гарантирует событие.`;
+  }
+
   return item.statement;
 }
-function evidenceTitle(item: IntegratedEvidence): string {
-  if (item.source !== 'transit') return item.title;
-  const match = item.factorId.match(/transit:([A-Z][a-z]+):([A-Z][a-z]+):([^:]+):/);
-  if (!match) return item.title;
-  return `Транзитное ${PLANETS[match[1]] ?? match[1]} к натальной планете ${PLANETS[match[2]] ?? match[2]} — ${match[3]}`;
-}
-function sourceFamilyName(family: string): string {
-  return family === 'natal-structure' ? 'натальная карта'
-    : family === 'varga-projection' ? 'дополнительные карты'
-      : family === 'timing-dasha' ? 'периоды Даши'
-        : family === 'timing-transit' ? 'транзиты' : family;
-}
 
-function EvidenceCard({ item, area }: { item: IntegratedEvidence; area: IntegratedAreaSynthesis }) {
+function EvidenceDetails({ area }: { area: IntegratedAreaSynthesis }) {
   const [expanded, setExpanded] = useState(false);
-  const sourceName = item.source === 'house' ? 'Дом и его управитель'
-    : item.source === 'planet' ? 'Положение планеты'
-      : item.source === 'yoga' ? 'Комбинация планет'
-        : item.source === 'varga' ? 'Дополнительная карта'
-          : item.source === 'dasha' ? 'Текущий период'
-            : 'Транзит';
   return (
-    <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
-      <p className="text-xs font-semibold text-indigo-700">{sourceName}</p>
-      <p className="mt-1 text-sm font-semibold text-gray-900">{evidenceTitle(item)}</p>
-      <p className="mt-1 text-sm leading-relaxed text-gray-700">{explainEvidence(item, area)}</p>
-      {item.references.length > 0 && <button type="button" onClick={() => setExpanded((value) => !value)} className="mt-2 text-xs font-medium text-indigo-700">{expanded ? 'Скрыть исходные данные расчёта' : 'Посмотреть исходные данные расчёта'}</button>}
-      {expanded && <ul className="mt-2 list-disc space-y-1 pl-4">{item.references.filter(Boolean).slice(0, 6).map((ref, index) => <li key={index} className="text-xs text-gray-500">{ref}</li>)}</ul>}
+    <div className="rounded-xl border border-gray-200 p-3">
+      <button
+        type="button"
+        onClick={() => setExpanded((value) => !value)}
+        aria-expanded={expanded}
+        className="flex w-full items-center justify-between gap-3 text-left text-sm font-semibold text-gray-800"
+      >
+        <span>Почему приложение сделало такой вывод?</span>
+        <span className="text-indigo-700">{expanded ? 'Скрыть' : 'Подробнее'}</span>
+      </button>
+      {expanded && (
+        <div className="mt-3 space-y-3">
+          {area.evidence.map((item) => (
+            <article key={item.id} className="rounded-lg bg-gray-50 p-3">
+              <p className="text-xs font-semibold text-indigo-700">
+                {item.source === 'house' ? 'Дом и его управитель'
+                  : item.source === 'planet' ? 'Положение планеты'
+                    : item.source === 'yoga' ? 'Комбинация планет'
+                      : item.source === 'varga' ? 'Дополнительная карта'
+                        : item.source === 'dasha' ? 'Период Даши' : 'Транзит'}
+              </p>
+              <p className="mt-1 text-sm font-semibold text-gray-900">{item.title}</p>
+              <p className="mt-1 text-sm leading-relaxed text-gray-700">{explainEvidence(item, area)}</p>
+              {item.references.length > 0 && (
+                <details className="mt-2 rounded-lg border border-gray-200 bg-white p-2">
+                  <summary className="cursor-pointer text-xs font-medium text-gray-600">Посмотреть исходные данные расчёта</summary>
+                  <ul className="mt-2 list-disc space-y-1 pl-4">
+                    {item.references.map((reference, index) => (
+                      <li key={index} className="text-xs leading-relaxed text-gray-500">{reference}</li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </article>
+          ))}
+          {area.contradictions.map((item) => (
+            <p key={item} className="rounded-lg bg-amber-50 p-3 text-xs text-amber-900">{item}</p>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 function AreaCard({ area }: { area: IntegratedAreaSynthesis }) {
-  const [expanded, setExpanded] = useState(false);
-  const visible = expanded ? area.evidence : area.evidence.slice(0, 3);
-  const familyNames = [...new Set(area.evidence.map((item) => item.source))].map((source) =>
-    source === 'house' ? 'дома' : source === 'planet' ? 'планеты' : source === 'yoga' ? 'комбинации планет'
-      : source === 'varga' ? 'дополнительные карты' : source === 'dasha' ? 'периоды' : 'транзиты',
-  );
+  const planetKeys = [...new Set(area.evidence
+    .filter((item) => item.source === 'planet')
+    .map(getPlanetKey)
+    .filter((key): key is string => Boolean(key)))];
+  const examples = [...new Set(planetKeys.flatMap((key) => PLANET_EXAMPLES[key] ?? []))];
+  const watchouts = [...new Set(planetKeys.map((key) => PLANET_WATCHOUTS[key]).filter(Boolean))];
+  const planetSteps = [...new Set(planetKeys.map((key) => PLANET_PRACTICAL_STEPS[key]).filter(Boolean))];
+  const practicalStep = [AREA_EXAMPLES[area.id], ...planetSteps].filter(Boolean).join('. ');
+  const hasEvidence = area.evidence.length > 0;
+
   return (
     <article className="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div><h4 className="font-semibold text-gray-900">{area.title}</h4><p className="mt-1 text-xs text-gray-500">{AREA_MEANINGS[area.id]}</p></div>
-        <span className={`rounded-full px-2 py-1 text-xs ${area.dataStatus === 'complete' ? 'bg-emerald-50 text-emerald-700' : area.dataStatus === 'partial' ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-600'}`}>
-          {area.dataStatus === 'complete' ? 'Есть расчётные основания' : area.dataStatus === 'partial' ? 'Часть данных отсутствует' : 'Оснований для вывода нет'}
-        </span>
+      <div>
+        <h4 className="font-semibold text-gray-900">{area.title}</h4>
+        <p className="mt-1 text-xs text-gray-500">{AREA_MEANINGS[area.id]}</p>
+        <p className="mt-1 text-xs text-gray-500">
+          {area.dataStatus === 'complete'
+            ? 'Основные данные этой сферы доступны.'
+            : area.dataStatus === 'partial'
+              ? 'Часть расчётных данных этой сферы отсутствует; вывод ограничен.'
+              : 'Персональные натальные основания для этой сферы не найдены.'}
+        </p>
       </div>
-      {area.evidence.length ? <>
-        <p className="text-sm text-gray-700">Для этой темы расчёт использовал {area.uniqueFactorCount} отдельных оснований из разделов: {familyNames.join(', ')}. Это число показывает количество учтённых факторов, а не силу их влияния, важность темы или вероятность события.</p>
-        {visible.map((item) => <EvidenceCard key={item.id} item={item} area={area} />)}
-        {area.evidence.length > 3 && <button type="button" onClick={() => setExpanded((value) => !value)} className="text-xs font-semibold text-indigo-700">{expanded ? 'Свернуть' : `Показать остальные объяснения (${area.evidence.length})`}</button>}
-      </> : <p className="text-sm text-gray-600">В рассчитанных показателях нет достаточных оснований, чтобы делать персональный вывод по этой теме.</p>}
-      {area.contradictions.map((item) => <p key={item} className="rounded-lg bg-amber-50 p-3 text-xs text-amber-900">{item}</p>)}
+
+      {hasEvidence ? (
+        <>
+          <p className="text-sm leading-relaxed text-gray-800">{buildPersonalSummary(area)}</p>
+          {examples.length > 0 && (
+            <section className="space-y-1">
+              <h5 className="text-sm font-semibold text-gray-800">Как эти качества могут проявляться</h5>
+              <p className="text-sm leading-relaxed text-gray-700">{examples.join('; ')}.</p>
+            </section>
+          )}
+          <section className="rounded-lg bg-blue-50 p-3 space-y-1">
+            <h5 className="text-sm font-semibold text-blue-900">Практический шаг</h5>
+            <p className="text-sm leading-relaxed text-gray-800">{practicalStep}.</p>
+          </section>
+          {watchouts.length > 0 && (
+            <p className="text-xs leading-relaxed text-gray-600"><strong>На что обратить внимание:</strong> {watchouts.join('; ')}.</p>
+          )}
+          <EvidenceDetails area={area} />
+        </>
+      ) : (
+        <p className="text-sm leading-relaxed text-gray-600">
+          {area.dataStatus === 'unavailable'
+            ? 'В доступных расчётах нет достаточных оснований для персонального вывода по этой сфере.'
+            : 'Часть исходных данных отсутствует. Приложение не будет дополнять разбор предположениями.'}
+        </p>
+      )}
     </article>
   );
 }
 
 export function NatalIntegratedSynthesisSection({ natalChart }: Props) {
   const report = useMemo(() => buildIntegratedNatalAnalysis(natalChart), [natalChart]);
-  const prominentAreas = [...report.areas].filter((area) => area.uniqueFactorCount > 0)
-    .sort((a, b) => b.uniqueFactorCount - a.uniqueFactorCount).slice(0, 3);
+
   return (
     <GlassCard>
       <section className="space-y-4">
         <div className="flex items-start gap-3 border-b border-gray-200 pb-3">
           <div className="rounded-xl bg-indigo-50 p-2"><GitMerge className="h-5 w-5 text-indigo-700" /></div>
-          <div><h3 className="text-lg font-bold text-gray-900">Какие темы чаще встречаются в расчётах карты</h3><p className="mt-1 text-sm text-gray-600">Сравнение расчётных оснований по разным жизненным сферам. Число оснований не определяет важность темы и не предсказывает события.</p></div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-900">Персональный анализ по сферам жизни</h3>
+            <p className="mt-1 text-sm text-gray-600">
+              Сначала — понятное объяснение и практический смысл. Расчётные основания и технические подробности можно открыть отдельно.
+            </p>
+          </div>
         </div>
+
         <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-4">
-          <p className="font-semibold text-gray-900">{prominentAreas.length ? `Чаще всего расчёты выделяют сферу «${prominentAreas[0].title.toLowerCase()}».` : 'Пока недостаточно расчётных данных, чтобы сравнить темы между собой.'}</p>
-          <p className="mt-1 text-sm text-gray-700">{prominentAreas.length ? `В этой сфере найдено больше отдельных расчётных оснований, чем в других. Поэтому она чаще упоминается в астрологическом разборе. Это не означает, что она важнее остальных сфер или обязательно станет главным событием жизни.` : 'Проверьте дату, время и место рождения, а также полноту рассчитанных положений.'}</p>
-          <p className="mt-2 text-xs text-gray-600">В расчёт включены {9 - report.dataQuality.missingPlanets.length} из 9 планет и {12 - report.dataQuality.missingHouses.length} из 12 домов.</p>
+          <p className="font-semibold text-gray-900">Как читать этот разбор</p>
+          <p className="mt-1 text-sm leading-relaxed text-gray-700">
+            Выводы формируются по сочетанию показателей натальной карты. Дополнительные карты, Даша и транзиты уточняют контекст, но не являются независимым доказательством и не гарантируют события.
+          </p>
         </div>
-        {prominentAreas.length > 1 && <section className="space-y-2"><h4 className="text-sm font-semibold text-gray-800">Следующие темы по числу расчётных оснований</h4><div className="grid gap-2 md:grid-cols-2">{prominentAreas.slice(1).map((area) => <div key={area.id} className="rounded-lg border border-gray-200 p-3"><p className="text-sm font-semibold text-gray-900">{area.title}</p><p className="mt-1 text-sm text-gray-600">{AREA_MEANINGS[area.id]}</p></div>)}</div></section>}
-        {report.repeatedThemes.length > 0 && <section className="space-y-2"><h4 className="text-sm font-semibold text-gray-800">Темы, которые повторяются в разных разделах анализа</h4>{report.repeatedThemes.map((item) => <p key={item.area} className="rounded-lg border border-indigo-100 p-3 text-sm text-gray-700"><strong>{item.title}:</strong> эта тема встречается в нескольких разделах: {item.sourceFamilies.map(sourceFamilyName).join(', ')}. Разделы используют одну и ту же астрологическую модель, поэтому повторение не является независимым доказательством и не гарантирует событие.</p>)}</section>}
-        {report.contradictions.length > 0 && <section className="space-y-2"><h4 className="flex items-center gap-2 text-sm font-semibold text-amber-800"><AlertTriangle className="h-4 w-4" />Где показатели неоднозначны</h4>{report.contradictions.map((item, index) => <div key={item.area + index} className="rounded-lg bg-amber-50 p-3"><p className="text-sm font-medium text-amber-900">{item.title}</p><p className="mt-1 text-sm text-amber-800">В этой сфере есть как поддерживающие, так и требующие внимания показатели. Поэтому её нельзя описать только как лёгкую или только как сложную.</p></div>)}</section>}
-        <section className="space-y-2"><h4 className="text-sm font-semibold text-gray-800">Объяснение по всем жизненным сферам</h4><div className="grid gap-3 lg:grid-cols-2">{report.areas.map((area) => <AreaCard key={area.id} area={area} />)}</div></section>
+
+        {report.contradictions.length > 0 && (
+          <section className="space-y-2">
+            <h4 className="flex items-center gap-2 text-sm font-semibold text-amber-800">
+              <AlertTriangle className="h-4 w-4" />Неоднозначные показатели
+            </h4>
+            {report.contradictions.map((item, index) => (
+              <div key={item.area + index} className="rounded-lg bg-amber-50 p-3">
+                <p className="text-sm font-medium text-amber-900">{item.title}</p>
+                <p className="mt-1 text-sm text-amber-800">{item.explanation}</p>
+              </div>
+            ))}
+          </section>
+        )}
+
+        <section className="grid gap-3 lg:grid-cols-2">
+          {report.areas.map((area) => <AreaCard key={area.id} area={area} />)}
+        </section>
+
         <details className="rounded-xl border border-gray-200 p-4">
-          <summary className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-gray-800"><ShieldCheck className="h-4 w-4" />Технические детали и ограничения</summary>
-          <ul className="mt-3 list-disc space-y-1 pl-5">{report.methodology.map((item) => <li key={item} className="text-xs leading-relaxed text-gray-600">{item}</li>)}</ul>
-          {report.dataQuality.warnings.length > 0 && <ul className="mt-3 list-disc space-y-1 pl-5">{report.dataQuality.warnings.map((item, index) => <li key={index} className="text-xs text-amber-800">{item}</li>)}</ul>}
-          {report.dataQuality.missingPlanets.length > 0 && <p className="mt-2 text-xs text-gray-600">Нет данных по планетам: {report.dataQuality.missingPlanets.map((item) => PLANETS[item]).join(', ')}</p>}
-          {report.dataQuality.missingHouses.length > 0 && <p className="mt-1 text-xs text-gray-600">Нет данных по домам: {report.dataQuality.missingHouses.join(', ')}</p>}
+          <summary className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-gray-800">
+            <ShieldCheck className="h-4 w-4" />Методика расчёта и общие ограничения
+          </summary>
+          <ul className="mt-3 list-disc space-y-1 pl-5">
+            {report.methodology.map((item) => <li key={item} className="text-xs leading-relaxed text-gray-600">{item}</li>)}
+          </ul>
+          {report.dataQuality.warnings.length > 0 && (
+            <ul className="mt-3 list-disc space-y-1 pl-5">
+              {report.dataQuality.warnings.map((item, index) => <li key={index} className="text-xs text-amber-800">{item}</li>)}
+            </ul>
+          )}
+          {report.dataQuality.missingPlanets.length > 0 && (
+            <p className="mt-2 text-xs text-gray-600">Нет данных по планетам: {report.dataQuality.missingPlanets.map((item) => PLANETS[item]).join(', ')}</p>
+          )}
+          {report.dataQuality.missingHouses.length > 0 && (
+            <p className="mt-1 text-xs text-gray-600">Нет данных по домам: {report.dataQuality.missingHouses.join(', ')}</p>
+          )}
         </details>
       </section>
     </GlassCard>

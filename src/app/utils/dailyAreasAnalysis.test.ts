@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { calculateTransitAspects } from './aspectCalculations';
 import { calculateNatalChart } from './astrology';
 import { calculateDailyAreas } from './dailyAreasAnalysis';
+import { calculateDailyAreaScore } from './dailyAreaScoring';
 import { calculatePanchang } from './panchang';
 import { getCurrentDashaForChart } from './personalRecommendations';
 
@@ -25,6 +26,21 @@ for (const area of areas) {
   assert.ok(area.name.trim().length > 0);
   assert.ok(area.description.trim().length > 0);
   assert.ok(Array.isArray(area.recommendations));
+  assert.ok(area.recommendations.length > 0, `${area.id} must include practical next steps`);
+  assert.ok(area.recommendations.every((item) => !item.includes('Астрологические основания')));
+  assert.ok(area.whyToday.length > 0, `${area.id} must explain the calculation in plain language`);
+  assert.ok(area.recommendationReason.trim().length > 0, `${area.id} must explain why the action is useful`);
+  assert.ok(area.scoreBreakdown.panchang >= 0);
+  assert.ok(area.scoreBreakdown.panchang <= 10);
+  assert.equal(
+    area.score,
+    calculateDailyAreaScore({
+      dashaScore: area.scoreBreakdown.dasha,
+      transitScore: area.scoreBreakdown.transits,
+      panchangScore: area.scoreBreakdown.panchang,
+    }),
+    `${area.id} score must match its displayed breakdown`
+  );
 }
 
 const sortedScores = [...areas].sort((a, b) => b.score - a.score).map((area) => area.score);

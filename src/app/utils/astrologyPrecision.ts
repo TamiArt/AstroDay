@@ -89,7 +89,12 @@ export function calculateAngularAspects(
   motions: Record<string, PlanetMotion | null> = {},
   maxOrbs: Partial<Record<AngularAspectResult['aspect'], number>> = {},
 ): AngularAspectResult[] {
-  const entries = Object.entries(positions), results: AngularAspectResult[] = [];
+  // Runtime chart payloads may contain null/undefined slots despite the
+  // complete static Record type. Normalize once before building planet pairs.
+  const entries = Object.entries(positions).filter(([, position]) =>
+    position != null && Number.isFinite(position.siderealLon) && Number.isFinite(position.tropicalLon),
+  );
+  const results: AngularAspectResult[] = [];
   for (let i = 0; i < entries.length - 1; i++) for (let j = i + 1; j < entries.length; j++) {
     const [planet1, a] = entries[i], [planet2, b] = entries[j];
     const separation = angularSeparation(a.siderealLon, b.siderealLon);

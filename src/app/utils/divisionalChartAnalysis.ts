@@ -133,7 +133,16 @@ function boundarySensitivity(division: number, natalAscendantLongitude: number):
  * anchors, varga houses, and the same planets' placements side by side.
  */
 export function analyzeDivisionalCharts(chart: NatalChart): DivisionalAnalysisReport {
-  const charts = calculateAllDivisionalCharts(chart.planets, chart.ascendant.siderealLon);
+  // NatalChart's static type describes a complete chart, but persisted or
+  // partially calculated charts can contain missing/null planet positions.
+  // Normalize that boundary once: only finite sidereal longitudes may enter
+  // varga calculations; never substitute a fabricated 0° position.
+  const availablePlanets: Record<string, { siderealLon: number }> = {};
+  for (const [planetName, data] of Object.entries(chart.planets)) {
+    if (!data || !Number.isFinite(data.siderealLon)) continue;
+    availablePlanets[planetName] = { siderealLon: data.siderealLon };
+  }
+  const charts = calculateAllDivisionalCharts(availablePlanets, chart.ascendant.siderealLon);
   const byDivision = new Map(charts.map((item) => [item.division, item]));
   const d1 = byDivision.get(1);
   if (!d1) throw new Error('Не удалось построить базовую карту D1');
@@ -214,6 +223,9 @@ export function analyzeDivisionalCharts(chart: NatalChart): DivisionalAnalysisRe
     baseChart,
     analyses,
     warnings: [
+      ...Object.keys(PLANET_NAMES_RU)
+        .filter((planetName) => !availablePlanets[planetName])
+        .map((planetName) => `Позиция планеты ${PLANET_NAMES_RU[planetName]} отсутствует или некорректна; планета исключена из расчётов дробных карт и сравнений.`),
       'Правила расчёта реализованы в выбранной Парашари-схеме; другие школы и варианты варг не объединяются.',
       'Все варги используют исходные сидерические долготы; ошибка времени рождения особенно сильно влияет на Асцендент и дома дробных карт.',
       'Символическая астрологическая интерпретация не является научно подтверждённым прогнозом и не заменяет медицинские, финансовые, юридические или профессиональные решения.',

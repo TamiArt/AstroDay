@@ -120,12 +120,12 @@ export function EnergyTracker({ profile, days = 7 }: EnergyTrackerProps) {
         <div>
           <h3 className="mb-1">Трекер энергии</h3>
           <p className="opacity-70">
-            {hasPersonalHistory ? 'История по персональным прогнозам' : 'Базовая оценка, пока прогнозы загружаются'}
+            {hasPersonalHistory ? 'Персональные данные за последние 7 дней' : 'Общий ориентир за последние 7 дней'}
           </p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary">
           <TrendingUp className="w-4 h-4" style={{ color: 'var(--neon-green)' }} />
-          <span className="opacity-70">Средняя: {avgEnergy.toFixed(0)}%</span>
+          <span className="opacity-70">Средний индекс: {avgEnergy.toFixed(0)} из 100</span>
         </div>
       </div>
 
@@ -162,10 +162,30 @@ export function EnergyTracker({ profile, days = 7 }: EnergyTrackerProps) {
                   )}
                 </div>
                 <span className="text-xs opacity-60">{item.label}</span>
+                <span className="text-[10px] opacity-55">{item.energy >= 70 ? 'Активный' : item.energy >= 40 ? 'Ровный' : 'Спокойный'}</span>
               </div>
             );
           })}
         </div>
+      </div>
+
+      <div className="mb-5 rounded-2xl border border-border bg-secondary/50 p-4">
+        <p className="font-medium mb-3">Как читать периоды</p>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div>
+            <p className="font-semibold text-sm">70–100 · Выше среднего</p>
+            <p className="text-sm opacity-70 mt-1">По модели можно запланировать одну-две важные задачи и активные дела.</p>
+          </div>
+          <div>
+            <p className="font-semibold text-sm">40–69 · Умеренный уровень</p>
+            <p className="text-sm opacity-70 mt-1">Чередуйте работу и перерывы, не перегружайте расписание.</p>
+          </div>
+          <div>
+            <p className="font-semibold text-sm">0–39 · Спокойный режим</p>
+            <p className="text-sm opacity-70 mt-1">Оставьте запас времени, займитесь необходимым и не планируйте всё подряд.</p>
+          </div>
+        </div>
+        <p className="text-xs opacity-60 mt-3">Это условный индекс астрологической модели, а не измерение физической энергии, здоровья или реальной продуктивности. Ориентируйтесь прежде всего на самочувствие.</p>
       </div>
 
       <div className="grid grid-cols-3 gap-3">

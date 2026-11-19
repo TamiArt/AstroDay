@@ -1,6 +1,7 @@
-// [КОМПОНЕНТ] Влияние аспектов сегодня
+// [КОМПОНЕНТ] Понятное описание символической связи дня
 import { Info, ChevronRight } from 'lucide-react';
 import { Aspect } from '../../utils/astrology';
+import { getPlanetName } from '../../utils/planetUtils';
 import { GlassCard } from '../common/GlassCard';
 
 interface AspectsTodayProps {
@@ -13,41 +14,28 @@ export function AspectsToday({ topAspect, onDeepDive }: AspectsTodayProps) {
 
   return (
     <GlassCard>
-      <h3 className="mb-4">Влияние аспектов сегодня</h3>
-      <div className="p-5 rounded-2xl bg-secondary">
-        <div className="flex items-center gap-3 mb-3">
-          <div
-            className="px-4 py-2 rounded-xl"
-            style={{
-              background: 'linear-gradient(135deg, var(--neon-purple), var(--neon-pink))',
-              color: 'white'
-            }}
-          >
-            {topAspect.planet1}
-          </div>
+      <h3 className="mb-3">На что ещё обратить внимание</h3>
+      <div className="rounded-2xl bg-secondary p-5">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <span className="rounded-xl bg-primary/15 px-3 py-2">{getPlanetName(topAspect.planet1)}</span>
           <ChevronRight className="opacity-50" />
-          <div
-            className="px-4 py-2 rounded-xl"
-            style={{
-              background: 'linear-gradient(135deg, var(--neon-blue), var(--neon-green))',
-              color: 'white'
-            }}
-          >
-            {topAspect.planet2}
-          </div>
+          <span className="rounded-xl bg-primary/15 px-3 py-2">{getPlanetName(topAspect.planet2)}</span>
         </div>
-        <p className="leading-relaxed">{topAspect.description}</p>
-        <p className="mt-2 opacity-70">
-          Сила аспекта: {topAspect.strength.toFixed(1)}/10
-        </p>
+        <p className="text-sm font-medium mb-1">Символическая подсказка</p>
+        <p className="leading-relaxed text-sm">{topAspect.description}</p>
+        <p className="mt-2 text-xs opacity-60">Это астрологическая трактовка, а не указание на обязательное событие.</p>
+        <details className="mt-3 border-t border-border pt-3 text-xs opacity-70">
+          <summary className="cursor-pointer">Технические подробности</summary>
+          <p className="mt-2">Тип связи: {topAspect.type}. Условная сила аспекта по модели: {topAspect.strength.toFixed(1)}/10.</p>
+        </details>
       </div>
 
       <button
         onClick={onDeepDive}
-        className="w-full mt-4 py-3 rounded-xl border border-border hover:bg-secondary transition-colors flex items-center justify-center gap-2"
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-border py-3 transition-colors hover:bg-secondary"
       >
-        <Info className="w-4 h-4" />
-        Подробнее об аспектах
+        <Info className="h-4 w-4" />
+        Посмотреть все связи
       </button>
     </GlassCard>
   );

@@ -21,9 +21,16 @@ export interface LifeArea {
   icon: string;
   description: string;
   recommendations: string[];
+  recommendationReason: string;
   natalPotential?: string;
   todayInfluence?: string;
   dashaInfluence?: string;
+  whyToday: string[];
+  scoreBreakdown: {
+    dasha?: number;
+    transits?: number;
+    panchang: number;
+  };
 }
 
 interface AreaState {
@@ -33,9 +40,10 @@ interface AreaState {
   natalPotential?: string;
   todayInfluence?: string;
   dashaInfluence?: string;
+  whyToday: string[];
 }
 
-const AREA_META: Record<LifeAreaId, Omit<LifeArea, 'score' | 'recommendations'>> = {
+const AREA_META: Record<LifeAreaId, Omit<LifeArea, 'score' | 'recommendations' | 'recommendationReason' | 'whyToday' | 'scoreBreakdown'>> = {
   career: { id: 'career', name: 'Карьера и достижения', color: '#6b4ce6', icon: '💼', description: 'Профессиональный рост, успех в делах, достижение целей' },
   relationships: { id: 'relationships', name: 'Отношения и любовь', color: '#ec4899', icon: '💕', description: 'Романтические отношения, социальные связи, партнёрство' },
   health: { id: 'health', name: 'Самочувствие и режим', color: '#10b981', icon: '💪', description: 'Режим, восстановление и повседневная забота о себе' },
@@ -44,6 +52,17 @@ const AREA_META: Record<LifeAreaId, Omit<LifeArea, 'score' | 'recommendations'>>
   creativity: { id: 'creativity', name: 'Творчество и самовыражение', color: '#a78bfa', icon: '🎨', description: 'Искусство, креативность, самовыражение' },
   spirituality: { id: 'spirituality', name: 'Духовность и медитация', color: '#8b5cf6', icon: '🧘', description: 'Духовные практики, медитация, внутренний рост' },
   family: { id: 'family', name: 'Семья и дом', color: '#14b8a6', icon: '🏡', description: 'Семейные отношения, дом, уют' },
+};
+
+const RECOMMENDATION_REASONS: Record<LifeAreaId, string> = {
+  career: 'Одна понятная задача помогает не распыляться и увидеть конкретный результат.',
+  relationships: 'Спокойный разговор с ясными вопросами помогает понять ожидания друг друга, а не додумывать за другого человека.',
+  health: 'Режим и отдых стоит выбирать по самочувствию и реальной нагрузке, а не по астрологическому баллу.',
+  finances: 'Проверка бюджета и условий помогает принимать решения на реальных цифрах, а не на предположениях.',
+  learning: 'Небольшие шаги легче выполнить и проверить, действительно ли вы поняли материал.',
+  creativity: 'Небольшой эксперимент помогает начать работу и понять, какую идею стоит развивать дальше.',
+  spirituality: 'Короткая добровольная практика помогает выделить время на спокойствие и размышления.',
+  family: 'Обсуждение обязанностей заранее помогает уменьшить недопонимание и распределить нагрузку.',
 };
 
 const RECOMMENDATIONS: Record<LifeAreaId, string[]> = {
@@ -57,18 +76,8 @@ const RECOMMENDATIONS: Record<LifeAreaId, string[]> = {
   family: ['Обсудите бытовые задачи и распределение обязанностей', 'Запланируйте время для близких', 'Уточните, какая помощь или поддержка сейчас нужна'],
 };
 
-function getRecommendations(areaId: LifeAreaId, area: AreaState): string[] {
-  const base = RECOMMENDATIONS[areaId];
-  const reasons = [area.dashaInfluence, area.todayInfluence, area.natalPotential]
-    .filter((value): value is string => Boolean(value));
-
-  if (reasons.length === 0) return base;
-
-  return [
-    base[0],
-    `Астрологические основания, которые учтены моделью: ${reasons[0]}`,
-    base[1],
-  ];
+function getRecommendations(areaId: LifeAreaId): string[] {
+  return RECOMMENDATIONS[areaId];
 }
 
 
@@ -79,7 +88,16 @@ export function calculateDailyAreas(
   aspects: Aspect[],
   dasha?: DashaPeriod | null
 ): LifeArea[] {
-  const areas = Object.fromEntries(LIFE_AREA_IDS.map((id) => [id, {}])) as Record<LifeAreaId, AreaState>;
+  const areas: Record<LifeAreaId, AreaState> = {
+    career: { whyToday: [] },
+    relationships: { whyToday: [] },
+    health: { whyToday: [] },
+    finances: { whyToday: [] },
+    learning: { whyToday: [] },
+    creativity: { whyToday: [] },
+    spirituality: { whyToday: [] },
+    family: { whyToday: [] },
+  };
 
   if (dasha) {
     const influenceMap = getDashaPlanetInfluence(dasha.planet);
@@ -87,7 +105,8 @@ export function calculateDailyAreas(
       const influence = influenceMap[areaId] ?? 0;
       areas[areaId].dashaScore = influence * 5;
       if (influence > 0) {
-        areas[areaId].dashaInfluence = `Махадаша ${getPlanetName(dasha.planet)}: в традиционной трактовке её связывают с темами этой сферы; это общий символический фон, а не прогноз события.`;
+        areas[areaId].dashaInfluence = `Сейчас идёт большой период ${getPlanetName(dasha.planet)}. В правилах этой модели он связан с темой «${AREA_META[areaId].name}». Это общий фон периода, а не обещание события.`;
+        areas[areaId].whyToday.push(areas[areaId].dashaInfluence);
       }
     }
   }
@@ -99,6 +118,14 @@ export function calculateDailyAreas(
       let transitInfluence = 0;
       const transitingPlanets: string[] = [];
       const houseLords = relevantHouses.map((houseNumber) => natalChart.houses![houseNumber - 1].lord);
+      const relevantAspects = aspects.filter((aspect) =>
+        (aspect.context === 'transit' || aspect.isTransit || aspect.context === undefined)
+        && (houseLords.includes(aspect.planet1) || houseLords.includes(aspect.planet2))
+      );
+      const favorableLords = houseLords.filter((lord) => {
+        const lordPosition = natalChart.planets[lord as keyof typeof natalChart.planets];
+        return Boolean(lordPosition && FAVORABLE_NAKSHATRAS.has(lordPosition.nakshatraName));
+      });
 
       for (const houseNumber of relevantHouses) {
         for (const [planetName, planetPosition] of Object.entries(currentChart.planets)) {
@@ -109,40 +136,42 @@ export function calculateDailyAreas(
         }
       }
 
-      for (const aspect of aspects) {
-        const isTransitAspect = aspect.context === 'transit' || aspect.isTransit || aspect.context === undefined;
-        if (isTransitAspect && (houseLords.includes(aspect.planet1) || houseLords.includes(aspect.planet2))) {
-          transitInfluence += getAspectWeight(aspect.type, aspect.strength);
-        }
+      for (const aspect of relevantAspects) {
+        transitInfluence += getAspectWeight(aspect.type, aspect.strength);
       }
 
-      for (const lord of houseLords) {
-        const lordPosition = natalChart.planets[lord as keyof typeof natalChart.planets];
-        if (lordPosition && FAVORABLE_NAKSHATRAS.has(lordPosition.nakshatraName)) {
-          transitInfluence += 3;
-        }
-      }
+      transitInfluence += favorableLords.length * 3;
 
       areas[areaId].transitScore = Math.min(40, Math.max(0, transitInfluence));
       if (houseLords.length > 0) {
-        areas[areaId].natalPotential = `Дома ${relevantHouses.join(', ')} управляются ${houseLords.join(', ')}`;
+        areas[areaId].natalPotential = `В натальной карте эта сфера связана с домами ${relevantHouses.join(', ')}. Ими управляют планеты: ${houseLords.map(getPlanetName).join(', ')}.`;
+        areas[areaId].whyToday.push(`${areas[areaId].natalPotential} Это постоянная особенность карты, а не прогноз на сегодня.`);
       }
 
       if (transitingPlanets.length > 0) {
-        const aspectInfo = aspects.filter((aspect) =>
-          (aspect.context === 'transit' || aspect.isTransit || aspect.context === undefined)
-          && (houseLords.includes(aspect.planet1) || houseLords.includes(aspect.planet2))
-        ).length;
         const planetNames = Array.from(new Set(transitingPlanets)).map(getPlanetName).join(', ');
-        areas[areaId].todayInfluence = `Текущие положения: ${planetNames} проходят по домам ${relevantHouses.join(', ')}${aspectInfo > 0 ? `; найдено аспектных связей с управителями: ${aspectInfo}` : ''}. Это описание расчёта, а не оценка вероятности события.`;
+        areas[areaId].todayInfluence = `Сегодня ${planetNames} находятся в домах ${relevantHouses.join(', ')}, которые модель связывает с этой сферой.`;
+        areas[areaId].whyToday.push(`${areas[areaId].todayInfluence} Это астрологические положения, а не указание на то, что событие обязательно произойдёт.`);
       } else {
-        areas[areaId].todayInfluence = `По выбранным правилам не найдено транзитных планет через дома ${relevantHouses.join(', ')}`;
+        areas[areaId].todayInfluence = `Сегодня модель не обнаружила планет, проходящих по домам ${relevantHouses.join(', ')}.`;
+        areas[areaId].whyToday.push(`${areas[areaId].todayInfluence} Само по себе это не означает, что в сфере ничего не произойдёт.`);
+      }
+
+      if (relevantAspects.length > 0) {
+        areas[areaId].whyToday.push(`Дополнительно модель учитывает ${relevantAspects.length} связей между планетами, одна из которых связана с этой сферой. В астрологии такую связь называют аспектом.`);
+      }
+
+      if (favorableLords.length > 0) {
+        areas[areaId].whyToday.push(`Управители домов ${favorableLords.map(getPlanetName).join(', ')} находятся в определённых участках зодиакального круга — накшатрах. По правилам модели это добавляет сфере дополнительные баллы.`);
       }
     }
   }
 
   for (const areaId of LIFE_AREA_IDS) {
     areas[areaId].panchangScore = getPanchangInfluence(areaId, panchang);
+    areas[areaId].whyToday.push(
+      `В дневной части расчёта учтены лунный день «${panchang.tithi.name}» (${panchang.tithi.meaning}), день недели «${panchang.vara.name}» (${panchang.vara.quality}) и календарное сочетание (йога) «${panchang.yoga.name}» (${panchang.yoga.meaning}).`
+    );
   }
 
   return LIFE_AREA_IDS.map((areaId) => {
@@ -151,10 +180,17 @@ export function calculateDailyAreas(
     return {
       ...AREA_META[areaId],
       score,
-      recommendations: getRecommendations(areaId, state),
+      recommendations: getRecommendations(areaId),
+      recommendationReason: RECOMMENDATION_REASONS[areaId],
       natalPotential: state.natalPotential,
       todayInfluence: state.todayInfluence,
       dashaInfluence: state.dashaInfluence,
+      whyToday: state.whyToday,
+      scoreBreakdown: {
+        dasha: state.dashaScore,
+        transits: state.transitScore,
+        panchang: state.panchangScore ?? 0,
+      },
     };
   }).sort((a, b) => b.score - a.score);
 }

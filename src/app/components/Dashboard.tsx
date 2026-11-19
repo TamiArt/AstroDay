@@ -256,6 +256,7 @@ export function Dashboard({ profile, onReset, onProfileUpdate }: DashboardProps)
 
         {selectedView === 'overview' && (
           <Suspense fallback={<ViewFallback />}>
+            <EnergyTracker profile={profile} days={7} />
             <DailyReport
               profile={profile}
               natalChart={natalChart}
@@ -269,7 +270,6 @@ export function Dashboard({ profile, onReset, onProfileUpdate }: DashboardProps)
               isAwayFromBirthPlace={!!profile.currentLocation}
               currentLocation={profile.currentLocation?.place}
             />
-            <EnergyTracker profile={profile} days={7} />
           </Suspense>
         )}
 
@@ -281,7 +281,7 @@ export function Dashboard({ profile, onReset, onProfileUpdate }: DashboardProps)
 
         {selectedView === 'natalchart' && (
           <Suspense fallback={<ViewFallback />}>
-            <NatalChartDetailed natalChart={natalChart} />
+            <NatalChartDetailed natalChart={natalChart} profile={profile} />
           </Suspense>
         )}
 

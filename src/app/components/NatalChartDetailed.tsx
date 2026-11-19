@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { AlertCircle, BarChart3, BookOpen, Clock, Eye, Layers, Orbit, Sparkles, Star, Users, Zap } from 'lucide-react';
 import { NatalChart as NatalChartType } from '../utils/astrology';
+import type { UserProfile } from '../utils/storage';
+import { CopyNatalChartData } from './natal-chart/CopyNatalChartData';
 import { AspectsTableEnhanced } from './AspectsTableEnhanced';
 import { GlassCard } from './common/GlassCard';
 import { DivisionalChartsTab } from './natal-chart/DivisionalChartsTab';
@@ -8,13 +10,14 @@ import { NatalAnalysisTab } from './natal-chart/NatalAnalysisTab';
 import { NatalDashaTab } from './natal-chart/NatalDashaTab';
 import { NatalTransitsTab } from './natal-chart/NatalTransitsTab';
 import { NatalForecastTab } from './natal-chart/NatalForecastTab';
-import { NatalHousesTab } from './natal-chart/NatalHousesTab';
+import { NatalHousesTab } from './natal-chart/NatalHousesClearTab';
 import { NatalOverviewTab } from './natal-chart/NatalOverviewTab';
 import { LifePathAnalysisTab } from './natal-chart/LifePathAnalysisTab';
 import { PartnerCompatibility } from './PartnerCompatibility';
 
 interface NatalChartDetailedProps {
   natalChart: NatalChartType;
+  profile: UserProfile;
 }
 
 type TabType = 'overview' | 'analysis' | 'life' | 'compatibility' | 'aspects' | 'houses' | 'dasha' | 'transits' | 'forecast' | 'divisional';
@@ -56,7 +59,7 @@ function NatalChartTimeRequired() {
   );
 }
 
-export function NatalChartDetailed({ natalChart }: NatalChartDetailedProps) {
+export function NatalChartDetailed({ natalChart, profile }: NatalChartDetailedProps) {
   const [selectedTab, setSelectedTab] = useState<TabType>('overview');
 
   if (!natalChart.houses || natalChart.houses.length === 0) {
@@ -92,24 +95,27 @@ export function NatalChartDetailed({ natalChart }: NatalChartDetailedProps) {
 
   return (
     <div className="space-y-6 p-6">
-      <div className="flex items-center gap-3 pb-4 border-b border-purple-200">
-        <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-          <Star className="w-7 h-7 text-purple-600" />
+      <div className="flex flex-col gap-4 border-b border-purple-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20">
+            <Star className="w-7 h-7 text-purple-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              Натальная карта
+            </h1>
+            <p className="text-sm text-gray-600">
+              {new Date(natalChart.date).toLocaleDateString('ru-RU', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Натальная карта
-          </h1>
-          <p className="text-sm text-gray-600">
-            {new Date(natalChart.date).toLocaleDateString('ru-RU', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </p>
-        </div>
+        <CopyNatalChartData profile={profile} natalChart={natalChart} />
       </div>
 
       <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border-l-4 border-blue-500">

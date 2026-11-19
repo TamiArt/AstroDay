@@ -25,6 +25,14 @@ const motions = {
   B: { planet: 'B', dailyMotion: 0, state: 'stationary' as const, sampleWindowHours: 12 },
   C: { planet: 'C', dailyMotion: -1, state: 'retrograde' as const, sampleWindowHours: 12 },
 };
+const positionsWithMissingEntry = {
+  ...positions,
+  Missing: undefined,
+} as unknown as Record<string, PlanetPosition>;
+assert.doesNotThrow(
+  () => calculateAngularAspects(positionsWithMissingEntry),
+  'angular aspect pairing must skip missing position records',
+);
 const aspects = calculateAngularAspects(positions, motions);
 const square = aspects.find((a) => a.planet1 === 'A' && a.planet2 === 'B' && a.aspect === 'square');
 assert.ok(square); assert.equal(square.orb, 0.5); assert.equal(square.phase, 'applying');

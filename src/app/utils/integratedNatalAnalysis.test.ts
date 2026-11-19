@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import type { NatalChart, PlanetPosition } from './astrology';
 import { addIntegratedFactor, buildIntegratedNatalAnalysis, type IntegratedEvidence } from './integratedNatalAnalysis';
+import { buildNatalChartFacts } from './natalChartFacts';
+import { analyzeDivisionalCharts } from './divisionalChartAnalysis';
+import { analyzeAllNatalHouses } from './natalHousePersonalizedAnalysis';
+import { analyzeAllNatalPlanets } from './natalPlanetPersonalizedAnalysis';
 
 const signs = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
 const lords = ['Mars', 'Venus', 'Mercury', 'Moon', 'Sun', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Saturn', 'Jupiter'];
@@ -45,6 +49,29 @@ const report = buildIntegratedNatalAnalysis(chart, asOf);
 
 assert.equal(report.generatedAt.toISOString(), asOf.toISOString());
 assert.equal(report.areas.length, 12, 'all twelve thematic areas must be represented');
+
+const expectedAreas = [
+  'identity', 'resources', 'skills', 'home', 'creativity', 'work',
+  'relationships', 'transformation', 'wisdom', 'career', 'gains', 'retreat',
+];
+assert.deepEqual(report.areas.map((area) => area.id), expectedAreas, 'all twelve life areas must appear in stable roadmap order');
+for (const area of report.areas) {
+  assert.ok(area.houses.length > 0, `${area.id} must be linked to at least one natal house`);
+  assert.ok(area.evidence.some((item) => item.source === 'house'), `${area.id} must use its natal-house calculation`);
+  assert.ok(area.evidence.every((item) => item.area === area.id), `${area.id} must not contain evidence assigned to another area`);
+}
+
+const chartFacts = buildNatalChartFacts(chart);
+const houseAnalyses = analyzeAllNatalHouses(chartFacts);
+const planetAnalyses = analyzeAllNatalPlanets(chartFacts);
+assert.equal(houseAnalyses.length, 12, 'the detailed analysis must cover all twelve houses');
+assert.deepEqual(houseAnalyses.map((item) => item.house), Array.from({ length: 12 }, (_, index) => index + 1));
+assert.ok(houseAnalyses.every((item) => item.available && item.theme.length > 0 && item.evidence.length > 0));
+assert.ok(houseAnalyses.every((item) => item.interpretation.length > 0 && item.limitations.length > 0));
+assert.equal(planetAnalyses.length, 9, 'the detailed analysis must cover all nine grahas');
+assert.ok(planetAnalyses.every((item) => item.available && item.function.length > 0 && item.interpretation.length > 0));
+assert.ok(planetAnalyses.every((item) => item.evidence.some((fact) => fact.includes('находится в знаке'))));
+
 assert.ok(report.evidence.some((item) => item.source === 'house'), 'house analysis must be included');
 assert.ok(report.evidence.some((item) => item.source === 'planet'), 'nine-planet analysis must be included');
 assert.ok(report.evidence.some((item) => item.source === 'yoga'), 'yoga findings must be included');
@@ -62,6 +89,35 @@ for (const area of report.areas) {
 assert.ok(report.methodology.some((item) => item.includes('не суммируются')));
 assert.ok(report.methodology.some((item) => item.includes('Йоги')));
 assert.ok(report.overview.includes('диспозиторы'));
+
+const missingJupiterChart = {
+  ...chart,
+  planets: { ...chart.planets, Jupiter: undefined },
+} as unknown as NatalChart;
+const partialVargas = analyzeDivisionalCharts(missingJupiterChart);
+assert.ok(partialVargas.warnings.some((warning) => warning.includes('Юпитер') && warning.includes('исключена')));
+assert.ok(partialVargas.baseChart.evidence.every((item) => !item.occupants.includes('Юпитер')));
+assert.ok(partialVargas.analyses.every((item) =>
+  item.vargaEvidence.every((house) => !house.occupants.includes('Юпитер'))
+  && item.comparisons.every((comparison) => comparison.planet !== 'Юпитер'),
+), 'missing planets must not be fabricated in varga evidence or comparisons');
+
+const nullJupiterChart = {
+  ...chart,
+  planets: { ...chart.planets, Jupiter: null },
+} as unknown as NatalChart;
+assert.doesNotThrow(() => analyzeDivisionalCharts(nullJupiterChart), 'null planet positions must be skipped');
+
+const invalidLongitudeChart = {
+  ...chart,
+  planets: { ...chart.planets, Jupiter: { ...chart.planets.Jupiter, siderealLon: Number.NaN } },
+} as unknown as NatalChart;
+assert.doesNotThrow(() => analyzeDivisionalCharts(invalidLongitudeChart), 'non-finite planet longitudes must be skipped');
+
+const partialReport = buildIntegratedNatalAnalysis(missingJupiterChart, asOf);
+assert.equal(partialReport.areas.find((area) => area.id === 'identity')?.dataStatus, 'complete', 'unrelated missing planets must not downgrade every area');
+assert.equal(partialReport.areas.find((area) => area.id === 'wisdom')?.dataStatus, 'partial', 'an area must be marked partial when its house lord is missing');
+assert.equal(partialReport.areas.find((area) => area.id === 'retreat')?.dataStatus, 'partial', 'all areas ruled by the missing planet must be marked partial');
 
 const invalidDate = new Date(Number.NaN);
 assert.throws(() => buildIntegratedNatalAnalysis(chart, invalidDate), /Некорректная дата/);

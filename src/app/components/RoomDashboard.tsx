@@ -21,13 +21,18 @@ export function RoomDashboard({ room, recommendations, planetaryHour, panchang }
   }
 
   const analysis = recommendations.zoneAnalysis[room.vastuZone] || recommendations.zoneAnalysis[room.baguaZone];
+  const sectorName = (value: string) => ({
+    northwest: 'Северо-запад', north: 'Север', northeast: 'Северо-восток',
+    west: 'Запад', center: 'Центр', east: 'Восток',
+    southwest: 'Юго-запад', south: 'Юг', southeast: 'Юго-восток',
+  }[value] ?? value);
 
   return (
     <GlassCard>
       <div className="space-y-4">
         <div>
           <h2 className="text-xl font-semibold">{room.name}</h2>
-          <p className="opacity-70">Сектор: {room.baguaZone} / {room.vastuZone}</p>
+          <p className="opacity-70">Сектор: {sectorName(room.baguaZone)} / {sectorName(room.vastuZone)}</p>
         </div>
         <div className="rounded-3xl p-4 bg-secondary border border-border">
           <p className="text-sm opacity-70">Планета текущей Даши</p>

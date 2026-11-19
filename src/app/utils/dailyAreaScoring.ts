@@ -150,9 +150,13 @@ export function calculateDailyAreaScore(parts: DailyAreaScoreParts): number {
   const transitPoints = parts.transitScore ?? 0;
   const panchangPoints = parts.panchangScore ?? 0;
 
-  if (parts.transitScore === undefined && parts.dashaScore === undefined) {
-    return Math.min(100, panchangPoints * 10);
-  }
+  const availableMaximum =
+    (parts.dashaScore === undefined ? 0 : 50)
+    + (parts.transitScore === undefined ? 0 : 40)
+    + (parts.panchangScore === undefined ? 0 : 10);
 
-  return Math.max(0, Math.min(100, Math.round(dashaPoints + transitPoints + panchangPoints)));
+  if (availableMaximum === 0) return 0;
+
+  const earnedPoints = dashaPoints + transitPoints + panchangPoints;
+  return Math.max(0, Math.min(100, Math.round((earnedPoints / availableMaximum) * 100)));
 }

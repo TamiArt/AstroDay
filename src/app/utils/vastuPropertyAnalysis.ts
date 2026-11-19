@@ -105,6 +105,12 @@ export const PROPERTY_CONDITION_ITEMS = [
   { id: 'insurance', label: 'Страхование и история убытков', priority: 'medium' as const, recommendation: 'Запросите доступную историю страховых случаев, ограничения покрытия и стоимость страхования.' },
 ] as const;
 
+const VASTU_SECTOR_LABELS: Record<VastuSector, string> = {
+  northwest: 'северо-запад', north: 'север', northeast: 'северо-восток',
+  west: 'запад', center: 'центр', east: 'восток',
+  southwest: 'юго-запад', south: 'юг', southeast: 'юго-восток',
+};
+
 const EXPECTED_ROOMS: Record<VastuSector, VastuRoomUse[]> = {
   northwest: ['guest-bedroom', 'bedroom', 'laundry', 'bathroom', 'toilet', 'living'],
   north: ['living', 'study', 'office', 'prayer', 'water', 'open'],
@@ -171,14 +177,14 @@ export function analyzeVastuProperty(data: VastuPropertyAssessment): VastuProper
       aligned++;
       findings.push({
         id: `room-${sector}`, sector, room, level: 'note',
-        title: `${sector}: функция помещения соответствует одному из распространённых традиционных вариантов`,
+        title: `${VASTU_SECTOR_LABELS[sector]}: функция помещения соответствует одному из распространённых традиционных вариантов`,
         explanation: 'Это совпадение с выбранной справочной схемой, а не оценка качества объекта или прогноз результата.',
         tradition: 'Традиционные рекомендации разных школ могут допускать иные назначения.',
       });
     } else {
       findings.push({
         id: `room-${sector}`, sector, room, level: 'review',
-        title: `Проверьте назначение помещения в секторе ${sector}`,
+        title: `Проверьте назначение помещения в секторе «${VASTU_SECTOR_LABELS[sector]}»`,
         explanation: 'Назначение отличается от распространённых рекомендаций выбранной справочной схемы. Само по себе это не доказывает проблему и не требует перестройки.',
         tradition: 'Сопоставление носит ориентировочный характер; школы Васту расходятся в деталях.',
       });
@@ -191,29 +197,31 @@ export function analyzeVastuProperty(data: VastuPropertyAssessment): VastuProper
   })[direction];
   const siteFindings: VastuSiteFinding[] = [];
   if (data.facingDirection) {
-    siteFindings.push({ id: 'facing', level: 'note', title: 'Ориентация фасада указана', explanation: `Главный фасад обращён на ${directionLabel(data.facingDirection)}. Это фиксирует исходное направление для дальнейшей традиционной интерпретации; само по себе направление не определяет качество или стоимость объекта.` });
+    siteFindings.push({ id: 'facing', level: 'note', title: data.propertyType === 'apartment' ? 'Ориентация квартиры указана' : 'Ориентация фасада указана', explanation: data.propertyType === 'apartment' ? `Основные окна квартиры выходят на ${directionLabel(data.facingDirection)}. Это исходное направление для традиционной схемы Васту, а не оценка качества квартиры.` : `Главный фасад обращён на ${directionLabel(data.facingDirection)}. Это фиксирует исходное направление для дальнейшей традиционной интерпретации; само по себе направление не определяет качество или стоимость объекта.` });
   } else {
-    siteFindings.push({ id: 'facing-missing', level: 'review', title: 'Нужно подтвердить ориентацию фасада', explanation: 'Сверьте направление с геодезическим или архитектурным планом либо компасом вдали от металла и электроники.' });
+    siteFindings.push({ id: 'facing-missing', level: 'review', title: data.propertyType === 'apartment' ? 'Нужно определить ориентацию квартиры' : 'Нужно подтвердить ориентацию фасада', explanation: data.propertyType === 'apartment' ? 'Посмотрите на план квартиры с обозначенным севером и определите, в какую сторону выходят основные окна.' : 'Сверьте направление с геодезическим или архитектурным планом либо компасом вдали от металла и электроники.' });
   }
-  if (data.plotShape === 'unknown') {
-    siteFindings.push({ id: 'shape-missing', level: 'review', title: 'Форма участка не подтверждена', explanation: 'Сверьте границы и фактическую геометрию с кадастровым/геодезическим планом.' });
-  } else if (['irregular', 'triangular', 'narrow'].includes(data.plotShape)) {
-    siteFindings.push({ id: 'shape', level: 'review', title: 'Нестандартная геометрия участка', explanation: 'Проверьте площадь фактического использования, отступы от границ, подъезд, дренаж и ограничения зонирования. Васту-школы по-разному трактуют неправильные формы.' });
-  } else {
-    siteFindings.push({ id: 'shape', level: 'note', title: 'Форма участка отмечена как регулярная', explanation: 'Квадратная или прямоугольная форма зафиксирована по вашему вводу; геометрию всё равно следует сверить с планом.' });
-  }
-  if (data.plotSlope === 'unknown') {
-    siteFindings.push({ id: 'slope-missing', level: 'review', title: 'Уклон участка не проверен', explanation: 'Закажите оценку рельефа и направления стока воды; это важно для дренажа и риска подтопления.' });
-  } else if (data.plotSlope === 'flat') {
-    siteFindings.push({ id: 'slope', level: 'note', title: 'Участок отмечен как почти ровный', explanation: 'Подтвердите уклон нивелированием и убедитесь, что вода отводится от фундамента.' });
-  } else {
-    siteFindings.push({ id: 'slope', level: 'review', title: `Уклон в сторону: ${directionLabel(data.plotSlope)}`, explanation: 'Традиционные школы Васту учитывают направление уклона, но единой универсальной оценки здесь не применяется. Для сделки проверьте инженерный дренаж, подпорные конструкции, эрозию и риск подтопления.' });
-  }
-  if (data.roadSides.length) {
-    siteFindings.push({ id: 'roads', level: 'note', title: 'Отмечены дороги или подъезды', explanation: `Стороны: ${data.roadSides.map(directionLabel).join(', ')}. Проверьте безопасный въезд/выезд, шум, пыль, освещение и приватность в часы пик.` });
-  }
-  if (data.waterSides.length) {
-    siteFindings.push({ id: 'water', level: 'review', title: 'Рядом отмечен водный объект', explanation: `Стороны: ${data.waterSides.map(directionLabel).join(', ')}. Уточните зоны затопления, береговые ограничения, влажность, эрозию, страховку и требования местных органов.` });
+  if (data.propertyType !== 'apartment') {
+    if (data.plotShape === 'unknown') {
+      siteFindings.push({ id: 'shape-missing', level: 'review', title: 'Форма участка не подтверждена', explanation: 'Сверьте границы и фактическую геометрию с кадастровым/геодезическим планом.' });
+    } else if (['irregular', 'triangular', 'narrow'].includes(data.plotShape)) {
+      siteFindings.push({ id: 'shape', level: 'review', title: 'Нестандартная геометрия участка', explanation: 'Проверьте площадь фактического использования, отступы от границ, подъезд, дренаж и ограничения зонирования. Васту-школы по-разному трактуют неправильные формы.' });
+    } else {
+      siteFindings.push({ id: 'shape', level: 'note', title: 'Форма участка отмечена как регулярная', explanation: 'Квадратная или прямоугольная форма зафиксирована по вашему вводу; геометрию всё равно следует сверить с планом.' });
+    }
+    if (data.plotSlope === 'unknown') {
+      siteFindings.push({ id: 'slope-missing', level: 'review', title: 'Уклон участка не проверен', explanation: 'Закажите оценку рельефа и направления стока воды; это важно для дренажа и риска подтопления.' });
+    } else if (data.plotSlope === 'flat') {
+      siteFindings.push({ id: 'slope', level: 'note', title: 'Участок отмечен как почти ровный', explanation: 'Подтвердите уклон нивелированием и убедитесь, что вода отводится от фундамента.' });
+    } else {
+      siteFindings.push({ id: 'slope', level: 'review', title: `Уклон в сторону: ${directionLabel(data.plotSlope)}`, explanation: 'Традиционные школы Васту учитывают направление уклона, но единой универсальной оценки здесь не применяется. Для сделки проверьте инженерный дренаж, подпорные конструкции, эрозию и риск подтопления.' });
+    }
+    if (data.roadSides.length) {
+      siteFindings.push({ id: 'roads', level: 'note', title: 'Отмечены дороги или подъезды', explanation: `Стороны: ${data.roadSides.map(directionLabel).join(', ')}. Проверьте безопасный въезд/выезд, шум, пыль, освещение и приватность в часы пик.` });
+    }
+    if (data.waterSides.length) {
+      siteFindings.push({ id: 'water', level: 'review', title: 'Рядом отмечен водный объект', explanation: `Стороны: ${data.waterSides.map(directionLabel).join(', ')}. Уточните зоны затопления, береговые ограничения, влажность, эрозию, страховку и требования местных органов.` });
+    }
   }
 
   const conditionFindings = PROPERTY_CONDITION_ITEMS.map((item) => ({
