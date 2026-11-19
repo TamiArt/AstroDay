@@ -1,6 +1,7 @@
 import { buildNatalChartFacts } from '../../utils/natalChartFacts';
 import { NatalYogasSection } from './NatalYogasSection';
 import { NatalPrecisionSection } from './NatalPrecisionSection';
+import { NatalPlanetStory } from './NatalPlanetStory';
 import { NatalIntegratedSynthesisSection } from './NatalIntegratedSynthesisSection';
 import {
   AlertCircle,
@@ -278,62 +279,7 @@ const PLANET_RU_NAMES: Record<string, string> = {
   Jupiter: 'Юпитер', Venus: 'Венера', Saturn: 'Сатурн', Rahu: 'Раху', Ketu: 'Кету',
 };
 function PlanetQuickMeaning({ planet }: { planet: ReturnType<typeof analyzeAllNatalPlanets>[number] }) {
-  if (!planet.available) return <p className="text-sm text-gray-600">Недостаточно исходных данных, чтобы объяснить положение этой планеты.</p>;
-
-  const name = PLANET_RU_NAMES[planet.planet] ?? planet.name;
-  const meaning = PLANET_PLAIN_MEANINGS[planet.planet] ?? 'своя символическая функция';
-  const houseName = planet.house ? HOUSE_PLAIN_NAMES[planet.house] : null;
-  const ruled = planet.ruledHouses.map((house) => `${house}-й дом — ${HOUSE_PLAIN_NAMES[house] ?? 'сфера не определена'}`);
-  const signStyle = planet.sign ? SIGN_STYLES[planet.sign] : null;
-  const dignityKind = planet.dignity?.dignity;
-  const mercuryVirgo = planet.planet === 'Mercury' && planet.sign === 'Дева';
-  const dignityText = mercuryVirgo
-    ? 'Меркурий находится в Деве — собственном знаке и знаке экзальтации. Это сочетание традиционно связывают с выраженными качествами анализа, обучения, точности и работы с информацией.'
-    : dignityKind === 'exalted'
-    ? 'В традиции Джйотиш это положение называют экзальтацией — знаком, где качества планеты считаются особенно выраженными.'
-    : dignityKind === 'own'
-      ? 'Планета находится в собственном знаке: знак находится под её управлением.'
-      : dignityKind === 'debilitated'
-        ? 'В традиции Джйотиш это положение называют падением. Его рассматривают как фактор для дополнительного анализа, а не как приговор.'
-        : dignityKind === 'not_applicable'
-          ? 'Для этой точки отдельная оценка достоинства в выбранной модели не применяется.'
-          : 'Особое достоинство по принятой модели не отмечено или не определено.';
-  const example = PLANET_LIFE_EXAMPLES[planet.planet] ?? 'наблюдать, как символическая функция планеты проявляется в конкретных задачах';
-  const watchout = PLANET_WATCHOUTS_UI[planet.planet];
-
-  return (
-    <div className="rounded-lg bg-indigo-50/70 p-3 space-y-3">
-      <section>
-        <p className="text-xs font-semibold text-indigo-800">1. ЗА ЧТО ОТВЕЧАЕТ {name.toUpperCase()}</p>
-        <p className="mt-1 text-sm leading-relaxed text-gray-800">{name} в традиции Джйотиш символизирует {meaning}.</p>
-      </section>
-
-      <section>
-        <p className="text-xs font-semibold text-indigo-800">2. ГДЕ ЭТИ КАЧЕСТВА ПРОЯВЛЯЮТСЯ В КАРТЕ</p>
-        <p className="mt-1 text-sm leading-relaxed text-gray-800">
-          {planet.sign ? `Планета находится в знаке ${planet.sign}` : 'Знак планеты не определён'}
-          {signStyle ? `. Символически этот знак задаёт стиль: ${signStyle}` : ''}.
-          {planet.house && houseName ? ` Она расположена в ${planet.house}-м доме, который связан с темой «${houseName}».` : ' Дом планеты не определён, поэтому связать её функцию с конкретной сферой пока нельзя.'}
-        </p>
-        <p className="mt-1 text-sm leading-relaxed text-gray-700">{dignityText}</p>
-        {planet.dignity?.explanation && <p className="mt-1 text-xs leading-relaxed text-gray-600">{planet.dignity.explanation}</p>}
-      </section>
-
-      <section>
-        <p className="text-xs font-semibold text-indigo-800">3. КАКИЕ СФЕРЫ ЖИЗНИ ОНА СВЯЗЫВАЕТ</p>
-        <p className="mt-1 text-sm leading-relaxed text-gray-800">
-          {ruled.length ? `${name} управляет ${ruled.join('; ')}. Поэтому темы этих домов в традиционной модели связываются с положением этой планеты.` : 'В доступных расчётных данных управляемые этой планетой дома не определены.'}
-        </p>
-      </section>
-
-      <section className="rounded-lg border border-indigo-100 bg-white/80 p-3">
-        <p className="text-xs font-semibold text-gray-700">ПОНЯТНЫЙ ПРИМЕР</p>
-        <p className="mt-1 text-sm leading-relaxed text-gray-700">{example}. Это иллюстрация символики, а не утверждение, что человек обязательно ведёт себя именно так.</p>
-        {watchout && <p className="mt-2 text-xs leading-relaxed text-gray-600"><strong>На что обратить внимание:</strong> {watchout}.</p>}
-      </section>
-      <p className="text-xs leading-relaxed text-gray-600">Одна планета не описывает человека целиком. Её значение читают вместе с домом, управлением, достоинством, аспектами и остальными показателями карты.</p>
-    </div>
-  );
+  return <NatalPlanetStory planet={planet} />;
 }
 
 export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
@@ -352,7 +298,6 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
 
   return (
     <div className="space-y-6">
-      <NatalPrecisionSection natalChart={natalChart} />
       <NatalIntegratedSynthesisSection natalChart={natalChart} />
       <NatalYogasSection natalChart={natalChart} />
       <InsightCard
@@ -667,6 +612,8 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
           />
         </div>
       </GlassCard>
+
+      <NatalPrecisionSection natalChart={natalChart} />
     </div>
   );
 }
