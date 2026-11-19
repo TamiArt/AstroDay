@@ -239,7 +239,11 @@ export function calculateAllDivisionalCharts(
 ): DivisionalChart[] {
   const natalLongitudes: Record<string, number> = {};
 
-  Object.entries(planets).forEach(([name, data]) => {
+  // Runtime chart data may be partial even though the static type is complete.
+  // Ignore absent or invalid positions at this shared calculation boundary so
+  // every caller (including Vimshottari profiles) gets the same safe behavior.
+  Object.entries(planets ?? {}).forEach(([name, data]) => {
+    if (!data || !Number.isFinite(data.siderealLon)) return;
     natalLongitudes[name] = data.siderealLon;
   });
 
