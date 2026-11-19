@@ -158,7 +158,7 @@ export function NatalPlanetStory({ planet }: { planet: NatalPlanetPersonalizedAn
       <section className="rounded-lg bg-indigo-50/70 p-3">
         <h5 className="font-semibold text-indigo-950">Главный вывод</h5>
         <p className="mt-1 text-gray-800">
-          {name} в ${planet.house ? `${planet.house}-м доме` : 'неопределённом доме'}{planet.sign ? ` в знаке ${planet.sign}` : ''} описывает одну из тем вашей карты через символику ${meaning}. Это возможный ресурс для самонаблюдения и развития, а не неизменное описание характера или предсказание событий.
+          {name} в {planet.house ? `${planet.house}-м доме` : 'неопределённом доме'}{planet.sign ? ` в знаке ${planet.sign}` : ''} описывает одну из тем вашей карты через символику ${meaning}. Это возможный ресурс для самонаблюдения и развития, а не неизменное описание характера или предсказание событий.
         </p>
       </section>
     </div>
