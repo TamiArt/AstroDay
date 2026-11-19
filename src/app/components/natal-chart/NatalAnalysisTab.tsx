@@ -298,8 +298,6 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
 
   return (
     <div className="space-y-6">
-      <NatalIntegratedSynthesisSection natalChart={natalChart} />
-      <NatalYogasSection natalChart={natalChart} />
       <InsightCard
         icon={Star}
         title={ascDesc.title}
@@ -595,6 +593,9 @@ export function NatalAnalysisTab({ natalChart }: NatalAnalysisTabProps) {
           </div>
         </div>
       </GlassCard>
+
+      <NatalIntegratedSynthesisSection natalChart={natalChart} />
+      <NatalYogasSection natalChart={natalChart} />
 
       <GlassCard>
         <div className="p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border-l-4 border-yellow-600">
