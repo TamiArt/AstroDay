@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { calculateDivisionalChart } from './divisionalCharts';
+import { calculateAllDivisionalCharts, calculateDivisionalChart } from './divisionalCharts';
 
 function mappedSign(longitude: number, division: number): string {
   const chart = calculateDivisionalChart(
@@ -100,5 +100,26 @@ const generic = calculateDivisionalChart({ Sun: 10 }, 0, 60, 'D60', 'Shashtiamsh
 assert.equal(generic.calculationRule, 'generic', 'unverified D60 must remain explicitly generic');
 assert.throws(() => calculateDivisionalChart({ Sun: 10 }, 0, 0, 'D0', 'invalid', 'test'), /деление от 1 до 60/);
 assert.throws(() => calculateDivisionalChart({ Sun: Number.NaN }, 0, 9, 'D9', 'Navamsha', 'test'), /конечная долгота/);
+
+// The shared all-varga entry point must safely ignore missing and invalid
+// planet records regardless of which feature calls it.
+const partialPlanetPositions = {
+  Sun: { siderealLon: 10 },
+  Missing: undefined,
+  NullPosition: null,
+  InvalidLongitude: { siderealLon: Number.NaN },
+} as unknown as Record<string, { siderealLon: number }>;
+const partialVargaCharts = calculateAllDivisionalCharts(partialPlanetPositions, 0);
+assert.ok(partialVargaCharts.length > 0, 'all configured varga charts should still be returned');
+for (const varga of partialVargaCharts) {
+  assert.deepEqual(Object.keys(varga.planets), ['Sun'],
+    'only finite planet positions should be included in every varga');
+}
+assert.throws(
+  () => calculateAllDivisionalCharts({ Sun: { siderealLon: Number.NaN } }, 0).forEach((varga) => {
+    assert.equal(Object.keys(varga.planets).length, 0);
+  }),
+  undefined,
+);
 
 console.log('Divisional chart accuracy regression tests passed.');
