@@ -34,7 +34,7 @@ export function NatalOverviewTab({ natalChart }: NatalOverviewTabProps) {
         <div className="space-y-3">
           {planets.map((planet) => {
             const isBhadra = planet.planet === 'Mercury'
-              && planet.sign === 'Дева'
+              && ['Близнецы', 'Дева'].includes(planet.sign ?? '')
               && [1, 4, 7, 10].includes(planet.house ?? 0);
             return (
               <details
