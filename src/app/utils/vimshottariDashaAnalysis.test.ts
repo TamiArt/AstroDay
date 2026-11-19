@@ -42,5 +42,13 @@ assert.ok(report.current.mahadasha.profile.lifeAreaLinks.every((area) => area.re
 assert.ok(report.current.mahadasha.profile.vargas.length > 0, 'relevant varga evidence should be included');
 assert.ok(report.warnings.some((warning) => warning.includes('не научно')));
 assert.ok(report.methodology.some((line) => line.includes('120 лет')));
+const chartWithMissingJupiter = {
+  ...chart,
+  planets: { ...chart.planets, Jupiter: undefined },
+} as unknown as NatalChart;
+assert.doesNotThrow(
+  () => analyzeVimshottariDasha(chartWithMissingJupiter, now),
+  'Vimshottari profiles must tolerate missing planet records when building varga charts',
+);
 assert.throws(() => analyzeVimshottariDasha(chart, new Date('1989-12-31T00:00:00Z')), /раньше даты рождения/);
 console.log('Vimshottari dasha analysis tests passed.');
