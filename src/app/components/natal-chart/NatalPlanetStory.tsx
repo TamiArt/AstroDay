@@ -77,7 +77,8 @@ export function NatalPlanetStory({ planet }: { planet: NatalPlanetPersonalizedAn
   const signStyle = planet.sign ? SIGN_STYLES[planet.sign] : null;
   const dignityKind = planet.dignity?.dignity;
   const mercuryInVirgo = planet.planet === 'Mercury' && planet.sign === 'Дева';
-  const formsBhadra = mercuryInVirgo && [1, 4, 7, 10].includes(planet.house ?? 0);
+  const mercuryInOwnSign = planet.planet === 'Mercury' && ['Близнецы', 'Дева'].includes(planet.sign ?? '');
+  const formsBhadra = mercuryInOwnSign && [1, 4, 7, 10].includes(planet.house ?? 0);
   const dignityText = mercuryInVirgo
     ? 'Дева — собственный знак Меркурия и знак его экзальтации. В традиции Джйотиш оба достоинства учитываются одновременно; это не означает, что остальные показатели карты можно не учитывать.'
     : dignityKind === 'exalted'
@@ -138,7 +139,7 @@ export function NatalPlanetStory({ planet }: { planet: NatalPlanetPersonalizedAn
               <p className="mt-1 text-gray-700">В традиции Джйотиш её связывают с интеллектом, обучением, речью, аналитическими способностями и умением применять знания на практике. Полная оценка силы йоги требует также учитывать аспекты, соединения и другие условия карты.</p>
             </>
           ) : (
-            <p className="mt-1 text-gray-700">Для Бхадра-махапуруша-йоги Меркурий должен находиться в Близнецах или Деве и одновременно занимать один из угловых домов — 1-й, 4-й, 7-й или 10-й. По доступным положениям все эти условия не подтверждены.</p>
+            <p className="mt-1 text-gray-700">Для Бхадра-махапуруша-йоги Меркурий должен находиться в собственном знаке — Близнецах или Деве — либо в экзальтации в Деве и одновременно занимать один из угловых домов: 1-й, 4-й, 7-й или 10-й. По доступным положениям все эти условия не подтверждены.</p>
           )}
         </section>
       )}
