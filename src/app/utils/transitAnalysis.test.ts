@@ -1,10 +1,19 @@
 import assert from 'node:assert/strict';
 import { calculateNatalChart } from './astrology';
 import { analyzeTransits } from './transitAnalysis';
+import { calculateTransitAspects } from './aspectCalculations';
 
 const birth = new Date('1990-06-15T07:19:25.000Z');
 const chart = calculateNatalChart(birth, 28.6139, 77.2090);
 const moment = new Date('2026-11-12T12:00:00.000Z');
+const chartWithMissingJupiter = {
+  ...chart,
+  planets: { ...chart.planets, Jupiter: undefined },
+} as unknown as typeof chart;
+assert.doesNotThrow(
+  () => calculateTransitAspects(chartWithMissingJupiter, chart),
+  'transit aspect calculation must omit missing natal positions before combining datasets',
+);
 const report = analyzeTransits(chart, moment);
 
 assert.equal(report.positions.length, 9, 'all seven classical planets and both nodes are listed');
