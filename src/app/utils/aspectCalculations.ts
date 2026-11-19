@@ -44,17 +44,38 @@ function toAspect(
   };
 }
 
+function isUsablePosition(position: PlanetPosition | null | undefined): position is PlanetPosition {
+  return Boolean(position)
+    && Number.isFinite(position.siderealLon)
+    && Number.isFinite(position.tropicalLon);
+}
+
+function collectPlanetPositions(
+  planets: NatalChart['planets'],
+  prefix = '',
+): Record<string, PlanetPosition> {
+  const positions: Record<string, PlanetPosition> = {};
+  for (const [name, position] of Object.entries(planets ?? {})) {
+    if (!isUsablePosition(position)) continue;
+    positions[prefix + name] = position;
+  }
+  return positions;
+}
+
 export function calculateNatalAspects(chart: NatalChart): Aspect[] {
   const motions = getMotions(chart);
-  const aspects = calculateAngularAspects(chart.planets as Record<string, PlanetPosition>, motions);
+  const aspects = calculateAngularAspects(collectPlanetPositions(chart.planets), motions);
   return aspects.map((item) => toAspect(item, false))
     .sort((a, b) => b.strength - a.strength || a.orb - b.orb);
 }
 
 export function calculateTransitAspects(natalChart: NatalChart, transitChart: NatalChart): Aspect[] {
-  const positions: Record<string, PlanetPosition> = {};
-  for (const [name, position] of Object.entries(transitChart.planets)) positions['Transit ' + name] = position;
-  for (const [name, position] of Object.entries(natalChart.planets)) positions['Natal ' + name] = position;
+  // Partial persisted natal charts are valid inputs to the analysis pipeline:
+  // omit missing positions before combining transit and natal datasets.
+  const positions: Record<string, PlanetPosition> = {
+    ...collectPlanetPositions(transitChart.planets, 'Transit '),
+    ...collectPlanetPositions(natalChart.planets, 'Natal '),
+  };
   const motions = { ...getMotions(transitChart, 'Transit '), ...getMotions(natalChart, 'Natal ') };
   const aspects = calculateAngularAspects(positions, motions)
     .filter((item) => item.planet1.startsWith('Transit ') && item.planet2.startsWith('Natal '));
