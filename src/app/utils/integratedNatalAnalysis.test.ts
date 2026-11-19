@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import type { NatalChart, PlanetPosition } from './astrology';
 import { addIntegratedFactor, buildIntegratedNatalAnalysis, type IntegratedEvidence } from './integratedNatalAnalysis';
 import { buildNatalChartFacts } from './natalChartFacts';
+import { analyzeDivisionalCharts } from './divisionalChartAnalysis';
 import { analyzeAllNatalHouses } from './natalHousePersonalizedAnalysis';
 import { analyzeAllNatalPlanets } from './natalPlanetPersonalizedAnalysis';
 
@@ -93,6 +94,26 @@ const missingJupiterChart = {
   ...chart,
   planets: { ...chart.planets, Jupiter: undefined },
 } as unknown as NatalChart;
+const partialVargas = analyzeDivisionalCharts(missingJupiterChart);
+assert.ok(partialVargas.warnings.some((warning) => warning.includes('Юпитер') && warning.includes('исключена')));
+assert.ok(partialVargas.baseChart.evidence.every((item) => !item.occupants.includes('Юпитер')));
+assert.ok(partialVargas.analyses.every((item) =>
+  item.vargaEvidence.every((house) => !house.occupants.includes('Юпитер'))
+  && item.comparisons.every((comparison) => comparison.planet !== 'Юпитер'),
+), 'missing planets must not be fabricated in varga evidence or comparisons');
+
+const nullJupiterChart = {
+  ...chart,
+  planets: { ...chart.planets, Jupiter: null },
+} as unknown as NatalChart;
+assert.doesNotThrow(() => analyzeDivisionalCharts(nullJupiterChart), 'null planet positions must be skipped');
+
+const invalidLongitudeChart = {
+  ...chart,
+  planets: { ...chart.planets, Jupiter: { ...chart.planets.Jupiter, siderealLon: Number.NaN } },
+} as unknown as NatalChart;
+assert.doesNotThrow(() => analyzeDivisionalCharts(invalidLongitudeChart), 'non-finite planet longitudes must be skipped');
+
 const partialReport = buildIntegratedNatalAnalysis(missingJupiterChart, asOf);
 assert.equal(partialReport.areas.find((area) => area.id === 'identity')?.dataStatus, 'complete', 'unrelated missing planets must not downgrade every area');
 assert.equal(partialReport.areas.find((area) => area.id === 'wisdom')?.dataStatus, 'partial', 'an area must be marked partial when its house lord is missing');
