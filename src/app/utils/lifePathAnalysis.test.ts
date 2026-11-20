@@ -3,12 +3,17 @@ import { angularDistance, analyzeLifeAreas, getSynastryAspects } from './lifePat
 import type { NatalChart, PlanetPosition } from './astrology';
 
 const position = (siderealLon: number) => ({ siderealLon, signName: 'Овен', name: 'Test', tropicalLon: siderealLon, sign: 1, degree: siderealLon, nakshatra: 1, nakshatraName: 'Ашвини', pada: 1, vargas: {} } as unknown as PlanetPosition);
+const testHouses = Array.from(
+  { length: 12 },
+  (_, index) => ({ house: index + 1, signName: 'Овен', lord: 'Mars' }),
+);
+
 const chart = {
   date: new Date('1990-01-01T12:00:00Z'),
   latitude: 55,
   longitude: 37,
   ascendant: position(0),
-  houses: Array.from({ length: 12 }, (_, index) => ({ house: index + 1, signName: 'Овен', lord: 'Mars' })),
+  houses: testHouses,
   planets: {
     Sun: position(10), Moon: position(65), Mars: position(95), Mercury: position(125),
     Jupiter: position(185), Venus: position(245), Saturn: position(305),
@@ -23,9 +28,15 @@ assert.deepEqual(areas.map((area) => area.id), ['money', 'career', 'development'
 assert.ok(areas.every((area) => area.houseNotes.length === area.houses.length));
 assert.ok(areas.find((area) => area.id === 'money')?.planetNotes.length);
 
+// House data is optional on NatalChart; analysis must remain safe when a fixture omits it.
+const chartWithoutHouses = { ...chart, houses: undefined } as unknown as NatalChart;
+const areasWithoutHouses = analyzeLifeAreas(chartWithoutHouses);
+assert.ok(areasWithoutHouses.every((area) => area.houseNotes.length === area.houses.length));
+assert.ok(areasWithoutHouses.every((area) => area.houseNotes.every((note) => !note.includes('управитель —'))));
+
 const chartWithUnknownLord = {
   ...chart,
-  houses: chart.houses.map((house, index) => index === 0 ? { ...house, lord: 'Unknown' } : house),
+  houses: testHouses.map((house, index) => index === 0 ? { ...house, lord: 'Unknown' } : house),
 } as unknown as NatalChart;
 const unknownLordAreas = analyzeLifeAreas(chartWithUnknownLord);
 assert.ok(unknownLordAreas.some((area) => area.houseNotes.some((note) => note.includes('управитель — Unknown.'))));
