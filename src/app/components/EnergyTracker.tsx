@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { TrendingUp } from 'lucide-react';
-import { getEnergyColor, getEnergyLabel } from '../utils/energyUtils';
+import { getEnergyColor } from '../utils/energyUtils';
 import { getOrCalculateForecast } from '../utils/forecastCalculations';
 import { formatDateKey } from '../utils/dateUtils';
 import { UserProfile } from '../utils/storage';
