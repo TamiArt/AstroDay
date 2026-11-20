@@ -268,9 +268,10 @@ function buildAreaNarrative(
     );
     parts.push(`Также обнаружены точные связи: ${aspectText.join('; ')}.`);
   }
-  if (lordHits.length) {
-    const hitText = unique(lordHits.map((item) => item.detail));
-    parts.push(`Связь с управителями домов: ${hitText.join(' ')}`);
+  const additionalLordHits = lordHits.filter((item) => item.relation !== 'exact-aspect');
+  if (additionalLordHits.length) {
+    const hitText = unique(additionalLordHits.map((item) => item.detail));
+    parts.push(`Дополнительные связи с управителями домов: ${hitText.join(' ')}`);
   }
   if (!parts.length) {
     return 'На выбранную дату по применяемым критериям не найдено отдельных транзитных активаций этих домов или их управителей. Это не означает, что в этой сфере не может происходить ничего важного.';
