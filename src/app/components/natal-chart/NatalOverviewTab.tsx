@@ -42,7 +42,10 @@ export function NatalOverviewTab({ natalChart }: NatalOverviewTabProps) {
   const planets = useMemo(() => analyzeAllNatalPlanets(facts), [facts]);
   const sun = planets.find((planet) => planet.planet === 'Sun') ?? null;
   const moon = planets.find((planet) => planet.planet === 'Moon') ?? null;
-  const ascendantSign = natalChart.ascendant?.signName ?? null;
+  const ascendantSign = facts.chart.ascendantSign;
+  const firstHouse = facts.houses.find((house) => house.number === 1) ?? null;
+  const firstHouseLord = firstHouse?.lord ?? null;
+  const firstHouseLordHouse = firstHouseLord ? facts.planets[firstHouseLord]?.house ?? null : null;
   const selectedHouse = activeHouse
     ? facts.houses.find((house) => house.number === activeHouse) ?? null
     : null;
@@ -141,19 +144,19 @@ export function NatalOverviewTab({ natalChart }: NatalOverviewTabProps) {
           У каждого знака есть планета-управитель. Если знак стоит в определённом доме,
           его управитель связывает темы этого дома со своим положением в карте.
         </p>
-        {facts.houses[0]?.lord && (
+        {firstHouse && firstHouseLord && (
           <div className="mt-3 rounded-xl border border-gray-200 bg-white/80 p-4">
             <p className="text-sm font-semibold text-gray-900">
-              1-й дом: {facts.houses[0].sign} → {PLANET_LABELS[facts.houses[0].lord] ?? facts.houses[0].lord}
+              1-й дом: {firstHouse.sign} → {PLANET_LABELS[firstHouseLord] ?? firstHouseLord}
             </p>
             <p className="mt-1 text-sm text-gray-700">
-              {PLANET_LABELS[facts.houses[0].lord] ?? facts.houses[0].lord} управляет знаком {facts.houses[0].sign}.
-              {facts.planets[facts.houses[0].lord]?.house
-                ? ' Эта планета находится в ' + facts.planets[facts.houses[0].lord]?.house + '-м доме.'
+              {PLANET_LABELS[firstHouseLord] ?? firstHouseLord} управляет знаком {firstHouse.sign}.
+              {firstHouseLordHouse
+                ? ' Эта планета находится в ' + firstHouseLordHouse + '-м доме.'
                 : ' Положение управителя в доме не определено.'}
               {' '}Поэтому темы 1-го дома (личность и самостоятельность) связываются с темами
-              {facts.planets[facts.houses[0].lord]?.house
-                ? ' ' + (HOUSE_MEANINGS[facts.planets[facts.houses[0].lord]!.house!] ?? 'дома расположения управителя') + '.'
+              {firstHouseLordHouse
+                ? ' ' + (HOUSE_MEANINGS[firstHouseLordHouse] ?? 'дома расположения управителя') + '.'
                 : ' положения управителя в карте.'}
             </p>
           </div>
