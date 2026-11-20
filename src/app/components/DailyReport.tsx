@@ -32,6 +32,15 @@ const SIGN_NAMES_RU: Record<string, string> = {
   Sagittarius: 'Стрелец', Capricorn: 'Козерог', Aquarius: 'Водолей', Pisces: 'Рыбы',
 };
 
+const SIGN_THEMES: Record<string, string> = {
+  Aries: 'инициативой и смелыми шагами', Taurus: 'практичными делами и устойчивостью',
+  Gemini: 'общением, обучением и обменом идеями', Cancer: 'домом, заботой и близкими',
+  Leo: 'творчеством и самовыражением', Virgo: 'порядком, вниманием к деталям и повседневными задачами',
+  Libra: 'партнёрством, переговорами и гармонией', Scorpio: 'глубиной, концентрацией и внутренними переменами',
+  Sagittarius: 'обучением и расширением горизонтов', Capricorn: 'ответственностью и долгосрочными целями',
+  Aquarius: 'новыми идеями, командами и технологиями', Pisces: 'чувствами, воображением и творчеством',
+};
+
 const PLANET_THEMES: Record<string, string> = {
   Sun: 'инициатива, ясность и самовыражение',
   Moon: 'чувства, забота и повседневный комфорт',
@@ -102,7 +111,7 @@ export function DailyReport({
             <h2 className="text-xl font-semibold">Сегодняшний день</h2>
             <p className="mt-2 text-sm leading-relaxed">
               В календарной символике сегодня {panchang.tithi.name.toLowerCase()} — {panchang.tithi.meaning.toLowerCase()}.
-              Луна находится в знаке {moonSignRu}; в традиции этот знак связывают с темами {PLANET_THEMES[currentChart.planets.Moon.sign] ?? 'внутреннего состояния и повседневных дел'}.
+              Луна находится в знаке {moonSignRu}; в традиции этот знак связывают с темами {SIGN_THEMES[moonSign] ?? 'внутреннего состояния и повседневных дел'}.
             </p>
             <p className="mt-2 text-xs opacity-65">Это общий символический фон дня. Персональные подсказки ниже дополнительно учитывают вашу натальную карту.</p>
           </div>
@@ -125,7 +134,7 @@ export function DailyReport({
           <div className="rounded-xl border border-border p-4">
             <p className="text-xs font-semibold uppercase tracking-wide opacity-60">Общий календарный фон</p>
             <p className="mt-2 text-sm"><strong>Лунный день:</strong> {panchang.tithi.name} — {panchang.tithi.meaning}.</p>
-            <p className="mt-2 text-sm"><strong>Положение Луны:</strong> {moonSignRu}. Традиционная символика: {PLANET_THEMES[currentChart.planets.Moon.sign] ?? 'внутреннее состояние и повседневные дела'}.</p>
+            <p className="mt-2 text-sm"><strong>Положение Луны:</strong> {moonSignRu}. Традиционная символика: {SIGN_THEMES[moonSign] ?? 'внутреннее состояние и повседневные дела'}.</p>
             <p className="mt-2 text-sm"><strong>Накшатра:</strong> {panchang.nakshatra.name}. Это один из 27 участков лунного пути, который в Джйотиш используют как дополнительный символический ориентир.</p>
             <details className="mt-3 border-t border-border pt-3 text-sm">
               <summary className="cursor-pointer font-medium">Дополнительные элементы Панчанга</summary>
