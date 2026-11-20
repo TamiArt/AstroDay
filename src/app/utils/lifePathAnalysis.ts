@@ -35,10 +35,13 @@ export function analyzeLifeAreas(chart: NatalChart): LifeAreaInsight[] {
       const occupants = Object.entries(chart.planets)
         .filter(([, position]) => getHouseForPlanet(position, chart.ascendant.siderealLon) === houseNumber)
         .map(([name]) => name);
-      const lordPosition = house?.lord ? chart.planets[house.lord] : null;
+      const lordName = house?.lord;
+      const lordPosition = lordName && lordName in chart.planets
+        ? chart.planets[lordName as keyof typeof chart.planets]
+        : null;
       const lordHouse = lordPosition ? getHouseForPlanet(lordPosition, chart.ascendant.siderealLon) : null;
-      const lordNote = house?.lord
-        ? `; управитель — ${house.lord}${lordPosition ? `, расположен в ${lordHouse}-м доме (${lordPosition.signName})` : ''}`
+      const lordNote = lordName
+        ? `; управитель — ${lordName}${lordPosition ? `, расположен в ${lordHouse}-м доме (${lordPosition.signName})` : ''}`
         : '';
       return `${houseNumber}-й дом${house?.signName ? ` (${house.signName})` : ''}: ${occupants.length ? `планеты — ${occupants.join(', ')}` : 'планет в доме нет'}${lordNote}.`;
     });
