@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { TrendingUp } from 'lucide-react';
-import { calculateEnergyLevel, getEnergyColor, getEnergyLabel } from '../utils/energyUtils';
-import { FORECAST_CALC_VERSION, getForecastProfileKey } from '../utils/forecastCalculations';
-import { getForecastsInRange } from '../utils/indexedDB';
+import { getEnergyColor, getEnergyLabel } from '../utils/energyUtils';
+import { getOrCalculateForecast } from '../utils/forecastCalculations';
 import { formatDateKey } from '../utils/dateUtils';
 import { UserProfile } from '../utils/storage';
-import { getEnergyVisual } from '../utils/visualScales';
 
 interface EnergyTrackerProps {
   profile: UserProfile;
@@ -16,233 +14,231 @@ interface EnergyPoint {
   dateKey: string;
   energy: number;
   label: string;
-  source: 'forecast' | 'baseline';
-  recommendation?: string;
+  recommendation: string;
+  avoidRecommendation: string;
+  microUpaya: string;
 }
 
-function buildBaselineEnergy(days: number): EnergyPoint[] {
-  const data: EnergyPoint[] = [];
+function buildDateRange(days: number): Date[] {
   const today = new Date();
+  const dates: Date[] = [];
 
-  for (let i = 0; i < days; i++) {
+  for (let offset = days - 1; offset >= 0; offset--) {
     const date = new Date(today);
-    date.setDate(date.getDate() - (days - 1 - i));
-
-    data.push({
-      dateKey: formatDateKey(date),
-      energy: calculateEnergyLevel(date),
-      label: date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' }),
-      source: 'baseline',
-    });
+    date.setHours(12, 0, 0, 0);
+    date.setDate(date.getDate() - offset);
+    dates.push(date);
   }
 
-  return data;
+  return dates;
+}
+
+function getEnergyBand(level: number): string {
+  if (level >= 70) return 'Выше среднего';
+  if (level >= 40) return 'Умеренный';
+  return 'Спокойный режим';
+}
+
+function getDayInterpretation(level: number): string {
+  if (level >= 70) {
+    return 'По символической модели это более активный день. Можно выделить одну-две приоритетные задачи, не забывая учитывать реальные обстоятельства и своё самочувствие.';
+  }
+  if (level >= 40) {
+    return 'По модели день проходит в умеренном ритме. Подойдут обычные задачи, последовательная работа и разумное чередование нагрузки с перерывами.';
+  }
+  return 'По модели это более спокойный период. Можно сосредоточиться на необходимом, оставить запас времени и не перегружать расписание только из-за планов.';
 }
 
 export function EnergyTracker({ profile, days = 7 }: EnergyTrackerProps) {
-  const baselineData = useMemo(() => buildBaselineEnergy(days), [days]);
-  const [energyData, setEnergyData] = useState<EnergyPoint[]>(baselineData);
-  const [hasPersonalHistory, setHasPersonalHistory] = useState(false);
+  const dates = useMemo(() => buildDateRange(days), [days]);
+  const [energyData, setEnergyData] = useState<EnergyPoint[]>([]);
+  const [selectedDateKey, setSelectedDateKey] = useState(() => formatDateKey(new Date()));
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     let cancelled = false;
 
-    const loadForecastHistory = async () => {
-      setEnergyData(baselineData);
-      setHasPersonalHistory(false);
+    const loadPersonalForecasts = async () => {
+      setIsLoading(true);
+      setLoadError('');
 
       try {
-        const startDate = baselineData[0]?.dateKey;
-        const endDate = baselineData[baselineData.length - 1]?.dateKey;
-        if (!startDate || !endDate) return;
-
-        const forecasts = await getForecastsInRange(startDate, endDate);
-        const profileKey = getForecastProfileKey(profile);
-        const byDate = new Map(
-          forecasts
-            .filter(forecast => forecast.profileKey === profileKey && forecast.calcVersion === FORECAST_CALC_VERSION)
-            .map(forecast => [forecast.date, forecast])
+        const forecasts = await Promise.all(
+          dates.map(async (date) => {
+            const forecast = await getOrCalculateForecast(date, profile);
+            return {
+              dateKey: forecast.date,
+              energy: forecast.energyLevel,
+              label: date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' }),
+              recommendation: forecast.topRecommendation,
+              avoidRecommendation: forecast.avoidRecommendation,
+              microUpaya: forecast.microUpaya,
+            };
+          })
         );
 
-        const merged = baselineData.map(point => {
-          const forecast = byDate.get(point.dateKey);
-          return forecast
-            ? {
-                ...point,
-                energy: forecast.energyLevel,
-                source: 'forecast' as const,
-                recommendation: forecast.topRecommendation,
-              }
-            : point;
-        });
-
         if (!cancelled) {
-          setEnergyData(merged);
-          setHasPersonalHistory(merged.some(point => point.source === 'forecast'));
+          setEnergyData(forecasts);
+          if (!forecasts.some((point) => point.dateKey === selectedDateKey)) {
+            setSelectedDateKey(forecasts[forecasts.length - 1]?.dateKey ?? '');
+          }
         }
       } catch (error) {
-        console.error('Ошибка загрузки истории энергии:', error);
+        if (!cancelled) {
+          setLoadError(error instanceof Error ? error.message : 'Не удалось рассчитать показатели за неделю.');
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
       }
     };
 
-    loadForecastHistory();
-
+    loadPersonalForecasts();
     return () => {
       cancelled = true;
     };
-  }, [baselineData, profile]);
+  }, [dates, profile]);
 
-  const maxEnergy = Math.max(...energyData.map(d => d.energy), 1);
-  const avgEnergy = energyData.reduce((sum, d) => sum + d.energy, 0) / Math.max(energyData.length, 1);
-  const todayEnergy = energyData[energyData.length - 1] || baselineData[baselineData.length - 1];
-  const previousEnergy = energyData[energyData.length - 2];
-  const trendDelta = previousEnergy ? todayEnergy.energy - previousEnergy.energy : 0;
-  const trendLabel = trendDelta > 3
-    ? `рост +${trendDelta.toFixed(0)}`
-    : trendDelta < -3
-      ? `снижение ${trendDelta.toFixed(0)}`
-      : 'ровный фон';
-  const bestDay = energyData.reduce<EnergyPoint | null>(
-    (best, point) => (!best || point.energy > best.energy ? point : best),
+  const todayKey = formatDateKey(new Date());
+  const today = energyData.find((point) => point.dateKey === todayKey) ?? energyData[energyData.length - 1];
+  const selectedDay = energyData.find((point) => point.dateKey === selectedDateKey) ?? today;
+  const average = energyData.length
+    ? Math.round(energyData.reduce((sum, point) => sum + point.energy, 0) / energyData.length)
+    : 0;
+  const firstDay = energyData[0];
+  const weeklyChange = today && firstDay ? today.energy - firstDay.energy : 0;
+  const highestDay = energyData.reduce<EnergyPoint | null>(
+    (highest, point) => (!highest || point.energy > highest.energy ? point : highest),
     null
   );
 
   return (
-    <div
-      className="rounded-3xl p-8"
+    <section
+      className="rounded-3xl p-6 sm:p-8"
       style={{
         background: 'var(--glass-bg)',
         border: '1px solid var(--glass-border)',
         boxShadow: '0 8px 32px rgba(107, 76, 230, 0.15)'
       }}
+      aria-labelledby="energy-tracker-title"
     >
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
-          <h3 className="mb-1">Трекер энергии</h3>
-          <p className="opacity-70">
-            {hasPersonalHistory ? 'Персональные данные за последние 7 дней' : 'Общий ориентир за последние 7 дней'}
-          </p>
+          <h2 id="energy-tracker-title" className="text-xl font-semibold mb-1">Трекер энергии</h2>
+          <p className="text-sm opacity-70">Условный астрологический ориентир · последние {days} дней</p>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary">
-          <TrendingUp className="w-4 h-4" style={{ color: 'var(--neon-green)' }} />
-          <span className="opacity-70">Средний индекс: {avgEnergy.toFixed(0)} из 100</span>
-        </div>
-      </div>
-
-      <div className="mb-6">
-        <div className="flex items-end justify-between gap-2 h-48">
-          {energyData.map((item) => {
-            const height = (item.energy / maxEnergy) * 100;
-            const color = getEnergyColor(item.energy);
-            const visual = getEnergyVisual(item.energy);
-
-            return (
-              <div
-                key={item.dateKey}
-                className="flex-1 flex flex-col items-center gap-2 group cursor-pointer"
-                title={`${visual.label}: ${visual.description}`}
-              >
-                <div className="w-full flex flex-col items-center justify-end flex-1 relative">
-                  <div
-                    className="w-full rounded-t-xl transition-all duration-300 group-hover:scale-110"
-                    style={{
-                      height: `${height}%`,
-                      background: `linear-gradient(180deg, ${color}, ${color}88)`,
-                      boxShadow: `0 -4px 16px ${color}40`,
-                      minHeight: '4px'
-                    }}
-                  />
-                  <div className="absolute -top-8 opacity-0 group-hover:opacity-100 transition-opacity bg-foreground text-background px-2 py-1 rounded text-xs whitespace-nowrap">
-                    {item.energy.toFixed(0)}%
-                  </div>
-                  {item.recommendation && (
-                    <div className="absolute -top-16 opacity-0 group-hover:opacity-100 transition-opacity bg-foreground text-background px-2 py-1 rounded text-xs max-w-[220px] text-center">
-                      {item.recommendation}
-                    </div>
-                  )}
-                </div>
-                <span className="text-xs opacity-60">{item.label}</span>
-                <span className="text-[10px] opacity-55">{item.energy >= 70 ? 'Активный' : item.energy >= 40 ? 'Ровный' : 'Спокойный'}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="mb-5 rounded-2xl border border-border bg-secondary/50 p-4">
-        <p className="font-medium mb-3">Как читать периоды</p>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div>
-            <p className="font-semibold text-sm">70–100 · Выше среднего</p>
-            <p className="text-sm opacity-70 mt-1">По модели можно запланировать одну-две важные задачи и активные дела.</p>
+        {!isLoading && !loadError && (
+          <div className="rounded-xl bg-secondary px-4 py-3">
+            <p className="text-xs opacity-65">Средний показатель за неделю</p>
+            <p className="text-2xl font-semibold tabular-nums">{average}<span className="text-sm font-normal opacity-65"> / 100</span></p>
+            <p className="text-xs opacity-70">{getEnergyBand(average)}</p>
           </div>
-          <div>
-            <p className="font-semibold text-sm">40–69 · Умеренный уровень</p>
-            <p className="text-sm opacity-70 mt-1">Чередуйте работу и перерывы, не перегружайте расписание.</p>
-          </div>
-          <div>
-            <p className="font-semibold text-sm">0–39 · Спокойный режим</p>
-            <p className="text-sm opacity-70 mt-1">Оставьте запас времени, займитесь необходимым и не планируйте всё подряд.</p>
-          </div>
-        </div>
-        <p className="text-xs opacity-60 mt-3">Это условный индекс астрологической модели, а не измерение физической энергии, здоровья или реальной продуктивности. Ориентируйтесь прежде всего на самочувствие.</p>
+        )}
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
-        <div className="flex items-center gap-2">
-          <div
-            className="w-4 h-4 rounded-full"
-            style={{ background: 'var(--neon-green)' }}
-          />
-          <span className="opacity-70">Высокий</span>
+      {isLoading && <p className="py-10 text-center text-sm opacity-70">Рассчитываем персональные показатели за неделю…</p>}
+      {loadError && (
+        <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
+          {loadError}
         </div>
-        <div className="flex items-center gap-2">
-          <div
-            className="w-4 h-4 rounded-full"
-            style={{ background: 'var(--neon-yellow)' }}
-          />
-          <span className="opacity-70">Умеренный</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div
-            className="w-4 h-4 rounded-full"
-            style={{ background: 'var(--neon-pink)' }}
-          />
-          <span className="opacity-70">Отдых</span>
-        </div>
-      </div>
+      )}
 
-      <div
-        className="mt-6 p-5 rounded-2xl"
-        style={{
-          background: 'var(--secondary)',
-          border: '1px solid var(--border)'
-        }}
-      >
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="mb-1 opacity-70">Сегодня</p>
-            <p>{getEnergyLabel(todayEnergy.energy)}</p>
-            <p className="mt-1 text-sm opacity-60">Динамика: {trendLabel}</p>
-            {bestDay && (
-              <p className="mt-1 text-sm opacity-60">
-                Самый сильный день периода: {bestDay.label} ({bestDay.energy.toFixed(0)}%)
+      {!isLoading && !loadError && energyData.length > 0 && (
+        <>
+          <div className="mb-5">
+            <div className="flex items-end justify-between gap-2 h-44 sm:h-52" role="group" aria-label="Показатель модели по дням. Выберите день для подробностей.">
+              {energyData.map((point) => {
+                const isSelected = point.dateKey === selectedDay?.dateKey;
+                const color = getEnergyColor(point.energy);
+                return (
+                  <button
+                    key={point.dateKey}
+                    type="button"
+                    onClick={() => setSelectedDateKey(point.dateKey)}
+                    aria-pressed={isSelected}
+                    aria-label={`${point.label}: ${point.energy} из 100, ${getEnergyBand(point.energy)}`}
+                    className="group flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2 rounded-xl px-1 pt-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  >
+                    <span className={`text-xs font-semibold tabular-nums transition-opacity ${isSelected ? 'opacity-100' : 'opacity-65 group-hover:opacity-100'}`}>{point.energy}</span>
+                    <span className="flex w-full flex-1 items-end justify-center">
+                      <span
+                        className={`block w-full max-w-12 rounded-t-lg transition-all ${isSelected ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : 'opacity-80 group-hover:opacity-100'}`}
+                        style={{
+                          height: `${Math.max(point.energy, 3)}%`,
+                          background: color,
+                          minHeight: '4px'
+                        }}
+                      />
+                    </span>
+                    <span className={`text-[11px] capitalize ${isSelected ? 'font-semibold opacity-100' : 'opacity-65'}`}>{point.label}</span>
+                    <span className="text-[10px] opacity-65">{getEnergyBand(point.energy)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3 mb-5">
+            <div className="rounded-xl border border-border p-3">
+              <p className="text-xs opacity-65">Самый высокий показатель</p>
+              <p className="mt-1 font-semibold">{highestDay?.label ?? '—'} · {highestDay?.energy ?? '—'}</p>
+            </div>
+            <div className="rounded-xl border border-border p-3">
+              <p className="text-xs opacity-65">Сегодня</p>
+              <p className="mt-1 font-semibold">{today ? `${today.energy}/100 · ${getEnergyBand(today.energy)}` : '—'}</p>
+            </div>
+            <div className="rounded-xl border border-border p-3">
+              <p className="text-xs opacity-65">Изменение с первого дня</p>
+              <p className="mt-1 flex items-center gap-2 font-semibold tabular-nums">
+                <TrendingUp className="h-4 w-4 opacity-60" />
+                {weeklyChange > 0 ? '+' : ''}{weeklyChange} пунктов
               </p>
-            )}
+            </div>
           </div>
-          <div
-            className="w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{
-              background: getEnergyColor(todayEnergy.energy),
-              boxShadow: `0 4px 16px ${getEnergyColor(todayEnergy.energy)}40`
-            }}
-          >
-            <span className="text-white text-xl">
-              {todayEnergy.energy.toFixed(0)}
-            </span>
+
+          {selectedDay && (
+            <div className="rounded-2xl border border-primary/25 bg-primary/5 p-4 sm:p-5" aria-live="polite">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide opacity-60">Выбранный день</p>
+                  <h3 className="mt-1 text-lg font-semibold capitalize">
+                    {new Date(`${selectedDay.dateKey}T12:00:00`).toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  </h3>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-semibold tabular-nums">{selectedDay.energy}/100</p>
+                  <p className="text-sm opacity-70">{getEnergyBand(selectedDay.energy)}</p>
+                </div>
+              </div>
+              <p className="mt-3 text-sm leading-relaxed">{getDayInterpretation(selectedDay.energy)}</p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs font-semibold opacity-70">Что можно сделать</p>
+                  <p className="mt-1 text-sm">{selectedDay.recommendation}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold opacity-70">С чем не спешить</p>
+                  <p className="mt-1 text-sm">{selectedDay.avoidRecommendation}</p>
+                </div>
+              </div>
+              <p className="mt-3 text-xs opacity-70">Небольшая практика: {selectedDay.microUpaya}</p>
+            </div>
+          )}
+
+          <div className="mt-5 rounded-xl border border-border p-4">
+            <p className="text-sm font-semibold mb-3">Как читать шкалу</p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <p className="text-sm"><strong>70–100 · Выше среднего</strong><span className="mt-1 block opacity-70">Более активный период по символике модели.</span></p>
+              <p className="text-sm"><strong>40–69 · Умеренный</strong><span className="mt-1 block opacity-70">Ровный фон без особого акцента на активность.</span></p>
+              <p className="text-sm"><strong>0–39 · Спокойный режим</strong><span className="mt-1 block opacity-70">Более спокойный показатель модели.</span></p>
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
+        </>
+      )}
+
+      <p className="mt-5 text-xs leading-relaxed opacity-65">
+        Показатели рассчитаны персонально по данным натальной карты и транзитам на 12:00 местного времени. Это условная оценка астрологической модели, а не измерение физической энергии, здоровья или реальной работоспособности. Цвет всегда дублируется числом и подписью; ориентируйтесь на самочувствие и реальные обстоятельства.
+      </p>
+    </section>
   );
 }
