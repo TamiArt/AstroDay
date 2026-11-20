@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 // Ежедневный обзор: сначала понятные ориентиры, затем астрологические подробности
 import { ChevronRight, Clock3, Info, MoonStar } from 'lucide-react';
 import type { NatalChart, Aspect } from '../utils/astrology';
@@ -113,7 +114,7 @@ export function DailyReport({
   }, [latitude, longitude, timezone, currentDate.toDateString()]);
 
   const visibleAspects = aspects.slice(0, 3);
-  const currentPlanetaryHour = planetaryHours.find((hour) => currentDate >= hour.start && currentDate < hour.end);
+  const currentPlanetaryHour = planetaryHours.find((hour: PlanetaryHourInfo) => currentDate >= hour.start && currentDate < hour.end);
 
   return (
     <div className="space-y-5">
@@ -196,7 +197,7 @@ export function DailyReport({
           <span className="text-xs opacity-60">{currentPlanetaryHour ? `Сейчас · ${getPlanetName(currentPlanetaryHour.planet)}` : 'Подробнее'}</span>
         </summary>
         <div className="mt-4 space-y-2">
-          {planetaryHours.length ? planetaryHours.map((hour) => (
+          {planetaryHours.length ? planetaryHours.map((hour: PlanetaryHourInfo) => (
             <div key={hour.hourNumber} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-secondary/50 p-3">
               <span className="text-sm tabular-nums">{formatTime(hour.start, timezone)}–{formatTime(hour.end, timezone)}</span>
               <span className="text-sm font-medium">{getPlanetName(hour.planet)}</span>
