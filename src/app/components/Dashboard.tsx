@@ -275,7 +275,11 @@ export function Dashboard({ profile, onReset, onProfileUpdate }: DashboardProps)
 
         {selectedView === 'panchang' && (
           <Suspense fallback={<ViewFallback />}>
-            <PanchangWidget panchang={panchang} />
+            <PanchangWidget
+              panchang={panchang}
+              date={currentDate}
+              timezone={currentTimezone}
+/>
           </Suspense>
         )}
 
