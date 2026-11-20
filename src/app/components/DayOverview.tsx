@@ -63,7 +63,7 @@ function MainTheme({ area }: { area: DayLifeAreaAnalysis | null }) {
               <p className="mt-2 text-lg font-semibold">{area.definition.icon} {area.definition.title}</p>
               <p className="mt-2 text-sm leading-relaxed">{area.narrative}</p>
               <p className="mt-2 text-sm opacity-75">{area.definition.practicalFocus}</p>
-              <p className="mt-2 text-xs opacity-60">Выделено по конкретным транзитным положениям и связям с натальными домами. Это символический астрологический акцент, а не обещание события.</p>
+              <p className="mt-2 text-xs opacity-60">Эта сфера выбрана потому, что в ней найдено больше учтённых транзитных связей, чем в других направлениях. Количество факторов не является оценкой благоприятности или важности событий. Это символический астрологический акцент, а не обещание события.</p>
             </>
           ) : (
             <p className="mt-2 text-sm leading-relaxed opacity-75">
