@@ -4,6 +4,8 @@ import { calculateNatalAspects } from '../utils/aspectCalculations';
 interface NatalChartWheelProps {
   natalChart: NatalChart;
   showAspects?: boolean;
+  onPlanetSelect?: (planet: string) => void;
+  onHouseSelect?: (house: number) => void;
 }
 
 const PLANET_SYMBOLS: Record<string, string> = {
@@ -18,6 +20,12 @@ const PLANET_SYMBOLS: Record<string, string> = {
   Ketu: '☋',
 };
 
+const SIGN_NAMES_RU: Record<string, string> = {
+  Aries: 'Овен', Taurus: 'Телец', Gemini: 'Близнецы', Cancer: 'Рак',
+  Leo: 'Лев', Virgo: 'Дева', Libra: 'Весы', Scorpio: 'Скорпион',
+  Sagittarius: 'Стрелец', Capricorn: 'Козерог', Aquarius: 'Водолей', Pisces: 'Рыбы',
+};
+
 const ASPECT_COLORS: Record<number, string> = {
   0: '#FF0000',    // Conjunction (0°)
   60: '#00FF00',   // Sextile (60°)
@@ -26,7 +34,12 @@ const ASPECT_COLORS: Record<number, string> = {
   180: '#FF0000',  // Opposition (180°)
 };
 
-export function NatalChartWheel({ natalChart, showAspects = false }: NatalChartWheelProps) {
+export function NatalChartWheel({
+  natalChart,
+  showAspects = false,
+  onPlanetSelect,
+  onHouseSelect,
+}: NatalChartWheelProps) {
   const centerX = 300;
   const centerY = 300;
   const outerRadius = 280;
@@ -91,7 +104,7 @@ export function NatalChartWheel({ natalChart, showAspects = false }: NatalChartW
                 fill="#666"
                 fontWeight="600"
               >
-                {natalChart.ascendant.signName && ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'][i]}
+                {SIGN_NAMES_RU[['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'][i]]}
               </text>
             </g>
           );
@@ -110,7 +123,20 @@ export function NatalChartWheel({ natalChart, showAspects = false }: NatalChartW
           const textPos = polarToCartesian(midAngle, innerRadius - 30);
 
           return (
-            <g key={`house-${i}`}>
+            <g
+              key={`house-${i}`}
+              role="button"
+              tabIndex={0}
+              aria-label={`Открыть объяснение ${house.house}-го дома`}
+              className="cursor-pointer"
+              onClick={() => onHouseSelect?.(house.house)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  onHouseSelect?.(house.house);
+                }
+              }}
+            >
               {/* Линия куспида дома */}
               <line
                 x1={centerX}
@@ -142,7 +168,7 @@ export function NatalChartWheel({ natalChart, showAspects = false }: NatalChartW
                 fontSize="10"
                 fill="#666"
               >
-                {house.signName}
+                {SIGN_NAMES_RU[house.signName] ?? house.signName}
               </text>
             </g>
           );
@@ -184,7 +210,20 @@ export function NatalChartWheel({ natalChart, showAspects = false }: NatalChartW
           const isPlanet = planet.name !== 'Asc';
 
           return (
-            <g key={`planet-${idx}`}>
+            <g
+              key={`planet-${idx}`}
+              role="button"
+              tabIndex={0}
+              aria-label={planet.name === 'Asc' ? 'Открыть объяснение Асцендента' : `Открыть объяснение ${planet.name}`}
+              className="cursor-pointer"
+              onClick={() => onPlanetSelect?.(planet.name)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  onPlanetSelect?.(planet.name);
+                }
+              }}
+            >
               {/* Кружок планеты */}
               <circle
                 cx={pos.x}
