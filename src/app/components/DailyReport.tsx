@@ -41,7 +41,16 @@ const SIGN_THEMES: Record<string, string> = {
   Aquarius: 'новыми идеями, командами и технологиями', Pisces: 'чувствами, воображением и творчеством',
 };
 
-const NAKSHATRA_NAMES_RU: Record<string, string> = {\n  Ashwini: 'Ашвини', Bharani: 'Бхарани', Krittika: 'Криттика', Rohini: 'Рохини', Mrigashira: 'Мригашира',\n  Ardra: 'Ардра', Punarvasu: 'Пунарвасу', Pushya: 'Пушья', Ashlesha: 'Ашлеша', Magha: 'Магха',\n  'Purva Phalguni': 'Пурва-Пхалгуни', 'Uttara Phalguni': 'Уттара-Пхалгуни', Hasta: 'Хаста', Chitra: 'Читра',\n  Swati: 'Свати', Vishakha: 'Вишакха', Anuradha: 'Анурадха', Jyeshtha: 'Джйештха', Mula: 'Мула',\n  'Purva Ashadha': 'Пурва-Ашадха', 'Uttara Ashadha': 'Уттара-Ашадха', Shravana: 'Шравана', Dhanishta: 'Дхаништха',\n  Shatabhisha: 'Шатабхиша', 'Purva Bhadrapada': 'Пурва-Бхадрапада', 'Uttara Bhadrapada': 'Уттара-Бхадрапада', Revati: 'Ревати',\n};\n\nconst PLANET_THEMES: Record<string, string> = {
+const NAKSHATRA_NAMES_RU: Record<string, string> = {
+  Ashwini: 'Ашвини', Bharani: 'Бхарани', Krittika: 'Криттика', Rohini: 'Рохини', Mrigashira: 'Мригашира',
+  Ardra: 'Ардра', Punarvasu: 'Пунарвасу', Pushya: 'Пушья', Ashlesha: 'Ашлеша', Magha: 'Магха',
+  'Purva Phalguni': 'Пурва-Пхалгуни', 'Uttara Phalguni': 'Уттара-Пхалгуни', Hasta: 'Хаста', Chitra: 'Читра',
+  Swati: 'Свати', Vishakha: 'Вишакха', Anuradha: 'Анурадха', Jyeshtha: 'Джйештха', Mula: 'Мула',
+  'Purva Ashadha': 'Пурва-Ашадха', 'Uttara Ashadha': 'Уттара-Ашадха', Shravana: 'Шравана', Dhanishta: 'Дхаништха',
+  Shatabhisha: 'Шатабхиша', 'Purva Bhadrapada': 'Пурва-Бхадрапада', 'Uttara Bhadrapada': 'Уттара-Бхадрапада', Revati: 'Ревати',
+};
+
+const PLANET_THEMES: Record<string, string> = {
   Sun: 'инициатива, ясность и самовыражение',
   Moon: 'чувства, забота и повседневный комфорт',
   Mars: 'действие, решительность и управление импульсами',
@@ -77,7 +86,11 @@ export function DailyReport({
     nextSunrise: currentDate,
     isFallback: true,
   };
-  const tithiNumber = panchang.tithi.index < 15 ? panchang.tithi.index + 1 : panchang.tithi.index - 14;\n  const tithiPhase = panchang.tithi.index < 15 ? 'растущей' : 'убывающей';\n  const tithiLabel = `${tithiNumber}-й лунный день ${tithiPhase} Луны (${panchang.tithi.name})`;\n  const nakshatraName = NAKSHATRA_NAMES_RU[panchang.nakshatra.name] ?? panchang.nakshatra.name;\n  const personalRecommendation = generatePersonalRecommendations({
+  const tithiNumber = panchang.tithi.index < 15 ? panchang.tithi.index + 1 : panchang.tithi.index - 14;
+  const tithiPhase = panchang.tithi.index < 15 ? 'растущей' : 'убывающей';
+  const tithiLabel = `${tithiNumber}-й лунный день ${tithiPhase} Луны (${panchang.tithi.name})`;
+  const nakshatraName = NAKSHATRA_NAMES_RU[panchang.nakshatra.name] ?? panchang.nakshatra.name;
+  const personalRecommendation = generatePersonalRecommendations({
     profile,
     date: currentDate,
     natalChart,
