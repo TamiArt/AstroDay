@@ -72,8 +72,8 @@ export function EnergyTracker({ profile, days = 7 }: EnergyTrackerProps) {
               energy: forecast.energyLevel,
               label: date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' }),
               recommendation: forecast.topRecommendation,
-              avoidRecommendation: forecast.avoidRecommendation,
-              microUpaya: forecast.microUpaya,
+              avoidRecommendation: forecast.avoidRecommendation ?? 'Не принимайте важные решения без проверки фактов и условий.',
+              microUpaya: forecast.microUpaya ?? 'Выберите одно небольшое полезное действие и выполните его без спешки.',
             };
           })
         );
