@@ -150,7 +150,7 @@ export function NatalOverviewTab({ natalChart }: NatalOverviewTabProps) {
               1-й дом: {firstHouse.sign} → {PLANET_LABELS[firstHouseLord] ?? firstHouseLord}
             </p>
             <p className="mt-1 text-sm text-gray-700">
-              {PLANET_LABELS[firstHouseLord] ?? firstHouseLord} управляет знаком {firstHouse.sign}.
+              {PLANET_LABELS[firstHouseLord] ?? firstHouseLord} управляет знаком {signInGenitive(firstHouse.sign)}.
               {firstHouseLordHouse
                 ? ' Эта планета находится в ' + firstHouseLordHouse + '-м доме.'
                 : ' Положение управителя в доме не определено.'}
