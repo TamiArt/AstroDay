@@ -17,8 +17,8 @@ const AREA_CONFIG: Array<{
   houses: number[];
   practicalFocus: string[];
 }> = [
-  { id: 'money', title: 'Деньги и ресурсы', houses: [2, 5, 11], practicalFocus: ['Навыки монетизации и переговоров о вознаграждении', 'Система бюджета, накоплений и финансовой подушки', 'Проверка источников дохода и реалистичности финансовых целей'] },
-  { id: 'career', title: 'Карьера и профессиональная реализация', houses: [6, 10, 11], practicalFocus: ['Какие задачи и роли дают устойчивый профессиональный рост', 'Какие навыки стоит подтвердить портфолио или практикой', 'Как расширять профессиональные связи и видимость результатов'] },
+  { id: 'money', title: 'Деньги и материальные ресурсы', houses: [2, 11], practicalFocus: ['Навыки монетизации и переговоров о вознаграждении', 'Система бюджета, накоплений и финансовой подушки', 'Проверка источников дохода и реалистичности финансовых целей'] },
+  { id: 'career', title: 'Работа и профессиональная реализация', houses: [6, 10], practicalFocus: ['Какие задачи и роли дают устойчивый профессиональный рост', 'Какие навыки стоит подтвердить портфолио или практикой', 'Как расширять профессиональные связи и видимость результатов'] },
   { id: 'development', title: 'Путь развития и призвание', houses: [1, 5, 9], practicalFocus: ['Обучение и области, в которых стоит углублять экспертизу', 'Личные инициативы и проекты для проверки интереса', 'Переход от вдохновения к регулярной практике'] },
   { id: 'wellbeing', title: 'Благополучие и устойчивость', houses: [1, 4, 6, 12], practicalFocus: ['Режим восстановления, сна и разумные границы нагрузки', 'Поддерживающая домашняя среда и повседневные привычки', 'При вопросах здоровья опираться на медицинских специалистов, а не карту'] },
   { id: 'relationships', title: 'Отношения и партнёрство', houses: [2, 5, 7, 8], practicalFocus: ['Открыто обсуждать ожидания, границы и распределение ответственности', 'Согласовывать финансовые решения и общие цели', 'Замечать способы проявления заботы и конструктивного разрешения конфликтов'] },
@@ -35,10 +35,16 @@ export function analyzeLifeAreas(chart: NatalChart): LifeAreaInsight[] {
       const occupants = Object.entries(chart.planets)
         .filter(([, position]) => getHouseForPlanet(position, chart.ascendant.siderealLon) === houseNumber)
         .map(([name]) => name);
-      return `${houseNumber}-й дом${house?.signName ? ` (${house.signName})` : ''}: ${occupants.length ? `планеты — ${occupants.join(', ')}` : 'планет в доме нет'}${house?.lord ? `; управитель — ${house.lord}` : ''}.`;
+      const lordPosition = house?.lord ? chart.planets[house.lord] : null;
+      const lordHouse = lordPosition ? getHouseForPlanet(lordPosition, chart.ascendant.siderealLon) : null;
+      const lordNote = house?.lord
+        ? `; управитель — ${house.lord}${lordPosition ? `, расположен в ${lordHouse}-м доме (${lordPosition.signName})` : ''}`
+        : '';
+      return `${houseNumber}-й дом${house?.signName ? ` (${house.signName})` : ''}: ${occupants.length ? `планеты — ${occupants.join(', ')}` : 'планет в доме нет'}${lordNote}.`;
     });
     const planetNotes = Object.entries(chart.planets)
-      .filter(([, position]) => area.houses.includes(getHouseForPlanet(position, chart.ascendant.siderealLon)))
+      .filter(([name, position]) => area.houses.includes(getHouseForPlanet(position, chart.ascendant.siderealLon))
+        || (area.id === 'relationships' && ['Venus', 'Jupiter'].includes(name)))
       .map(([name, position]) => `${name}: ${position.signName}, ${getHouseForPlanet(position, chart.ascendant.siderealLon)}-й дом`);
 
     return { id: area.id, title: area.title, houses: area.houses, houseNotes, planetNotes, practicalFocus: area.practicalFocus };
