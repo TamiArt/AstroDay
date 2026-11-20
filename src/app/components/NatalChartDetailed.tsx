@@ -155,8 +155,8 @@ export function NatalChartDetailed({ natalChart, profile }: NatalChartDetailedPr
         </div>
         <p className="mt-2 text-xs text-gray-500">
           Расчёт: сидерический зодиак, айанамша Лахири, дома Whole Sign.
-          {profile.timeUncertainty > 0
-            ? ` Указана неопределённость времени рождения: ±${profile.timeUncertainty} мин.; это может повлиять на Асцендент и точность домов.`
+          {(profile.timeUncertainty ?? 0) > 0
+            ? ` Указана неопределённость времени рождения: ±${profile.timeUncertainty ?? 0} мин.; это может повлиять на Асцендент и точность домов.`
             : ' Точность времени особенно важна для Асцендента, домов и дробных карт.'}
         </p>
       </div>
