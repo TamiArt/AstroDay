@@ -191,7 +191,7 @@ export function EnergyTracker({ profile, days = 7 }: EnergyTrackerProps) {
               <p className="text-xs opacity-65">Изменение с первого дня</p>
               <p className="mt-1 flex items-center gap-2 font-semibold tabular-nums">
                 <TrendingUp className="h-4 w-4 opacity-60" />
-                {weeklyChange > 0 ? '+' : ''}{weeklyChange} пунктов
+                {weeklyChange === 0 ? 'Без изменений' : weeklyChange > 0 ? `На ${weeklyChange} пунктов выше, чем в первый день` : `На ${Math.abs(weeklyChange)} пунктов ниже, чем в первый день`}
               </p>
             </div>
           </div>
