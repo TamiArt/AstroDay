@@ -111,7 +111,7 @@ function EvidenceDetails({ area }: { area: DayLifeAreaAnalysis }) {
                 <p className="mt-1 text-xs opacity-65">Орбис {aspect.orb.toFixed(2)}° · расчётная сила {aspect.strength.toFixed(0)}/100 · {aspect.applying === null ? 'фаза аспекта не определена' : aspect.applying ? 'сходящийся аспект' : 'расходящийся аспект'}</p>
               </div>
             ))}
-            {area.lordHits.map((hit, index) => (
+            {area.lordHits.filter((hit) => hit.relation !== 'exact-aspect').map((hit, index) => (
               <div key={`${hit.house}-${hit.transitPlanet}-${index}`} className="rounded-xl bg-secondary/60 p-3 text-sm">
                 <p>{hit.detail}</p>
                 <p className="mt-1 text-xs opacity-65">Связанный натальный дом: {hit.house}-й · управитель: {hit.lordName} · его натальное положение: {hit.natalLordHouse ?? 'не определено'}-й дом.</p>
@@ -261,7 +261,7 @@ function Recommendations({ mainArea }: { mainArea: DayLifeAreaAnalysis | null })
         <>
           <p className="mt-2 text-sm leading-relaxed opacity-80">{mainArea.definition.practicalFocus}</p>
           <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed">
-            {mainArea.definition.recommendations.map((item) => <li key={item}>{item}</li>)}
+            {mainArea.definition.recommendations.slice(1, 3).map((item) => <li key={item}>{item}</li>)}
           </ul>
           <p className="mt-4 rounded-xl bg-secondary/50 p-3 text-sm">
             <strong>Главный совет:</strong> {mainArea.definition.recommendations[0]}
@@ -307,7 +307,7 @@ function Methodology({ report }: { report: TransitAnalysisReport }) {
               <div><dt className="font-medium">Натальная карта</dt><dd className="opacity-75">Карта неба на момент рождения.</dd></div>
               <div><dt className="font-medium">Транзит</dt><dd className="opacity-75">Текущее положение планеты относительно натальной карты.</dd></div>
               <div><dt className="font-medium">Натальный дом</dt><dd className="opacity-75">Одна из двенадцати областей натальной карты.</dd></div>
-              <div><dt className="font-medium">Управитель дома</dt><dd className="opacity-75">Планета, связанная со знаком на куспиде/начале дома в используемой системе.</dd></div>
+              <div><dt className="font-medium">Управитель дома</dt><dd className="opacity-75">Планета, которая управляет знаком соответствующего дома в используемой системе.</dd></div>
               <div><dt className="font-medium">Аспект</dt><dd className="opacity-75">Угловое соотношение между двумя планетами.</dd></div>
               <div><dt className="font-medium">Соединение</dt><dd className="opacity-75">Аспект, при котором планеты находятся близко по долготе.</dd></div>
               <div><dt className="font-medium">Квадратура</dt><dd className="opacity-75">Аспект с углом около 90°.</dd></div>
