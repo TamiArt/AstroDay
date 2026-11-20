@@ -55,8 +55,8 @@ const PLANET_NAMES: Record<string, string> = {
 
 function formatRuledHouses(houses: number[]): string {
   const numbers = houses.map((house) => house + '-м');
-  if (numbers.length === 1) return numbers[0] + ' дом';
-  return numbers.slice(0, -1).join(', ') + ' и ' + numbers[numbers.length - 1] + ' дома';
+  if (numbers.length === 1) return numbers[0] + ' домом';
+  return numbers.slice(0, -1).join(', ') + ' и ' + numbers[numbers.length - 1] + ' домами';
 }
 
 function getDignityExplanation(planet: NatalPlanetPersonalizedAnalysis): string {
@@ -104,7 +104,7 @@ export function NatalPlanetStory({ planet }: { planet: NatalPlanetPersonalizedAn
 
       <section>
         <h5 className="font-semibold text-indigo-900">Что символизирует планета?</h5>
-        <p className="mt-1 text-gray-800">{name} связывают с темами: {planet.function}.</p>
+        <p className="mt-1 text-gray-800">Ключевые темы: {planet.function}.</p>
       </section>
 
       <section>
