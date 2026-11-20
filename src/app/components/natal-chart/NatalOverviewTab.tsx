@@ -216,7 +216,7 @@ export function NatalOverviewTab({ natalChart }: NatalOverviewTabProps) {
         <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Натальная карта</h3>
-            <p className="mt-1 text-sm text-gray-600">Схема показывает знаки, номера домов и расположение планет.</p>
+            <p className="mt-1 text-sm text-gray-600">Схема показывает знаки, номера домов и расположение планет. Дома рассчитаны по системе Whole Sign (целые знаки).</p>
           </div>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -237,7 +237,10 @@ export function NatalOverviewTab({ natalChart }: NatalOverviewTabProps) {
         <NatalChartWheel
           natalChart={natalChart}
           showAspects={showAspects}
-          onPlanetSelect={(planet) => setActivePlanet(planet)}
+          onPlanetSelect={(planet) => {
+            if (planet === 'Asc') setActiveHouse(1);
+            else setActivePlanet(planet);
+          }}
           onHouseSelect={(house) => setActiveHouse(house)}
         />
         {selectedHouse && (
