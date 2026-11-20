@@ -7,7 +7,6 @@ import type { PanchangData } from '../utils/panchang';
 import { analyzeTransits, type TransitAnalysisReport, type TransitHousePosition } from '../utils/transitAnalysis';
 import {
   buildDayLifeAreaAnalyses,
-  countAreaEvidence,
   type DayLifeAreaAnalysis,
 } from '../utils/dayOverviewAnalysis';
 import { GlassCard } from './common/GlassCard';
@@ -57,23 +56,40 @@ function MainTheme({ area }: { area: DayLifeAreaAnalysis | null }) {
       <div className="flex items-start gap-3">
         <div className="rounded-2xl bg-primary/15 p-3"><Sparkles className="h-6 w-6 text-primary" /></div>
         <div className="min-w-0">
-          <h3 className="font-semibold">Главная тема дня</h3>
+          <h3 className="font-semibold">На чём сегодня сосредоточено больше всего астрологических связей</h3>
           {area ? (
             <>
               <p className="mt-2 text-lg font-semibold">{area.definition.icon} {area.definition.title}</p>
-              <p className="mt-2 text-sm leading-relaxed">{area.narrative}</p>
-              <p className="mt-2 text-sm opacity-75">{area.definition.practicalFocus}</p>
-              <p className="mt-2 text-xs opacity-60">Эта сфера выбрана потому, что в ней найдено больше учтённых транзитных связей, чем в других направлениях. Количество факторов не является оценкой благоприятности или важности событий. Это символический астрологический акцент, а не обещание события.</p>
+              <p className="mt-2 text-sm leading-relaxed">{area.simpleSummary}</p>
+              <p className="mt-3 text-sm opacity-80">{area.definition.practicalFocus}</p>
+              <p className="mt-3 text-xs opacity-65">Тема выбрана по наибольшему количеству учтённых расчётных связей: {area.evidenceCount}. Это не оценка здоровья, энергии, успешности или благоприятности дня и не прогноз обязательного события.</p>
             </>
           ) : (
             <p className="mt-2 text-sm leading-relaxed opacity-75">
-              На выбранную дату расчёт не выделяет одну жизненную сферу по применяемым критериям транзитной активации. Это не означает, что день пустой или что важные события невозможны: ориентируйтесь на реальные обстоятельства и собственные приоритеты.
+              На выбранную дату модель не выделяет одну сферу по применяемым критериям. Это не означает, что день пустой или что важные события невозможны: ориентируйтесь на реальные обстоятельства и собственные приоритеты.
             </p>
           )}
         </div>
       </div>
     </GlassCard>
   );
+}
+
+function getAreaEvidenceKeys(area: DayLifeAreaAnalysis): string[] {
+  return [
+    ...area.transitPositions.map((item) => `position:${item.planet}`),
+    ...area.aspects.map((item) => `aspect:${item.transitPlanet}:${item.natalPlanet}:${item.aspect}`),
+    ...area.lordHits
+      .filter((item) => item.relation !== 'exact-aspect')
+      .map((item) => `lord:${item.house}:${item.transitPlanet}:${item.relation}`),
+  ];
+}
+
+function countSharedEvidence(area: DayLifeAreaAnalysis, areas: DayLifeAreaAnalysis[]): number {
+  const ownKeys = new Set(getAreaEvidenceKeys(area));
+  return [...ownKeys].filter((key) =>
+    areas.filter((candidate) => getAreaEvidenceKeys(candidate).includes(key)).length > 1,
+  ).length;
 }
 
 function EvidenceDetails({ area }: { area: DayLifeAreaAnalysis }) {
@@ -111,7 +127,15 @@ function EvidenceDetails({ area }: { area: DayLifeAreaAnalysis }) {
   );
 }
 
-function LifeAreaCard({ area, open = false }: { area: DayLifeAreaAnalysis; open?: boolean }) {
+function LifeAreaCard({
+  area,
+  open = false,
+  sharedEvidenceCount,
+}: {
+  area: DayLifeAreaAnalysis;
+  open?: boolean;
+  sharedEvidenceCount: number;
+}) {
   const { definition } = area;
   return (
     <details open={open} className="group rounded-2xl border border-border bg-card/40">
@@ -120,69 +144,58 @@ function LifeAreaCard({ area, open = false }: { area: DayLifeAreaAnalysis; open?
         <span className="min-w-0 flex-1">
           <span className="block font-semibold">{definition.title}</span>
           <span className="mt-1 block text-sm opacity-70">{definition.description}</span>
-          <span className="mt-2 block text-xs opacity-60">Натальная основа: {definition.houses.map((house) => `${house}-й`).join(', ')} дома · транзитных оснований: {area.evidenceCount}</span>
+          <span className="mt-2 block text-xs opacity-70">{area.evidenceCount} учтённых связей</span>
+          {sharedEvidenceCount > 0 && (
+            <span className="mt-1 block text-xs opacity-60">{sharedEvidenceCount} из них также учитываются в других сферах</span>
+          )}
         </span>
         <ChevronDown className="h-5 w-5 shrink-0 opacity-60 transition-transform group-open:rotate-180" />
       </summary>
       <div className="space-y-5 border-t border-border p-4">
         <section>
-          <h4 className="font-semibold">Что анализируем</h4>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed opacity-80">
-            {definition.houseMeanings.map((meaning) => <li key={meaning}>{meaning}</li>)}
-          </ul>
+          <h4 className="font-semibold">Простое объяснение</h4>
+          <p className="mt-1 text-sm leading-relaxed opacity-80">{area.simpleSummary}</p>
         </section>
         <section>
-          <h4 className="font-semibold">Натальная основа — постоянные особенности карты</h4>
-          <p className="mt-1 text-sm leading-relaxed opacity-80">{area.natalSummary}</p>
-          <div className="mt-2 grid gap-2 sm:grid-cols-2">
-            {area.natalBasis.map((item) => (
-              <div key={item.house} className="rounded-xl bg-secondary/50 p-3 text-sm">
-                <strong>{item.house}-й дом</strong> · {item.sign}
-                <p className="mt-1">Управитель: {item.lordName}</p>
-                <p className="mt-1 text-xs opacity-65">Натальное положение управителя: {item.lordSign}, {item.lordDegree.toFixed(2)}°{item.lordHouse ? `, ${item.lordHouse}-й дом` : ''}.</p>
-              </div>
-            ))}
-          </div>
-        </section>
-        <section>
-          <h4 className="font-semibold">Что транзиты активируют сегодня</h4>
-          <p className="mt-1 text-sm leading-relaxed opacity-80">{area.narrative}</p>
-          <div className="mt-3"><EvidenceDetails area={area} /></div>
-        </section>
-        <section>
-          <h4 className="font-semibold">Практические ориентиры</h4>
+          <h4 className="font-semibold">Что это означает в обычной жизни</h4>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed opacity-80">
             {definition.recommendations.map((item) => <li key={item}>{item}</li>)}
           </ul>
+        </section>
+        <section>
+          <h4 className="font-semibold">Почему приложение выделило эту тему?</h4>
+          <p className="mt-1 text-sm leading-relaxed opacity-80">
+            В расчёте участвуют {definition.houses.map((house) => `${house}-й`).join(', ')} дома натальной карты и связанные с ними транзитные положения, аспекты и управители.
+          </p>
+          <p className="mt-2 text-xs opacity-65">{area.activationSummary}</p>
+          <details className="mt-3 rounded-xl border border-border p-3">
+            <summary className="cursor-pointer text-sm font-medium">Какие дома участвуют</summary>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed opacity-80">
+              {definition.houseMeanings.map((meaning) => <li key={meaning}>{meaning}</li>)}
+            </ul>
+            <p className="mt-2 text-sm opacity-75">{area.natalSummary}</p>
+          </details>
+          <details className="mt-2 rounded-xl border border-border p-3">
+            <summary className="cursor-pointer text-sm font-medium">Какие планеты и аспекты учтены</summary>
+            <div className="mt-3"><EvidenceDetails area={area} /></div>
+          </details>
+          <details className="mt-2 rounded-xl border border-border p-3">
+            <summary className="cursor-pointer text-sm font-medium">Технические расчёты</summary>
+            <div className="mt-2 space-y-2 text-xs leading-relaxed opacity-70">
+              {area.natalBasis.map((item) => (
+                <p key={item.house}>
+                  {item.house}-й дом в знаке {item.sign}; управитель — {item.lordName}, его натальное положение — {item.lordSign}, {item.lordDegree.toFixed(2)}°{item.lordHouse ? `, ${item.lordHouse}-й дом` : ''}.
+                </p>
+              ))}
+              <p>{area.narrative}</p>
+            </div>
+          </details>
         </section>
         {definition.limitation && (
           <p className="rounded-xl border border-border p-3 text-xs leading-relaxed opacity-75"><strong>Важно:</strong> {definition.limitation}</p>
         )}
       </div>
     </details>
-  );
-}
-
-function ActivatedAreas({ areas }: { areas: DayLifeAreaAnalysis[] }) {
-  const active = areas.filter((area) => countAreaEvidence(area) > 0);
-  return (
-    <GlassCard>
-      <h3 className="font-semibold">Что сегодня особенно активировано в твоей карте</h3>
-      <p className="mt-1 text-sm opacity-65">Здесь показаны не общие характеристики знаков, а конкретные транзитные положения, аспекты и связи с управителями натальных домов.</p>
-      {active.length ? (
-        <div className="mt-4 space-y-3">
-          {active.map((area) => (
-            <div key={area.definition.id} className="rounded-xl border border-border p-3">
-              <h4 className="font-semibold">{area.definition.icon} {area.definition.title}</h4>
-              <p className="mt-2 text-sm leading-relaxed opacity-80">{area.narrative}</p>
-              <p className="mt-2 text-xs opacity-60">{area.activationSummary}</p>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="mt-3 text-sm opacity-70">На выбранную дату нет отдельных активаций по критериям этого анализа. Это не оценка дня как благоприятного или неблагоприятного.</p>
-      )}
-    </GlassCard>
   );
 }
 
@@ -240,36 +253,25 @@ function PlanetaryInfluences({ natalChart, report }: { natalChart: NatalChart; r
   );
 }
 
-function Recommendations({ areas, mainArea }: { areas: DayLifeAreaAnalysis[]; mainArea: DayLifeAreaAnalysis | null }) {
-  const recommendations = areas
-    .filter((area) => area.evidenceCount > 0)
-    .sort((a, b) => b.evidenceCount - a.evidenceCount)
-    .slice(0, 4);
+function Recommendations({ mainArea }: { mainArea: DayLifeAreaAnalysis | null }) {
   return (
     <GlassCard>
-      <h3 className="font-semibold">Рекомендации на сегодня</h3>
-      {mainArea && (
-        <div className="mt-3 rounded-xl bg-secondary/50 p-3">
-          <h4 className="font-semibold">Твой ориентир на день</h4>
-          <p className="mt-1 text-sm leading-relaxed">{mainArea.definition.practicalFocus}</p>
-        </div>
-      )}
-      {recommendations.length ? (
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          {recommendations.map((area) => (
-            <div key={area.definition.id} className="rounded-xl border border-border p-3">
-              <h4 className="font-semibold text-sm">{area.definition.icon} {area.definition.title}</h4>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm opacity-80">
-                {area.definition.recommendations.slice(0, 2).map((item) => <li key={item}>{item}</li>)}
-              </ul>
-            </div>
-          ))}
-        </div>
+      <h3 className="font-semibold">Твой ориентир на день</h3>
+      {mainArea ? (
+        <>
+          <p className="mt-2 text-sm leading-relaxed opacity-80">{mainArea.definition.practicalFocus}</p>
+          <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed">
+            {mainArea.definition.recommendations.map((item) => <li key={item}>{item}</li>)}
+          </ul>
+          <p className="mt-4 rounded-xl bg-secondary/50 p-3 text-sm">
+            <strong>Главный совет:</strong> {mainArea.definition.recommendations[0]}
+          </p>
+        </>
       ) : (
-        <p className="mt-2 text-sm opacity-75">Выберите одну важную для себя задачу, соотнесите планы с реальными обстоятельствами и оставьте время на отдых. Отсутствие выделенных транзитных факторов не требует откладывать дела.</p>
+        <p className="mt-2 text-sm leading-relaxed opacity-75">
+          Выберите одну важную для себя задачу, соотнесите планы с реальными обстоятельствами и оставьте время на отдых. Отсутствие выделенных транзитных факторов не требует откладывать дела.
+        </p>
       )}
-      <p className="mt-4 text-sm font-semibold">Главный совет дня</p>
-      <p className="mt-1 text-sm opacity-80">Не распыляйтесь на множество направлений. Выберите одну важную задачу и доведите её до результата.</p>
     </GlassCard>
   );
 }
@@ -299,6 +301,20 @@ function Methodology({ report }: { report: TransitAnalysisReport }) {
               {report.warnings.map((item) => <li key={item}>{item}</li>)}
             </ul>
           </div>
+          <details className="rounded-xl border border-border p-3">
+            <summary className="cursor-pointer text-sm font-semibold">Краткий словарь астрологических терминов</summary>
+            <dl className="mt-3 space-y-2 text-sm">
+              <div><dt className="font-medium">Натальная карта</dt><dd className="opacity-75">Карта неба на момент рождения.</dd></div>
+              <div><dt className="font-medium">Транзит</dt><dd className="opacity-75">Текущее положение планеты относительно натальной карты.</dd></div>
+              <div><dt className="font-medium">Натальный дом</dt><dd className="opacity-75">Одна из двенадцати областей натальной карты.</dd></div>
+              <div><dt className="font-medium">Управитель дома</dt><dd className="opacity-75">Планета, связанная со знаком на куспиде/начале дома в используемой системе.</dd></div>
+              <div><dt className="font-medium">Аспект</dt><dd className="opacity-75">Угловое соотношение между двумя планетами.</dd></div>
+              <div><dt className="font-medium">Соединение</dt><dd className="opacity-75">Аспект, при котором планеты находятся близко по долготе.</dd></div>
+              <div><dt className="font-medium">Квадратура</dt><dd className="opacity-75">Аспект с углом около 90°.</dd></div>
+              <div><dt className="font-medium">Трин</dt><dd className="opacity-75">Аспект с углом около 120°.</dd></div>
+              <div><dt className="font-medium">Орбис</dt><dd className="opacity-75">Отклонение фактического угла от точного угла аспекта.</dd></div>
+            </dl>
+          </details>
           <p className="text-xs leading-relaxed opacity-60">Натальная основа показывает постоянные темы карты. Транзиты и периоды Даши описывают выбранный момент времени. Они не заменяют проверку фактов, профессиональную консультацию или медицинские рекомендации.</p>
         </div>
       )}
@@ -328,16 +344,19 @@ export function DayOverview({ natalChart }: DayOverviewProps) {
   const mainArea = calculation.areas
     .filter((area) => area.evidenceCount > 0)
     .sort((a, b) => b.evidenceCount - a.evidenceCount)[0] ?? null;
+  const orderedAreas = mainArea
+    ? [mainArea, ...calculation.areas.filter((area) => area.definition.id !== mainArea.definition.id)]
+    : calculation.areas;
 
   return (
     <div className="space-y-6">
       <GlassCard>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider opacity-60">Персональный прогноз по системе Джйотиш</p>
-            <h2 className="mt-1 text-2xl font-semibold">Твой день</h2>
+            <p className="text-xs font-semibold uppercase tracking-wider opacity-60">Персональный прогноз</p>
+            <h2 className="mt-1 text-2xl font-semibold">Прогноз на выбранный день</h2>
             <p className="mt-1 text-sm opacity-70">{formatLongDate(selectedDate)}</p>
-            <p className="mt-1 text-xs opacity-55">Положения планет рассчитаны на 12:00 по местному времени браузера. Быстрые транзиты, особенно Луна, могут меняться в течение дня.</p>
+            <p className="mt-1 text-xs opacity-65">Момент расчёта: 12:00, местное время браузера ({Intl.DateTimeFormat().resolvedOptions().timeZone || 'часовой пояс браузера'}). Быстрые факторы, особенно Луна, могут меняться в течение дня.</p>
           </div>
           <label className="flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm">
             <CalendarDays className="h-4 w-4 opacity-60" />
@@ -354,34 +373,42 @@ export function DayOverview({ natalChart }: DayOverviewProps) {
           <MainTheme area={mainArea} />
 
           <GlassCard>
-            <h3 className="font-semibold">Сферы жизни</h3>
-            <p className="mt-1 text-sm opacity-65">Краткая оценка показывает, какие направления получили транзитную активацию. Подробное объяснение раскрывается в каждой карточке ниже; цветные оценки «хорошо/плохо» не используются.</p>
+            <h3 className="font-semibold">Все сферы жизни</h3>
+            <p className="mt-1 text-sm opacity-65">Главная тема показана первой, остальные сферы сохранены в исходном порядке. Числа обозначают количество учтённых расчётных связей, а не проценты, рейтинг или оценку «хорошо/плохо».</p>
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
-              {calculation.areas.map((area) => (
+              {orderedAreas.map((area) => (
                 <div key={area.definition.id} className="rounded-xl border border-border p-3">
                   <div className="flex items-center justify-between gap-2">
                     <strong className="text-sm">{area.definition.icon} {area.definition.title}</strong>
-                    <span className="shrink-0 text-xs opacity-60">{area.evidenceCount ? `${area.evidenceCount} осн.` : 'не выделено'}</span>
+                    <span className="shrink-0 text-xs opacity-65">{area.evidenceCount} связ.</span>
                   </div>
-                  <p className="mt-1 text-xs opacity-65">{area.activationSummary}</p>
+                  <p className="mt-1 text-xs opacity-65">{area.definition.description}</p>
+                  {area.definition.id === mainArea?.definition.id && (
+                    <p className="mt-2 text-xs font-medium text-primary">Главная тема дня</p>
+                  )}
                 </div>
               ))}
             </div>
+            <p className="mt-3 text-xs leading-relaxed opacity-65">Одна и та же астрологическая связь может учитываться в нескольких сферах, если затрагивает их натальные дома или управителей. Поэтому числа по карточкам не складываются в количество уникальных событий.</p>
           </GlassCard>
 
           <GlassCard>
-            <h3 className="font-semibold">Главные жизненные направления</h3>
-            <p className="mt-1 text-sm opacity-65">Для каждой сферы приложение соединяет постоянную натальную основу с транзитами выбранной даты. Управители и натальные положения не меняются каждый день — меняются транзитные активации.</p>
+            <h3 className="font-semibold">Подробный разбор сфер</h3>
+            <p className="mt-1 text-sm opacity-65">Сначала простое объяснение и практические ориентиры, затем натальная основа и технические расчёты.</p>
             <div className="mt-4 space-y-3">
-              {calculation.areas.map((area) => (
-                <LifeAreaCard key={area.definition.id} area={area} open={area.definition.id === mainArea?.definition.id} />
+              {orderedAreas.map((area) => (
+                <LifeAreaCard
+                  key={area.definition.id}
+                  area={area}
+                  open={area.definition.id === mainArea?.definition.id}
+                  sharedEvidenceCount={countSharedEvidence(area, calculation.areas)}
+                />
               ))}
             </div>
           </GlassCard>
 
-          <ActivatedAreas areas={calculation.areas} />
           <PlanetaryInfluences natalChart={natalChart} report={calculation.report} />
-          <Recommendations areas={calculation.areas} mainArea={mainArea} />
+          <Recommendations mainArea={mainArea} />
           <Methodology report={calculation.report} />
           <div className="flex items-start gap-2 rounded-xl border border-border p-3 text-xs leading-relaxed opacity-70">
             <Info className="mt-0.5 h-4 w-4 shrink-0" />
