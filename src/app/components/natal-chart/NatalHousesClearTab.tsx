@@ -161,7 +161,7 @@ function LifeTopicCard({ topic }: { topic: LifeTopicInsight }) {
 }
 
 export function NatalHousesTab({ natalChart }: NatalHousesTabProps) {
-  const [expandedHouse, setExpandedHouse] = useState<number | null>(1);
+  const [expandedHouse, setExpandedHouse] = useState<number | null>(null);
   const houses = useMemo(() => analyzePersonalizedHouses(natalChart), [natalChart]);
   const topics = useMemo(() => analyzeLifeTopics(natalChart), [natalChart]);
   const orderedTopics = TOPIC_ORDER.map((id) => topics.find((topic) => topic.id === id)).filter((topic): topic is LifeTopicInsight => Boolean(topic));
@@ -199,16 +199,20 @@ export function NatalHousesTab({ natalChart }: NatalHousesTabProps) {
         </div>
       </section>
 
-      <section className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-purple-600" />
-          <h3 className="text-xl font-bold text-gray-900">2. Главные сферы жизни — короткие выводы</h3>
-        </div>
-        <p className="text-sm text-gray-600">Здесь несколько домов объединены в одну тему. Это помогает увидеть общую картину, не повторяя весь подробный разбор.</p>
-        <div className="grid gap-3 xl:grid-cols-2">
-          {orderedTopics.map((topic) => <LifeTopicCard key={topic.id} topic={topic} />)}
-        </div>
-      </section>
+      <details className="rounded-2xl border border-gray-200 bg-white/70 p-4">
+        <summary className="cursor-pointer text-base font-semibold text-gray-900">Дополнительно: как несколько домов объединяются в жизненные темы</summary>
+        <p className="mt-2 text-sm text-gray-600">Этот слой помогает сопоставить дома по темам денег, карьеры, отношений, семьи и развития. Откройте его, если хотите углубиться.</p>
+              <section className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-purple-600" />
+                  <h3 className="text-xl font-bold text-gray-900">2. Главные сферы жизни — короткие выводы</h3>
+                </div>
+                <p className="text-sm text-gray-600">Здесь несколько домов объединены в одну тему. Это помогает увидеть общую картину, не повторяя весь подробный разбор.</p>
+                <div className="grid gap-3 xl:grid-cols-2">
+                  {orderedTopics.map((topic) => <LifeTopicCard key={topic.id} topic={topic} />)}
+                </div>
+              </section>
+      </details>
 
       <GlassCard>
         <p className="text-sm leading-relaxed text-gray-700">
