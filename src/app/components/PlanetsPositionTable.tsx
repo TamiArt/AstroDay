@@ -57,7 +57,9 @@ export function PlanetsPositionTable({ natalChart }: PlanetsPositionTableProps) 
         name: PLANET_NAMES_RU[key],
         position,
         house: fact?.house ?? null,
-        dignityLabel: fact?.dignity?.label ?? null,
+        dignityLabel: fact?.dignity?.dignity === 'other'
+          ? 'Особое достоинство не отмечено. Это не означает, что планета неблагоприятна.'
+          : fact?.dignity?.label ?? null,
         dignityNotApplicable: fact?.dataAvailability.dignity === 'not-applicable',
       }];
     }),
