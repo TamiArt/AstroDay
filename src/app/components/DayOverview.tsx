@@ -4,7 +4,6 @@ import type { NatalChart } from '../utils/astrology';
 import { getNakshatra, getNakshatraPada, NAKSHATRAS } from '../utils/astrology';
 import type { Aspect } from '../utils/astrology';
 import type { PanchangData } from '../utils/panchang';
-import { getPlanetName } from '../utils/planetUtils';
 import { analyzeTransits, type TransitAnalysisReport, type TransitHousePosition } from '../utils/transitAnalysis';
 import {
   buildDayLifeAreaAnalyses,
