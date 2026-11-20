@@ -34,6 +34,7 @@ export interface DayLifeAreaAnalysis {
   aspects: TransitNatalAspect[];
   lordHits: TransitHouseLordHit[];
   evidenceCount: number;
+  simpleSummary: string;
   narrative: string;
   natalSummary: string;
   activationSummary: string;
@@ -42,6 +43,18 @@ export interface DayLifeAreaAnalysis {
 const PLANET_NAMES: Record<string, string> = {
   Sun: 'Солнце', Moon: 'Луна', Mars: 'Марс', Mercury: 'Меркурий',
   Jupiter: 'Юпитер', Venus: 'Венера', Saturn: 'Сатурн', Rahu: 'Раху', Ketu: 'Кету',
+};
+
+const PLANET_THEMES: Record<string, string> = {
+  Sun: 'самостоятельность, ясность и проявление инициативы',
+  Moon: 'эмоциональный отклик, привычки и повседневный комфорт',
+  Mars: 'действия, решительность и управление импульсами',
+  Mercury: 'общение, обучение и работа с информацией',
+  Jupiter: 'развитие, знания и расширение взглядов',
+  Venus: 'отношения, согласование интересов и чувство гармонии',
+  Saturn: 'ответственность, терпение и последовательность',
+  Rahu: 'нестандартные стремления и усиление интереса к новому',
+  Ketu: 'дистанция, пересмотр приоритетов и освобождение от лишнего',
 };
 
 export const DAY_LIFE_AREAS: DayLifeAreaDefinition[] = [
@@ -183,6 +196,59 @@ function unique<T>(items: T[]): T[] {
   return [...new Set(items)];
 }
 
+function uniqueBy<T>(items: T[], getKey: (item: T) => string): T[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const key = getKey(item);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function getAreaEvidenceCounts(
+  positions: TransitHousePosition[],
+  aspects: TransitNatalAspect[],
+  lordHits: TransitHouseLordHit[],
+) {
+  const uniquePositions = uniqueBy(positions, (item) => item.planet);
+  const uniqueAspects = uniqueBy(aspects, (item) =>
+    [item.transitPlanet, item.natalPlanet, item.aspect].join(':'),
+  );
+  // An exact aspect to a house lord is already counted as an aspect.
+  // Same-house and graha-drishti links are separate calculation relations.
+  const uniqueLordHits = uniqueBy(
+    lordHits.filter((item) => item.relation !== 'exact-aspect'),
+    (item) => [item.house, item.transitPlanet, item.relation].join(':'),
+  );
+  return {
+    positions: uniquePositions.length,
+    aspects: uniqueAspects.length,
+    lordHits: uniqueLordHits.length,
+    total: uniquePositions.length + uniqueAspects.length + uniqueLordHits.length,
+  };
+}
+
+function buildSimpleSummary(
+  positions: TransitHousePosition[],
+  aspects: TransitNatalAspect[],
+  lordHits: TransitHouseLordHit[],
+): string {
+  const planets = unique([
+    ...positions.map((item) => item.planet),
+    ...aspects.map((item) => item.transitPlanet),
+    ...lordHits.map((item) => item.transitPlanet),
+  ]);
+  if (!planets.length) {
+    return 'По выбранным критериям на эту дату не найдено отдельных транзитных связей с данной сферой. Это описание расчёта, а не вывод о том, что в жизни ничего не происходит.';
+  }
+  const themes = planets
+    .map((planet) => PLANET_THEMES[planet])
+    .filter((theme): theme is string => Boolean(theme));
+  const planetNames = planets.map(planetName);
+  return `В расчёте этой сферы участвуют связи с планетами: ${planetNames.join(', ')}. В символическом языке Джйотиш их связывают с темами: ${themes.join('; ')}. Это помогает понять, какие темы модель учитывает, но не предсказывает конкретные события и не определяет их исход.`;
+}
+
 function buildAreaNarrative(
   definition: DayLifeAreaDefinition,
   positions: TransitHousePosition[],
@@ -227,7 +293,8 @@ export function buildDayLifeAreaAnalyses(
       || lords.includes(item.natalPlanet),
     );
     const lordHits = report.houseLordHits.filter((item) => lordHouseSet.has(item.house));
-    const evidenceCount = transitPositions.length + aspects.length + lordHits.length;
+    const evidenceCounts = getAreaEvidenceCounts(transitPositions, aspects, lordHits);
+    const evidenceCount = evidenceCounts.total;
     const lordSummary = natalBasis.map((item) =>
       `${item.house}-й дом в ${item.sign}: управитель ${item.lordName}${item.lordHouse ? ` расположен в ${item.lordHouse}-м доме` : ''} (${item.lordSign}, ${item.lordDegree.toFixed(2)}°)`,
     );
@@ -238,13 +305,14 @@ export function buildDayLifeAreaAnalyses(
       aspects,
       lordHits,
       evidenceCount,
+      simpleSummary: buildSimpleSummary(transitPositions, aspects, lordHits),
       narrative: buildAreaNarrative(definition, transitPositions, aspects, lordHits),
       natalSummary: lordSummary.length
         ? `Натальная основа: ${lordSummary.join('; ')}.`
         : 'Данные натальных домов или управителей для этой сферы недоступны.',
       activationSummary: evidenceCount
-        ? `Найдено расчётных оснований: ${evidenceCount} (положения транзитов: ${transitPositions.length}, аспекты: ${aspects.length}, связи с управителями: ${lordHits.length}).`
-        : 'Отдельные транзитные основания по выбранным критериям не найдены.',
+        ? `Учтённых связей: ${evidenceCount} (положения планет: ${evidenceCounts.positions}, аспекты: ${evidenceCounts.aspects}, дополнительные связи с управителями: ${evidenceCounts.lordHits}).`
+        : 'Отдельные транзитные связи по выбранным критериям не найдены.',
     };
   });
 }
