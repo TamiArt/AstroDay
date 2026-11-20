@@ -56,7 +56,7 @@ function MainTheme({ area }: { area: DayLifeAreaAnalysis | null }) {
       <div className="flex items-start gap-3">
         <div className="rounded-2xl bg-primary/15 p-3"><Sparkles className="h-6 w-6 text-primary" /></div>
         <div className="min-w-0">
-          <h3 className="font-semibold">На чём сегодня сосредоточено больше всего астрологических связей</h3>
+          <h3 className="font-semibold">На чём сосредоточено больше всего астрологических связей</h3>
           {area ? (
             <>
               <p className="mt-2 text-lg font-semibold">{area.definition.icon} {area.definition.title}</p>
@@ -294,6 +294,10 @@ function Methodology({ report }: { report: TransitAnalysisReport }) {
             <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed opacity-80">
               {report.methodology.map((item) => <li key={item}>{item}</li>)}
             </ul>
+          </div>
+          <div className="rounded-xl border border-border p-3">
+            <h4 className="font-semibold text-sm">Как считается количество связей</h4>
+            <p className="mt-2 text-sm leading-relaxed opacity-80">Внутри каждой сферы считаются уникальные транзитные положения, аспекты и дополнительные связи с управителями. Один и тот же точный аспект не учитывается повторно как связь с управителем. Одна связь может относиться к нескольким сферам, если затрагивает их дома или управителей, поэтому суммы карточек не равны числу уникальных связей во всём прогнозе.</p>
           </div>
           <div className="rounded-xl border border-border p-3">
             <h4 className="font-semibold text-sm">Ограничения текущей версии</h4>
