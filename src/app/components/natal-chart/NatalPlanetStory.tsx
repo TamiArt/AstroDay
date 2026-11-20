@@ -92,7 +92,7 @@ export function NatalPlanetStory({ planet }: { planet: NatalPlanetPersonalizedAn
   const ruledHouses = planet.ruledHouses.map((house) => house + '-й дом — ' + (HOUSE_NAMES[house] ?? 'сфера не определена'));
   const applications = PLANET_APPLICATIONS[planet.planet] ?? [];
   const summary = sign && planet.house
-    ? name + ' символизирует ' + planet.function + '. В знаке ' + signGenitive + ' эта тема рассматривается через ' + (signStyle ?? 'символику знака') + ', а ' + planet.house + '-й дом связывает её с темами «' + (houseName ?? 'сфера не определена') + '».'
+    ? name + ' связывают с темами ' + planet.function + '. В знаке ' + signGenitive + ' эта тема рассматривается через ' + (signStyle ?? 'символику знака') + ', а ' + planet.house + '-й дом связывает её с темами «' + (houseName ?? 'сфера не определена') + '».'
     : name + ' символизирует ' + planet.function + '. Часть данных о знаке или доме отсутствует, поэтому полное сочетание «планета — знак — дом» здесь не формулируется.';
 
   return (
