@@ -8,160 +8,264 @@ import type { AstrologyTermId } from '../utils/astrologyTerms';
 
 interface PanchangWidgetProps {
   panchang: PanchangData;
+  date: Date;
+  timezone: string;
 }
 
-export function PanchangWidget({ panchang }: PanchangWidgetProps) {
+interface PanchangItem {
+  id: string;
+  term: AstrologyTermId;
+  icon: string;
+  title: string;
+  question: string;
+  value: string;
+  summary: string;
+  meaningLabel: string;
+  meaning: string;
+  details: string;
+}
+
+const NAKSHATRA_NAMES_RU: Record<string, string> = {
+  Ashwini: 'Ашвини', Bharani: 'Бхарани', Krittika: 'Криттика',
+  Rohini: 'Рохини', Mrigashira: 'Мригашира', Ardra: 'Ардра',
+  Punarvasu: 'Пунарвасу', Pushya: 'Пушья', Ashlesha: 'Ашлеша',
+  Magha: 'Магха', 'Purva Phalguni': 'Пурва-Пхалгуни',
+  'Uttara Phalguni': 'Уттара-Пхалгуни', Hasta: 'Хаста',
+  Chitra: 'Читра', Swati: 'Свати', Vishakha: 'Вишакха',
+  Anuradha: 'Анурадха', Jyeshtha: 'Джйештха', Mula: 'Мула',
+  'Purva Ashadha': 'Пурва-Ашадха', 'Uttara Ashadha': 'Уттара-Ашадха',
+  Shravana: 'Шравана', Dhanishta: 'Дхаништха', Shatabhisha: 'Шатабхиша',
+  'Purva Bhadrapada': 'Пурва-Бхадрапада',
+  'Uttara Bhadrapada': 'Уттара-Бхадрапада', Revati: 'Ревати',
+};
+
+export function PanchangWidget({ panchang, date, timezone }: PanchangWidgetProps) {
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  const nakshatra = NAKSHATRAS[panchang.nakshatra.index];
-  const nakshatraNameRu: Record<string, string> = {
-    Ashwini: 'Ашвини', Bharani: 'Бхарани', Krittika: 'Криттика',
-    Rohini: 'Рохини', Mrigashira: 'Мригашира', Ardra: 'Ардра',
-    Punarvasu: 'Пунарвасу', Pushya: 'Пушья', Ashlesha: 'Ашлеша',
-    Magha: 'Магха', 'Purva Phalguni': 'Пурва-Пхалгуни',
-    'Uttara Phalguni': 'Уттара-Пхалгуни', Hasta: 'Хаста',
-    Chitra: 'Читра', Swati: 'Свати', Vishakha: 'Вишакха',
-    Anuradha: 'Анурадха', Jyeshtha: 'Джйештха', Mula: 'Мула',
-    'Purva Ashadha': 'Пурва-Ашадха', 'Uttara Ashadha': 'Уттара-Ашадха',
-    Shravana: 'Шравана', Dhanishta: 'Дхаништха', Shatabhisha: 'Шатабхиша',
-    'Purva Bhadrapada': 'Пурва-Бхадрапада',
-    'Uttara Bhadrapada': 'Уттара-Бхадрапада', Revati: 'Ревати',
-  };
-  const activeNakshatraName = nakshatra ? nakshatraNameRu[nakshatra.name] ?? nakshatra.name : panchang.nakshatra.name;
+  const dateLabel = new Intl.DateTimeFormat('ru-RU', {
+    timeZone: timezone,
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(date);
+  const weekdayLabel = new Intl.DateTimeFormat('ru-RU', {
+    timeZone: timezone,
+    weekday: 'long',
+  }).format(date);
+  const timeLabel = new Intl.DateTimeFormat('ru-RU', {
+    timeZone: timezone,
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
 
-  const items = [
+  const nakshatra = NAKSHATRAS[panchang.nakshatra.index];
+  const nakshatraName = NAKSHATRA_NAMES_RU[panchang.nakshatra.name] ?? panchang.nakshatra.name;
+  const nakshatraLord = nakshatra?.lord ? getPlanetName(nakshatra.lord) : 'не определён';
+  const tithiPhase = panchang.tithi.index < 15 ? 'растущей' : 'убывающей';
+  const tithiMeaning = panchang.tithi.meaning.toLowerCase();
+
+  const items: PanchangItem[] = [
     {
       id: 'tithi',
-      term: 'tithi' as AstrologyTermId,
+      term: 'tithi',
       icon: '🌒',
-      title: 'Титхи',
+      title: 'Титхи — лунный день',
+      question: 'Какой сейчас лунный день?',
       value: panchang.tithi.name,
-      tooltip: 'Что это?',
-      description: `Лунный день: ${panchang.tithi.meaning.toLowerCase()}.`,
-      details: 'Титхи — это лунный день, который рассчитывают по угловому расстоянию между Солнцем и Луной. В лунном месяце 30 титхи. В традиции Джйотиш их используют как один из символических ориентиров календарного дня.'
+      summary: `Показывает, какая часть лунного месяца идёт сейчас. Сегодня — ${tithiPhase} Луны.`,
+      meaningLabel: 'Символический смысл',
+      meaning: tithiMeaning,
+      details: 'Титхи рассчитывают по угловому расстоянию между Солнцем и Луной. В лунном месяце 30 титхи: 15 приходятся на период растущей Луны и 15 — на период убывающей. Экадаши — одиннадцатый титхи каждой половины месяца; в традиции его связывают с постом и духовными практиками.',
     },
     {
       id: 'nakshatra',
-      term: 'nakshatra' as AstrologyTermId,
+      term: 'nakshatra',
       icon: '🐎',
-      title: 'Накшатра',
-      value: activeNakshatraName,
-      tooltip: 'Что это?',
-      description: `Накшатра — один из 27 участков лунного пути. В традиции её символический фон связывают с планетой-управителем: ${nakshatra?.lord ? getPlanetName(nakshatra.lord) : 'не определена'}.`,
-      details: 'Накшатра — один из 27 участков лунного пути, через которые проходит Луна. Луна обычно находится в одном таком участке около суток. В Джйотиш накшатру используют для символического описания дня; она не предсказывает конкретные события.'
+      title: 'Накшатра — путь Луны среди звёзд',
+      question: 'В каком участке звёздного пути находится Луна?',
+      value: nakshatraName,
+      summary: 'Показывает, в каком из 27 участков лунного пути находится Луна.',
+      meaningLabel: 'Планета-управитель',
+      meaning: nakshatraLord,
+      details: 'В Джйотиш путь Луны по небу делят на 27 участков — накшатр. Луна проходит через них последовательно; обычно одна накшатра занимает около суток. Название и управитель накшатры используют как символические ориентиры, а не как предсказание конкретных событий.',
     },
     {
       id: 'yoga',
-      term: 'yoga' as AstrologyTermId,
-      icon: '⚡️',
-      title: 'Йога',
+      term: 'yoga',
+      icon: '⚡',
+      title: 'Йога — сочетание Солнца и Луны',
+      question: 'Какой символический фон связывают с их сочетанием?',
       value: panchang.yoga.name,
-      tooltip: 'Что это?',
-      description: `Общий символический фон: ${panchang.yoga.meaning.toLowerCase()}.`,
-      details: 'Йогу дня рассчитывают по сумме долгот Солнца и Луны. В панчанге выделяют 27 йог. Это традиционная характеристика календарного дня, а не гарантия успеха или неудачи дела.'
+      summary: 'Это отдельный календарный показатель, который рассчитывают по положениям Солнца и Луны.',
+      meaningLabel: 'Символический смысл',
+      meaning: panchang.yoga.meaning.toLowerCase(),
+      details: 'Йогу Панчанга рассчитывают по сумме эклиптических долгот Солнца и Луны. В традиционной системе выделяют 27 йог. Здесь слово «йога» не означает физические упражнения; это название календарного показателя.',
     },
     {
       id: 'karana',
-      term: 'karana' as AstrologyTermId,
-      icon: '🗣',
-      title: 'Карана',
+      term: 'karana',
+      icon: '🗣️',
+      title: 'Карана — половина титхи',
+      question: 'Какая половина лунного дня идёт сейчас?',
       value: panchang.karana.name,
-      tooltip: 'Что это?',
-      description: `Дополнительный ориентир: ${panchang.karana.quality.toLowerCase()}.`,
-      details: 'Карана — половина лунного дня (титхи). В календаре используются 11 видов каран, часть из которых повторяется циклически. В традиции это дополнительный символический ориентир для оценки дня.'
+      summary: 'Каждый титхи делится на две части, и каждая такая часть называется караной.',
+      meaningLabel: 'Традиционный ориентир',
+      meaning: panchang.karana.quality.toLowerCase(),
+      details: 'Карана — половина титхи. Поэтому в пределах одного титхи последовательно проходят две караны. В Панчанге используют 11 названий каран: часть повторяется в цикле, а несколько встречаются один раз в лунном месяце. Вишти традиционно советуют учитывать при выборе времени для некоторых начинаний, но это не делает весь день плохим и не запрещает обычные дела.',
     },
     {
       id: 'vara',
-      term: 'vara' as AstrologyTermId,
+      term: 'vara',
       icon: '🌞',
-      title: 'Вара (День недели)',
+      title: 'Вара — день недели',
+      question: 'Какой сегодня день недели и какая планета ему соответствует?',
       value: panchang.vara.name,
-      tooltip: 'Что это?',
-      description: `Планета дня — ${panchang.vara.planet}. Традиционная тема: ${panchang.vara.quality.toLowerCase()}.`,
-      details: 'Вара — день недели в индийском календаре. Каждому дню традиционно сопоставляют планету. Это общий календарный символ, а не описание характера конкретного человека.'
-    }
+      summary: `В традиции Джйотиш каждому дню недели соответствует планета: сегодня — ${panchang.vara.planet}.`,
+      meaningLabel: 'Традиционная тема',
+      meaning: panchang.vara.quality.toLowerCase(),
+      details: 'Вара — это день недели в индийском календаре. Каждому из семи дней традиционно соответствует одна из семи планет. Для пятницы это Венера, которую связывают с любовью, красотой и гармонией.',
+    },
+  ];
+
+  const additionalThemes = [
+    { icon: '⚡', label: `Йога ${panchang.yoga.name}`, value: panchang.yoga.meaning.toLowerCase() },
+    { icon: '💗', label: panchang.vara.name, value: panchang.vara.quality.toLowerCase() },
+    { icon: '🌙', label: `Накшатра ${nakshatraName}`, value: `управитель — ${nakshatraLord}` },
   ];
 
   return (
-    <div
-      className="rounded-3xl p-8"
+    <section
+      className="rounded-3xl p-5 sm:p-8 space-y-6"
       style={{
         background: 'var(--glass-bg)',
         border: '1px solid var(--glass-border)',
-        boxShadow: '0 8px 32px rgba(107, 76, 230, 0.15)'
+        boxShadow: '0 8px 32px rgba(107, 76, 230, 0.15)',
       }}
+      aria-labelledby="panchang-title"
     >
-      <div className="mb-6">
-        <h2 className="mb-2">Панчанг <TermTooltip term="panchang" /> на сегодня</h2>
-        <p className="opacity-70">
-          Пять частей традиционного индийского календаря. Сначала — общий смысл дня, ниже — каждый показатель простыми словами.
+      <header>
+        <h2 id="panchang-title" className="text-2xl font-semibold">Панчанг</h2>
+        <p className="mt-1 text-xl font-semibold capitalize">{dateLabel}</p>
+        <p className="mt-1 text-sm font-medium capitalize opacity-70">{weekdayLabel}</p>
+        <p className="mt-3 text-sm leading-relaxed opacity-70">
+          Панчанг — традиционный индийский календарь. Он описывает день с помощью пяти показателей.
         </p>
-      </div>
+        <p className="mt-2 text-xs opacity-60">Расчёт на {timeLabel} · местное время выбранного места</p>
+      </header>
 
-      <div className="mb-5 rounded-2xl border border-primary/20 bg-primary/5 p-5">
-        <h3 className="font-semibold text-lg">Общий смысл дня</h3>
-        <p className="mt-2 leading-relaxed">
-          В символике Панчанга сегодняшний день связан с темой «{panchang.tithi.meaning.toLowerCase()}».
-          Дополнительный оттенок задаёт йога «{panchang.yoga.name}» — {panchang.yoga.meaning.toLowerCase()},
-          а день недели ({panchang.vara.name}) традиционно связывают с темой «{panchang.vara.quality.toLowerCase()}».
+      <section className="rounded-2xl border border-primary/20 bg-primary/5 p-5" aria-labelledby="panchang-day-theme">
+        <p className="text-xs font-semibold uppercase tracking-wide opacity-60">Общий смысл дня</p>
+        <h3 id="panchang-day-theme" className="mt-2 text-2xl font-semibold">{panchang.tithi.meaning}</h3>
+        <p className="mt-2 text-sm leading-relaxed opacity-80">
+          В традиционной символике этот титхи связывают с темой «{tithiMeaning}». Это один из ориентиров Панчанга, а не характеристика всех событий дня.
         </p>
-        <p className="mt-2 text-sm opacity-75">
-          Накшатра {activeNakshatraName} (управитель — {nakshatra?.lord ? getPlanetName(nakshatra.lord) : 'не определён'}) и карана {panchang.karana.name}
-          дополняют это описание: накшатра задаёт символический лунный фон, а карана — дополнительный оттенок лунного дня.
-        </p>
-        <p className="mt-3 text-sm">
-          Как использовать: выберите одно-два посильных дела, учитывайте реальные обстоятельства и не воспринимайте это описание как обещание события или запрет на действия.
-        </p>
-      </div>
 
-      <h3 className="mb-3 font-semibold">Из чего складывается Панчанга</h3>
-      <div className="space-y-4">
-        {items.map((item) => (
-          <div
-            key={item.id}
-            className="p-5 rounded-2xl border border-border hover:border-primary/50 transition-all cursor-pointer"
-            onClick={() => setExpanded(expanded === item.id ? null : item.id)}
-            style={{
-              background: expanded === item.id ? 'var(--secondary)' : 'transparent'
-            }}
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-4 flex-1">
-                <span className="text-3xl">{item.icon}</span>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3>{item.title}</h3>
-                    <TermTooltip term={item.term} label={item.tooltip} />
-                  </div>
-                  <p className="opacity-90 mb-2">{item.value}</p>
-                  <p className="opacity-70">{item.description}</p>
-
-                  {expanded === item.id && (
-                    <div className="mt-4 p-4 rounded-xl bg-background/50 border border-border animate-in fade-in duration-300">
-                      <p className="opacity-80 leading-relaxed">{item.details}</p>
-                    </div>
-                  )}
-                </div>
+        <div className="mt-4">
+          <h4 className="text-sm font-semibold">Дополнительные оттенки</h4>
+          <div className="mt-2 grid gap-2 sm:grid-cols-3">
+            {additionalThemes.map((theme) => (
+              <div key={theme.label} className="rounded-xl border border-border bg-background/50 p-3">
+                <p className="text-sm font-medium">{theme.icon} {theme.label}</p>
+                <p className="mt-1 text-xs leading-relaxed opacity-70">{theme.value}</p>
               </div>
-
-              {expanded === item.id ? (
-                <ChevronUp className="w-5 h-5 opacity-50 flex-shrink-0" />
-              ) : (
-                <ChevronDown className="w-5 h-5 opacity-50 flex-shrink-0" />
-              )}
-            </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
 
-      <div className="mt-6 p-4 rounded-xl bg-accent/10 border border-accent/30">
-        <div className="flex gap-3">
-          <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
-          <p className="opacity-80 leading-relaxed">
-            Панчанг используют в традиции Джйотиш как один из ориентиров при выборе времени для дел. Например, Пурниму (полнолуние) связывают с завершением, а Экадаши — с постом и духовными практиками. Это культурная традиция, а не научно подтверждённый способ предсказать результат.
+        <div className="mt-4 rounded-xl bg-background/60 p-4">
+          <h4 className="font-semibold">Как использовать эту информацию?</h4>
+          <p className="mt-1 text-sm leading-relaxed">
+            Выбери одно-два посильных дела. Например, удели время спокойным практикам, отдыху или тому, что помогает навести порядок в мыслях. Учитывай свои планы и реальные обстоятельства.
           </p>
         </div>
+        <p className="mt-3 text-xs leading-relaxed opacity-65">
+          Это символическая трактовка традиции Джйотиш, а не обещание события, оценка дня или запрет на действия.
+        </p>
+      </section>
+
+      <section aria-labelledby="panchang-five-parts">
+        <div className="mb-3">
+          <h3 id="panchang-five-parts" className="text-lg font-semibold">Из чего складывается Панчанг?</h3>
+          <p className="mt-1 text-sm opacity-70">Пять частей отвечают на пять разных вопросов. Нажми на карточку, чтобы узнать подробнее.</p>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          {items.map((item, index) => {
+            const isExpanded = expanded === item.id;
+            return (
+              <article
+                key={item.id}
+                className={`rounded-2xl border p-4 transition-colors ${isExpanded ? 'border-primary/50 bg-secondary/50' : 'border-border'} ${index === 4 ? 'sm:col-span-2' : ''}`}
+              >
+                <button
+                  type="button"
+                  className="w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+                  onClick={() => setExpanded(isExpanded ? null : item.id)}
+                  aria-expanded={isExpanded}
+                  aria-controls={`panchang-details-${item.id}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="text-3xl" aria-hidden="true">{item.icon}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-2 font-semibold">
+                        {index + 1}. {item.title}
+                        <TermTooltip term={item.term} />
+                      </span>
+                      <span className="mt-1 block text-sm opacity-70">{item.question}</span>
+                      <span className="mt-3 block text-lg font-semibold">{item.value}</span>
+                      <span className="mt-1 block text-sm leading-relaxed opacity-75">{item.summary}</span>
+                    </span>
+                    <span className="shrink-0 pt-1 opacity-55" aria-hidden="true">
+                      {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                    </span>
+                  </div>
+                </button>
+
+                {isExpanded && (
+                  <div id={`panchang-details-${item.id}`} className="mt-4 space-y-3 border-t border-border pt-4">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide opacity-55">Что это значит?</p>
+                      <p className="mt-1 text-sm leading-relaxed">{item.details}</p>
+                    </div>
+                    <div className="rounded-xl bg-background/60 p-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide opacity-55">{item.meaningLabel}</p>
+                      <p className="mt-1 text-sm">{item.meaning}</p>
+                    </div>
+                  </div>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-border p-5" aria-labelledby="panchang-cheatsheet">
+        <h3 id="panchang-cheatsheet" className="font-semibold">Пять частей — пять вопросов</h3>
+        <ul className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+          <li><strong>Титхи:</strong> какой сейчас лунный день?</li>
+          <li><strong>Накшатра:</strong> где находится Луна на звёздном пути?</li>
+          <li><strong>Йога:</strong> какой фон связывают с сочетанием Солнца и Луны?</li>
+          <li><strong>Карана:</strong> какая половина титхи идёт?</li>
+          <li className="sm:col-span-2"><strong>Вара:</strong> какой сегодня день недели и какая планета ему соответствует?</li>
+        </ul>
+        <p className="mt-3 text-xs leading-relaxed opacity-65">
+          Запомни: титхи — это лунный день, а карана — его половина. Остальные три показателя описывают другие стороны календарного дня.
+        </p>
+      </section>
+
+      <div className="rounded-xl border border-accent/30 bg-accent/10 p-4">
+        <div className="flex gap-3">
+          <Info className="mt-0.5 h-5 w-5 shrink-0" />
+          <div className="text-sm leading-relaxed opacity-80">
+            <p>
+              Панчанг используют в традиции Джйотиш как один из ориентиров при выборе времени для дел. Например, Пурниму (полнолуние) связывают с завершением, а Экадаши — с постом и духовными практиками.
+            </p>
+            <p className="mt-2 text-xs opacity-75">
+              Значения титхи, накшатры, йоги и караны могут меняться в течение суток. Сейчас приложение показывает расчёт на указанное местное время; точные интервалы смены этих показателей пока не отображаются. Панчанг — культурная традиция, а не научно подтверждённый способ предсказывать результат.
+            </p>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
