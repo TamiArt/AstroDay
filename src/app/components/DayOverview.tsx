@@ -108,7 +108,7 @@ function EvidenceDetails({ area }: { area: DayLifeAreaAnalysis }) {
             {area.aspects.map((aspect, index) => (
               <div key={`${aspect.transitPlanet}-${aspect.natalPlanet}-${index}`} className="rounded-xl bg-secondary/60 p-3 text-sm">
                 {aspect.evidence}
-                <p className="mt-1 text-xs opacity-65">Орбис {aspect.orb.toFixed(2)}° · расчётная сила {aspect.strength.toFixed(0)}/100 · {aspect.applying === null ? 'фаза аспекта не определена' : aspect.applying ? 'сходящийся аспект' : 'расходящийся аспект'}</p>
+                <p className="mt-1 text-xs opacity-65">Орбис {aspect.orb.toFixed(2)}° · расчётная сила {aspect.strength.toFixed(0)}/100 · {aspect.applying === null ? 'фаза аспекта не определена' : aspect.applying ? 'сходящийся аспект' : 'расходящийся аспект'}. Сила — параметр алгоритма, а не оценка благоприятности или негативности.</p>
               </div>
             ))}
             {area.lordHits.filter((hit) => hit.relation !== 'exact-aspect').map((hit, index) => (
