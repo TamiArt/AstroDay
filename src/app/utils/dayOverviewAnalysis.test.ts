@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { calculateNatalChart } from './astrology';
 import { analyzeTransits } from './transitAnalysis';
-import { buildDayLifeAreaAnalyses, DAY_LIFE_AREAS } from './dayOverviewAnalysis';
+import { buildDayLifeAreaAnalyses, countAreaEvidence, DAY_LIFE_AREAS } from './dayOverviewAnalysis';
 
 const natalChart = calculateNatalChart(new Date('1990-06-15T07:19:25.000Z'), 28.6139, 77.2090);
 const report = analyzeTransits(natalChart, new Date('2026-11-20T12:00:00.000Z'));
@@ -26,9 +26,26 @@ assert.ok(areas.every((area) => area.natalBasis.every((item) =>
 assert.ok(areas.every((area) => area.transitPositions.every((item) =>
   area.definition.houses.includes(item.natalHouse),
 )));
-assert.ok(areas.every((area) => area.evidenceCount ===
+assert.ok(areas.every((area) => area.evidenceCount === countAreaEvidence(area)));
+assert.ok(areas.every((area) => area.evidenceCount <=
   area.transitPositions.length + area.aspects.length + area.lordHits.length));
+assert.ok(areas.every((area) => area.simpleSummary.length > 0));
 assert.ok(areas.every((area) => area.narrative.length > 0));
+
+const areaWithAspect = areas.find((area) => area.aspects.length > 0);
+if (areaWithAspect) {
+  const duplicatedReport = {
+    ...report,
+    aspects: [...report.aspects, report.aspects[0]],
+  };
+  const duplicatedAreas = buildDayLifeAreaAnalyses(natalChart, duplicatedReport);
+  const duplicatedArea = duplicatedAreas.find((area) => area.definition.id === areaWithAspect.definition.id);
+  assert.equal(
+    duplicatedArea?.evidenceCount,
+    areaWithAspect.evidenceCount,
+    'the same transit aspect is counted only once within a life area',
+  );
+}
 assert.ok(areas.find((area) => area.definition.id === 'children')?.definition.limitation?.includes('зачатия'));
 assert.ok(areas.find((area) => area.definition.id === 'health')?.definition.limitation?.includes('диагностирует'));
 
