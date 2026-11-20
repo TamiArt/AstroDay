@@ -23,6 +23,13 @@ assert.deepEqual(areas.map((area) => area.id), ['money', 'career', 'development'
 assert.ok(areas.every((area) => area.houseNotes.length === area.houses.length));
 assert.ok(areas.find((area) => area.id === 'money')?.planetNotes.length);
 
+const chartWithUnknownLord = {
+  ...chart,
+  houses: chart.houses.map((house, index) => index === 0 ? { ...house, lord: 'Unknown' } : house),
+} as unknown as NatalChart;
+const unknownLordAreas = analyzeLifeAreas(chartWithUnknownLord);
+assert.ok(unknownLordAreas.some((area) => area.houseNotes.some((note) => note.includes('управитель — Unknown.'))));
+
 const firstSynastryChart = { ...chart, planets: { Moon: position(65) } } as unknown as NatalChart;
 const secondSynastryChart = { ...chart, planets: { Sun: position(65) } } as unknown as NatalChart;
 const synastry = getSynastryAspects(firstSynastryChart, secondSynastryChart);
