@@ -1,13 +1,13 @@
 // Ежедневный обзор: сначала понятные ориентиры, затем астрологические подробности
-import { useMemo } from 'react';
 import { ChevronRight, Clock3, Info, MoonStar } from 'lucide-react';
-import { NatalChart, Aspect } from '../utils/astrology';
-import { PanchangData } from '../utils/panchang';
-import { calculatePlanetaryHoursForDay, PlanetaryHourInfo } from '../utils/planetaryHours';
+import type { NatalChart, Aspect } from '../utils/astrology';
+import type { PanchangData } from '../utils/panchang';
+import { calculatePlanetaryHoursForDay } from '../utils/planetaryHours';
+import type { PlanetaryHourInfo } from '../utils/planetaryHours';
 import { formatTime } from '../utils/dateUtils';
 import { getPlanetName } from '../utils/planetUtils';
 import { generatePersonalRecommendations } from '../utils/personalRecommendations';
-import { UserProfile } from '../utils/storage';
+import type { UserProfile } from '../utils/storage';
 import { GlassCard } from './common/GlassCard';
 import { TopRecommendations } from './daily-report/TopRecommendations';
 import { LocationContext } from './daily-report/LocationContext';
@@ -41,7 +41,7 @@ const SIGN_THEMES: Record<string, string> = {
   Aquarius: 'новыми идеями, командами и технологиями', Pisces: 'чувствами, воображением и творчеством',
 };
 
-const PLANET_THEMES: Record<string, string> = {
+const NAKSHATRA_NAMES_RU: Record<string, string> = {\n  Ashwini: 'Ашвини', Bharani: 'Бхарани', Krittika: 'Криттика', Rohini: 'Рохини', Mrigashira: 'Мригашира',\n  Ardra: 'Ардра', Punarvasu: 'Пунарвасу', Pushya: 'Пушья', Ashlesha: 'Ашлеша', Magha: 'Магха',\n  'Purva Phalguni': 'Пурва-Пхалгуни', 'Uttara Phalguni': 'Уттара-Пхалгуни', Hasta: 'Хаста', Chitra: 'Читра',\n  Swati: 'Свати', Vishakha: 'Вишакха', Anuradha: 'Анурадха', Jyeshtha: 'Джйештха', Mula: 'Мула',\n  'Purva Ashadha': 'Пурва-Ашадха', 'Uttara Ashadha': 'Уттара-Ашадха', Shravana: 'Шравана', Dhanishta: 'Дхаништха',\n  Shatabhisha: 'Шатабхиша', 'Purva Bhadrapada': 'Пурва-Бхадрапада', 'Uttara Bhadrapada': 'Уттара-Бхадрапада', Revati: 'Ревати',\n};\n\nconst PLANET_THEMES: Record<string, string> = {
   Sun: 'инициатива, ясность и самовыражение',
   Moon: 'чувства, забота и повседневный комфорт',
   Mars: 'действие, решительность и управление импульсами',
@@ -77,7 +77,7 @@ export function DailyReport({
     nextSunrise: currentDate,
     isFallback: true,
   };
-  const personalRecommendation = generatePersonalRecommendations({
+  const tithiNumber = panchang.tithi.index < 15 ? panchang.tithi.index + 1 : panchang.tithi.index - 14;\n  const tithiPhase = panchang.tithi.index < 15 ? 'растущей' : 'убывающей';\n  const tithiLabel = `${tithiNumber}-й лунный день ${tithiPhase} Луны (${panchang.tithi.name})`;\n  const nakshatraName = NAKSHATRA_NAMES_RU[panchang.nakshatra.name] ?? panchang.nakshatra.name;\n  const personalRecommendation = generatePersonalRecommendations({
     profile,
     date: currentDate,
     natalChart,
@@ -110,7 +110,7 @@ export function DailyReport({
           <div>
             <h2 className="text-xl font-semibold">Сегодняшний день</h2>
             <p className="mt-2 text-sm leading-relaxed">
-              В календарной символике сегодня {panchang.tithi.name.toLowerCase()} — {panchang.tithi.meaning.toLowerCase()}.
+              В календарной символике сегодня {tithiLabel.toLowerCase()} — {panchang.tithi.meaning.toLowerCase()}.
               Луна находится в знаке {moonSignRu}; в традиции этот знак связывают с темами {SIGN_THEMES[moonSign] ?? 'внутреннего состояния и повседневных дел'}.
             </p>
             <p className="mt-2 text-xs opacity-65">Это общий символический фон дня. Персональные подсказки ниже дополнительно учитывают вашу натальную карту.</p>
@@ -133,9 +133,9 @@ export function DailyReport({
         <div className="mt-4 space-y-3">
           <div className="rounded-xl border border-border p-4">
             <p className="text-xs font-semibold uppercase tracking-wide opacity-60">Общий календарный фон</p>
-            <p className="mt-2 text-sm"><strong>Лунный день:</strong> {panchang.tithi.name} — {panchang.tithi.meaning}.</p>
+            <p className="mt-2 text-sm"><strong>Лунный день:</strong> {tithiLabel} — {panchang.tithi.meaning}.</p>
             <p className="mt-2 text-sm"><strong>Положение Луны:</strong> {moonSignRu}. Традиционная символика: {SIGN_THEMES[moonSign] ?? 'внутреннее состояние и повседневные дела'}.</p>
-            <p className="mt-2 text-sm"><strong>Накшатра:</strong> {panchang.nakshatra.name}. Это один из 27 участков лунного пути, который в Джйотиш используют как дополнительный символический ориентир.</p>
+            <p className="mt-2 text-sm"><strong>Накшатра:</strong> {nakshatraName}. Это один из 27 участков лунного пути, который в Джйотиш используют как дополнительный символический ориентир.</p>
             <details className="mt-3 border-t border-border pt-3 text-sm">
               <summary className="cursor-pointer font-medium">Дополнительные элементы Панчанга</summary>
               <p className="mt-2">Йога: {panchang.yoga.name} — {panchang.yoga.meaning}.</p>
