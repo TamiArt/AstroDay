@@ -7,7 +7,9 @@ export const PLANET_DATA = {
   Mercury: { icon: '☿️', name: 'Меркурий', color: '#06b6d4' },
   Jupiter: { icon: '♃', name: 'Юпитер', color: '#eab308' },
   Venus: { icon: '♀️', name: 'Венера', color: '#ec4899' },
-  Saturn: { icon: '♄', name: 'Сатурн', color: '#6366f1' },\n  Rahu: { icon: '☊', name: 'Раху', color: '#64748b' },\n  Ketu: { icon: '☋', name: 'Кету', color: '#a16207' }
+  Saturn: { icon: '♄', name: 'Сатурн', color: '#6366f1' },
+  Rahu: { icon: '☊', name: 'Раху', color: '#64748b' },
+  Ketu: { icon: '☋', name: 'Кету', color: '#a16207' }
 } as const;
 
 export type PlanetName = keyof typeof PLANET_DATA;
