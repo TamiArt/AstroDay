@@ -34,8 +34,8 @@ interface DashboardProps {
 type DashboardView = 'dayoverview' | 'overview' | 'home' | 'panchang' | 'natalchart' | 'remedies' | 'calendar' | 'now' | 'settings' | 'palmistry';
 
 const NAV_ITEMS: Array<{ id: DashboardView; label: string }> = [
-  { id: 'dayoverview', label: 'Обзор дня' },
   { id: 'overview', label: 'Сегодня' },
+  { id: 'dayoverview', label: 'Обзор дня' },
   { id: 'home', label: 'Дом' },
   { id: 'panchang', label: 'Панчанг' },
   { id: 'natalchart', label: 'Натальная карта' },
@@ -55,7 +55,7 @@ function ViewFallback() {
 }
 
 export function Dashboard({ profile, onReset, onProfileUpdate }: DashboardProps) {
-  const [selectedView, setSelectedView] = useState<DashboardView>('dayoverview');
+  const [selectedView, setSelectedView] = useState<DashboardView>('overview');
   const [showDeepDive, setShowDeepDive] = useState(false);
   const [dailyMood, setDailyMood] = useState<number | null>(null);
   const [isPrecalculating, setIsPrecalculating] = useState(false);
