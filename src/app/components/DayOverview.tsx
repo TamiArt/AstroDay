@@ -337,6 +337,7 @@ export function DayOverview({ natalChart }: DayOverviewProps) {
             <p className="text-xs font-semibold uppercase tracking-wider opacity-60">Персональный прогноз по системе Джйотиш</p>
             <h2 className="mt-1 text-2xl font-semibold">Твой день</h2>
             <p className="mt-1 text-sm opacity-70">{formatLongDate(selectedDate)}</p>
+            <p className="mt-1 text-xs opacity-55">Положения планет рассчитаны на 12:00 по местному времени браузера. Быстрые транзиты, особенно Луна, могут меняться в течение дня.</p>
           </div>
           <label className="flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm">
             <CalendarDays className="h-4 w-4 opacity-60" />
