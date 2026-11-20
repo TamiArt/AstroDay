@@ -236,8 +236,8 @@ function buildSimpleSummary(
 ): string {
   const planets = unique([
     ...positions.map((item) => item.planet),
-    ...aspects.map((item) => item.transitPlanet),
-    ...lordHits.map((item) => item.transitPlanet),
+    ...aspects.flatMap((item) => [item.transitPlanet, item.natalPlanet]),
+    ...lordHits.flatMap((item) => [item.transitPlanet, item.lord]),
   ]);
   if (!planets.length) {
     return 'По выбранным критериям на эту дату не найдено отдельных транзитных связей с данной сферой. Это описание расчёта, а не вывод о том, что в жизни ничего не происходит.';
