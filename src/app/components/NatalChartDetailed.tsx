@@ -148,10 +148,16 @@ export function NatalChartDetailed({ natalChart, profile }: NatalChartDetailedPr
           Начните с обзора. В каждой вкладке сначала читайте краткий персональный вывод;
           расчёты и расширенные объяснения открывайте только тогда, когда они нужны.
         </p>
+        <div className="mt-3 grid gap-2 text-xs text-gray-600 sm:grid-cols-2">
+          <p><span className="font-semibold text-gray-800">Дата рождения:</span> {profile.birthDate}</p>
+          <p><span className="font-semibold text-gray-800">Время рождения:</span> {profile.birthTime}</p>
+          <p className="sm:col-span-2"><span className="font-semibold text-gray-800">Место рождения:</span> {profile.birthPlace}</p>
+        </div>
         <p className="mt-2 text-xs text-gray-500">
-          Дата и время карты: {new Date(natalChart.date).toLocaleString('ru-RU', {
-            day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
-          })}. Время рождения влияет на Асцендент и распределение домов.
+          Расчёт: сидерический зодиак, айанамша Лахири, дома Whole Sign.
+          {profile.timeUncertainty > 0
+            ? ` Указана неопределённость времени рождения: ±${profile.timeUncertainty} мин.; это может повлиять на Асцендент и точность домов.`
+            : ' Точность времени особенно важна для Асцендента, домов и дробных карт.'}
         </p>
       </div>
 
