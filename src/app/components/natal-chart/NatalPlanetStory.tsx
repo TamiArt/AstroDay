@@ -98,7 +98,8 @@ export function NatalPlanetStory({ planet }: { planet: NatalPlanetPersonalizedAn
   return (
     <div className="space-y-4 text-sm leading-relaxed">
       <section className="rounded-xl bg-indigo-50/70 p-3">
-        <p className="font-semibold text-gray-900">{summary}</p>
+        <h5 className="font-semibold text-indigo-950">Главный вывод</h5>
+        <p className="mt-1 font-semibold text-gray-900">{summary}</p>
         <p className="mt-2 text-xs text-gray-600">Такое прочтение относится к символической традиции Джйотиш и предлагает тему для самонаблюдения, а не психологический диагноз или обязательное описание характера.</p>
       </section>
 
@@ -154,6 +155,10 @@ export function NatalPlanetStory({ planet }: { planet: NatalPlanetPersonalizedAn
       <details className="rounded-lg border border-gray-200 p-3">
         <summary className="cursor-pointer font-medium text-gray-800">Дополнительные связи и технические основания</summary>
         <div className="mt-3 space-y-2 text-gray-700">
+          <p>Градус внутри знака: {planet.degreeInSign === null ? 'не рассчитан' : planet.degreeInSign.toFixed(2) + '°'}.</p>
+          <p>Накшатра: {planet.nakshatra ?? 'не определена'}{planet.pada ? ', пада ' + planet.pada : ''}.</p>
+          {planet.supportingFactors.map((item) => <p key={item}>Дополнительный фактор: {item}</p>)}
+          {planet.attentionFactors.map((item) => <p key={item}>Фактор для дополнительного внимания: {item}</p>)}
           {planet.conjunctions.length > 0 && <p>Соединения по знаку: {planet.conjunctions.map((item) => PLANET_NAMES[item] ?? item).join(', ')}. Точный орбис в этом показателе не оценивается.</p>}
           {planet.receivesAspectsFrom.length > 0 && <p>Получает аспекты от: {planet.receivesAspectsFrom.map((item) => PLANET_NAMES[item] ?? item).join(', ')}.</p>}
           {planet.aspectsToPlanets.length > 0 && <p>Аспектирует планеты: {planet.aspectsToPlanets.map((item) => PLANET_NAMES[item] ?? item).join(', ')}.</p>}
