@@ -214,7 +214,7 @@ export function DailyReport({
         <summary className="cursor-pointer font-semibold">Точность исходных данных и персонализация</summary>
         <div className="mt-3 space-y-2 text-sm leading-relaxed opacity-80">
           <p><strong>Данные рождения:</strong> {profile.birthDate}, {profile.birthTime}; место — {profile.birthPlace}.</p>
-          <p><strong>Место для расчёта текущих транзитов и календаря:</strong> {profile.currentLocation?.place ?? profile.birthPlace}{profile.currentLocation ? " (текущий город)" : " (пока используется место рождения; укажите город проживания в настройках)" }.</p>
+          <p><strong>Место для расчёта текущих транзитов и календаря:</strong> {profile.currentLocation?.place ?? profile.birthPlace}{profile.currentLocation ? ' (текущий город)' : ' (пока используется место рождения; укажите город проживания в настройках)'}.</p>
           <p><strong>Погрешность времени рождения:</strong> {typeof profile.timeUncertainty === 'number' ? `около ${profile.timeUncertainty} минут` : 'не указана'}.</p>
           <p><strong>Часовой пояс рождения:</strong> {profile.timezoneAccuracy === 'matched-region' ? 'сопоставлен с регионом' : profile.timezoneAccuracy === 'estimated-longitude' ? 'оценён по долготе' : 'указан вручную или не уточнён'}.</p>
           {personalRecommendation.precision.notes.length > 0 && (
