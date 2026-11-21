@@ -1,4 +1,4 @@
-// [КОМПОНЕНТ] Четыре коротких практических ориентира на день
+// [КОМПОНЕНТ] Цветовые ориентиры и короткие практические подсказки на день
 import { Check, AlertCircle, Ear, Eye, Sparkles } from 'lucide-react';
 import { PanchangData } from '../../utils/panchang';
 import { Aspect } from '../../utils/astrology';
