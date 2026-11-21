@@ -54,7 +54,7 @@ export function EnergyTracker({ profile, days = 7 }: EnergyTrackerProps) {
   const timezone = profile.currentLocation?.timezone ?? profile.timezone;
   const dates = useMemo(() => buildDateRange(days, timezone), [days, timezone]);
   const [energyData, setEnergyData] = useState<EnergyPoint[]>([]);
-  const [selectedDateKey, setSelectedDateKey] = useState(() => formatDateKey(new Date()));
+  const [selectedDateKey, setSelectedDateKey] = useState(() => formatDateKey(new Date(), timezone));
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
 
@@ -107,7 +107,6 @@ export function EnergyTracker({ profile, days = 7 }: EnergyTrackerProps) {
   const average = energyData.length
     ? Math.round(energyData.reduce((sum, point) => sum + point.energy, 0) / energyData.length)
     : 0;
-  const firstDay = energyData[0];
   const previousDay = energyData.length > 1 ? energyData[energyData.length - 2] : undefined;
   const trendDelta = today && previousDay ? today.energy - previousDay.energy : 0;
   const trendLabel = trendDelta > 3
@@ -210,7 +209,7 @@ export function EnergyTracker({ profile, days = 7 }: EnergyTrackerProps) {
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide opacity-60">Выбранный день</p>
                   <h3 className="mt-1 text-lg font-semibold capitalize">
-                    {new Date(`${selectedDay.dateKey}T12:00:00`).toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })}
+                    {new Date(`${selectedDay.dateKey}T12:00:00`).toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long', timeZone: timezone })}
                   </h3>
                 </div>
                 <div className="text-right">
