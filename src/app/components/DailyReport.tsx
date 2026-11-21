@@ -147,15 +147,12 @@ export function DailyReport({
         <div className="mt-4 space-y-3">
           <div className="rounded-xl border border-border p-4">
             <p className="text-xs font-semibold uppercase tracking-wide opacity-60">Общий календарный фон</p>
-            <p className="mt-2 text-sm"><strong>Лунный день:</strong> {tithiLabel} — {panchang.tithi.meaning}.</p>
-            <p className="mt-2 text-sm"><strong>Положение Луны:</strong> {moonSignRu}. Традиционная символика: {SIGN_THEMES[moonSign] ?? 'внутреннее состояние и повседневные дела'}.</p>
-            <p className="mt-2 text-sm"><strong>Накшатра:</strong> {nakshatraName}. Это один из 27 участков лунного пути, который в Джйотиш используют как дополнительный символический ориентир.</p>
-            <details className="mt-3 border-t border-border pt-3 text-sm">
-              <summary className="cursor-pointer font-medium">Дополнительные элементы Панчанга</summary>
-              <p className="mt-2">Йога: {panchang.yoga.name} — {panchang.yoga.meaning}.</p>
-              <p className="mt-1">Карана: {panchang.karana.name} — {panchang.karana.quality}.</p>
-              <p className="mt-1">День недели: {panchang.vara.name}; традиционная тема — {panchang.vara.quality.toLowerCase()}.</p>
-            </details>
+            <p className="mt-2 text-sm"><strong>Лунный день:</strong> {tithiLabel} — {panchang.tithi.meaning}. Это часть лунного месяца: она показывает, насколько Луна ушла вперёд относительно Солнца.</p>
+            <p className="mt-2 text-sm"><strong>Положение Луны:</strong> {moonSignRu}. В символике Джйотиш знак описывает общий стиль переживания и выражения тем дня. Например, Рыбы связывают с чувствами, интуицией, отдыхом, воображением и творчеством.</p>
+            <p className="mt-2 text-sm"><strong>Накшатра:</strong> {nakshatraName}. Это один из 27 участков пути Луны; показатель добавляет более тонкий символический оттенок к её положению.</p>
+            <p className="mt-2 text-sm"><strong>Йога:</strong> {panchang.yoga.name} — {panchang.yoga.meaning}. Это сочетание долгот Солнца и Луны, которому традиция приписывает общий характер дня.</p>
+            <p className="mt-2 text-sm"><strong>Карана:</strong> {panchang.karana.name} — {panchang.karana.quality}. Это половина лунного дня; её трактуют как дополнительную подсказку о стиле повседневных действий.</p>
+            <p className="mt-2 text-sm"><strong>День недели:</strong> {panchang.vara.name} — {panchang.vara.quality.toLowerCase()}. В традиции каждый день связан с определённой планетой и её символическими темами.</p>
           </div>
 
           <div className="rounded-xl border border-border p-4">
