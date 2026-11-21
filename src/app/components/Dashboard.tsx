@@ -187,7 +187,7 @@ export function Dashboard({ profile, onReset, onProfileUpdate }: DashboardProps)
               Привет, {profile.name}!
             </h1>
             <p className="opacity-70 mt-1">
-              {currentDate.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })}
+              {currentDate.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long', timeZone: profile.currentLocation?.timezone ?? profile.timezone })}
             </p>
           </div>
 
