@@ -3,6 +3,7 @@ import { TrendingUp } from 'lucide-react';
 import { getEnergyColor } from '../utils/energyUtils';
 import { getOrCalculateForecast } from '../utils/forecastCalculations';
 import { formatDateKey } from '../utils/dateUtils';
+import { createDateInTimezone } from '../utils/timezones';
 import { UserProfile } from '../utils/storage';
 
 interface EnergyTrackerProps {
@@ -19,15 +20,15 @@ interface EnergyPoint {
   microUpaya: string;
 }
 
-function buildDateRange(days: number): Date[] {
-  const today = new Date();
+function buildDateRange(days: number, timezone: string): Date[] {
+  const todayKey = formatDateKey(new Date(), timezone);
+  const [year, month, day] = todayKey.split('-').map(Number);
   const dates: Date[] = [];
 
   for (let offset = days - 1; offset >= 0; offset--) {
-    const date = new Date(today);
-    date.setHours(12, 0, 0, 0);
-    date.setDate(date.getDate() - offset);
-    dates.push(date);
+    const calendarDate = new Date(Date.UTC(year, month - 1, day - offset));
+    const dateKey = calendarDate.toISOString().slice(0, 10);
+    dates.push(createDateInTimezone(dateKey, '12:00', timezone));
   }
 
   return dates;
@@ -50,7 +51,8 @@ function getDayInterpretation(level: number): string {
 }
 
 export function EnergyTracker({ profile, days = 7 }: EnergyTrackerProps) {
-  const dates = useMemo(() => buildDateRange(days), [days]);
+  const timezone = profile.currentLocation?.timezone ?? profile.timezone;
+  const dates = useMemo(() => buildDateRange(days, timezone), [days, timezone]);
   const [energyData, setEnergyData] = useState<EnergyPoint[]>([]);
   const [selectedDateKey, setSelectedDateKey] = useState(() => formatDateKey(new Date()));
   const [isLoading, setIsLoading] = useState(true);
@@ -70,7 +72,7 @@ export function EnergyTracker({ profile, days = 7 }: EnergyTrackerProps) {
             return {
               dateKey: forecast.date,
               energy: forecast.energyLevel,
-              label: date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' }),
+              label: date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', timeZone: timezone }),
               recommendation: forecast.topRecommendation,
               avoidRecommendation: forecast.avoidRecommendation ?? 'Не принимайте важные решения без проверки фактов и условий.',
               microUpaya: forecast.microUpaya ?? 'Выберите одно небольшое полезное действие и выполните его без спешки.',
@@ -97,16 +99,22 @@ export function EnergyTracker({ profile, days = 7 }: EnergyTrackerProps) {
     return () => {
       cancelled = true;
     };
-  }, [dates, profile]);
+  }, [dates, profile, timezone]);
 
-  const todayKey = formatDateKey(new Date());
+  const todayKey = formatDateKey(new Date(), timezone);
   const today = energyData.find((point) => point.dateKey === todayKey) ?? energyData[energyData.length - 1];
   const selectedDay = energyData.find((point) => point.dateKey === selectedDateKey) ?? today;
   const average = energyData.length
     ? Math.round(energyData.reduce((sum, point) => sum + point.energy, 0) / energyData.length)
     : 0;
   const firstDay = energyData[0];
-  const weeklyChange = today && firstDay ? today.energy - firstDay.energy : 0;
+  const previousDay = energyData.length > 1 ? energyData[energyData.length - 2] : undefined;
+  const trendDelta = today && previousDay ? today.energy - previousDay.energy : 0;
+  const trendLabel = trendDelta > 3
+    ? 'рост +' + trendDelta
+    : trendDelta < -3
+      ? 'снижение ' + trendDelta
+      : 'ровный фон';
   const highestDay = energyData.reduce<EnergyPoint | null>(
     (highest, point) => (!highest || point.energy > highest.energy ? point : highest),
     null
@@ -191,7 +199,7 @@ export function EnergyTracker({ profile, days = 7 }: EnergyTrackerProps) {
               <p className="text-xs opacity-65">Изменение с первого дня</p>
               <p className="mt-1 flex items-center gap-2 font-semibold tabular-nums">
                 <TrendingUp className="h-4 w-4 opacity-60" />
-                {weeklyChange === 0 ? 'Без изменений' : weeklyChange > 0 ? `На ${weeklyChange} пунктов выше, чем в первый день` : `На ${Math.abs(weeklyChange)} пунктов ниже, чем в первый день`}
+                {trendLabel}
               </p>
             </div>
           </div>
@@ -226,11 +234,50 @@ export function EnergyTracker({ profile, days = 7 }: EnergyTrackerProps) {
           )}
 
           <div className="mt-5 rounded-xl border border-border p-4">
-            <p className="text-sm font-semibold mb-3">Как читать шкалу</p>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <p className="text-sm"><strong>70–100 · Выше среднего</strong><span className="mt-1 block opacity-70">Более активный период по символике модели.</span></p>
-              <p className="text-sm"><strong>40–69 · Умеренный</strong><span className="mt-1 block opacity-70">Ровный фон без особого акцента на активность.</span></p>
-              <p className="text-sm"><strong>0–39 · Спокойный режим</strong><span className="mt-1 block opacity-70">Более спокойный показатель модели.</span></p>
+            <p className="text-sm font-semibold mb-3">Как читать периоды</p>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div>
+                <p className="text-sm font-semibold">70–100 · Выше среднего</p>
+                <p className="mt-1 text-sm leading-relaxed opacity-75">По модели можно запланировать одну-две важные задачи и активные дела.</p>
+              </div>
+              <div>
+                <p className="text-sm font-semibold">40–69 · Умеренный уровень</p>
+                <p className="mt-1 text-sm leading-relaxed opacity-75">Чередуйте работу и перерывы, не перегружайте расписание.</p>
+              </div>
+              <div>
+                <p className="text-sm font-semibold">0–39 · Спокойный режим</p>
+                <p className="mt-1 text-sm leading-relaxed opacity-75">Оставьте запас времени, займитесь необходимым и не планируйте всё подряд.</p>
+              </div>
+            </div>
+            <p className="mt-3 text-xs leading-relaxed opacity-65">Это условный индекс астрологической модели, а не измерение физической энергии, здоровья или реальной продуктивности. Ориентируйтесь прежде всего на самочувствие.</p>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-x-6 gap-y-3">
+            <div className="flex items-center gap-2">
+              <span className="h-3.5 w-3.5 rounded-full" style={{ background: getEnergyColor(85) }} />
+              <span className="text-sm opacity-75">Высокий</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="h-3.5 w-3.5 rounded-full" style={{ background: getEnergyColor(55) }} />
+              <span className="text-sm opacity-75">Умеренный</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="h-3.5 w-3.5 rounded-full" style={{ background: getEnergyColor(20) }} />
+              <span className="text-sm opacity-75">Отдых</span>
+            </div>
+          </div>
+          <div className="mt-5 rounded-2xl border border-border bg-secondary/50 p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-sm opacity-65">Сегодня</p>
+                <p className="mt-1 font-semibold">{today ? (today.energy >= 70 ? 'Выше среднего по модели' : getEnergyBand(today.energy) + ' по модели') : '—'}</p>
+                <p className="mt-1 text-sm opacity-70">Динамика: {trendLabel}</p>
+                {highestDay && (
+                  <p className="mt-1 text-sm opacity-70">Самый сильный день периода: {highestDay.label} ({highestDay.energy}%)</p>
+                )}
+              </div>
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-lg font-semibold text-white" style={{ background: today ? getEnergyColor(today.energy) : 'var(--muted)' }}>
+                {today?.energy ?? '—'}
+              </div>
             </div>
           </div>
         </>
