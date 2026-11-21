@@ -10,7 +10,7 @@ import { DayForecast, saveForecast, getForecast } from './indexedDB';
 import { formatDateKey } from './dateUtils';
 import { createDateInTimezone } from './timezones';
 
-export const FORECAST_CALC_VERSION = 'personalized-v4';
+export const FORECAST_CALC_VERSION = 'personalized-v5';
 
 interface ForecastCalculationContext {
   natalChart: NatalChart;
@@ -56,7 +56,7 @@ function prepareForecastContext(profile: UserProfile): ForecastCalculationContex
 export async function calculateDayForecast(date: Date, profile: UserProfile, preparedContext?: ForecastCalculationContext): Promise<DayForecast> {
   const context = preparedContext ?? prepareForecastContext(profile);
   const { natalChart, currentLat, currentLon, currentTimezone } = context;
-  const dateKey = formatDateKey(date);
+  const dateKey = formatDateKey(date, currentTimezone);
   const forecastMoment = createDateInTimezone(dateKey, '12:00', currentTimezone);
   const transitChart = calculateNatalChart(forecastMoment, currentLat, currentLon);
   const aspects = calculateTransitAspects(natalChart, transitChart);
@@ -89,11 +89,12 @@ export async function precalculateForecasts(
   const total = daysBack + daysForward + 1;
   const profileKey = getForecastProfileKey(profile);
   const context = prepareForecastContext(profile);
+  const [year, month, day] = formatDateKey(today, context.currentTimezone).split('-').map(Number);
   for (let i = -daysBack; i <= daysForward; i++) {
     if (shouldCancel?.()) return;
-    const date = new Date(today);
-    date.setDate(date.getDate() + i);
-    const dateStr = formatDateKey(date);
+    const calendarDate = new Date(Date.UTC(year, month - 1, day + i));
+    const dateStr = calendarDate.toISOString().slice(0, 10);
+    const date = createDateInTimezone(dateStr, '12:00', context.currentTimezone);
     const cached = await getForecast(dateStr, profileKey, FORECAST_CALC_VERSION);
     if (shouldCancel?.()) return;
     if (!cached) {
@@ -110,7 +111,8 @@ export async function precalculateForecasts(
 }
 
 export async function getOrCalculateForecast(date: Date, profile: UserProfile): Promise<DayForecast> {
-  const dateStr = formatDateKey(date);
+  const timezone = profile.currentLocation?.timezone ?? profile.timezone;
+  const dateStr = formatDateKey(date, timezone);
   const profileKey = getForecastProfileKey(profile);
   const cached = await getForecast(dateStr, profileKey, FORECAST_CALC_VERSION);
   if (cached) return cached;
