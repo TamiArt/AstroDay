@@ -195,7 +195,7 @@ export function EnergyTracker({ profile, days = 7 }: EnergyTrackerProps) {
               <p className="mt-1 font-semibold">{today ? `${today.energy}/100 · ${getEnergyBand(today.energy)}` : '—'}</p>
             </div>
             <div className="rounded-xl border border-border p-3">
-              <p className="text-xs opacity-65">Изменение с первого дня</p>
+              <p className="text-xs opacity-65">Динамика относительно прошлого дня</p>
               <p className="mt-1 flex items-center gap-2 font-semibold tabular-nums">
                 <TrendingUp className="h-4 w-4 opacity-60" />
                 {trendLabel}
