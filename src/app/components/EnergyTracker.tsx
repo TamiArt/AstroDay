@@ -133,6 +133,7 @@ export function EnergyTracker({ profile, days = 7 }: EnergyTrackerProps) {
         <div>
           <h2 id="energy-tracker-title" className="text-xl font-semibold mb-1">Трекер энергии</h2>
           <p className="text-sm opacity-70">Условный астрологический ориентир · последние {days} дней</p>
+          <p className="mt-1 text-xs opacity-60">Место расчёта: {profile.currentLocation?.place ?? profile.birthPlace}</p>
         </div>
         {!isLoading && !loadError && (
           <div className="rounded-xl bg-secondary px-4 py-3">
