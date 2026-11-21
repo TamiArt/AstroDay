@@ -14,29 +14,6 @@ interface TopRecommendationsProps {
 }
 
 export function TopRecommendations({ personalRecommendation }: TopRecommendationsProps) {
-  const cards = [
-    {
-      icon: Check,
-      title: 'Что можно сделать',
-      text: personalRecommendation.mainRecommendation,
-    },
-    {
-      icon: AlertCircle,
-      title: 'С чем лучше не спешить',
-      text: personalRecommendation.avoidRecommendation,
-    },
-    {
-      icon: Eye,
-      title: 'На что обратить внимание',
-      text: 'Проверьте сроки, детали и договорённости. Важные решения сверяйте с фактами и реальными обстоятельствами.',
-    },
-    {
-      icon: Sparkles,
-      title: 'Небольшая практика',
-      text: personalRecommendation.microUpaya.action,
-    },
-  ];
-
   return (
     <GlassCard>
       <h3 className="mb-2 font-semibold">Подсказки на сегодня</h3>
