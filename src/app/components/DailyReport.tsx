@@ -148,7 +148,7 @@ export function DailyReport({
           <div className="rounded-xl border border-border p-4">
             <p className="text-xs font-semibold uppercase tracking-wide opacity-60">Общий календарный фон</p>
             <p className="mt-2 text-sm"><strong>Лунный день:</strong> {tithiLabel} — {panchang.tithi.meaning}. Это часть лунного месяца: она показывает, насколько Луна ушла вперёд относительно Солнца.</p>
-            <p className="mt-2 text-sm"><strong>Положение Луны:</strong> {moonSignRu}. В символике Джйотиш знак описывает общий стиль переживания и выражения тем дня. Например, Рыбы связывают с чувствами, интуицией, отдыхом, воображением и творчеством.</p>
+            <p className="mt-2 text-sm"><strong>Положение Луны:</strong> {moonSignRu}. В символике Джйотиш знак описывает общий стиль переживания и выражения тем дня. Для знака {moonSignRu} традиционно выделяют темы {SIGN_THEMES[moonSign] ?? 'внутреннего состояния и повседневных дел'}.</p>
             <p className="mt-2 text-sm"><strong>Накшатра:</strong> {nakshatraName}. Это один из 27 участков пути Луны; показатель добавляет более тонкий символический оттенок к её положению.</p>
             <p className="mt-2 text-sm"><strong>Йога:</strong> {panchang.yoga.name} — {panchang.yoga.meaning}. Это сочетание долгот Солнца и Луны, которому традиция приписывает общий характер дня.</p>
             <p className="mt-2 text-sm"><strong>Карана:</strong> {panchang.karana.name} — {panchang.karana.quality}. Это половина лунного дня; её трактуют как дополнительную подсказку о стиле повседневных действий.</p>
